@@ -12,8 +12,14 @@ from ohmyadmin.request import AdminRequest
 
 
 class OhMyAdmin(Router):
-    def __init__(self, template_paths: list[str] | None = None, app_name: str = 'oma') -> None:
+    def __init__(
+        self,
+        template_paths: list[str] | None = None,
+        app_name: str = 'oma',
+        user_menu_config: typing.Callable[[AdminRequest, UserMenu], None] | None = None,
+    ) -> None:
         self.app_name = app_name
+        self.user_menu_config = user_menu_config or self._default_user_menu_config
         self.jinja_env = jinja2.Environment(
             extensions=['jinja2.ext.i18n', 'jinja2.ext.debug'],
             loader=jinja2.ChoiceLoader(
@@ -38,6 +44,7 @@ class OhMyAdmin(Router):
     def get_routes(self) -> list[BaseRoute]:
         return [
             Route('/', self.welcome_view, name='welcome'),
+            Route('/logout', self.logout_view, name='logout'),
             Mount('/static', StaticFiles(packages=['ohmyadmin']), name='static'),
         ]
 
@@ -60,10 +67,15 @@ class OhMyAdmin(Router):
             MenuItem('Orders', '/admin/orders', external=True),
         ]
 
+    def _default_user_menu_config(self, request: AdminRequest, user_menu: UserMenu) -> None:
+        user_menu.name = getattr(request.user, 'display_name', '<user>')
+        user_menu.photo = getattr(request.user, 'avatar', '')
+
     def get_user_menu(self, request: AdminRequest) -> UserMenu:
-        user_name = getattr(request.user, 'display_name', '<user>')
-        avatar = getattr(request.user, 'avatar', '')
-        return UserMenu(name=user_name, photo=avatar, items=[MenuItem('Log out', '/admin/logout', icon='logout')])
+        user_menu = UserMenu(name='<anon.>', items=[], photo='')
+        self.user_menu_config(request, user_menu)
+        user_menu.items.append(MenuItem('Log out', self.url_for(request, 'logout')))
+        return user_menu
 
     def bootstrap(self) -> None:
         ...
@@ -89,10 +101,11 @@ class OhMyAdmin(Router):
         return Response(content, status_code, media_type='text/html')
 
     def url_for(self, request: AdminRequest, path_name: str, **path_params: typing.Any) -> str:
+        path_name = self.path_name(path_name)
         return request.url_for(path_name, **path_params)
 
     def static_url(self, request: AdminRequest, path: str) -> str:
-        return request.url_for(self.path_name('static'), path=path) + f'?{time.time()}'
+        return self.url_for(request, 'static', path=path) + f'?{time.time()}'
 
     def welcome_view(self, request: Request) -> Response:
         request = AdminRequest.from_starlette(request, self)
@@ -100,3 +113,6 @@ class OhMyAdmin(Router):
 
     def path_name(self, path_name: str) -> str:
         return f'{self.app_name}:{path_name}'
+
+    async def logout_view(self, request: Request) -> Response:
+        return Response('')
