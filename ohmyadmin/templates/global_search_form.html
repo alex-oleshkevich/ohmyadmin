@@ -1,0 +1,14 @@
+<form class="w-full flex md:ml-0" action="#" method="GET">
+    <label for="search-field" class="sr-only">Search</label>
+    <div class="relative w-full md:w-96 text-gray-400 focus-within:text-gray-600 flex items-center">
+        <div class="absolute inset-y-0 left-3 flex items-center pointer-events-none" aria-hidden="true">
+            {{ icon('search') }}
+        </div>
+        <input
+            id="search-field"
+            name="search-field"
+            class="block w-full bg-white border border-gray-300 rounded-md py-2 pl-10 pr-3 text-sm placeholder-gray-500 focus:outline-none focus:text-gray-900 focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-300 focus:border-blue-500 sm:text-sm"
+            placeholder="Site search"
+            type="search">
+    </div>
+</form>

@@ -1,0 +1,43 @@
+{% import '_menus.html' as menus %}
+{% set user_menu = admin.get_user_menu(request) %}
+<div
+    x-data="{ open: false }"
+    @click.away="open = false"
+    class="ml-3 relative"
+>
+    <div>
+        <button
+            type="button"
+            class="max-w-xs rounded-full flex items-center text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-300 lg:p-2 lg:rounded-md lg:hover:bg-gray-200"
+            @click="open = !open"
+            aria-expanded="false"
+            aria-haspopup="true"
+            x-bind:aria-expanded="open.toString()">
+            <img class="h-8 w-8 rounded-full" src="{{ user_menu.photo }}" alt="{{ user_menu }}">
+            <span class="hidden ml-3 text-gray-700 text-sm font-medium lg:block">
+                <span class="sr-only">Open user menu for </span>
+                {{ user_menu }}
+            </span>
+            {{ icon('chevron-down', class='hidden flex-shrink-0 ml-1 h-5 w-5 text-gray-400 lg:block') }}
+        </button>
+    </div>
+
+    <div
+        x-show="open"
+        x-transition:enter="transition ease-out duration-100"
+        x-transition:enter-start="transform opacity-0 scale-95"
+        x-transition:enter-end="transform opacity-100 scale-100"
+        x-transition:leave="transition ease-in duration-75"
+        x-transition:leave-start="transform opacity-100 scale-100"
+        x-transition:leave-end="transform opacity-0 scale-95"
+        class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none"
+        role="menu"
+        aria-orientation="vertical"
+        aria-labelledby="user-menu-button"
+        tabindex="-1"
+    >
+        {% for menu_item in user_menu %}
+            {{ menus.menu_item(request, menu_item) }}
+        {% endfor %}
+    </div>
+</div>
