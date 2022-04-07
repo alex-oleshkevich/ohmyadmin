@@ -7,13 +7,12 @@ from starlette.routing import Mount, Route
 from ohmyadmin.admin import OhMyAdmin
 from ohmyadmin.dashboards import Dashboard
 from ohmyadmin.menus import MenuItem, UserMenu
-from ohmyadmin.request import AdminRequest
 from ohmyadmin.resources import Resource
 from ohmyadmin.routing import route
 from ohmyadmin.tools import Tool
 
 
-def user_menu_config(request: AdminRequest, user_menu: UserMenu) -> None:
+def user_menu_config(request: Request, user_menu: UserMenu) -> None:
     user_menu.name = 'Alex Oleshkevich'
     user_menu.photo = (
         'https://images.unsplash.com/photo-1502685104226-ee32379fefbe?ixlib=rb-1.2.1'
@@ -23,7 +22,7 @@ def user_menu_config(request: AdminRequest, user_menu: UserMenu) -> None:
 
 
 def index_view(request: Request) -> Response:
-    url = request.url_for('oma:welcome')
+    url = request.url_for('welcome')
     return Response(f'<a href="{url}">admin</a>')
 
 
@@ -31,15 +30,15 @@ class FileManager(Tool):
     title = 'File Manager'
     icon = 'file'
 
-    async def index_view(self, request: AdminRequest) -> Response:
+    async def index_view(self, request: Request) -> Response:
         return self.admin.render_to_response(request, 'file_manager/index.html')
 
     @route('/create')
-    async def create_file_view(self, request: AdminRequest) -> Response:
+    async def create_file_view(self, request: Request) -> Response:
         return self.admin.render_to_response(request, 'file_manager/create_file.html')
 
     @route('/delete')
-    async def delete_file_view(self, request: AdminRequest) -> Response:
+    async def delete_file_view(self, request: Request) -> Response:
         return self.admin.render_to_response(request, 'file_manager/delete_file.html')
 
 
@@ -47,7 +46,7 @@ class Backup(Tool):
     title = 'Back ups'
     icon = 'database-export'
 
-    async def index_view(self, request: AdminRequest) -> Response:
+    async def index_view(self, request: Request) -> Response:
         return self.admin.render_to_response(request, 'file_manager/index.html')
 
 
@@ -55,7 +54,7 @@ class Calendar(Tool):
     title = 'Calendar'
     icon = 'calendar'
 
-    async def index_view(self, request: AdminRequest) -> Response:
+    async def index_view(self, request: Request) -> Response:
         return self.admin.render_to_response(request, 'calendar.html')
 
 
@@ -63,7 +62,7 @@ class Photos(Tool):
     title = 'Photos'
     icon = 'photo'
 
-    async def index_view(self, request: AdminRequest) -> Response:
+    async def index_view(self, request: Request) -> Response:
         return self.admin.render_to_response(request, 'photos.html')
 
 
@@ -105,6 +104,6 @@ app = Starlette(
     debug=True,
     routes=[
         Route('/', index_view),
-        Mount('/admin', admin, name='oma'),
+        Mount('/admin', admin),
     ],
 )

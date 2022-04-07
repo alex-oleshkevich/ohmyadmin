@@ -2,13 +2,12 @@ from __future__ import annotations
 
 import inspect
 import os
+from starlette.requests import Request
 from starlette.responses import Response
-from starlette.routing import BaseRoute, Mount
+from starlette.routing import BaseRoute, Mount, Route
 
 from ohmyadmin.admin import OhMyAdmin
 from ohmyadmin.menus import MenuItem
-from ohmyadmin.request import AdminRequest
-from ohmyadmin.routing import Route
 
 
 class Tool:
@@ -33,5 +32,5 @@ class Tool:
     def get_menu_item(self) -> MenuItem:
         return MenuItem(label=self.title, path_name=self.slug, icon=self.icon)
 
-    async def index_view(self, request: AdminRequest) -> Response:
+    async def index_view(self, request: Request) -> Response:
         return self.admin.render_to_response(request, 'ohmyadmin/tool_stub.html')

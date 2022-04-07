@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import typing
+from starlette.requests import Request
 from starlette.responses import Response
-from starlette.routing import BaseRoute
+from starlette.routing import BaseRoute, Route
 
 from ohmyadmin.menus import MenuItem
 from ohmyadmin.metrics import Metric
-from ohmyadmin.request import AdminRequest
-from ohmyadmin.routing import Route
 
 if typing.TYPE_CHECKING:
     from ohmyadmin.admin import OhMyAdmin
@@ -30,5 +29,5 @@ class Dashboard:
     def get_menu_item(self) -> MenuItem:
         return MenuItem(label=self.title, path_name=self.slug, icon=self.icon)
 
-    async def index_view(self, request: AdminRequest) -> Response:
+    async def index_view(self, request: Request) -> Response:
         return self.admin.render_to_response(request, 'ohmyadmin/dashboard.html')

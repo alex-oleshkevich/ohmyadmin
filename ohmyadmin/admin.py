@@ -14,7 +14,6 @@ from tabler_icons import tabler_icon
 
 from ohmyadmin.dashboards import Dashboard
 from ohmyadmin.menus import MenuGroup, MenuItem, UserMenu
-from ohmyadmin.request import AdminRequest
 from ohmyadmin.resources import Resource
 
 if typing.TYPE_CHECKING:
@@ -34,13 +33,11 @@ class OhMyAdmin(Router):
     def __init__(
         self,
         template_dirs: list[str | os.PathLike] | None = None,
-        app_name: str = 'oma',
-        user_menu_config: typing.Callable[[AdminRequest, UserMenu], None] | None = None,
+        user_menu_config: typing.Callable[[Request, UserMenu], None] | None = None,
         dashboards: list[typing.Type[Dashboard]] | None = None,
         resources: list[typing.Type[Resource]] | None = None,
         tools: list[typing.Type[Tool]] | None = None,
     ) -> None:
-        self.app_name = app_name
         self.template_dirs = template_dirs or []
         self.user_menu_config = user_menu_config or self._default_user_menu_config
 
@@ -85,7 +82,7 @@ class OhMyAdmin(Router):
             routes.extend(resource.get_routes())
         return routes
 
-    def get_main_menu(self, request: AdminRequest) -> list[MenuItem | MenuGroup]:
+    def get_main_menu(self) -> list[MenuItem | MenuGroup]:
         tool_menus = [tool.get_menu_item() for tool in self.tools]
         dashboard_menus = [dashboard.get_menu_item() for dashboard in self.dashboards]
         resource_menus = [resource.get_menu_item() for resource in self.resources]
@@ -95,11 +92,11 @@ class OhMyAdmin(Router):
             *tool_menus,
         ]
 
-    def _default_user_menu_config(self, request: AdminRequest, user_menu: UserMenu) -> None:
+    def _default_user_menu_config(self, request: Request, user_menu: UserMenu) -> None:
         user_menu.name = getattr(request.user, 'display_name', '<user>')
         user_menu.photo = getattr(request.user, 'avatar', '')
 
-    def get_user_menu(self, request: AdminRequest) -> UserMenu:
+    def get_user_menu(self, request: Request) -> UserMenu:
         user_menu = UserMenu(name='<anon.>', items=[], photo='')
         self.user_menu_config(request, user_menu)
         user_menu.items.append(MenuItem('Log out', path_name='logout'))
@@ -114,7 +111,7 @@ class OhMyAdmin(Router):
 
     def render_to_response(
         self,
-        request: AdminRequest,
+        request: Request,
         template_name: str,
         context: dict[str, typing.Any] | None = None,
         status_code: int = 200,
@@ -128,14 +125,13 @@ class OhMyAdmin(Router):
         content = self.render(template_name, context)
         return Response(content, status_code, media_type='text/html')
 
-    def url_for(self, request: AdminRequest, path_name: str, **path_params: typing.Any) -> str:
+    def url_for(self, request: Request, path_name: str, **path_params: typing.Any) -> str:
         return request.url_for(path_name, **path_params)
 
-    def static_url(self, request: AdminRequest, path: str) -> str:
+    def static_url(self, request: Request, path: str) -> str:
         return self.url_for(request, 'static', path=path) + f'?{time.time()}'
 
     def welcome_view(self, request: Request) -> Response:
-        request = AdminRequest.from_starlette(request)
         return self.render_to_response(request, 'ohmyadmin/index.html')
 
     async def logout_view(self, request: Request) -> Response:
@@ -163,4 +159,6 @@ class OhMyAdmin(Router):
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         scope['ohmyadmin'] = self
+        scope.setdefault("state", {})
+        scope['state']['admin'] = self
         return await super().__call__(scope, receive, send)
