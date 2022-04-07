@@ -22,7 +22,7 @@ class Dashboard:
     def __init__(self, admin: OhMyAdmin) -> None:
         self.admin = admin
         if not self.title:
-            self.title = self.__class__.__name__.replace('_', ' ').title()
+            self.title = self.__class__.__name__.replace('_', ' ').removesuffix('Dashboard').title()
 
     def get_route(self) -> BaseRoute:
         return Route('/' + self.slug, self.index_view, name=self.slug)

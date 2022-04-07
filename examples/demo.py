@@ -8,6 +8,7 @@ from ohmyadmin.admin import OhMyAdmin
 from ohmyadmin.dashboards import Dashboard
 from ohmyadmin.menus import MenuItem, UserMenu
 from ohmyadmin.request import AdminRequest
+from ohmyadmin.resources import Resource
 from ohmyadmin.routing import route
 from ohmyadmin.tools import Tool
 
@@ -50,22 +51,54 @@ class Backup(Tool):
         return self.admin.render_to_response(request, 'file_manager/index.html')
 
 
+class Calendar(Tool):
+    title = 'Calendar'
+    icon = 'calendar'
+
+    async def index_view(self, request: AdminRequest) -> Response:
+        return self.admin.render_to_response(request, 'calendar.html')
+
+
+class Photos(Tool):
+    title = 'Photos'
+    icon = 'photo'
+
+    async def index_view(self, request: AdminRequest) -> Response:
+        return self.admin.render_to_response(request, 'photos.html')
+
+
 class OverviewDashboard(Dashboard):
     title = 'Overview'
     icon = 'dashboard'
+
+
+class UserResource(Resource):
+    title = 'User'
+    icon = 'users'
+
+
+class OrdersResource(Resource):
+    title = 'Order'
+    icon = 'list'
+
+
+class FalimiesResource(Resource):
+    title = 'Family'
+    icon = 'list'
+
+
+class SpeciesResource(Resource):
+    title = 'Specie'
+    icon = 'feather'
 
 
 this_dir = pathlib.Path(__file__).parent
 admin = OhMyAdmin(
     user_menu_config=user_menu_config,
     template_dirs=[this_dir / 'templates'],
-    dashboards=[
-        OverviewDashboard,
-    ],
-    tools=[
-        Backup,
-        FileManager,
-    ],
+    tools=[Backup, FileManager, Calendar, Photos],
+    dashboards=[OverviewDashboard],
+    resources=[UserResource, OrdersResource, FalimiesResource, SpeciesResource],
 )
 
 app = Starlette(

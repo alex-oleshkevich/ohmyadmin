@@ -15,6 +15,7 @@ from tabler_icons import tabler_icon
 from ohmyadmin.dashboards import Dashboard
 from ohmyadmin.menus import MenuGroup, MenuItem, UserMenu
 from ohmyadmin.request import AdminRequest
+from ohmyadmin.resources import Resource
 
 if typing.TYPE_CHECKING:
     from ohmyadmin.tools import Tool
@@ -36,6 +37,7 @@ class OhMyAdmin(Router):
         app_name: str = 'oma',
         user_menu_config: typing.Callable[[AdminRequest, UserMenu], None] | None = None,
         dashboards: list[typing.Type[Dashboard]] | None = None,
+        resources: list[typing.Type[Resource]] | None = None,
         tools: list[typing.Type[Tool]] | None = None,
     ) -> None:
         self.app_name = app_name
@@ -45,14 +47,14 @@ class OhMyAdmin(Router):
         # setup dashboards
         self.dashboards = [ensure_slug(dashboard)(self) for dashboard in dashboards or []]
 
+        # setup resources
+        self.resources = [ensure_slug(resource)(self) for resource in resources or []]
+
         # setup tools
-        self.tools: list[Tool] = []
-        for tool in tools or []:
-            if not tool.slug:
-                tool.slug = slugify(tool.__name__)
-            if tool.template_dir:
-                self.template_dirs.append(tool.template_dir)
-            self.tools.append(tool(self))
+        self.tools = [ensure_slug(tool)(self) for tool in tools or []]
+
+        # setup templates
+        self.template_dirs.extend([tool.template_dir for tool in self.tools if tool.template_dir])
 
         self.jinja_env = self._create_jinja_env()
         self.bootstrap()
@@ -65,6 +67,7 @@ class OhMyAdmin(Router):
             Mount('/static', StaticFiles(packages=['ohmyadmin']), name='static'),
             *self.get_tool_routes(),
             *self.get_dashboard_routes(),
+            *self.get_resource_routes(),
         ]
 
     def get_tool_routes(self) -> list[BaseRoute]:
@@ -76,16 +79,16 @@ class OhMyAdmin(Router):
     def get_dashboard_routes(self) -> list[BaseRoute]:
         return [dashboard.get_route() for dashboard in self.dashboards]
 
+    def get_resource_routes(self) -> list[BaseRoute]:
+        routes = []
+        for resource in self.resources:
+            routes.extend(resource.get_routes())
+        return routes
+
     def get_main_menu(self, request: AdminRequest) -> list[MenuItem | MenuGroup]:
-        dashboard_menus: list[MenuItem | MenuGroup] = []
-        resource_menus: list[MenuItem | MenuGroup] = []
-        tool_menus: list[MenuItem | MenuGroup] = []
-        for tool in self.tools:
-            tool_menus.append(tool.get_menu_item())
-
-        for dashboard in self.dashboards:
-            dashboard_menus.append(dashboard.get_menu_item())
-
+        tool_menus = [tool.get_menu_item() for tool in self.tools]
+        dashboard_menus = [dashboard.get_menu_item() for dashboard in self.dashboards]
+        resource_menus = [resource.get_menu_item() for resource in self.resources]
         return [
             *dashboard_menus,
             *resource_menus,
