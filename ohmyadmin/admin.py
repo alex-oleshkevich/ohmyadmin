@@ -12,11 +12,21 @@ from starlette.staticfiles import StaticFiles
 from starlette.types import Receive, Scope, Send
 from tabler_icons import tabler_icon
 
+from ohmyadmin.dashboards import Dashboard
 from ohmyadmin.menus import MenuGroup, MenuItem, UserMenu
 from ohmyadmin.request import AdminRequest
 
 if typing.TYPE_CHECKING:
     from ohmyadmin.tools import Tool
+
+T = typing.TypeVar('T')
+
+
+def ensure_slug(obj: typing.Type[T]) -> typing.Type[T]:
+    slug = getattr(obj, 'slug', '')
+    if not slug:
+        setattr(obj, 'slug', slugify(obj.__name__))
+    return obj
 
 
 class OhMyAdmin(Router):
@@ -25,11 +35,15 @@ class OhMyAdmin(Router):
         template_dirs: list[str | os.PathLike] | None = None,
         app_name: str = 'oma',
         user_menu_config: typing.Callable[[AdminRequest, UserMenu], None] | None = None,
+        dashboards: list[typing.Type[Dashboard]] | None = None,
         tools: list[typing.Type[Tool]] | None = None,
     ) -> None:
         self.app_name = app_name
         self.template_dirs = template_dirs or []
         self.user_menu_config = user_menu_config or self._default_user_menu_config
+
+        # setup dashboards
+        self.dashboards = [ensure_slug(dashboard)(self) for dashboard in dashboards or []]
 
         # setup tools
         self.tools: list[Tool] = []
@@ -50,6 +64,7 @@ class OhMyAdmin(Router):
             Route('/logout', self.logout_view, name='logout'),
             Mount('/static', StaticFiles(packages=['ohmyadmin']), name='static'),
             *self.get_tool_routes(),
+            *self.get_dashboard_routes(),
         ]
 
     def get_tool_routes(self) -> list[BaseRoute]:
@@ -58,12 +73,18 @@ class OhMyAdmin(Router):
             mounts.append(tool.get_route())
         return mounts
 
+    def get_dashboard_routes(self) -> list[BaseRoute]:
+        return [dashboard.get_route() for dashboard in self.dashboards]
+
     def get_main_menu(self, request: AdminRequest) -> list[MenuItem | MenuGroup]:
         dashboard_menus: list[MenuItem | MenuGroup] = []
         resource_menus: list[MenuItem | MenuGroup] = []
         tool_menus: list[MenuItem | MenuGroup] = []
         for tool in self.tools:
-            tool_menus.append(tool.get_menu_item(request))
+            tool_menus.append(tool.get_menu_item())
+
+        for dashboard in self.dashboards:
+            dashboard_menus.append(dashboard.get_menu_item())
 
         return [
             *dashboard_menus,

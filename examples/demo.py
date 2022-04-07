@@ -5,6 +5,7 @@ from starlette.responses import Response
 from starlette.routing import Mount, Route
 
 from ohmyadmin.admin import OhMyAdmin
+from ohmyadmin.dashboards import Dashboard
 from ohmyadmin.menus import MenuItem, UserMenu
 from ohmyadmin.request import AdminRequest
 from ohmyadmin.routing import route
@@ -49,10 +50,18 @@ class Backup(Tool):
         return self.admin.render_to_response(request, 'file_manager/index.html')
 
 
+class OverviewDashboard(Dashboard):
+    title = 'Overview'
+    icon = 'dashboard'
+
+
 this_dir = pathlib.Path(__file__).parent
 admin = OhMyAdmin(
     user_menu_config=user_menu_config,
     template_dirs=[this_dir / 'templates'],
+    dashboards=[
+        OverviewDashboard,
+    ],
     tools=[
         Backup,
         FileManager,
