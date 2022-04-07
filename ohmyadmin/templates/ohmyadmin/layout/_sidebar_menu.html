@@ -1,0 +1,3 @@
+{% for menu in admin.get_main_menu(request) %}
+    {{ menu.render(request) }}
+{% endfor %}

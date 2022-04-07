@@ -1,43 +1,46 @@
+from __future__ import annotations
+
 import jinja2
+import os
 import time
 import typing
+from slugify import slugify
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import BaseRoute, Mount, Route, Router
 from starlette.staticfiles import StaticFiles
+from starlette.types import Receive, Scope, Send
 from tabler_icons import tabler_icon
 
 from ohmyadmin.menus import MenuGroup, MenuItem, UserMenu
 from ohmyadmin.request import AdminRequest
 
+if typing.TYPE_CHECKING:
+    from ohmyadmin.tools import Tool
+
 
 class OhMyAdmin(Router):
     def __init__(
         self,
-        template_paths: list[str] | None = None,
+        template_dirs: list[str | os.PathLike] | None = None,
         app_name: str = 'oma',
         user_menu_config: typing.Callable[[AdminRequest, UserMenu], None] | None = None,
+        tools: list[typing.Type[Tool]] | None = None,
     ) -> None:
         self.app_name = app_name
+        self.template_dirs = template_dirs or []
         self.user_menu_config = user_menu_config or self._default_user_menu_config
-        self.jinja_env = jinja2.Environment(
-            extensions=['jinja2.ext.i18n', 'jinja2.ext.debug'],
-            loader=jinja2.ChoiceLoader(
-                [
-                    jinja2.loaders.PackageLoader('ohmyadmin'),
-                    jinja2.loaders.FileSystemLoader(template_paths or []),
-                ]
-            ),
-        )
-        self.jinja_env.globals.update(
-            {
-                'admin': self,
-                'static': self.static_url,
-                'url': self.url_for,
-                'icon': tabler_icon,
-            }
-        )
 
+        # setup tools
+        self.tools: list[Tool] = []
+        for tool in tools or []:
+            if not tool.slug:
+                tool.slug = slugify(tool.__name__)
+            if tool.template_dir:
+                self.template_dirs.append(tool.template_dir)
+            self.tools.append(tool(self))
+
+        self.jinja_env = self._create_jinja_env()
         self.bootstrap()
         super().__init__(routes=self.get_routes())
 
@@ -46,25 +49,26 @@ class OhMyAdmin(Router):
             Route('/', self.welcome_view, name='welcome'),
             Route('/logout', self.logout_view, name='logout'),
             Mount('/static', StaticFiles(packages=['ohmyadmin']), name='static'),
+            *self.get_tool_routes(),
         ]
 
-    @property
-    def main_menu(self) -> list[MenuItem | MenuGroup]:
+    def get_tool_routes(self) -> list[BaseRoute]:
+        mounts = []
+        for tool in self.tools:
+            mounts.append(tool.get_route())
+        return mounts
+
+    def get_main_menu(self, request: AdminRequest) -> list[MenuItem | MenuGroup]:
+        dashboard_menus: list[MenuItem | MenuGroup] = []
+        resource_menus: list[MenuItem | MenuGroup] = []
+        tool_menus: list[MenuItem | MenuGroup] = []
+        for tool in self.tools:
+            tool_menus.append(tool.get_menu_item(request))
+
         return [
-            MenuItem('Overview', '/admin', icon='dashboard'),
-            MenuGroup(
-                'Resources',
-                [
-                    MenuItem('Users', '/admin/users', icon='user'),
-                    MenuItem('Groups', '/admin/groups', icon='users'),
-                    MenuItem('Species', '/admin/species', icon='feather'),
-                    MenuItem('Read more', '/admin/read-more', external=True),
-                ],
-                collapsible=True,
-                icon='bucket',
-            ),
-            MenuItem('Families', '/admin/families'),
-            MenuItem('Orders', '/admin/orders', external=True),
+            *dashboard_menus,
+            *resource_menus,
+            *tool_menus,
         ]
 
     def _default_user_menu_config(self, request: AdminRequest, user_menu: UserMenu) -> None:
@@ -74,7 +78,7 @@ class OhMyAdmin(Router):
     def get_user_menu(self, request: AdminRequest) -> UserMenu:
         user_menu = UserMenu(name='<anon.>', items=[], photo='')
         self.user_menu_config(request, user_menu)
-        user_menu.items.append(MenuItem('Log out', self.url_for(request, 'logout')))
+        user_menu.items.append(MenuItem('Log out', path_name='logout'))
         return user_menu
 
     def bootstrap(self) -> None:
@@ -101,18 +105,38 @@ class OhMyAdmin(Router):
         return Response(content, status_code, media_type='text/html')
 
     def url_for(self, request: AdminRequest, path_name: str, **path_params: typing.Any) -> str:
-        path_name = self.path_name(path_name)
         return request.url_for(path_name, **path_params)
 
     def static_url(self, request: AdminRequest, path: str) -> str:
         return self.url_for(request, 'static', path=path) + f'?{time.time()}'
 
     def welcome_view(self, request: Request) -> Response:
-        request = AdminRequest.from_starlette(request, self)
-        return self.render_to_response(request, 'index.html')
-
-    def path_name(self, path_name: str) -> str:
-        return f'{self.app_name}:{path_name}'
+        request = AdminRequest.from_starlette(request)
+        return self.render_to_response(request, 'ohmyadmin/index.html')
 
     async def logout_view(self, request: Request) -> Response:
         return Response('')
+
+    def _create_jinja_env(self) -> jinja2.Environment:
+        jinja_env = jinja2.Environment(
+            extensions=['jinja2.ext.i18n', 'jinja2.ext.debug'],
+            loader=jinja2.ChoiceLoader(
+                [
+                    jinja2.loaders.PackageLoader('ohmyadmin'),
+                    jinja2.loaders.FileSystemLoader(self.template_dirs or []),
+                ]
+            ),
+        )
+        jinja_env.globals.update(
+            {
+                'admin': self,
+                'static': self.static_url,
+                'url': self.url_for,
+                'icon': tabler_icon,
+            }
+        )
+        return jinja_env
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        scope['ohmyadmin'] = self
+        return await super().__call__(scope, receive, send)

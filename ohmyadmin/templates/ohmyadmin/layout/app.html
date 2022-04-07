@@ -1,24 +1,24 @@
-{% extends 'layout/base.html' %}
+{% extends 'ohmyadmin/layout/base.html' %}
 
 {% set html_tag_classes = 'h-full bg-gray-100' %}
 {% set bidy_tag_classes = 'h-full' %}
 
 {% block main %}
     <div x-data="{sidebarMenuOpen: false}">
-        {% include 'layout/_offcanvas.html' %}
-        {% include 'layout/_sidebar.html' %}
+        {% include 'ohmyadmin/layout/_offcanvas.html' %}
+        {% include 'ohmyadmin/layout/_sidebar.html' %}
 
         <div class="md:pl-64 flex flex-col flex-1">
             <div class="relative z-10 flex-shrink-0 flex h-16">
-                {% include 'layout/_sidebar_toggle.html' %}
+                {% include 'ohmyadmin/layout/_sidebar_toggle.html' %}
 
                 <div class="flex-1 px-4 flex justify-between sm:px-6 lg:max-w-7xl lg:mx-auto lg:px-8">
                     <div class="flex-1 flex">
-                        {% include 'global_search_form.html' %}
+                        {% include 'ohmyadmin/global_search_form.html' %}
                     </div>
                     <div class="ml-4 flex items-center md:ml-6">
-                        {% include 'notifications.html' %}
-                        {% include 'user_menu.html' %}
+                        {% include 'ohmyadmin/notifications.html' %}
+                        {% include 'ohmyadmin/user_menu.html' %}
                     </div>
                 </div>
             </div>

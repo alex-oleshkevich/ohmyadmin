@@ -1,0 +1,7 @@
+{% extends 'ohmyadmin/layout/tool.html' %}
+
+{% block content %}
+    DELETE FILE<br />
+    <a href="{{ url(request, 'filemanager') }}">list files</a>
+    <a href="{{ url(request, 'create_file_view') }}">create file</a>
+{% endblock %}

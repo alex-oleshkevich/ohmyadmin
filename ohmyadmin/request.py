@@ -8,10 +8,16 @@ if typing.TYPE_CHECKING:
 
 
 class AdminRequest(Request):
-    admin: OhMyAdmin
-
     @classmethod
-    def from_starlette(cls, request: Request, admin: OhMyAdmin) -> AdminRequest:
-        admin_request = AdminRequest(scope=request.scope, receive=request.receive, send=request._send)
-        admin_request.admin = admin
-        return admin_request
+    def from_starlette(cls, request: Request) -> AdminRequest:
+        return AdminRequest(scope=request.scope, receive=request.receive, send=request._send)
+
+    @property
+    def admin(self) -> OhMyAdmin:
+        return self.scope['ohmyadmin']
+
+    def url_for(self, name: str, **path_params: typing.Any) -> str:
+        return super().url_for(self.path_name(name), **path_params)
+
+    def path_name(self, path_name: str) -> str:
+        return f'{self.admin.app_name}:{path_name}'

@@ -9,9 +9,10 @@
     {% set default_classes = 'text-gray-600 hover:bg-gray-50 hover:text-gray-900' %}
     {% set active_classes = 'bg-blue-100 text-blue-900' %}
     {% set style_classes = active_classes if is_active else default_classes %}
+    {% set url = menu_item.url(request) %}
 
     <a
-        href="{{ menu_item.url }}"
+        href="{{ url }}"
         {% if menu_item.external %}target="_blank"{% endif %}
         class="group w-full flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md select-none active:text-blue-900 active:bg-blue-200 {{ style_classes }}">
         {% if menu_item.icon %}

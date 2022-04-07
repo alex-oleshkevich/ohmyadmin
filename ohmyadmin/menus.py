@@ -4,17 +4,35 @@ from ohmyadmin.request import AdminRequest
 
 
 class MenuItem:
-    def __init__(self, label: str, url: str, icon: str = '', external: bool = False) -> None:
+    def __init__(
+        self,
+        label: str,
+        *,
+        url: str | None = None,
+        icon: str = '',
+        external: bool = False,
+        path_name: str | None = None,
+        path_params: dict[str, typing.Any] | None = None,
+    ) -> None:
+        assert url or path_name, 'Either "url" or "path_name" argument expected.'
         self.label = label
-        self.url = url
+        self._url = url
+        self.path_name = path_name
+        self.path_params = path_params or {}
         self.icon = icon
         self.external = external
 
+    def url(self, request: AdminRequest) -> str:
+        if self._url:
+            return self._url
+        assert self.path_name
+        return request.url_for(self.path_name, **self.path_params)
+
     def is_active(self, request: AdminRequest) -> bool:
-        return self.url in request.url.path
+        return request.url.path in self.url(request)
 
     def render(self, request: AdminRequest) -> str:
-        return request.admin.render('menu_item.html', {'request': request, 'menu_item': self})
+        return request.admin.render('ohmyadmin/menu_item.html', {'request': request, 'menu_item': self})
 
     def __str__(self) -> str:
         return self.label
@@ -31,7 +49,7 @@ class MenuGroup:
         return any([item.is_active(request) for item in self.items])
 
     def render(self, request: AdminRequest) -> str:
-        return request.admin.render('menu_group.html', {'request': request, 'group': self})
+        return request.admin.render('ohmyadmin/menu_group.html', {'request': request, 'group': self})
 
     def __str__(self) -> str:
         return self.label

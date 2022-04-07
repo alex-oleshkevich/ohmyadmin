@@ -53,6 +53,8 @@ repos:
       hooks:
           - id: mypy
             files: "ohmyadmin"
+            additional_dependencies:
+                - types-python-slugify
 
     -   repo: https://github.com/myint/docformatter.git
         rev: v1.4
