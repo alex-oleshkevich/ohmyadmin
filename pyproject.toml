@@ -27,6 +27,8 @@ Jinja2 = "^3.1.1"
 starlette = "^0.19.0"
 tabler-icons = {git = "https://github.com/alex-oleshkevich/python-tabler-icons.git"}
 python-slugify = "^6.1.1"
+SQLAlchemy = {extras = ["mypy"], version = "^1.4.35"}
+asyncpg = "^0.25.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.0"

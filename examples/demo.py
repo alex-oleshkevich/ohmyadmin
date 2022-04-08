@@ -118,6 +118,7 @@ class SpeciesResource(Resource):
 
 this_dir = pathlib.Path(__file__).parent
 admin = OhMyAdmin(
+    database_url='postgresql+asyncpg://postgres:postgres@localhost/haj',
     user_menu_config=user_menu_config,
     template_dirs=[this_dir / 'templates'],
     tools=[Backup, FileManager, Calendar, Photos],

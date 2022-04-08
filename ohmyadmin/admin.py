@@ -6,6 +6,8 @@ import os
 import time
 import typing
 from slugify import slugify
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import BaseRoute, Mount, Route, Router
@@ -33,12 +35,15 @@ def ensure_slug(obj: typing.Type[T]) -> typing.Type[T]:
 class OhMyAdmin(Router):
     def __init__(
         self,
+        database_url: str,
         template_dirs: list[str | os.PathLike] | None = None,
         user_menu_config: typing.Callable[[Request, UserMenu], None] | None = None,
         dashboards: list[typing.Type[Dashboard]] | None = None,
         resources: list[typing.Type[Resource]] | None = None,
         tools: list[typing.Type[Tool]] | None = None,
     ) -> None:
+        self.db_engine = create_async_engine(database_url, future=True)
+        self.session_maker = sessionmaker(self.db_engine, expire_on_commit=False, class_=AsyncSession)
         self.template_dirs = template_dirs or []
         self.user_menu_config = user_menu_config or self._default_user_menu_config
 
@@ -162,4 +167,6 @@ class OhMyAdmin(Router):
         scope['ohmyadmin'] = self
         scope.setdefault("state", {})
         scope['state']['admin'] = self
-        return await super().__call__(scope, receive, send)
+        async with self.session_maker() as session:
+            scope['state']['db'] = session
+            return await super().__call__(scope, receive, send)
