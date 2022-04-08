@@ -1,4 +1,5 @@
 import pathlib
+import typing
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import Response
@@ -7,6 +8,7 @@ from starlette.routing import Mount, Route
 from ohmyadmin.admin import OhMyAdmin
 from ohmyadmin.dashboards import Dashboard
 from ohmyadmin.menus import MenuItem, UserMenu
+from ohmyadmin.metrics import StatMetric
 from ohmyadmin.resources import Resource
 from ohmyadmin.routing import route
 from ohmyadmin.tools import Tool
@@ -66,9 +68,32 @@ class Photos(Tool):
         return self.admin.render_to_response(request, 'photos.html')
 
 
+class NewUsersMetric(StatMetric):
+    title = 'New users'
+
+    async def compute(self, request: Request) -> typing.Any:
+        return 42
+
+
+class NewBirdsMetric(StatMetric):
+    title = 'New birds'
+
+    async def compute(self, request: Request) -> typing.Any:
+        return 2
+
+
+class ObservationTrendMetric(StatMetric):
+    title = 'Observation Trend'
+    columns = 6
+
+    async def compute(self, request: Request) -> typing.Any:
+        return 2
+
+
 class OverviewDashboard(Dashboard):
     title = 'Overview'
     icon = 'dashboard'
+    metrics = [NewUsersMetric, NewBirdsMetric, ObservationTrendMetric]
 
 
 class UserResource(Resource):

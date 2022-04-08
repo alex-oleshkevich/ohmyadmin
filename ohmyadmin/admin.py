@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import functools
 import jinja2
 import os
 import time
@@ -120,6 +121,8 @@ class OhMyAdmin(Router):
         context.update(
             {
                 'request': request,
+                'static': functools.partial(self.static_url, request),
+                'url': functools.partial(self.url_for, request),
             }
         )
         content = self.render(template_name, context)
@@ -150,8 +153,6 @@ class OhMyAdmin(Router):
         jinja_env.globals.update(
             {
                 'admin': self,
-                'static': self.static_url,
-                'url': self.url_for,
                 'icon': tabler_icon,
             }
         )

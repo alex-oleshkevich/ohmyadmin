@@ -1,8 +1,11 @@
 module.exports = {
     mode: 'jit',
-    content: ['../ohmyadmin/**/*.html'],
+    content: [
+        '../ohmyadmin/**/*.html',
+        '../examples/**/*.html',
+    ],
     safelist: [
-        {pattern: /./},
+        {pattern: /.*/},
     ],
     plugins: [
         require('@tailwindcss/forms'),
