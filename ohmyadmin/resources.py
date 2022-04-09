@@ -114,6 +114,7 @@ class Resource(HasFields):
     page_size_query_param: str = 'page_size'
     ordering_query_param: str = 'ordering[]'
     search_query_param: str = 'search'
+    search_placeholder: str = 'Search %(title_plural)s'
     filters: list[Filter] = []
     query_joins: list[sa.Column] = []
     query_select_related: list[sa.Column] = []
@@ -167,6 +168,7 @@ class Resource(HasFields):
             {
                 'page': page,
                 'request': request,
+                'search_placeholder': self.search_placeholder % {'title_plural': self.title_plural.lower()},
                 'search_value': get_search_value(request, self.search_query_param),
                 'sorting_helper': SortingHelper(self.ordering_query_param),
                 'resource': self,
