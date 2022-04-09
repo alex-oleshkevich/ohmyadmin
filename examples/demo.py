@@ -1,5 +1,7 @@
 import pathlib
+import sqlalchemy as sa
 import typing
+from sqlalchemy.orm import declarative_base, relationship
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import Response
@@ -7,11 +9,104 @@ from starlette.routing import Mount, Route
 
 from ohmyadmin.admin import OhMyAdmin
 from ohmyadmin.dashboards import Dashboard
+from ohmyadmin.fields import Field
 from ohmyadmin.menus import MenuItem, UserMenu
 from ohmyadmin.metrics import StatMetric
 from ohmyadmin.resources import Resource
 from ohmyadmin.routing import route
 from ohmyadmin.tools import Tool
+
+Base = declarative_base()
+
+
+# class User(Base):
+#     __tablename__ = "users"
+#     id = sa.Column(sa.BigInteger, primary_key=True, autoincrement=True)
+#     first_name = sa.Column(sa.String(128))
+#     last_name = sa.Column(sa.String(128))
+#     email = sa.Column(sa.String(128), unique=True, index=True)
+#     password = sa.Column(sa.String(128))
+#     permissions = sa.Column(sa.JSON, default=list, server_default='[]')
+#     created_at = sa.Column(
+#         sa.DateTime(timezone=True),
+#         nullable=False,
+#         default=datetime.datetime.now,
+#         server_default=sa.func.now(),
+#     )
+#
+#     @property
+#     def avatar(self):
+#         email_hash = hashlib.md5(self.email.encode()).hexdigest()
+#         return f"https://www.gravatar.com/avatar/{email_hash}?s=128&d=identicon"
+#
+#     def get_id(self) -> int:
+#         return self.id
+#
+#     def get_hashed_password(self) -> str:
+#         return self.password
+#
+#     def get_display_name(self) -> str:
+#         return f"{self.first_name} {self.last_name}".strip() or self.email
+#
+#     def get_scopes(self) -> list[str]:
+#         return self.permissions
+#
+#     __str__ = get_display_name
+
+
+class Order(Base):
+    __tablename__ = "orders"
+    id = sa.Column(sa.BigInteger, primary_key=True, autoincrement=True)
+    name_be = sa.Column(sa.String(256), nullable=True, default='')
+    name_ru = sa.Column(sa.String(256), nullable=True, default='')
+    name_la = sa.Column(sa.String(256), unique=True)
+
+    @property
+    def name(self) -> str:
+        if self.name_ru:
+            return f'{self.name_la} ({self.name_ru})'
+        return self.name_la
+
+    def __str__(self) -> str:
+        return self.name_be
+
+
+class Family(Base):
+    __tablename__ = "families"
+    id = sa.Column(sa.BigInteger, primary_key=True, autoincrement=True)
+    name_be = sa.Column(sa.String(256), nullable=True, server_default='', default='')
+    name_ru = sa.Column(sa.String(256), nullable=True, server_default='', default='')
+    name_la = sa.Column(sa.String(256), nullable=False, unique=True)
+    order_id = sa.Column(sa.ForeignKey("orders.id"), nullable=False)
+    order = relationship(Order)
+
+    @property
+    def name(self) -> str:
+        if self.name_ru:
+            return f'{self.name_la} ({self.name_ru})'
+        return self.name_la
+
+    def __str__(self) -> str:
+        return self.name_be
+
+
+#
+# class Genus(Base):
+#     __tablename__ = "genea"
+#     name_be = sa.Column(sa.String(256), nullable=True, server_default='', default='')
+#     name_ru = sa.Column(sa.String(256), nullable=True, server_default='', default='')
+#     name_la = sa.Column(sa.String(256), nullable=False, unique=True)
+#     family_id = sa.Column(sa.ForeignKey("families.id"), nullable=False)
+#     family = relationship(Family)
+#
+#     @property
+#     def name(self) -> str:
+#         if self.name_ru:
+#             return f'{self.name_la} ({self.name_ru})'
+#         return self.name_la
+#
+#     def __str__(self) -> str:
+#         return self.name_be
 
 
 def user_menu_config(request: Request, user_menu: UserMenu) -> None:
@@ -96,24 +191,46 @@ class OverviewDashboard(Dashboard):
     metrics = [NewUsersMetric, NewBirdsMetric, ObservationTrendMetric]
 
 
-class UserResource(Resource):
-    title = 'User'
-    icon = 'users'
+# class UserResource(Resource):
+#     title = 'User'
+#     icon = 'users'
+#     entity_class = User
 
 
 class OrdersResource(Resource):
     title = 'Order'
     icon = 'list'
+    fields = [
+        Field('name_ru', title='Name (rus)', searchable=True, sortable=True),
+        Field('name_be', title='Name (bel)', searchable=True, sortable=True),
+        Field('name_la', title='Name (lat)', searchable=True, sortable=True),
+    ]
+    entity_class = Order
 
 
 class FalimiesResource(Resource):
     title = 'Family'
     icon = 'list'
+    fields = [
+        Field('name_ru', title='Name (rus)', searchable=True, sortable=True),
+        Field('name_be', title='Name (bel)', searchable=True, sortable=True),
+        Field('name_la', title='Name (lat)', searchable=True, sortable=True),
+        Field('order', title='Order', searchable=True, sortable=True, source='order.name_ru'),
+    ]
+    entity_class = Family
+    query_joins = [Order]
+    query_select_related = [Family.order]
 
 
-class SpeciesResource(Resource):
-    title = 'Specie'
-    icon = 'feather'
+# class GenusResource(Resource):
+#     title = 'Genera'
+#     icon = 'feather'
+#     entity_class = Genus
+
+
+# class SpeciesResource(Resource):
+#     title = 'Specie'
+#     icon = 'feather'
 
 
 this_dir = pathlib.Path(__file__).parent
@@ -123,7 +240,7 @@ admin = OhMyAdmin(
     template_dirs=[this_dir / 'templates'],
     tools=[Backup, FileManager, Calendar, Photos],
     dashboards=[OverviewDashboard],
-    resources=[UserResource, OrdersResource, FalimiesResource, SpeciesResource],
+    resources=[OrdersResource, FalimiesResource],
 )
 
 app = Starlette(

@@ -1,0 +1,335 @@
+<!-- metrics -->
+<div class="max-w-7xl mx-auto px-4 mt-6 sm:px-6 lg:px-8">
+    <div>
+        <h2 class="text-gray-500 text-xs font-medium uppercase tracking-wide">Pinned Projects</h2>
+        <ul role="list" class="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-2 xl:grid-cols-4 mt-3" x-max="1">
+
+            <li class="relative col-span-1 flex shadow-sm rounded-md">
+                <div
+                    class="flex-shrink-0 flex items-center justify-center w-16 bg-pink-600 text-white text-sm font-medium rounded-l-md">
+                    GA
+                </div>
+                <div
+                    class="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
+                    <div class="flex-1 px-4 py-2 text-sm truncate">
+                        <a href="#" class="text-gray-900 font-medium hover:text-gray-600">
+                            GraphQL API
+                        </a>
+                        <p class="text-gray-500">12 Members</p>
+                    </div>
+                    <div x-data="Components.menu({ open: false })" x-init="init()"
+                         @keydown.escape.stop="open = false; focusButton()" @click.away="onClickAway($event)"
+                         class="flex-shrink-0 pr-2">
+                        <button type="button"
+                                class="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                                id="pinned-project-options-menu-0-button" x-ref="button" @click="onButtonClick()"
+                                @keyup.space.prevent="onButtonEnter()" @keydown.enter.prevent="onButtonEnter()"
+                                aria-expanded="false" aria-haspopup="true" x-bind:aria-expanded="open.toString()"
+                                @keydown.arrow-up.prevent="onArrowUp()" @keydown.arrow-down.prevent="onArrowDown()">
+                            <span class="sr-only">Open options</span>
+                            <svg class="w-5 h-5" x-description="Heroicon name: solid/dots-vertical"
+                                 xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                                 aria-hidden="true">
+                                <path
+                                    d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path>
+                            </svg>
+                        </button>
+
+                        <div x-show="open" x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="transform opacity-0 scale-95"
+                             x-transition:enter-end="transform opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="transform opacity-100 scale-100"
+                             x-transition:leave-end="transform opacity-0 scale-95"
+                             class="z-10 mx-3 origin-top-right absolute right-10 top-3 w-48 mt-1 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-200 focus:outline-none"
+                             x-ref="menu-items" x-description="Dropdown menu, show/hide based on menu state."
+                             x-bind:aria-activedescendant="activeDescendant" role="menu" aria-orientation="vertical"
+                             aria-labelledby="pinned-project-options-menu-0-button" tabindex="-1"
+                             @keydown.arrow-up.prevent="onArrowUp()" @keydown.arrow-down.prevent="onArrowDown()"
+                             @keydown.tab="open = false" @keydown.enter.prevent="open = false; focusButton()"
+                             @keyup.space.prevent="open = false; focusButton()" style="display: none;">
+                            <div class="py-1" role="none">
+                                <a href="#" class="text-gray-700 block px-4 py-2 text-sm" x-state:on="Active"
+                                   x-state:off="Not Active"
+                                   :class="{ 'bg-gray-100 text-gray-900': activeIndex === 0, 'text-gray-700': !(activeIndex === 0) }"
+                                   role="menuitem" tabindex="-1" id="pinned-project-options-menu-0-item-0"
+                                   @mouseenter="activeIndex = 0" @mouseleave="activeIndex = -1"
+                                   @click="open = false; focusButton()">View</a>
+                            </div>
+                            <div class="py-1" role="none">
+                                <a href="#" class="text-gray-700 block px-4 py-2 text-sm"
+                                   :class="{ 'bg-gray-100 text-gray-900': activeIndex === 1, 'text-gray-700': !(activeIndex === 1) }"
+                                   role="menuitem" tabindex="-1" id="pinned-project-options-menu-0-item-1"
+                                   @mouseenter="activeIndex = 1" @mouseleave="activeIndex = -1"
+                                   @click="open = false; focusButton()">Removed from pinned</a>
+                                <a href="#" class="text-gray-700 block px-4 py-2 text-sm"
+                                   :class="{ 'bg-gray-100 text-gray-900': activeIndex === 2, 'text-gray-700': !(activeIndex === 2) }"
+                                   role="menuitem" tabindex="-1" id="pinned-project-options-menu-0-item-2"
+                                   @mouseenter="activeIndex = 2" @mouseleave="activeIndex = -1"
+                                   @click="open = false; focusButton()">Share</a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </li>
+
+            <li class="relative col-span-1 flex shadow-sm rounded-md">
+                <div
+                    class="flex-shrink-0 flex items-center justify-center w-16 bg-purple-600 text-white text-sm font-medium rounded-l-md">
+                    NB
+                </div>
+                <div
+                    class="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
+                    <div class="flex-1 px-4 py-2 text-sm truncate">
+                        <a href="#" class="text-gray-900 font-medium hover:text-gray-600">
+                            New Benefits Plan
+                        </a>
+                        <p class="text-gray-500">8 Members</p>
+                    </div>
+                    <div x-data="Components.menu({ open: false })" x-init="init()"
+                         @keydown.escape.stop="open = false; focusButton()" @click.away="onClickAway($event)"
+                         class="flex-shrink-0 pr-2">
+                        <button type="button"
+                                class="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                                id="pinned-project-options-menu-1-button" x-ref="button" @click="onButtonClick()"
+                                @keyup.space.prevent="onButtonEnter()" @keydown.enter.prevent="onButtonEnter()"
+                                aria-expanded="false" aria-haspopup="true" x-bind:aria-expanded="open.toString()"
+                                @keydown.arrow-up.prevent="onArrowUp()" @keydown.arrow-down.prevent="onArrowDown()">
+                            <span class="sr-only">Open options</span>
+                            <svg class="w-5 h-5" x-description="Heroicon name: solid/dots-vertical"
+                                 xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                                 aria-hidden="true">
+                                <path
+                                    d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path>
+                            </svg>
+                        </button>
+
+                        <div x-show="open" x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="transform opacity-0 scale-95"
+                             x-transition:enter-end="transform opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="transform opacity-100 scale-100"
+                             x-transition:leave-end="transform opacity-0 scale-95"
+                             class="z-10 mx-3 origin-top-right absolute right-10 top-3 w-48 mt-1 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-200 focus:outline-none"
+                             x-ref="menu-items" x-description="Dropdown menu, show/hide based on menu state."
+                             x-bind:aria-activedescendant="activeDescendant" role="menu" aria-orientation="vertical"
+                             aria-labelledby="pinned-project-options-menu-1-button" tabindex="-1"
+                             @keydown.arrow-up.prevent="onArrowUp()" @keydown.arrow-down.prevent="onArrowDown()"
+                             @keydown.tab="open = false" @keydown.enter.prevent="open = false; focusButton()"
+                             @keyup.space.prevent="open = false; focusButton()" style="display: none;">
+                            <div class="py-1" role="none">
+                                <a href="#" class="text-gray-700 block px-4 py-2 text-sm" x-state:on="Active"
+                                   x-state:off="Not Active"
+                                   :class="{ 'bg-gray-100 text-gray-900': activeIndex === 0, 'text-gray-700': !(activeIndex === 0) }"
+                                   role="menuitem" tabindex="-1" id="pinned-project-options-menu-1-item-0"
+                                   @mouseenter="activeIndex = 0" @mouseleave="activeIndex = -1"
+                                   @click="open = false; focusButton()">View</a>
+                            </div>
+                            <div class="py-1" role="none">
+                                <a href="#" class="text-gray-700 block px-4 py-2 text-sm"
+                                   :class="{ 'bg-gray-100 text-gray-900': activeIndex === 1, 'text-gray-700': !(activeIndex === 1) }"
+                                   role="menuitem" tabindex="-1" id="pinned-project-options-menu-1-item-1"
+                                   @mouseenter="activeIndex = 1" @mouseleave="activeIndex = -1"
+                                   @click="open = false; focusButton()">Removed from pinned</a>
+                                <a href="#" class="text-gray-700 block px-4 py-2 text-sm"
+                                   :class="{ 'bg-gray-100 text-gray-900': activeIndex === 2, 'text-gray-700': !(activeIndex === 2) }"
+                                   role="menuitem" tabindex="-1" id="pinned-project-options-menu-1-item-2"
+                                   @mouseenter="activeIndex = 2" @mouseleave="activeIndex = -1"
+                                   @click="open = false; focusButton()">Share</a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </li>
+
+            <li class="relative col-span-1 flex shadow-sm rounded-md">
+                <div
+                    class="flex-shrink-0 flex items-center justify-center w-16 bg-yellow-500 text-white text-sm font-medium rounded-l-md">
+                    OE
+                </div>
+                <div
+                    class="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
+                    <div class="flex-1 px-4 py-2 text-sm truncate">
+                        <a href="#" class="text-gray-900 font-medium hover:text-gray-600">
+                            Onboarding Emails
+                        </a>
+                        <p class="text-gray-500">14 Members</p>
+                    </div>
+                    <div x-data="Components.menu({ open: false })" x-init="init()"
+                         @keydown.escape.stop="open = false; focusButton()" @click.away="onClickAway($event)"
+                         class="flex-shrink-0 pr-2">
+                        <button type="button"
+                                class="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                                id="pinned-project-options-menu-2-button" x-ref="button" @click="onButtonClick()"
+                                @keyup.space.prevent="onButtonEnter()" @keydown.enter.prevent="onButtonEnter()"
+                                aria-expanded="false" aria-haspopup="true" x-bind:aria-expanded="open.toString()"
+                                @keydown.arrow-up.prevent="onArrowUp()" @keydown.arrow-down.prevent="onArrowDown()">
+                            <span class="sr-only">Open options</span>
+                            <svg class="w-5 h-5" x-description="Heroicon name: solid/dots-vertical"
+                                 xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                                 aria-hidden="true">
+                                <path
+                                    d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path>
+                            </svg>
+                        </button>
+
+                        <div x-show="open" x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="transform opacity-0 scale-95"
+                             x-transition:enter-end="transform opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="transform opacity-100 scale-100"
+                             x-transition:leave-end="transform opacity-0 scale-95"
+                             class="z-10 mx-3 origin-top-right absolute right-10 top-3 w-48 mt-1 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-200 focus:outline-none"
+                             x-ref="menu-items" x-description="Dropdown menu, show/hide based on menu state."
+                             x-bind:aria-activedescendant="activeDescendant" role="menu" aria-orientation="vertical"
+                             aria-labelledby="pinned-project-options-menu-2-button" tabindex="-1"
+                             @keydown.arrow-up.prevent="onArrowUp()" @keydown.arrow-down.prevent="onArrowDown()"
+                             @keydown.tab="open = false" @keydown.enter.prevent="open = false; focusButton()"
+                             @keyup.space.prevent="open = false; focusButton()" style="display: none;">
+                            <div class="py-1" role="none">
+                                <a href="#" class="text-gray-700 block px-4 py-2 text-sm" x-state:on="Active"
+                                   x-state:off="Not Active"
+                                   :class="{ 'bg-gray-100 text-gray-900': activeIndex === 0, 'text-gray-700': !(activeIndex === 0) }"
+                                   role="menuitem" tabindex="-1" id="pinned-project-options-menu-2-item-0"
+                                   @mouseenter="activeIndex = 0" @mouseleave="activeIndex = -1"
+                                   @click="open = false; focusButton()">View</a>
+                            </div>
+                            <div class="py-1" role="none">
+                                <a href="#" class="text-gray-700 block px-4 py-2 text-sm"
+                                   :class="{ 'bg-gray-100 text-gray-900': activeIndex === 1, 'text-gray-700': !(activeIndex === 1) }"
+                                   role="menuitem" tabindex="-1" id="pinned-project-options-menu-2-item-1"
+                                   @mouseenter="activeIndex = 1" @mouseleave="activeIndex = -1"
+                                   @click="open = false; focusButton()">Removed from pinned</a>
+                                <a href="#" class="text-gray-700 block px-4 py-2 text-sm"
+                                   :class="{ 'bg-gray-100 text-gray-900': activeIndex === 2, 'text-gray-700': !(activeIndex === 2) }"
+                                   role="menuitem" tabindex="-1" id="pinned-project-options-menu-2-item-2"
+                                   @mouseenter="activeIndex = 2" @mouseleave="activeIndex = -1"
+                                   @click="open = false; focusButton()">Share</a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </li>
+
+            <li class="relative col-span-1 flex shadow-sm rounded-md">
+                <div
+                    class="flex-shrink-0 flex items-center justify-center w-16 bg-green-500 text-white text-sm font-medium rounded-l-md">
+                    IA
+                </div>
+                <div
+                    class="flex-1 flex items-center justify-between border-t border-r border-b border-gray-200 bg-white rounded-r-md truncate">
+                    <div class="flex-1 px-4 py-2 text-sm truncate">
+                        <a href="#" class="text-gray-900 font-medium hover:text-gray-600">
+                            iOS App
+                        </a>
+                        <p class="text-gray-500">2 Members</p>
+                    </div>
+                    <div x-data="Components.menu({ open: false })" x-init="init()"
+                         @keydown.escape.stop="open = false; focusButton()" @click.away="onClickAway($event)"
+                         class="flex-shrink-0 pr-2">
+                        <button type="button"
+                                class="w-8 h-8 bg-white inline-flex items-center justify-center text-gray-400 rounded-full hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                                id="pinned-project-options-menu-3-button" x-ref="button" @click="onButtonClick()"
+                                @keyup.space.prevent="onButtonEnter()" @keydown.enter.prevent="onButtonEnter()"
+                                aria-expanded="false" aria-haspopup="true" x-bind:aria-expanded="open.toString()"
+                                @keydown.arrow-up.prevent="onArrowUp()" @keydown.arrow-down.prevent="onArrowDown()">
+                            <span class="sr-only">Open options</span>
+                            <svg class="w-5 h-5" x-description="Heroicon name: solid/dots-vertical"
+                                 xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                                 aria-hidden="true">
+                                <path
+                                    d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"></path>
+                            </svg>
+                        </button>
+
+                        <div x-show="open" x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="transform opacity-0 scale-95"
+                             x-transition:enter-end="transform opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="transform opacity-100 scale-100"
+                             x-transition:leave-end="transform opacity-0 scale-95"
+                             class="z-10 mx-3 origin-top-right absolute right-10 top-3 w-48 mt-1 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 divide-y divide-gray-200 focus:outline-none"
+                             x-ref="menu-items" x-description="Dropdown menu, show/hide based on menu state."
+                             x-bind:aria-activedescendant="activeDescendant" role="menu" aria-orientation="vertical"
+                             aria-labelledby="pinned-project-options-menu-3-button" tabindex="-1"
+                             @keydown.arrow-up.prevent="onArrowUp()" @keydown.arrow-down.prevent="onArrowDown()"
+                             @keydown.tab="open = false" @keydown.enter.prevent="open = false; focusButton()"
+                             @keyup.space.prevent="open = false; focusButton()" style="display: none;">
+                            <div class="py-1" role="none">
+                                <a href="#" class="text-gray-700 block px-4 py-2 text-sm" x-state:on="Active"
+                                   x-state:off="Not Active"
+                                   :class="{ 'bg-gray-100 text-gray-900': activeIndex === 0, 'text-gray-700': !(activeIndex === 0) }"
+                                   role="menuitem" tabindex="-1" id="pinned-project-options-menu-3-item-0"
+                                   @mouseenter="activeIndex = 0" @mouseleave="activeIndex = -1"
+                                   @click="open = false; focusButton()">View</a>
+                            </div>
+                            <div class="py-1" role="none">
+                                <a href="#" class="text-gray-700 block px-4 py-2 text-sm"
+                                   :class="{ 'bg-gray-100 text-gray-900': activeIndex === 1, 'text-gray-700': !(activeIndex === 1) }"
+                                   role="menuitem" tabindex="-1" id="pinned-project-options-menu-3-item-1"
+                                   @mouseenter="activeIndex = 1" @mouseleave="activeIndex = -1"
+                                   @click="open = false; focusButton()">Removed from pinned</a>
+                                <a href="#" class="text-gray-700 block px-4 py-2 text-sm"
+                                   :class="{ 'bg-gray-100 text-gray-900': activeIndex === 2, 'text-gray-700': !(activeIndex === 2) }"
+                                   role="menuitem" tabindex="-1" id="pinned-project-options-menu-3-item-2"
+                                   @mouseenter="activeIndex = 2" @mouseleave="activeIndex = -1"
+                                   @click="open = false; focusButton()">Share</a>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </li>
+
+        </ul>
+    </div>
+</div>
+
+<!-- metrics row 2 -->
+<div class="max-w-7xl mx-auto px-4 mt-6 sm:px-6 lg:px-8">
+    <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
+
+        <div class="px-4 py-5 bg-white shadow rounded-lg overflow-hidden sm:p-6">
+            <dt class="text-sm font-medium text-gray-500 truncate">
+                Total Subscribers
+            </dt>
+            <dd class="mt-1 text-3xl flex items-baseline">
+                <p class="text-2xl font-semibold text-gray-900">
+                    71,897
+                </p>
+                <p class="ml-2 flex items-baseline text-sm font-semibold text-green-600">
+                    <svg class="self-center flex-shrink-0 h-5 w-5 text-green-500"
+                         x-description="Heroicon name: solid/arrow-sm-up" xmlns="http://www.w3.org/2000/svg"
+                         viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd"
+                              d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z"
+                              clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="sr-only">Increased by</span> 122
+                </p>
+            </dd>
+        </div>
+
+        <div class="px-4 py-5 bg-white shadow rounded-lg overflow-hidden sm:p-6">
+            <dt class="text-sm font-medium text-gray-500 truncate">
+                Avg. Open Rate
+            </dt>
+            <dd class="mt-1 text-3xl font-semibold text-gray-900">
+                58.16%
+            </dd>
+        </div>
+
+        <div class="px-4 py-5 bg-white shadow rounded-lg overflow-hidden sm:p-6">
+            <dt class="text-sm font-medium text-gray-500 truncate">
+                Avg. Click Rate
+            </dt>
+            <dd class="mt-1 text-3xl font-semibold text-gray-900">
+                24.57%
+            </dd>
+        </div>
+
+    </dl>
+</div>

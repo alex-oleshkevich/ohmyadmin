@@ -161,6 +161,7 @@ class OhMyAdmin(Router):
                 'icon': tabler_icon,
             }
         )
+        jinja_env.install_null_translations()
         return jinja_env
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:

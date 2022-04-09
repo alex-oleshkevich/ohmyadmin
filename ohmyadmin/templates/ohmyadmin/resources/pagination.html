@@ -1,0 +1,76 @@
+{% set button_classes = 'relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50' %}
+
+<div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+    <div class="flex-1 flex justify-between sm:hidden">
+        {% if page.total_pages > 1 %}
+            {% if page.has_previous %}
+                <a href="{{ request.url.include_query_params(page=page.previous_page) }}" class="{{ button_classes }}">
+                    {{ _('Previous') }}
+                </a>
+            {% endif %}
+            {% if page.has_next %}
+                <a href="{{ request.url.include_query_params(page=page.next_page) }}" class="ml-3 {{ button_classes }}">
+                    {{ _('Next') }}
+                </a>
+            {% endif %}
+        {% endif %}
+    </div>
+    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+        <div>
+            <p class="text-sm text-gray-700">
+                {% with start_index = page.start_index, end_index = page.end_index, total_rows = page.total_rows %}
+                    {% trans %}
+                        Showing
+                        <!-- space -->
+                        <span class="font-medium">{{ start_index }}</span>
+                        <!-- space -->
+                        to
+                        <!-- space -->
+                        <span class="font-medium">{{ end_index }}</span>
+                        <!-- space -->
+                        of
+                        <!-- space -->
+                        <span class="font-medium">{{ total_rows }}</span>
+                        <!-- space -->
+                        results
+                    {% endtrans %}
+                {% endwith %}
+            </p>
+        </div>
+
+        <div>
+            {% if page.total_pages > 1 %}
+                <nav class="relative z-0 inline-flex rounded-bl-md rounded-br-md shadow-sm -space-x-px"
+                     aria-label="Pagination">
+                    {% if page.has_previous %}
+                        <a href="{{ request.url.include_query_params(page=page.previous_page) }}"
+                           class="{{ button_classes }}">
+                            <span class="sr-only">{{ _('Previous') }}</span>
+                            {{ icon('chevron-left') }}
+                        </a>
+                    {% endif %}
+                    {% for page_number in page.iter_pages() %}
+                        {% set default_classes = 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50' %}
+                        {% set active_classes = 'z-10 bg-blue-50 border-blue-500 text-blue-600' %}
+                        {% set css_classes = active_classes if page_number == page.page else default_classes %}
+
+                        {% if page_number %}
+                            <a href="{{ request.url.include_query_params(page=page_number) }}" aria-current="page"
+                               class="{{ css_classes }} relative inline-flex items-center px-4 py-2 border text-sm font-medium">
+                                {{ page_number }}
+                            </a>
+                        {% else %}
+                            <span class="{{ button_classes}}">...</span>
+                        {% endif %}
+                    {% endfor %}
+
+                    <a href="{{ request.url.include_query_params(page=page.next_page) }}" class="{{ button_classes }}">
+                        <span class="sr-only">{{ _('Next') }}</span>
+                        {{ icon('chevron-right') }}
+                    </a>
+                </nav>
+            {% endif %}
+        </div>
+
+    </div>
+</div>

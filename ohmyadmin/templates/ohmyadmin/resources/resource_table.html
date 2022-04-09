@@ -1,0 +1,66 @@
+{% set header_cell_classes = 'px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider' %}
+
+{% macro sortable_header_cell(request, field, sorting_helper) %}
+    {% set current_ordering = sorting_helper.get_current_ordering(request, field.sort_by) %}
+    {% set ordering_index = sorting_helper.get_current_ordering_index(request, field.sort_by) %}
+    {% set next_ordering_url = sorting_helper.get_url(request, field.sort_by) %}
+    {% set should_show_index = sorting_helper.should_show_index(request) %}
+
+    <a href="{{ next_ordering_url }}" class="flex gap-2 items-center">
+        <span>{{ field.title }}</span>
+        <span class="flex items-center gap-1 text-gray-500">
+            {% if current_ordering == 'asc' %}
+                {{ icon('arrow-narrow-down') }}
+            {% elif current_ordering == 'desc' %}
+                {{ icon('arrow-narrow-up') }}
+            {% else %}
+                {{ icon('arrows-sort') }}
+            {% endif %}
+
+            {% if should_show_index and ordering_index %}
+                <span class="text-sm">{{ ordering_index }}</span>
+            {% endif %}
+        </span>
+    </a>
+{% endmacro %}
+
+{% macro header_cell(request, field) %}
+    {% if field.sortable %}
+        {{ sortable_header_cell(request, field, sorting_helper) }}
+    {% else %}
+        <span class="lg:pl-2">{{ field.title }}</span>
+    {% endif %}
+{% endmacro %}
+
+{% macro cell(request, column, obj) %}
+    <td>{{ column(request, obj) }}</td>
+{% endmacro %}
+
+<table class="min-w-full">
+    <thead>
+    <tr class="border-t border-gray-200">
+        {% for field in resource.fields %}
+            <th class="{{ header_cell_classes }}">
+                {{ header_cell(request, field) }}
+            </th>
+        {% endfor %}
+        <th class="{{ header_cell_classes }}"></th>
+    </tr>
+    </thead>
+    <tbody class="bg-white divide-y divide-gray-100">
+    {% for object in page %}
+        <tr>
+            {% for field in resource.fields %}
+                <td class="px-6 py-3 max-w-0 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {% with value = field.get_display_value(object) %}
+                        {% include field.cell_template %}
+                    {% endwith %}
+                </td>
+            {% endfor %}
+            <td class="px-6 py-3 whitespace-nowrap text-right text-sm font-medium">
+                <a href="#" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
