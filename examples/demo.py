@@ -316,7 +316,7 @@ class FamiliesResource(Resource):
         Field('name_ru', title='Name (rus)', searchable=True, sortable=True, link=True),
         Field('name_be', title='Name (bel)', searchable=True, sortable=True),
         Field('name_la', title='Name (lat)', searchable=True, sortable=True),
-        SelectField('order_id', title='Order', searchable=True, sortable=True, source='order.name_ru'),
+        IntegerSelectField('order_id', title='Order', searchable=True, sortable=True, source='order.name_ru'),
     ]
     entity_class = Family
     queryset = select(Family).join(Order).order_by(Family.name_ru).options(joinedload(Family.order))
@@ -327,15 +327,16 @@ class FamiliesResource(Resource):
 
 
 class GeneraResource(Resource):
-    title = 'Genera'
+    title = 'Genus'
+    title_plural = 'Genera'
     icon = 'feather'
     entity_class = Genus
     queryset = select(Genus).join(Family).order_by(Genus.name_ru).options(joinedload(Genus.family))
     fields = [
-        Field('name_ru', title='Name (rus)', searchable=True, sortable=True, link=True),
-        Field('name_be', title='Name (bel)', searchable=True, sortable=True),
+        Field('name_ru', title='Name (rus)', searchable=True, sortable=True, link=True, required=False),
+        Field('name_be', title='Name (bel)', searchable=True, sortable=True, required=False),
         Field('name_la', title='Name (lat)', searchable=True, sortable=True),
-        SelectField('family_id', title='Family', searchable=True, sortable=True, source='family.name_ru'),
+        IntegerSelectField('family_id', title='Family', searchable=True, sortable=True, source='family.name_ru'),
     ]
 
     async def choices_for_family_id(self, request: Request) -> list[tuple[str, typing.Any]]:

@@ -244,7 +244,7 @@ class Resource(WithFields):
             form.populate_obj(instance)
             request.state.db.add(instance)
             await request.state.db.commit()
-            flash(request).success(_('%(object)s has been created.') % {'object': self.title})
+            flash(request).success(_('%(object)s has been created.') % {'object': instance})
             if '_add' in data:
                 return RedirectResponse(request.url_for(self.url_name('create')), status_code=301)
             if '_return' in data:
@@ -277,7 +277,7 @@ class Resource(WithFields):
         if request.method == 'POST' and await form.validate_on_submit(request):
             form.populate_obj(instance)
             await request.state.db.commit()
-            flash(request).success(_('%(object)s has been updated.') % {'object': self.title})
+            flash(request).success(_('%(object)s has been updated.') % {'object': instance})
             if '_return' in data:
                 return RedirectResponse(request.url_for(self.url_name('list')), status_code=301)
             return RedirectResponse(request.url_for(self.url_name('edit'), pk=instance.id), status_code=301)
