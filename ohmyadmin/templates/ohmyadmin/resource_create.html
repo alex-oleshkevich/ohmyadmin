@@ -1,33 +1,25 @@
 {% extends 'ohmyadmin/layout/app.html' %}
 {% import 'ohmyadmin/ui/buttons.html' as buttons %}
 
+{% block page_heading %}
+    {% with resource_name = resource.title|lower %}
+        {% trans %}Create {{ resource_name }}{% endtrans %}
+    {% endwith %}
+{% endblock %}
+
 {% block content %}
-    <div class="border-b border-gray-200">
-        <div class="w-full sm:flex sm:items-center sm:justify-between py-4">
-            <div class="flex-1 min-w-0">
-                <h1 class="text-lg font-medium leading-6 text-gray-900 sm:truncate">
-                    {% with resource_name = resource.title|lower %}
-                        {% trans %}Create new {{ resource_name }} {% endtrans %}
-                    {% endwith %}
-                </h1>
+    <form method="post" class="align-middle inline-block min-w-full">
+        {{ form_layout(request) }}
+
+        <div class="mt-6 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                {{ buttons.primary_button(_('Create'), name='_save') }}
+                {{ buttons.button(_('Create and add another'), name='_add') }}
+                {{ buttons.button(_('Create and return to list'), name='_return') }}
+            </div>
+            <div>
+                {{ buttons.link_button(_('Cancel'), list_objects_url) }}
             </div>
         </div>
-    </div>
-
-    <div class="hidden mt-8 sm:block py-4">
-        <form method="post" class="align-middle inline-block min-w-full">
-            {{ form_layout(request) }}
-
-            <div class="mt-6 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    {{ buttons.primary_button(_('Create'), name='_save') }}
-                    {{ buttons.button(_('Create and add another'), name='_add') }}
-                    {{ buttons.button(_('Create and return to list'), name='_return') }}
-                </div>
-                <div>
-                    {{ buttons.link_button(_('Cancel'), list_objects_url) }}
-                </div>
-            </div>
-        </form>
-    </div>
+    </form>
 {% endblock %}

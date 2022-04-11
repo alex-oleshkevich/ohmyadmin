@@ -1,0 +1,23 @@
+{% set variants = {
+    'success': 'bg-green-50 text-green-800 border-green-100',
+    'error': 'bg-red-50 text-red-800 border-red-100',
+} %}
+{% macro flash_message(category, message) %}
+    {% set class = variants[category] %}
+    <div class="rounded-md p-4 border {{ class }}">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                {% if category == 'success' %}
+                {{ icon('circle-check') }}
+                {% else %}
+                {{ icon('alert-circle') }}
+                {% endif %}
+            </div>
+            <div class="ml-3">
+                <p class="text-sm font-medium">
+                    {{ message }}
+                </p>
+            </div>
+        </div>
+    </div>
+{% endmacro %}

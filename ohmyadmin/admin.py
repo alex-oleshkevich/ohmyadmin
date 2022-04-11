@@ -16,6 +16,7 @@ from starlette.types import Receive, Scope, Send
 from tabler_icons import tabler_icon
 
 from ohmyadmin.dashboards import Dashboard
+from ohmyadmin.flash_messages import flash
 from ohmyadmin.menus import MenuGroup, MenuItem, UserMenu
 from ohmyadmin.resources import Resource
 
@@ -128,6 +129,7 @@ class OhMyAdmin(Router):
                 'request': request,
                 'static': functools.partial(self.static_url, request),
                 'url': functools.partial(self.url_for, request),
+                'flash_messages': flash(request),
             }
         )
         content = self.render(template_name, context)

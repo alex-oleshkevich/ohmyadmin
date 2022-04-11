@@ -3,13 +3,16 @@ import sqlalchemy as sa
 import typing
 from sqlalchemy.orm import declarative_base, relationship
 from starlette.applications import Starlette
+from starlette.middleware import Middleware
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Mount, Route
+from starsessions import SessionMiddleware
 
 from ohmyadmin.admin import OhMyAdmin
 from ohmyadmin.dashboards import Dashboard
 from ohmyadmin.fields import Field
+from ohmyadmin.flash_messages import FlashMiddleware
 from ohmyadmin.menus import MenuItem, UserMenu
 from ohmyadmin.metrics import StatMetric
 from ohmyadmin.resources import Resource
@@ -202,7 +205,7 @@ class OrdersResource(Resource):
     icon = 'list'
     fields = [
         Field('name_ru', title='Name (rus)', searchable=True, sortable=True, link=True),
-        Field('name_be', title='Name (bel)', searchable=True, sortable=True, read_only=True),
+        Field('name_be', title='Name (bel)', searchable=True, sortable=True),
         Field(
             'name_la',
             title='Name (lat)',
@@ -259,5 +262,9 @@ app = Starlette(
     routes=[
         Route('/', index_view),
         Mount('/admin', admin),
+    ],
+    middleware=[
+        Middleware(SessionMiddleware, secret_key='key!', path='/'),
+        Middleware(FlashMiddleware),
     ],
 )

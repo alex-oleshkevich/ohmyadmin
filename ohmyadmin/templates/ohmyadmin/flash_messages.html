@@ -1,0 +1,8 @@
+{% import 'ohmyadmin/ui/flash_messages.html' as messages %}
+{% if flash_messages %}
+    <div class="mb-5">
+        {% for flash_message in flash_messages %}
+            {{ messages.flash_message(flash_message['category'], flash_message['message']) }}
+        {% endfor %}
+    </div>
+{% endif %}

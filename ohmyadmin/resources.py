@@ -225,12 +225,13 @@ class Resource(HasFields):
 
         return self.admin.render_to_response(
             request,
-            'ohmyadmin/resource_edit.html',
+            'ohmyadmin/resource_create.html',
             {
                 'form': form,
                 'resource': self,
                 'request': request,
                 'form_layout': form_layout,
+                'page_title': _('Create %(resource)s' % {'resource': self.title}),
                 'list_objects_url': request.url_for(self.url_name('list')),
             },
         )
@@ -263,17 +264,24 @@ class Resource(HasFields):
                 'request': request,
                 'resource': self,
                 'form_layout': form_layout,
+                'page_title': _('Edit %(object)s' % {'object': instance}),
                 'list_objects_url': request.url_for(self.url_name('list')),
             },
         )
 
     async def delete_view(self, request: Request) -> Response:
+        pk = request.path_params['pk']
+        instance = await query(request.state.db).find(self.entity_class, pk)
+        if not instance:
+            raise HTTPException(404, _('%(title)s not found.' % {'title': self.title}))
+
         return self.admin.render_to_response(
             request,
             'ohmyadmin/resource_delete.html',
             {
                 'request': request,
                 'resource': self,
+                'page_title': _('Delete %(object)s' % {'object': instance}),
             },
         )
 
