@@ -1,3 +1,5 @@
+{% import 'ohmyadmin/ui/buttons.html' as buttons %}
+
 {% set header_cell_classes = 'px-6 py-3 border-b border-gray-200 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider' %}
 
 {% macro sortable_header_cell(request, field, sorting_helper) %}
@@ -36,6 +38,18 @@
     <td>{{ column(request, obj) }}</td>
 {% endmacro %}
 
+{% macro destroy_object_button(object, confirmation) %}
+    <form
+        method="post"
+        action="{{ delete_object_url(object) }}"
+        class="inline-block"
+        @click="e => confirm('{{ confirmation }}') ? null : e.preventDefault()"
+    >
+        <input type="hidden" name="_method" value="DELETE">
+        {{ buttons.icon_button('trash', 'danger') }}
+    </form>
+{% endmacro %}
+
 <table class="min-w-full">
     <thead>
     <tr class="border-t border-gray-200">
@@ -58,7 +72,8 @@
                 </td>
             {% endfor %}
             <td class="px-6 py-3 whitespace-nowrap text-right text-sm font-medium">
-                <a href="#" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                {{ buttons.link_icon_button(edit_object_url(object), 'pencil') }}
+                {{ destroy_object_button(object, 'Delete?') }}
             </td>
         </tr>
     {% endfor %}

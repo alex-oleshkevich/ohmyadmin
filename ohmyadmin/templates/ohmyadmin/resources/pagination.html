@@ -60,14 +60,17 @@
                                 {{ page_number }}
                             </a>
                         {% else %}
-                            <span class="{{ button_classes}}">...</span>
+                            <span class="{{ button_classes }}">...</span>
                         {% endif %}
                     {% endfor %}
 
-                    <a href="{{ request.url.include_query_params(page=page.next_page) }}" class="{{ button_classes }}">
-                        <span class="sr-only">{{ _('Next') }}</span>
-                        {{ icon('chevron-right') }}
-                    </a>
+                    {% if page.has_next %}
+                        <a href="{{ request.url.include_query_params(page=page.next_page) }}"
+                           class="{{ button_classes }}">
+                            <span class="sr-only">{{ _('Next') }}</span>
+                            {{ icon('chevron-right') }}
+                        </a>
+                    {% endif %}
                 </nav>
             {% endif %}
         </div>

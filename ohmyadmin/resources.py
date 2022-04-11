@@ -4,13 +4,17 @@ import sqlalchemy as sa
 import typing
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
-from starlette.datastructures import URL, MultiDict
+from starlette.datastructures import URL, FormData, MultiDict
+from starlette.exceptions import HTTPException
 from starlette.requests import Request
-from starlette.responses import Response
+from starlette.responses import RedirectResponse, Response
 from starlette.routing import BaseRoute, Route
 from urllib.parse import parse_qsl, urlencode
 
 from ohmyadmin.fields import HasFields
+from ohmyadmin.flash_messages import flash
+from ohmyadmin.forms import Form, FormElement, Section, SectionRow
+from ohmyadmin.i18n import _
 from ohmyadmin.menus import MenuItem
 from ohmyadmin.pagination import Page
 from ohmyadmin.query import query
@@ -31,7 +35,7 @@ def get_search_value(request: Request, param_name: str) -> str:
 def get_page_value(request: Request, param_name: str) -> int:
     page = 1
     try:
-        page = min(1, int(request.query_params.get(param_name, 1)))
+        page = max(1, int(request.query_params.get(param_name, 1)))
     except TypeError:
         pass
     return page
@@ -114,11 +118,13 @@ class Resource(HasFields):
     page_size_query_param: str = 'page_size'
     ordering_query_param: str = 'ordering[]'
     search_query_param: str = 'search'
-    search_placeholder: str = 'Search %(title_plural)s'
+    search_placeholder: str = _('Search %(title_plural)s')
     filters: list[Filter] = []
     query_joins: list[sa.Column] = []
     query_select_related: list[sa.Column] = []
     query_prefetch_related: list[sa.Column] = []
+    queryset: sa.sql.Select | None = None
+    order_by: list[sa.sql.ClauseElement] | None = None
 
     def __init__(self, admin: OhMyAdmin) -> None:
         if not self.title:
@@ -139,14 +145,14 @@ class Resource(HasFields):
             Route(f'/{self.slug}', self.index_view, name=self.url_name('list')),
             Route(f'/{self.slug}/create', self.create_view, methods=['get', 'post'], name=self.url_name('create')),
             Route(
-                f'/{self.slug}/{{id:}}/edit',
-                self.create_view,
+                '/%(slug)s/{pk:%(pk_type)s}/edit' % {'slug': self.slug, 'pk_type': self.pk_type},
+                self.update_view,
                 methods=['get', 'post', 'put', 'patch'],
                 name=self.url_name('edit'),
             ),
             Route(
-                f'/{self.slug}/{{id:}}/delete',
-                self.create_view,
+                '/%(slug)s/{pk:%(pk_type)s}/delete' % {'slug': self.slug, 'pk_type': self.pk_type},
+                self.delete_view,
                 methods=['get', 'post', 'delete'],
                 name=self.url_name('delete'),
             ),
@@ -154,6 +160,25 @@ class Resource(HasFields):
 
     def get_menu_item(self) -> MenuItem:
         return MenuItem(label=self.title_plural, path_name=self.url_name('list'), icon=self.icon)
+
+    def get_form_class_for_creating(self) -> typing.Type[Form]:
+        form_fields = {field.name: field.create_form_field() for field in self.get_fields()}
+        return type(
+            f'{self.slug.title()}Form',
+            (Form,),
+            {
+                **form_fields,
+            },
+        )
+
+    def get_form_class_for_updating(self) -> typing.Type[Form]:
+        return self.get_form_class_for_creating()
+
+    def get_form_layout_for_creating(self, form: Form) -> FormElement:
+        return Section(title='', description='', elements=[SectionRow(form_field) for form_field in form])
+
+    def get_form_layout_for_updating(self, form: Form) -> FormElement:
+        return self.get_form_layout_for_creating(form)
 
     async def index_view(self, request: Request) -> Response:
         page_number = get_page_value(request, self.page_query_param)
@@ -168,30 +193,77 @@ class Resource(HasFields):
             {
                 'page': page,
                 'request': request,
-                'search_placeholder': self.search_placeholder % {'title_plural': self.title_plural.lower()},
+                'resource': self,
                 'search_value': get_search_value(request, self.search_query_param),
                 'sorting_helper': SortingHelper(self.ordering_query_param),
-                'resource': self,
+                'edit_object_url': lambda obj: request.url_for(self.url_name('edit'), pk=obj.id),
+                'create_object_url': request.url_for(self.url_name('create')),
+                'delete_object_url': lambda obj: request.url_for(self.url_name('delete'), pk=obj.id),
+                'search_placeholder': self.search_placeholder % {'title_plural': self.title_plural.lower()},
             },
         )
 
     async def create_view(self, request: Request) -> Response:
-        return self.admin.render_to_response(
-            request,
-            'ohmyadmin/resource_create.html',
-            {
-                'resource': self,
-                'request': request,
-            },
-        )
+        instance = self.entity_class()
+        form_class = self.get_form_class_for_creating()
 
-    async def update_view(self, request: Request) -> Response:
+        form_data = await request.form() if request.method == 'POST' else None
+        data: FormData = form_data or FormData()
+        form = form_class(form_data, obj=instance)
+        form_layout = self.get_form_layout_for_creating(form)
+
+        if request.method == 'POST' and await form.validate_on_submit(request):
+            form.populate_obj(instance)
+            request.state.db.add(instance)
+            await request.state.db.commit()
+            flash(request).success(_('%(object)s has been created.') % {'object': self.title})
+            if '_add' in data:
+                return RedirectResponse(request.url_for(self.url_name('create')), status_code=301)
+            if '_return' in data:
+                return RedirectResponse(request.url_for(self.url_name('list')), status_code=301)
+            return RedirectResponse(request.url_for(self.url_name('edit'), pk=instance.id), status_code=301)
+
         return self.admin.render_to_response(
             request,
             'ohmyadmin/resource_edit.html',
             {
+                'form': form,
+                'resource': self,
+                'request': request,
+                'form_layout': form_layout,
+                'list_objects_url': request.url_for(self.url_name('list')),
+            },
+        )
+
+    async def update_view(self, request: Request) -> Response:
+        pk = request.path_params['pk']
+        instance = await query(request.state.db).find(self.entity_class, pk)
+        if not instance:
+            raise HTTPException(404, _('%(title)s not found.' % {'title': self.title}))
+
+        form_class = self.get_form_class_for_updating()
+        form_data = await request.form() if request.method in ['POST', 'PUT', 'PATCH'] else None
+        data: FormData = form_data or FormData()
+        form = form_class(form_data, obj=instance)
+        form_layout = self.get_form_layout_for_updating(form)
+
+        if request.method == 'POST' and await form.validate_on_submit(request):
+            form.populate_obj(instance)
+            await request.state.db.commit()
+            flash(request).success(_('%(object)s has been updated.') % {'object': self.title})
+            if '_return' in data:
+                return RedirectResponse(request.url_for(self.url_name('list')), status_code=301)
+            return RedirectResponse(request.url_for(self.url_name('edit'), pk=instance.id), status_code=301)
+
+        return self.admin.render_to_response(
+            request,
+            'ohmyadmin/resource_edit.html',
+            {
+                'form': form,
                 'request': request,
                 'resource': self,
+                'form_layout': form_layout,
+                'list_objects_url': request.url_for(self.url_name('list')),
             },
         )
 
@@ -209,6 +281,9 @@ class Resource(HasFields):
         return f'{self.slug}_{action}'
 
     def get_queryset(self) -> sa.sql.Select:
+        if self.queryset:
+            return self.queryset
+
         queryset = sa.select(self.entity_class)
         if self.query_joins:
             for join in self.query_joins:
@@ -217,6 +292,9 @@ class Resource(HasFields):
             *[joinedload(column) for column in self.query_select_related or []],
             *[selectinload(column) for column in self.query_prefetch_related or []],
         )
+
+        if self.order_by:
+            queryset = queryset.order_by(*self.order_by)
         return queryset
 
     def get_filters(self) -> list[Filter]:
@@ -269,6 +347,8 @@ def create_ordering_filter(resource: Resource) -> Filter:
 
     def ordering_filter(request: Request, queryset: sa.sql.Select) -> sa.sql.Select:
         ordering = get_ordering_value(request, resource.ordering_query_param)
+        if ordering:
+            queryset = queryset.order_by(None)
         for order in ordering:
             field_name = order.lstrip('-')
             if field_name not in sortable_fields:

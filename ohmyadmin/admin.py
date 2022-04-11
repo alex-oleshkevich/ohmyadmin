@@ -28,7 +28,7 @@ T = typing.TypeVar('T')
 def ensure_slug(obj: typing.Type[T]) -> typing.Type[T]:
     slug = getattr(obj, 'slug', '')
     if not slug:
-        setattr(obj, 'slug', slugify(obj.__name__))
+        setattr(obj, 'slug', slugify(obj.__name__.removesuffix('Resource')))
     return obj
 
 
@@ -147,7 +147,7 @@ class OhMyAdmin(Router):
 
     def _create_jinja_env(self) -> jinja2.Environment:
         jinja_env = jinja2.Environment(
-            extensions=['jinja2.ext.i18n', 'jinja2.ext.debug'],
+            extensions=['jinja2.ext.i18n', 'jinja2.ext.debug', 'jinja2.ext.do'],
             loader=jinja2.ChoiceLoader(
                 [
                     jinja2.loaders.PackageLoader('ohmyadmin'),
@@ -161,7 +161,7 @@ class OhMyAdmin(Router):
                 'icon': tabler_icon,
             }
         )
-        jinja_env.install_null_translations()
+        jinja_env.install_null_translations()  # type: ignore
         return jinja_env
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:

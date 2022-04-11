@@ -65,10 +65,10 @@ class Order(Base):
     def name(self) -> str:
         if self.name_ru:
             return f'{self.name_la} ({self.name_ru})'
-        return self.name_la
+        return str(self.name_la)
 
     def __str__(self) -> str:
-        return self.name_be
+        return str(self.name_be)
 
 
 class Family(Base):
@@ -84,10 +84,10 @@ class Family(Base):
     def name(self) -> str:
         if self.name_ru:
             return f'{self.name_la} ({self.name_ru})'
-        return self.name_la
+        return str(self.name_la)
 
     def __str__(self) -> str:
-        return self.name_be
+        return str(self.name_be)
 
 
 #
@@ -203,12 +203,22 @@ class OrdersResource(Resource):
     fields = [
         Field('name_ru', title='Name (rus)', searchable=True, sortable=True),
         Field('name_be', title='Name (bel)', searchable=True, sortable=True),
-        Field('name_la', title='Name (lat)', searchable=True, sortable=True),
+        Field(
+            'name_la',
+            title='Name (lat)',
+            searchable=True,
+            sortable=True,
+            description='Latin specie name',
+            placeholder='Enter specie name',
+            input_mode='email',
+            autocomplete='family-name',
+        ),
     ]
     entity_class = Order
+    order_by = [Order.name_ru]
 
 
-class FalimiesResource(Resource):
+class FamiliesResource(Resource):
     title = 'Family'
     icon = 'list'
     fields = [
@@ -220,6 +230,7 @@ class FalimiesResource(Resource):
     entity_class = Family
     query_joins = [Order]
     query_select_related = [Family.order]
+    order_by = [Family.name_ru]
 
 
 # class GenusResource(Resource):
@@ -240,7 +251,7 @@ admin = OhMyAdmin(
     template_dirs=[this_dir / 'templates'],
     tools=[Backup, FileManager, Calendar, Photos],
     dashboards=[OverviewDashboard],
-    resources=[OrdersResource, FalimiesResource],
+    resources=[OrdersResource, FamiliesResource],
 )
 
 app = Starlette(

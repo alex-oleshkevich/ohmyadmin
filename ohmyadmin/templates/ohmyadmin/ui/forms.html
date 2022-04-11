@@ -1,0 +1,30 @@
+{% macro form_help(field) %}
+    <p class="mt-2 text-sm text-gray-500">{{ field.description }}</p>
+{% endmacro %}
+
+{% macro form_label(field, class='') %}
+    <label for="{{ field.label.id }}" class="block text-sm font-medium text-gray-700 {{ class }}">
+        {{ field.label.text }}
+        {% if field.flags.required %}
+            <span class="text-red-500">*</span>
+        {% endif %}
+    </label>
+{% endmacro %}
+
+{% macro form_input(field) %}
+    {% set classes = 'shadow-sm focus:ring-blue-500/75 focus:border-blue-500/75 block w-full sm:text-sm border-gray-300 rounded-md' %}
+    {% set render_kw = field.render_kw or {} %}
+    {% set class_name = render_kw.get('class', classes) %}
+    {% do render_kw.update(kwargs) %}
+    {{ field.widget(field, class=class_name, **render_kw) }}
+{% endmacro %}
+
+{% macro form_errors(field) %}
+    {% if field.errors %}
+        <ul class="list-none text-sm mt-2 text-red-500">
+            {% for error in field.errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endmacro %}
