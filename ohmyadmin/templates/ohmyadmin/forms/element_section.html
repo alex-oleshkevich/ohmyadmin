@@ -1,14 +1,4 @@
 <div class="py-8 px-4 sm:px-6 lg:px-8 rounded-lg bg-white border border-gray-300">
-    {% if element.title or element.description %}
-        <div class="mb-6 sm:mb-5">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">
-                {{ element.title }}
-            </h3>
-            <p class="mt-1 max-w-2xl text-sm text-gray-500">
-                {{ element.description }}
-            </p>
-        </div>
-    {% endif %}
     <div class="space-y-6 sm:space-y-5 divide-y divide-gray-200">
         {% for subelement in element %}
             {{ subelement(request) }}

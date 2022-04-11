@@ -53,7 +53,7 @@
 <table class="min-w-full">
     <thead>
     <tr class="border-t border-gray-200">
-        {% for field in resource.fields %}
+        {% for field in fields %}
             <th class="{{ header_cell_classes }}">
                 {{ header_cell(request, field) }}
             </th>
@@ -64,7 +64,7 @@
     <tbody class="bg-white divide-y divide-gray-100">
     {% for object in page %}
         <tr>
-            {% for field in resource.fields %}
+            {% for field in fields %}
                 <td class="px-6 py-3 max-w-0 whitespace-nowrap text-sm font-medium text-gray-900">
                     {% if field.link %}
                         <a href="{{ edit_object_url(object) }}" class="text-blue-700 hover:underline">

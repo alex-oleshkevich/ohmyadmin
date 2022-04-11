@@ -1,0 +1,8 @@
+{% import 'ohmyadmin/ui/forms.html' as forms %}
+
+<div class="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:pt-5">
+    {{ forms.render_form_label(element.form_field, class='sm:mt-px sm:pt-2') }}
+    <div class="mt-1 sm:mt-0 sm:col-span-2">
+        {{ forms.render_form_field(element.field, element.form_field) }}
+    </div>
+</div>

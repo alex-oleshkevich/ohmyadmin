@@ -1,23 +1,27 @@
 from __future__ import annotations
 
+import inspect
 import sqlalchemy as sa
 import typing
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, selectinload
-from starlette.datastructures import URL, FormData, MultiDict
+from starlette.datastructures import URL, MultiDict
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
 from starlette.routing import BaseRoute, Route
 from urllib.parse import parse_qsl, urlencode
 
-from ohmyadmin.fields import HasFields
+from ohmyadmin.choices import ChoicePopulator
+from ohmyadmin.fields import Field, WithFields
 from ohmyadmin.flash_messages import flash
-from ohmyadmin.forms import Form, FormElement, Section, SectionRow
+from ohmyadmin.form_elements import FormElement, FormGroup, Section
+from ohmyadmin.forms import Form
 from ohmyadmin.i18n import _
 from ohmyadmin.menus import MenuItem
 from ohmyadmin.pagination import Page
 from ohmyadmin.query import query
+from ohmyadmin.validators import Validator
 
 if typing.TYPE_CHECKING:
     from ohmyadmin.admin import OhMyAdmin
@@ -105,7 +109,7 @@ class SortingHelper:
         return len(get_ordering_value(request, self.query_param_name)) > 1
 
 
-class Resource(HasFields):
+class Resource(WithFields):
     slug: str = ''
     title: str = ''
     title_plural: str = ''
@@ -162,21 +166,42 @@ class Resource(HasFields):
     def get_menu_item(self) -> MenuItem:
         return MenuItem(label=self.title_plural, path_name=self.url_name('list'), icon=self.icon)
 
-    def get_form_class_for_creating(self) -> typing.Type[Form]:
-        form_fields = {field.name: field.create_form_field() for field in self.get_fields()}
-        return type(
-            f'{self.slug.title()}Form',
-            (Form,),
-            {
-                **form_fields,
-            },
+    def create_form_class(self, fields: list[Field]) -> typing.Type[Form]:
+        form_fields = {field.name: field.create_form_field() for field in fields}
+        inline_choice_populators: dict[str, ChoicePopulator] = {
+            method_name: callback
+            for method_name, callback in inspect.getmembers(self, inspect.ismethod)
+            if method_name.startswith('choices_for_')
+        }
+        inline_validators: dict[str, Validator] = {
+            method_name: callback
+            for method_name, callback in inspect.getmembers(self, inspect.ismethod)
+            if method_name.startswith('validator_for')
+        }
+
+        return typing.cast(
+            typing.Type[Form],
+            type(
+                f'{self.slug.title()}Form',
+                (Form,),
+                {
+                    **form_fields,
+                    **inline_choice_populators,
+                    **inline_validators,
+                },
+            ),
         )
 
-    def get_form_class_for_updating(self) -> typing.Type[Form]:
-        return self.get_form_class_for_creating()
+    def get_form_class_for_creating(self) -> typing.Type[Form]:
+        fields = [field for field in self.get_fields() if 'form' in field.show_on or 'create' in field.show_on]
+        return self.create_form_class(fields)
 
     def get_form_layout_for_creating(self, form: Form) -> FormElement:
-        return Section(title='', description='', elements=[SectionRow(form_field) for form_field in form])
+        return Section(elements=[FormGroup(self.fields_by_name[form_field.name], form_field) for form_field in form])
+
+    def get_form_class_for_updating(self) -> typing.Type[Form]:
+        fields = [field for field in self.get_fields() if 'form' in field.show_on or 'update' in field.show_on]
+        return self.create_form_class(fields)
 
     def get_form_layout_for_updating(self, form: Form) -> FormElement:
         return self.get_form_layout_for_creating(form)
@@ -188,6 +213,9 @@ class Resource(HasFields):
         queryset = self.get_queryset()
         queryset = self.filter_queryset(request, queryset)
         page = await self.paginate_query(request.state.db, queryset, page_number, page_size)
+
+        fields = [field for field in self.get_fields() if 'index' in field.show_on]
+
         return self.admin.render_to_response(
             request,
             'ohmyadmin/resource_list.html',
@@ -195,6 +223,7 @@ class Resource(HasFields):
                 'page': page,
                 'request': request,
                 'resource': self,
+                'fields': fields,
                 'search_value': get_search_value(request, self.search_query_param),
                 'sorting_helper': SortingHelper(self.ordering_query_param),
                 'edit_object_url': lambda obj: request.url_for(self.url_name('edit'), pk=obj.id),
@@ -208,10 +237,7 @@ class Resource(HasFields):
     async def create_view(self, request: Request) -> Response:
         instance = self.entity_class()
         form_class = self.get_form_class_for_creating()
-
-        form_data = await request.form() if request.method == 'POST' else None
-        data: FormData = form_data or FormData()
-        form = form_class(form_data, obj=instance)
+        form, data = await form_class.from_request(request)
         form_layout = self.get_form_layout_for_creating(form)
 
         if request.method == 'POST' and await form.validate_on_submit(request):
@@ -245,9 +271,7 @@ class Resource(HasFields):
             raise HTTPException(404, _('%(title)s not found.' % {'title': self.title}))
 
         form_class = self.get_form_class_for_updating()
-        form_data = await request.form() if request.method in ['POST', 'PUT', 'PATCH'] else None
-        data: FormData = form_data or FormData()
-        form = form_class(form_data, obj=instance)
+        form, data = await form_class.from_request(request, instance)
         form_layout = self.get_form_layout_for_updating(form)
 
         if request.method == 'POST' and await form.validate_on_submit(request):
@@ -300,7 +324,7 @@ class Resource(HasFields):
         return f'{self.slug}_{action}'
 
     def get_queryset(self) -> sa.sql.Select:
-        if self.queryset:
+        if self.queryset is not None:
             return self.queryset
 
         queryset = sa.select(self.entity_class)
