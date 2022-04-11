@@ -43,7 +43,7 @@
         method="post"
         action="{{ delete_object_url(object) }}"
         class="inline-block"
-        @click="e => confirm('{{ confirmation }}') ? null : e.preventDefault()"
+        @click="e => confirm('{{ delete_confirmation }}') ? null : e.preventDefault()"
     >
         <input type="hidden" name="_method" value="DELETE">
         {{ buttons.icon_button('trash', 'danger') }}

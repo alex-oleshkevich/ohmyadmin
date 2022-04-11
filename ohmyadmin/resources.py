@@ -125,6 +125,7 @@ class Resource(HasFields):
     query_prefetch_related: list[sa.Column] = []
     queryset: sa.sql.Select | None = None
     order_by: list[sa.sql.ClauseElement] | None = None
+    delete_confirmation: str = _('Delete this %(title)s?')
 
     def __init__(self, admin: OhMyAdmin) -> None:
         if not self.title:
@@ -200,6 +201,7 @@ class Resource(HasFields):
                 'create_object_url': request.url_for(self.url_name('create')),
                 'delete_object_url': lambda obj: request.url_for(self.url_name('delete'), pk=obj.id),
                 'search_placeholder': self.search_placeholder % {'title_plural': self.title_plural.lower()},
+                'delete_confirmation': self.delete_confirmation % {'title': self.title.lower()},
             },
         )
 
@@ -275,13 +277,22 @@ class Resource(HasFields):
         if not instance:
             raise HTTPException(404, _('%(title)s not found.' % {'title': self.title}))
 
+        if request.method in ['POST', 'DELETE']:
+            await request.state.db.delete(instance)
+            await request.state.db.commit()
+            flash(request).success(_('%(object)s has been deleted.') % {'object': instance})
+            return RedirectResponse(request.url_for(self.url_name('list')), status_code=301)
+
         return self.admin.render_to_response(
             request,
             'ohmyadmin/resource_delete.html',
             {
                 'request': request,
                 'resource': self,
+                'object': instance,
                 'page_title': _('Delete %(object)s' % {'object': instance}),
+                'list_objects_url': request.url_for(self.url_name('list')),
+                'delete_confirmation': self.delete_confirmation % {'title': self.title.lower()},
             },
         )
 

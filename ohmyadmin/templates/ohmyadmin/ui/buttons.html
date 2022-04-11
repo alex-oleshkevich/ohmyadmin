@@ -1,21 +1,21 @@
 {% set default_button_classes = 'border inline-flex items-center px-4 py-2 shadow-sm text-sm font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-300' %}
-{% set standard_button_classes = 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50' %}
-{% set primary_button_classes = 'border-transparent text-white bg-blue-600 hover:bg-blue-700' %}
 
-{% set icon_button_classes = 'p-1 inline-flex items-center border border-transparent rounded-full shadow-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-300' %}
+{% set icon_button_classes = 'p-1 inline-flex items-center border border-transparent rounded-full shadow-sm text-gray-400 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-300' %}
+
+{% set button_variants = {
+    'standard': 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50',
+    'primary': 'border-transparent text-white bg-blue-600 hover:bg-blue-700',
+    'danger': 'border-transparent text-white bg-red-600 hover:bg-red-700',
+} %}
 
 {% macro link_button(label, url, icon_name='', variant='standard') %}
-    {% if variant == 'primary' %}
-        {% set button_classes = default_button_classes + ' ' + primary_button_classes %}
-    {% else %}
-        {% set button_classes = default_button_classes + ' ' + standard_button_classes %}
-    {% endif %}
+    {% set classes = button_variants[variant] %}
 
     {% if icon_name %}
-        {% set button_classes = button_classes + ' ' + 'gap-2' %}
+        {% set button_classes = classes + ' ' + 'gap-2' %}
     {% endif %}
 
-    <a href="{{ url }}" type="button" class="{{ button_classes }}">
+    <a href="{{ url }}" class="{{ default_button_classes }} {{ classes }}">
         {% if icon_name %}
             {{ icon(icon_name) }}
         {% endif %}
@@ -46,15 +46,11 @@
 {% endmacro %}
 
 {% macro button(label, icon_name='', variant='standard', name='', type='submit') %}
-    {% if variant == 'primary' %}
-        {% set button_classes = default_button_classes + ' ' + primary_button_classes %}
-    {% else %}
-        {% set button_classes = default_button_classes + ' ' + standard_button_classes %}
-    {% endif %}
+    {% set classes = button_variants[variant] %}
     {% if icon_name %}
-        {% set button_classes = button_classes + ' ' + 'gap-2' %}
+        {% set classes = button_classes + ' ' + 'gap-2' %}
     {% endif %}
-    <button type="{{ type }}" class="{{ button_classes }}" name="{{ name }}">
+    <button type="{{ type }}" class="{{ default_button_classes }} {{ classes }}" name="{{ name }}">
         {% if icon_name %}
             {{ icon(icon_name) }}
         {% endif %}
@@ -64,4 +60,8 @@
 
 {% macro primary_button(label, icon_name='', name='', type='submit') %}
     {{ button(label, icon_name, variant='primary', name=name, type=type) }}
+{% endmacro %}
+
+{% macro danger_button(label, icon_name='', name='', type='submit') %}
+    {{ button(label, icon_name, variant='danger', name=name, type=type) }}
 {% endmacro %}
