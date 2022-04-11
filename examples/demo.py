@@ -202,7 +202,7 @@ class OrdersResource(Resource):
     icon = 'list'
     fields = [
         Field('name_ru', title='Name (rus)', searchable=True, sortable=True, link=True),
-        Field('name_be', title='Name (bel)', searchable=True, sortable=True),
+        Field('name_be', title='Name (bel)', searchable=True, sortable=True, read_only=True),
         Field(
             'name_la',
             title='Name (lat)',

@@ -16,6 +16,9 @@
     {% set render_kw = field.render_kw or {} %}
     {% set class_name = render_kw.get('class', classes) %}
     {% do render_kw.update(kwargs) %}
+    {% if 'readonly' in field.render_kw and field.render_kw['readonly'] is true %}
+        {% set class_name = class_name + ' bg-gray-50 text-gray-600 cursor-not-allowed' %}
+    {% endif %}
     {{ field.widget(field, class=class_name, **render_kw) }}
 {% endmacro %}
 
