@@ -28,6 +28,7 @@ class Field:
         input_mode: str = '',
         form_kwargs: dict[str, typing.Any] | None = None,
         read_only: bool = False,
+        link: bool = False,
     ) -> None:
         self.name = name
         self.title = name.replace('_', ' ').title() if title is None else title
@@ -44,6 +45,7 @@ class Field:
         self.autocomplete = autocomplete
         self.input_mode = input_mode
         self.read_only = read_only
+        self.link = link
         self.form_kwargs = form_kwargs or {}
 
     def get_value(self, obj: typing.Any) -> typing.Any:

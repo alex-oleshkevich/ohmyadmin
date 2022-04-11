@@ -66,9 +66,15 @@
         <tr>
             {% for field in resource.fields %}
                 <td class="px-6 py-3 max-w-0 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {% if field.link %}
+                        <a href="{{ edit_object_url(object) }}" class="text-blue-700 hover:underline">
+                    {% endif %}
                     {% with value = field.get_display_value(object) %}
                         {% include field.cell_template %}
                     {% endwith %}
+                    {% if field.link %}
+                        </a>
+                    {% endif %}
                 </td>
             {% endfor %}
             <td class="px-6 py-3 whitespace-nowrap text-right text-sm font-medium">
