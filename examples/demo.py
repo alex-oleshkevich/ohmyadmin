@@ -348,12 +348,31 @@ class SpeciesResource(Resource):
     title = 'Specie'
     icon = 'feather'
     entity_class = Specie
-    queryset = select(Specie).join(Genus).order_by(Specie.name_ru).options(joinedload(Specie.genus))
+    queryset = (
+        select(Specie, Genus)
+        .join(Genus)
+        .join(Family)
+        .order_by(Specie.name_ru)
+        .options(
+            joinedload(Specie.genus),
+            joinedload(Genus.family),
+        )
+    )
     fields = [
         Field('name_ru', title='Name (rus)', searchable=True, sortable=True, link=True, required=False),
-        Field('name_be', title='Name (bel)', searchable=True, sortable=True, required=False, read_only=True),
+        Field('name_be', title='Name (bel)', searchable=True, show_on=['form'], required=False, read_only=True),
         Field('name_la', title='Name (lat)', searchable=True, sortable=True, form_placeholder='Latin name.'),
-        IntegerSelectField('genus_id', title='Genus', searchable=True, sortable=True, source='genus.name_ru'),
+        IntegerSelectField(
+            'genus_id', title='Genus', searchable=True, sortable=True, source='genus.name_ru', show_on=['form']
+        ),
+        IntegerSelectField(
+            'family_id',
+            title='Family',
+            searchable=True,
+            sortable=True,
+            source='genus.family.name_ru',
+            show_on=['index'],
+        ),
         TextareaField(
             'description',
             title='Description',
@@ -378,7 +397,7 @@ class SpeciesResource(Resource):
             description='Used informational sources.',
             required=False,
         ),
-        CheckboxField('migratory', title='Migratory', show_on=['form'], required=False, default_value=True),
+        CheckboxField('migratory', title='Migratory', required=False, default_value=True),
         CheckboxField('transiting', title='Transit during migration', show_on=['form'], required=False),
         CheckboxField('settled', title='Settled', show_on=['form'], required=False),
         SelectField(
@@ -395,11 +414,10 @@ class SpeciesResource(Resource):
         CheckboxField('straying', title='Straying', show_on=['form'], required=False),
         CheckboxField('dimorphism', title='Dimorphism', show_on=['form'], required=False),
         CheckboxField('waterfowl', title='Waterfowl', show_on=['form'], required=False),
-        SelectField('red_book', title='Red book', show_on=['form'], required=False, choices=RedBook.choices),
+        SelectField('red_book', title='Red book', required=False, choices=RedBook.choices),
         SelectField(
             'iucn_risk',
             title='IUCN risk',
-            show_on=['form'],
             required=False,
             choices=IUCNRisk.choices,
             default_value=IUCNRisk.LEAST_CONCERN,

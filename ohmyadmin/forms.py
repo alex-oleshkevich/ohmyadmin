@@ -25,7 +25,7 @@ class Form(wtforms.Form):
         meta: typing.Mapping | None = None,
         extra_filters: typing.Mapping | None = None,
     ) -> tuple[_F, FormData]:
-        form_data = FormData()
+        form_data: FormData | None = None
         if request.method in SUBMIT_METHODS:
             form_data = await request.form()
         form = cls(
@@ -38,14 +38,7 @@ class Form(wtforms.Form):
             extra_filters=extra_filters,
         )
 
-        # setup choices
-        for name, field in form._fields.items():
-            if populator := getattr(form, f'choices_for_{name}', None):
-                value = await run_async(populator, request)
-                if isinstance(value, Collection):
-                    value = value.choices()
-                getattr(form, name).choices = value
-
+        await form.prefill_choices(request)
         return form, form_data
 
     def is_submitted(self, request: Request) -> bool:
@@ -87,3 +80,12 @@ class Form(wtforms.Form):
 
     async def validate_on_submit(self, request: Request) -> bool:
         return self.is_submitted(request) and await self.validate(request)
+
+    async def prefill_choices(self, request: Request) -> None:
+        # setup choices
+        for name, field in self._fields.items():
+            if populator := getattr(self, f'choices_for_{name}', None):
+                value = await run_async(populator, request)
+                if isinstance(value, Collection):
+                    value = value.choices()
+                getattr(self, name).choices = value

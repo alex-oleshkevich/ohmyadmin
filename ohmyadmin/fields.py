@@ -26,7 +26,7 @@ class Field:
         source: str = '',
         search_in: str | list[str] = '',
         sort_by: str = '',
-        value_format: str | Formatter = '%s',
+        value_format: str | Formatter | None = None,
         required: bool = True,
         form_placeholder: str = '',
         form_autocomplete: str = '',
@@ -75,7 +75,9 @@ class Field:
     def format_value(self, value: typing.Any) -> str:
         if callable(self.value_format):
             return self.value_format(value)
-        return self.value_format % value
+        if self.value_format:
+            return self.value_format % value
+        return value
 
     def get_display_value(self, obj: typing.Any) -> str:
         return self.format_value(self.get_value(obj))
@@ -103,10 +105,14 @@ class Field:
             validators.append(wtforms.validators.data_required())
         return validators
 
+    def __repr__(self) -> str:
+        return f'<{self.__class__.__name__}: name={self.name}, title={self.title}>'
+
 
 class SelectField(Field):
     form_field_class: typing.Type[wtforms.Field] = wtforms.SelectField
     form_field_template = 'ohmyadmin/fields/form_select.html'
+    cell_template = 'ohmyadmin/fields/cell_select.html'
     coerce: typing.Callable[[typing.Any], typing.Any] = str
 
     def __init__(self, *args: typing.Any, choices: list[tuple[str, str]] | None = None, **kwargs: typing.Any) -> None:
@@ -116,19 +122,28 @@ class SelectField(Field):
     def get_form_field_args(self) -> dict[str, typing.Any]:
         return {'coerce': self.coerce, 'choices': self.choices}
 
+    def format_value(self, value: typing.Any) -> str:
+        for value_, label in self.choices:
+            if value == value_:
+                return label
+        return value
+
 
 class IntegerSelectField(SelectField):
     coerce = int
+    cell_template = 'ohmyadmin/fields/cell_integer_select.html'
 
 
 class TextareaField(Field):
     form_field_class: typing.Type[wtforms.Field] = wtforms.TextAreaField
     form_field_template = 'ohmyadmin/fields/form_textarea.html'
+    cell_template = 'ohmyadmin/fields/cell_textarea.html'
 
 
 class CheckboxField(Field):
     form_field_class: typing.Type[wtforms.Field] = wtforms.BooleanField
     form_field_template = 'ohmyadmin/fields/form_checkbox.html'
+    cell_template = 'ohmyadmin/fields/cell_checkbox.html'
 
 
 class WithFields:
