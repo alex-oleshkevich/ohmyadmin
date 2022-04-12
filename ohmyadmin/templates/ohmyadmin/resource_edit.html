@@ -7,6 +7,10 @@
     {% endwith %}
 {% endblock %}
 
+{% block page_actions %}
+    {{ buttons.danger_link_button(_('Delete'), delete_object_url(object)) }}
+{% endblock %}
+
 {% block content %}
     <form method="post" class="align-middle inline-block min-w-full">
         {{ form_layout(request) }}

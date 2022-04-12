@@ -2,6 +2,7 @@ import sqlalchemy as sa
 import typing
 import wtforms
 
+from ohmyadmin.forms import Form
 from ohmyadmin.validators import Validator
 
 Formatter = typing.Callable[[typing.Any], str]
@@ -134,6 +135,11 @@ class IntegerSelectField(SelectField):
     cell_template = 'ohmyadmin/fields/cell_integer_select.html'
 
 
+class MultiSelectField(SelectField):
+    form_field_class = wtforms.SelectMultipleField
+    cell_template = 'ohmyadmin/fields/cell_multi_select.html'
+
+
 class TextareaField(Field):
     form_field_class: typing.Type[wtforms.Field] = wtforms.TextAreaField
     form_field_template = 'ohmyadmin/fields/form_textarea.html'
@@ -144,6 +150,25 @@ class CheckboxField(Field):
     form_field_class: typing.Type[wtforms.Field] = wtforms.BooleanField
     form_field_template = 'ohmyadmin/fields/form_checkbox.html'
     cell_template = 'ohmyadmin/fields/cell_checkbox.html'
+
+
+class SubFormListField(Field):
+    form_field_class: typing.Type[wtforms.Field] = wtforms.FieldList
+    form_field_template = 'ohmyadmin/fields/form_subform_list.html'
+    cell_template = 'ohmyadmin/fields/cell_subform_list.html'
+
+    def __init__(
+        self, *args: typing.Any, entity_class: typing.Any, fields: list[Field], columns: int = 3, **kwargs: typing.Any
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        self.entity_class = entity_class
+        self.fields = fields
+        self.columns = columns
+        self.show_on = ['form']
+
+    def create_form_field(self) -> wtforms.Field:
+        form = type(self.name + 'Form', (Form,), {field.name: field.create_form_field() for field in self.fields})
+        return wtforms.FieldList(wtforms.FormField(form, self.title, default=self.entity_class), min_entries=1)
 
 
 class WithFields:

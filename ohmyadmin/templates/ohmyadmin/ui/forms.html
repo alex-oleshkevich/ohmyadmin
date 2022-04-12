@@ -1,23 +1,23 @@
 {% set base_input_classes = 'shadow-sm focus:ring-blue-500/75 focus:border-blue-500/75 block w-full sm:text-sm border-gray-300 rounded-md' %}
 {% set read_only_classes = 'bg-gray-50 text-gray-600 cursor-not-allowed' %}
 
-{% macro form_help(field) %}
-    <p class="mt-2 text-sm text-gray-500">{{ field.description }}</p>
+{% macro form_help(form_field) %}
+    <p class="mt-2 text-sm text-gray-500">{{ form_field.description }}</p>
 {% endmacro %}
 
-{% macro form_label(field, class='') %}
-    <label for="{{ field.label.field_id }}" class="block text-sm font-medium text-gray-700 {{ class }}">
-        {{ field.label.text }}
-        {% if field.flags.required %}
+{% macro form_label(form_field, class='') %}
+    <label for="{{ form_field.label.field_id }}" class="block text-sm font-medium text-gray-700 {{ class }}">
+        {{ form_field.label.text }}
+        {% if form_field.flags.required %}
             <span class="text-red-500">*</span>
         {% endif %}
     </label>
 {% endmacro %}
 
-{% macro form_errors(field) %}
-    {% if field.errors %}
+{% macro form_errors(form_field) %}
+    {% if form_field.errors %}
         <ul class="list-none text-sm mt-2 text-red-500">
-            {% for error in field.errors %}
+            {% for error in form_field.errors %}
                 <li>{{ error }}</li>
             {% endfor %}
         </ul>
@@ -62,4 +62,25 @@
     <div class="max-w-lg flex rounded-md shadow-sm">
         {{ form_field.widget(form_field, class=base_input_classes, **attrs) }}
     </div>
+{% endmacro %}
+
+{% macro form_input(form_field) %}
+    {% set inputs = {
+        'BooleanField': checkbox_input,
+        'SelectField': select_input,
+        'SelectMultipleField': select_input,
+        'TextAreaField': textarea_input,
+    } %}
+    {{ inputs.get(form_field.type, text_input)(form_field) }}
+{% endmacro %}
+
+{% macro form_field(form_field) %}
+    {{ form_label(form_field, class='mb-1') }}
+    {{ form_input(form_field) }}
+    {% if form_field.description %}
+        {{ form_help(form_field) }}
+    {% endif %}
+    {% if form_field.errors %}
+        {{ form_errors(form_field) }}
+    {% endif %}
 {% endmacro %}

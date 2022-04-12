@@ -27,13 +27,17 @@
     {{ link_button(label, url, icon_name, 'primary') }}
 {% endmacro %}
 
+{% macro danger_link_button(label, url, icon_name='') %}
+    {{ link_button(label, url, icon_name, 'danger') }}
+{% endmacro %}
+
 {% set icon_button_variants = {
     'standard': 'hover:bg-gray-100',
     'danger': 'hover:bg-red-100 hover:text-red-900',
 } %}
-{% macro icon_button(icon_name, variant='standard') %}
+{% macro icon_button(icon_name, variant='standard', class='') %}
     {% set classes = icon_button_classes + ' ' + icon_button_variants[variant] %}
-    <button class="{{ classes }}">
+    <button class="{{ classes }} {{ class }}">
         {{ icon(icon_name) }}
     </button>
 {% endmacro %}
@@ -45,11 +49,12 @@
     </a>
 {% endmacro %}
 
-{% macro button(label, icon_name='', variant='standard', name='', type='submit') %}
+{% macro button(label, icon_name='', variant='standard', name='', type='submit', class='') %}
     {% set classes = button_variants[variant] %}
     {% if icon_name %}
         {% set classes = button_classes + ' ' + 'gap-2' %}
     {% endif %}
+    {% set classes = classes + ' ' + class %}
     <button type="{{ type }}" class="{{ default_button_classes }} {{ classes }}" name="{{ name }}">
         {% if icon_name %}
             {{ icon(icon_name) }}

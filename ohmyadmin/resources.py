@@ -266,7 +266,8 @@ class Resource(WithFields):
 
     async def update_view(self, request: Request) -> Response:
         pk = request.path_params['pk']
-        instance = await query(request.state.db).find(self.entity_class, pk)
+        stmt = self.get_queryset().where(getattr(self.entity_class, 'id') == pk)
+        instance = await query(request.state.db).one_or_none(stmt)
         if not instance:
             raise HTTPException(404, _('%(title)s not found.' % {'title': self.title}))
 
@@ -287,11 +288,13 @@ class Resource(WithFields):
             'ohmyadmin/resource_edit.html',
             {
                 'form': form,
-                'request': request,
                 'resource': self,
+                'request': request,
+                'object': instance,
                 'form_layout': form_layout,
                 'page_title': _('Edit %(object)s' % {'object': instance}),
                 'list_objects_url': request.url_for(self.url_name('list')),
+                'delete_object_url': lambda obj: request.url_for(self.url_name('delete'), pk=obj.id),
             },
         )
 

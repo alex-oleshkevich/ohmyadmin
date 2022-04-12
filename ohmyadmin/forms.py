@@ -15,6 +15,8 @@ SUBMIT_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE']
 
 
 class Form(wtforms.Form):
+    request: Request
+
     @classmethod
     async def from_request(
         cls: typing.Type[_F],
@@ -37,6 +39,7 @@ class Form(wtforms.Form):
             meta=meta,
             extra_filters=extra_filters,
         )
+        form.request = request
 
         await form.prefill_choices(request)
         return form, form_data
@@ -44,7 +47,7 @@ class Form(wtforms.Form):
     def is_submitted(self, request: Request) -> bool:
         return request.method in SUBMIT_METHODS
 
-    async def validate(self, request: Request) -> bool:
+    async def validate(self) -> bool:
         extra_validators: dict[str, list[Validator]] = {}
 
         async_validators = []
@@ -59,7 +62,7 @@ class Form(wtforms.Form):
         completed = []
 
         async def _perform_field_validation(field: wtforms.Field, validator: Validator) -> None:
-            is_valid = await self._validate_field(request, field, validator)
+            is_valid = await self._validate_field(field, validator)
             completed.append(is_valid)
 
         async with anyio.create_task_group() as tg:
@@ -70,16 +73,16 @@ class Form(wtforms.Form):
             is_valid = False
         return is_valid
 
-    async def _validate_field(self, request: Request, field: wtforms.Field, validator: Validator) -> bool:
+    async def _validate_field(self, field: wtforms.Field, validator: Validator) -> bool:
         try:
-            await validator(request, self, field)
+            await validator(self, field)
             return True
         except wtforms.ValidationError as ex:
             field.errors.append(ex.args[0])
             return False
 
     async def validate_on_submit(self, request: Request) -> bool:
-        return self.is_submitted(request) and await self.validate(request)
+        return self.is_submitted(request) and await self.validate()
 
     async def prefill_choices(self, request: Request) -> None:
         # setup choices
@@ -89,3 +92,6 @@ class Form(wtforms.Form):
                 if isinstance(value, Collection):
                     value = value.choices()
                 getattr(self, name).choices = value
+
+    def __len__(self) -> int:
+        return len(self._fields)

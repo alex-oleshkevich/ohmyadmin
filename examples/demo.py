@@ -3,7 +3,7 @@ import sqlalchemy as sa
 import typing
 import wtforms
 from sqlalchemy import select
-from sqlalchemy.orm import declarative_base, joinedload, relationship
+from sqlalchemy.orm import declarative_base, declared_attr, joinedload, relationship, selectinload
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.requests import Request
@@ -14,7 +14,15 @@ from starsessions import SessionMiddleware
 from ohmyadmin.admin import OhMyAdmin
 from ohmyadmin.choices import TextChoices
 from ohmyadmin.dashboards import Dashboard
-from ohmyadmin.fields import CheckboxField, Field, IntegerSelectField, SelectField, TextareaField
+from ohmyadmin.fields import (
+    CheckboxField,
+    Field,
+    IntegerSelectField,
+    MultiSelectField,
+    SelectField,
+    SubFormListField,
+    TextareaField,
+)
 from ohmyadmin.flash_messages import FlashMiddleware
 from ohmyadmin.forms import Form
 from ohmyadmin.menus import MenuItem, UserMenu
@@ -83,10 +91,81 @@ class IUCNRisk(TextChoices):
     NOT_EVALUATED = 'not_evaluated'  # NE
 
 
+class BeakShape(TextChoices):
+    TRIANGLE = 'triangle'
+    CURVED_DOWN = 'curved_down'
+    CURVED_UP = 'curved_up'
+    FLAT = 'flat'
+
+
+class BeakLength(TextChoices):
+    SHORT = 'short'
+    MEDIUM = 'medium'
+    LONG = 'long'
+
+
+class BeakThickness(TextChoices):
+    THIN = 'thin'
+    MEDIUM = 'medium'
+    THICK = 'thick'
+
+
+class Season(TextChoices):
+    WINTER = 'winter'
+    SPRING = 'spring'
+    SUMMER = 'summer'
+    AUTUMN = 'autumn'
+
+
+class BodySize(TextChoices):
+    SPARROW = 'sparrow'
+    THRUSH = 'thrush'
+    PIDGEON = 'pidgeon'
+    DUCK = 'duck'
+    LARGER = 'larger'
+
+
+class Biotope(TextChoices):
+    TOWN = 'town'
+    FOREST = 'forest'
+    FIELD = 'field'
+    MEADOW = 'meadow'
+    WATER = 'water'
+    SWAMP = 'swamp'
+
+
+class Color(TextChoices):
+    BLACK = 'black'
+    WHITE = 'white'
+    GRAY = 'gray'
+    CREAM = 'cream'
+    YELLOW = 'yellow'
+    ORANGE = 'orange'
+    RED = 'red'
+    BROWN = 'brown'
+    VIOLET = 'violet'
+    BLUE = 'blue'
+    GREEN = 'green'
+
+
 class Nesting(TextChoices):
     NOT_NESTING = 'not_nesting'
     NESTING = 'nesting'
     POSSIBLY_NESTING = 'possibly_nesting'
+
+
+class Behavior(TextChoices):
+    FLOATING = 'floating'
+    AT_FEEDER = 'at_feeder'
+    AT_GROUND = 'at_ground'
+    HANGS_UP = 'hangs_up'
+    FEEDS_IN_FLY = 'feeds_in_fly'
+    EATS_BERRIES = 'eats_berries'
+    EATS_ANIMALS = 'eats_animals'
+    IN_FLOCK = 'in_flock'
+    SHAKES_TAIL = 'shakes_tail'
+    WALKING = 'walking'
+    DIVING = 'diving'
 
 
 class Order(Base):
@@ -185,10 +264,10 @@ class Specie(Base):
     genus_id = sa.Column(sa.ForeignKey("genea.id"), nullable=False)
     genus = relationship(Genus, cascade='save-update')
 
-    # appearances = relationship('Appearance', cascade='all,delete-orphan')
-    # photos = relationship('Photo', cascade='all,delete-orphan')
-    # videos = relationship('Video', cascade='all,delete-orphan')
-    # voices = relationship('Voice', cascade='all,delete-orphan')
+    appearances = relationship('Appearance', cascade='all,delete-orphan')
+    photos = relationship('Photo', cascade='all,delete-orphan')
+    videos = relationship('Video', cascade='all,delete-orphan')
+    voices = relationship('Voice', cascade='all,delete-orphan')
 
     @property
     def name(self) -> str:
@@ -198,6 +277,86 @@ class Specie(Base):
 
     def __str__(self) -> str:
         return self.name_be
+
+
+class Appearance(Base):
+    __tablename__ = 'specie_appearances'
+    id = sa.Column(sa.BigInteger, primary_key=True, autoincrement=True)
+    beak_shape = sa.Column(sa.JSON, server_default='[]', default=list)
+    beak_length = sa.Column(sa.String(128))
+    beak_thickness = sa.Column(sa.String(128))
+    body_size = sa.Column(sa.String(128))
+
+    leg_colors = sa.Column(sa.JSON, nullable=True, server_default='[]', default=list)
+    beak_colors = sa.Column(sa.JSON, nullable=True, server_default='[]', default=list)
+    behaviors = sa.Column(sa.JSON, nullable=True, server_default='[]', default=list)
+    seasons = sa.Column(sa.JSON, nullable=True, server_default='[]', default=list)
+    habitats = sa.Column(sa.JSON, nullable=True, server_default='[]', default=list)
+    colors = sa.Column(sa.JSON, nullable=True, server_default='[]', default=list)
+
+    gender = sa.Column(sa.String(128))
+    age = sa.Column(sa.String(128))
+    specie_id = sa.Column(sa.ForeignKey("species.id"), nullable=False)
+
+
+class Media(Base):
+    __abstract__ = True
+    id = sa.Column(sa.BigInteger, primary_key=True, autoincrement=True)
+    path = sa.Column(sa.String(512), nullable=False)
+    author = sa.Column(sa.String(512), nullable=False)
+    gender = sa.Column(sa.String(32))
+    age = sa.Column(sa.String(32))
+    created_at = sa.Column(sa.DateTime(timezone=True))
+
+    @declared_attr
+    def uploader_id(self):
+        return sa.Column(sa.ForeignKey("users.id"), nullable=False)
+
+    @declared_attr
+    def specie_id(self):
+        return sa.Column(sa.ForeignKey("species.id"), nullable=False)
+
+
+class Photo(Media):
+    __tablename__ = 'photos'
+
+
+class Video(Media):
+    __tablename__ = 'videos'
+
+
+class Gender(TextChoices):
+    UNKNOWN = 'unknown'
+    MALE = 'male'
+    FEMALE = 'female'
+
+
+class Age(TextChoices):
+    UNKNOWN = 'unknown'
+    ADULT = 'adult'
+    IMMATURE = 'immature'
+    JUVENILE = 'juvenile'
+
+
+class VoiceType(TextChoices):
+    UNKNOWN = 'unknown'
+    SONG = 'song'
+    CALL = 'call'
+    NON_VOCAL = 'non_vocal'
+
+
+class Voice(Base):
+    __tablename__ = 'voices'
+    id = sa.Column(sa.BigInteger, primary_key=True, autoincrement=True)
+    path = sa.Column(sa.String(512), nullable=False)
+    description = sa.Column(sa.String(512), default='')
+    gender = sa.Column(sa.String(32), default=Gender.UNKNOWN)
+    type = sa.Column(sa.String(32), default=VoiceType.SONG)
+    age = sa.Column(sa.String(32), default=Age.UNKNOWN)
+    created_at = sa.Column(sa.DateTime(timezone=True), default=sa.func.now)
+
+    uploader_id = sa.Column(sa.ForeignKey("users.id"), nullable=False)
+    specie_id = sa.Column(sa.ForeignKey("species.id"), nullable=False)
 
 
 def user_menu_config(request: Request, user_menu: UserMenu) -> None:
@@ -356,11 +515,16 @@ class SpeciesResource(Resource):
         .options(
             joinedload(Specie.genus),
             joinedload(Genus.family),
+            selectinload(Specie.photos),
+            selectinload(Specie.videos),
+            selectinload(Specie.voices),
+            selectinload(Specie.appearances),
         )
     )
     fields = [
         Field('name_ru', title='Name (rus)', searchable=True, sortable=True, link=True, required=False),
-        Field('name_be', title='Name (bel)', searchable=True, show_on=['form'], required=False, read_only=True),
+        Field('name_be', title='Name (bel)', searchable=True, show_on=['form'], required=False),
+        Field('name_en', title='Name (eng)', searchable=True, show_on=['form'], required=False),
         Field('name_la', title='Name (lat)', searchable=True, sortable=True, form_placeholder='Latin name.'),
         IntegerSelectField(
             'genus_id', title='Genus', searchable=True, sortable=True, source='genus.name_ru', show_on=['form']
@@ -422,18 +586,38 @@ class SpeciesResource(Resource):
             choices=IUCNRisk.choices,
             default_value=IUCNRisk.LEAST_CONCERN,
         ),
+        SubFormListField(
+            'appearances',
+            entity_class=Appearance,
+            fields=[
+                SelectField('beak_length', title='Beak length', choices=BeakLength.choices, required=False),
+                SelectField('beak_thickness', title='Beak thickness', choices=BeakThickness.choices, required=False),
+                SelectField('body_size', title='Body size', choices=BodySize.choices, required=False),
+                MultiSelectField('beak_shape', title='Body shape', choices=BeakShape.choices, required=False),
+                MultiSelectField('beak_colors', title='Body colors', choices=Color.choices, required=False),
+                MultiSelectField('leg_colors', title='Leg colors', choices=Color.choices, required=False),
+                MultiSelectField('behaviors', title='Behaviors', choices=Behavior.choices, required=False),
+                MultiSelectField('seasons', title='Seasons', choices=Season.choices, required=False),
+                MultiSelectField('habitats', title='Biotope', choices=Biotope.choices, required=False),
+                MultiSelectField('colors', title='Colors', choices=Color.choices, required=False),
+                SelectField('age', title='Age', choices=Age.choices, default_value=Age.ADULT, required=False),
+                SelectField(
+                    'gender', title='Gender', choices=Gender.choices, default_value=Gender.UNKNOWN, required=False
+                ),
+            ],
+        ),
     ]
 
     async def choices_for_genus_id(self, request: Request) -> list[tuple[str, typing.Any]]:
         stmt = select(Genus).order_by(Genus.name_la)
         return await query(request.state.db).choices(stmt)
 
-    async def validator_for_name_la(self, request: Request, form: Form, field: wtforms.Field) -> None:
+    async def validator_for_name_la(self, form: Form, field: wtforms.Field) -> None:
         if field.object_data == field.data:
             return
 
         stmt = select(Specie).where(sa.func.lower(Specie.name_la) == field.data.lower())
-        if await query(request.state.db).exists(stmt):
+        if await query(form.request.state.db).exists(stmt):
             raise wtforms.ValidationError('This value must be unique.')
 
 

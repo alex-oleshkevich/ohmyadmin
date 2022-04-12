@@ -1,0 +1,30 @@
+{% import 'ohmyadmin/ui/forms.html' as forms %}
+{% import 'ohmyadmin/ui/buttons.html' as buttons %}
+
+{% macro render_subform(field, subform) %}
+    <div class="grid grid-cols-{{ field.columns }} gap-5 subform mb-10 relative pr-10">
+        <div class="absolute right-0 top-0">
+            {{ buttons.icon_button('trash', class='delete-row') }}
+        </div>
+        {% for subform_field in subform %}
+            <div>
+                {{ forms.form_field(subform_field) }}
+            </div>
+        {% endfor %}
+    </div>
+{% endmacro %}
+
+<div class="multirow">
+    <div class="subforms mb-5">
+        {% for subform in form_field %}
+            {{ render_subform(field, subform) }}
+        {% endfor %}
+    </div>
+    <div>
+        {{ buttons.button(_('Add new'), type='button', class='add-row') }}
+    </div>
+
+    <template>
+        {{ render_subform(field, form_field[0]) }}
+    </template>
+</div>
