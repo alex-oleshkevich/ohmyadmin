@@ -1,7 +1,9 @@
-{% if value is sameas true %}
-    <span class="text-green-500">{{ icon('circle-check') }}</span>
-{% elif value is sameas false %}
-    <span class="text-red-500">{{ icon('circle-x') }}</span>
-{% else %}
-    - {{ value }}, "{{ value is sameas true }}"
-{% endif %}
+<div class="flex items-center justify-center">
+    {% if value is sameas true %}
+        <span class="text-green-500">{{ icon('circle-check') }}</span>
+    {% elif value is sameas false %}
+        <span class="text-red-500">{{ icon('circle-x') }}</span>
+    {% else %}
+        - {{ value }}, "{{ value is sameas true }}"
+    {% endif %}
+</div>

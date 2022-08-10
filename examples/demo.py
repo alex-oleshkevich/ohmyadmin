@@ -349,11 +349,9 @@ class Voice(Base):
     __tablename__ = 'voices'
     id = sa.Column(sa.BigInteger, primary_key=True, autoincrement=True)
     path = sa.Column(sa.String(512), nullable=False)
-    description = sa.Column(sa.String(512), default='')
     gender = sa.Column(sa.String(32), default=Gender.UNKNOWN)
     type = sa.Column(sa.String(32), default=VoiceType.SONG)
     age = sa.Column(sa.String(32), default=Age.UNKNOWN)
-    created_at = sa.Column(sa.DateTime(timezone=True), default=sa.func.now)
 
     uploader_id = sa.Column(sa.ForeignKey("users.id"), nullable=False)
     specie_id = sa.Column(sa.ForeignKey("species.id"), nullable=False)
