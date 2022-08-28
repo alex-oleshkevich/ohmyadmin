@@ -56,7 +56,8 @@
 
                 <div>
                     <!-- user menu -->
-                    <div x-data="{open: false}" class="relative select-none" @click="open = !open">
+                    <div x-data="{open: false}" class="relative select-none" @click="open = !open"
+                         @click.outside="open = false">
                         <div class="flex items-center gap-3 hover:bg-slate-100 p-2 rounded-md cursor-pointer">
                             <div class="bg-slate-200 rounded-md p-1.5 text-slate-500">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
@@ -128,6 +129,11 @@
                 <div class="flex items-center justify-between mb-10">
                     <div class="text-2xl font-semibold">Post</div>
                     <div class="flex items-center gap-3">
+                        <div>
+                            <input type="search"
+                                   class="rounded-md border border-slate-200 shadow-sm bg-white px-3 py-1.5 w-96"
+                                   placeholder="Search...">
+                        </div>
                         <a
                             href="#"
                             class="rounded-md border border-slate-300 shadow bg-white px-3 py-1.5 hover:bg-slate-100 active:bg-slate-200 font-medium"
@@ -141,17 +147,22 @@
                     </div>
                 </div>
                 <div class="mb-6">
-                    <div class="mb-5 flex gap-5">
-                        <div>
-                            <input type="search" class="px-3 py-1.5 rounded-md shadow-sm border border-slate-200 w-96"
-                                   placeholder="Search...">
+                    <div class="mb-5 flex items-center justify-between gap-5 bg-yellow-100 rounded p-2">
+                        <div class="flex items-center gap-2">
+                            <select
+                                class="px-3 py-1.5 font-medium shadow-sm h-8 rounded-md border border-slate-300 w-48">
+                                <option></option>
+                                <option>Delete all</option>
+                            </select>
+                            <button>Run bulk action</button>
                         </div>
-                        <div></div>
-                    </div>
-                    <div class="mb-5 flex gap-5 bg-yellow-100 rounded p-2">
-                        20 rows selected
-                        <button class="hover:underline">Select all</button>
-                        <button class="hover:underline">Unselect all</button>
+                        <div class="flex items-center text-yellow-900">
+                            <span>20 rows selected</span>
+                            <div class="flex items-center gap-2 ml-5">
+                                <button class="hover:underline">Select all</button>
+                                <button class="hover:underline">Unselect all</button>
+                            </div>
+                        </div>
                     </div>
                     <table class="w-full">
                         <thead class="border-b border-slate-300">
@@ -220,14 +231,17 @@
                 <div class="flex items-center justify-between">
                     <div class="font-medium">Showing 21 - 40 of 120 results</div>
                     <div class="flex items-center justify-end gap-1">
-                        <a href="#" class="rounded py-2 px-3 hover:bg-slate-100 active:bg-slate-200 font-medium flex items-center gap-2">{{ icon('arrow-left') }} Previous</a>
+                        <a href="#"
+                           class="rounded py-2 px-3 hover:bg-slate-100 active:bg-slate-200 font-medium flex items-center gap-2">{{ icon('arrow-left') }}
+                            Previous</a>
                         <a href="#" class="rounded py-2 px-3 hover:bg-slate-100 active:bg-slate-200 font-medium">1</a>
                         <a href="#" class="rounded py-2 px-3 hover:bg-slate-100 active:bg-slate-200 font-medium">2</a>
                         <a href="#"
                            class="rounded py-2 px-3 hover:bg-slate-100 active:bg-slate-200 bg-blue-700 text-white font-medium">3</a>
                         <a href="#" class="rounded py-2 px-3 hover:bg-slate-100 active:bg-slate-200 font-medium">4</a>
                         <a href="#" class="rounded py-2 px-3 hover:bg-slate-100 active:bg-slate-200 font-medium">5</a>
-                        <a href="#" class="rounded py-2 px-3 hover:bg-slate-100 active:bg-slate-200 font-medium flex items-center gap-2">Next {{ icon('arrow-right') }}</a>
+                        <a href="#"
+                           class="rounded py-2 px-3 hover:bg-slate-100 active:bg-slate-200 font-medium flex items-center gap-2">Next {{ icon('arrow-right') }}</a>
                     </div>
                 </div>
                 <!-- end pagination -->
