@@ -1,47 +1,237 @@
 {% extends 'ohmyadmin/layout/base.html' %}
 
-{% set html_tag_classes = 'h-full bg-gray-100' %}
-{% set body_tag_classes = 'h-full' %}
+{% set html_tag_classes = 'h-full' %}
+{% set body_tag_classes = 'h-full text-sm' %}
 
 {% block main %}
-    <div x-data="{sidebarMenuOpen: false}">
-        {% include 'ohmyadmin/layout/_offcanvas.html' %}
-        {% include 'ohmyadmin/layout/_sidebar.html' %}
-
-        <div class="md:pl-64 flex flex-col flex-1">
-            <div class="relative z-10 flex-shrink-0 flex h-16">
-                {% include 'ohmyadmin/layout/_sidebar_toggle.html' %}
-
-                <div class="flex-1 sm:px-6 px-4 lg:px-8 flex justify-between lg:max-w-7xl lg:mx-auto">
-                    <div class="flex-1 flex">
-                        {% include 'ohmyadmin/global_search_form.html' %}
-                    </div>
-                    <div class="ml-4 flex items-center md:ml-6">
-                        {% include 'ohmyadmin/notifications.html' %}
-                        {% include 'ohmyadmin/user_menu.html' %}
-                    </div>
-                </div>
+    <div class="flex h-full">
+        <aside class="w-80 border-r border-gray-300 bg-slate-50 px-3 text-sm">
+            <!-- logo -->
+            <div class="w-full py-5">
+                <span class="text-lg font-semibold">Oh My Admin!</span>
             </div>
-            <main class="flex-1 pt-6">
-                <div class="w-full md:max-w-7xl mx-auto sm:px-6 px-4 lg:px-8 pb-10">
+            <!-- end logo -->
 
-                    <div class="w-full sm:flex sm:items-center sm:justify-between py-5">
-                        <div class="flex-1 min-w-0">
-                            <h1 class="text-xl font-medium leading-6 text-gray-900 sm:truncate">
-                                {% block page_heading %}
-                                    {{ page_heading }}
-                                {% endblock %}
-                            </h1>
-                        </div>
-                        <div class="flex sm:ml-4 gap-3">
-                            {% block page_actions %}{% endblock %}
-                        </div>
-                    </div>
+            <!-- main menu -->
+            <nav class="grid grid-cols-1 gap-1 mb-10">
+                {% for x in range(10) %}
+                    <a href="#"
+                       class="rounded-md flex items-center gap-3 w-full px-2 py-1 hover:bg-slate-200 {% if x == 0 %}bg-blue-100 text-blue-700 hover:bg-blue-200{% endif %}">
+                        {{ icon('home') }} Dashboard {{ x }}
+                    </a>
+                {% endfor %}
+            </nav>
+            <!-- end main menu -->
 
-                    {% include 'ohmyadmin/flash_messages.html' %}
-                    {% block content %}{% endblock %}
+            <!-- main menu -->
+            <nav class="grid grid-cols-1 gap-1 mb-10">
+                <div class="text-slate-600 uppercase mb-2 text-sm">Resources</div>
+                {% for x in range(3) %}
+                    <a href="#"
+                       class="rounded-md flex items-center gap-3 w-full px-2 py-1 hover:bg-slate-200 {% if x == 0 %}bg-blue-100 text-blue-700 hover:bg-blue-200{% endif %}">
+                        {{ icon('home') }} Dashboard {{ x }}
+                    </a>
+                {% endfor %}
+            </nav>
+            <!-- end main menu -->
+
+            <!-- main menu -->
+            <nav class="grid grid-cols-1 gap-1 mb-10">
+                <div class="text-slate-600 uppercase mb-2 text-sm">Links</div>
+                {% for x in range(2) %}
+                    <a href="#"
+                       class="rounded-md flex items-center gap-3 w-full px-2 py-1 hover:bg-slate-200 {% if x == 0 %}bg-blue-100 text-blue-700 hover:bg-blue-200{% endif %}">
+                        {{ icon('home') }} Dashboard {{ x }}
+                    </a>
+                {% endfor %}
+            </nav>
+            <!-- end main menu -->
+        </aside>
+        <main class="w-full">
+            <header class="border-b border-b-200 flex items-center justify-between px-10 h-16">
+
+                <div class="py-5">
+                    <!-- header left side actions -->
                 </div>
-            </main>
-        </div>
+
+                <div>
+                    <!-- user menu -->
+                    <div x-data="{open: false}" class="relative select-none" @click="open = !open">
+                        <div class="flex items-center gap-3 hover:bg-slate-100 p-2 rounded-md cursor-pointer">
+                            <div class="bg-slate-200 rounded-md p-1.5 text-slate-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                                     class="w-4 h-4">
+                                    <path fill-rule="evenodd"
+                                          d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z"
+                                          clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div>Jane Doe</div>
+                        </div>
+
+                        <!-- dropdown -->
+                        <div x-show="open"
+                             class="right-0 translate-y-1 -translate-x-4 bg-white border border-slate-200 shadow-lg w-64 absolute">
+                            <div class="border-b border-slate-300 flex items-center gap-3 pb-3 mb-3 p-3">
+                                <!-- avatar -->
+                                <div>
+                                    <div class="bg-slate-200 rounded-md p-1.5 text-slate-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                                             fill="currentColor"
+                                             class="w-8 h-8">
+                                            <path fill-rule="evenodd"
+                                                  d="M7.5 6a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM3.751 20.105a8.25 8.25 0 0116.498 0 .75.75 0 01-.437.695A18.683 18.683 0 0112 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 01-.437-.695z"
+                                                  clip-rule="evenodd"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <!-- end avatar -->
+
+                                <!-- username -->
+                                <div>
+                                    <div class="text-slate-500">Logged in as</div>
+                                    <div class="text-base">Jane Doe</div>
+                                </div>
+                                <!-- end username -->
+                            </div>
+
+                            <!-- user menu -->
+                            <ul class="space-y-1 py-1">
+                                <li>
+                                    <a href="#"
+                                       class="rounded-md px-2 py-1.5 flex items-center gap-3 hover:bg-slate-100 active:bg-slate-200">
+                                        {{ icon('user') }} My Profile
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                       class="rounded-md px-2 py-1.5 flex items-center gap-3 hover:bg-slate-100 active:bg-slate-200">
+                                        {{ icon('settings') }} Settings
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#"
+                                       class="rounded-md px-2 py-1.5 flex items-center gap-3 hover:bg-slate-100 active:bg-slate-200">
+                                        {{ icon('logout') }} Logout
+                                    </a>
+                                </li>
+                            </ul>
+                            <!-- end user menu -->
+                        </div>
+                        <!-- end dropdown -->
+                    </div>
+                    <!-- user menu -->
+                </div>
+
+            </header>
+            <article class="px-10 py-10 max-w-7xl mx-auto">
+                <div class="flex items-center justify-between mb-10">
+                    <div class="text-2xl font-semibold">Post</div>
+                    <div class="flex items-center gap-3">
+                        <a
+                            href="#"
+                            class="rounded-md border border-slate-300 shadow bg-white px-3 py-1.5 hover:bg-slate-100 active:bg-slate-200 font-medium"
+                        >
+                            Filters
+                        </a>
+                        <a href="#"
+                           class="rounded-md shadow bg-blue-600 text-white px-3 py-1.5 hover:bg-blue-700 active:bg-blue-800 font-medium">
+                            Add post
+                        </a>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <div class="mb-5 flex gap-5">
+                        <div>
+                            <input type="search" class="px-3 py-1.5 rounded-md shadow-sm border border-slate-200 w-96"
+                                   placeholder="Search...">
+                        </div>
+                        <div></div>
+                    </div>
+                    <div class="mb-5 flex gap-5 bg-yellow-100 rounded p-2">
+                        20 rows selected
+                        <button class="hover:underline">Select all</button>
+                        <button class="hover:underline">Unselect all</button>
+                    </div>
+                    <table class="w-full">
+                        <thead class="border-b border-slate-300">
+                        <tr>
+                            <th class="text-left p-2">
+                                <input type="checkbox" class="rounded border border-slate-400">
+                            </th>
+                            <th class="text-left p-2">Title</th>
+                            <th class="text-left p-2">Author</th>
+                            <th class="text-left p-2">Comments</th>
+                            <th class="text-left p-2">Published At</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for x in range(20) %}
+                            <tr
+                                class="hover:bg-slate-100 border-b border-slate-200"
+                                x-bind:class="{'bg-blue-100': selected}"
+                                x-data="{selected: false}"
+                            >
+                                <td class="p-2">
+                                    <input type="checkbox" class="rounded border border-slate-400"
+                                           @click="selected = !selected">
+                                </td>
+                                <td class="p-2">Abnobas sunt hilotaes de placidus vita</td>
+                                <td class="p-2"><a href="#">Tom Doe</a></td>
+                                <td class="p-2">5</td>
+                                <td class="p-2">Nov 19, 2017, 5:36 PM</td>
+                                <td class="p-2">
+                                    <button x-data="{open: false}" class="relative" @click="open = !open">
+                                        {{ icon('dots') }}
+                                        <div
+                                            x-show="open"
+                                            @click.outside="open = false"
+                                            class="absolute right-0 bg-white shadow-lg border border-slate-200 py-1 rounded-md w-48 z-10">
+                                            <ul class="space-y-1">
+                                                <li>
+                                                    <a href="#"
+                                                       class="rounded px-2 py-1.5 flex items-center gap-3 hover:bg-slate-100 active:bg-slate-200">
+                                                        {{ icon('eye') }} Show
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a href="#"
+                                                       class="rounded px-2 py-1.5 flex items-center gap-3 hover:bg-slate-100 active:bg-slate-200">
+                                                        {{ icon('pencil') }} Edit
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a href="#"
+                                                       class="rounded px-2 py-1.5 flex items-center gap-3 hover:bg-slate-100 active:bg-slate-200 text-red-700">
+                                                        {{ icon('trash') }} Delete
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </button>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <!-- pagination -->
+                <div class="flex items-center justify-between">
+                    <div class="font-medium">Showing 21 - 40 of 120 results</div>
+                    <div class="flex items-center justify-end gap-1">
+                        <a href="#" class="rounded py-2 px-3 hover:bg-slate-100 active:bg-slate-200 font-medium flex items-center gap-2">{{ icon('arrow-left') }} Previous</a>
+                        <a href="#" class="rounded py-2 px-3 hover:bg-slate-100 active:bg-slate-200 font-medium">1</a>
+                        <a href="#" class="rounded py-2 px-3 hover:bg-slate-100 active:bg-slate-200 font-medium">2</a>
+                        <a href="#"
+                           class="rounded py-2 px-3 hover:bg-slate-100 active:bg-slate-200 bg-blue-700 text-white font-medium">3</a>
+                        <a href="#" class="rounded py-2 px-3 hover:bg-slate-100 active:bg-slate-200 font-medium">4</a>
+                        <a href="#" class="rounded py-2 px-3 hover:bg-slate-100 active:bg-slate-200 font-medium">5</a>
+                        <a href="#" class="rounded py-2 px-3 hover:bg-slate-100 active:bg-slate-200 font-medium flex items-center gap-2">Next {{ icon('arrow-right') }}</a>
+                    </div>
+                </div>
+                <!-- end pagination -->
+            </article>
+        </main>
     </div>
 {% endblock %}

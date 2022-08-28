@@ -1,0 +1,47 @@
+{% extends 'ohmyadmin/layout/base.html' %}
+
+{% set html_tag_classes = 'h-full bg-gray-100' %}
+{% set body_tag_classes = 'h-full' %}
+
+{% block main %}
+    <div x-data="{sidebarMenuOpen: false}">
+        {% include 'ohmyadmin/layout/_offcanvas.html' %}
+        {% include 'ohmyadmin/layout/_sidebar.html' %}
+
+        <div class="md:pl-64 flex flex-col flex-1">
+            <div class="relative z-10 flex-shrink-0 flex h-16">
+                {% include 'ohmyadmin/layout/_sidebar_toggle.html' %}
+
+                <div class="flex-1 sm:px-6 px-4 lg:px-8 flex justify-between lg:max-w-7xl lg:mx-auto">
+                    <div class="flex-1 flex">
+                        {% include 'ohmyadmin/global_search_form.html' %}
+                    </div>
+                    <div class="ml-4 flex items-center md:ml-6">
+                        {% include 'ohmyadmin/notifications.html' %}
+                        {% include 'ohmyadmin/user_menu.html' %}
+                    </div>
+                </div>
+            </div>
+            <main class="flex-1 pt-6">
+                <div class="w-full md:max-w-7xl mx-auto sm:px-6 px-4 lg:px-8 pb-10">
+
+                    <div class="w-full sm:flex sm:items-center sm:justify-between py-5">
+                        <div class="flex-1 min-w-0">
+                            <h1 class="text-xl font-medium leading-6 text-gray-900 sm:truncate">
+                                {% block page_heading %}
+                                    {{ page_heading }}
+                                {% endblock %}
+                            </h1>
+                        </div>
+                        <div class="flex sm:ml-4 gap-3">
+                            {% block page_actions %}{% endblock %}
+                        </div>
+                    </div>
+
+                    {% include 'ohmyadmin/flash_messages.html' %}
+                    {% block content %}{% endblock %}
+                </div>
+            </main>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="" class="h-full {{ html_tag_classes }}">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+    <title>{{ page_title }}</title>
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <meta name="msapplication-TileColor" content="#206bc4"/>
+    <meta name="theme-color" content="#206bc4"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="mobile-web-app-capable" content="yes"/>
+    <meta name="HandheldFriendly" content="True"/>
+    <meta name="MobileOptimized" content="320"/>
+    <meta name="csrf-token" content="{{ csrf_token }}"/>
+
+    <link rel="icon" href="{{ static('logo_square.svg') }}" type="image/x-icon"/>
+    <link rel="shortcut icon" href="{{ static('logo_square.svg') }}" type="image/x-icon"/>
+
+    <link href="{{ static('build/main.css') }}" rel="stylesheet"/>
+    <script defer src="{{ static('build/main.js') }}"></script>
+
+    <style>
+        [x-cloak] {
+            display: none;
+        }
+    </style>
+
+    {% block head %}{% endblock %}
+    {% block head_scripts %}{% endblock %}
+</head>
+<body class="antialiased {{ body_tag_classes }}">
+{% block main %}{% endblock %}
+{% block page_scripts %}{% endblock %}
+</body>
+</html>
