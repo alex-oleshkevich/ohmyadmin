@@ -1,0 +1,26 @@
+{% set button_styles = 'btn inline-flex gap-1 items-center rounded-md border border-transparent px-3 py-1.5 font-medium' %}
+{% set default_styles = 'border-slate-300 bg-white hover:bg-slate-100 active:bg-slate-200' %}
+{% set primary_styles = 'btn-primary bg-blue-600 hover:bg-blue-600/75 active:bg-blue-700 text-white' %}
+{% set danger_styles = 'btn-danger bg-red-600 hover:bg-red-600/75 active:bg-red-700 text-white' %}
+{% set text_styles = 'btn-text bg-transparent hover:bg-slate-100 active:bg-slate-200 text-slate-900 shadow-none' %}
+
+{% set color_map = {
+    'default': default_styles,
+    'primary': primary_styles,
+    'danger': danger_styles,
+    'text': text_styles,
+} %}
+
+{% macro link_button(text, url, icon='', classes='', color='default') %}
+    <a href="{{ url }}" class="{{ button_styles }} {{ classes }}{{ color_map[color] }}">
+        {{ tabler_icon(icon) if icon else '' }}
+        <span>{{ text }}</span>
+    </a>
+{% endmacro %}
+
+{% macro button(text, type='button', icon='', classes='', color='default', attrs={}) %}
+    <button type="button" class="{{ button_styles }} {{ classes }}{{ color_map[color] }}" {{ attrs|dict_to_attrs }}>
+        {{ tabler_icon(icon) if icon else '' }}
+        <span>{{ text }}</span>
+    </button>
+{% endmacro %}

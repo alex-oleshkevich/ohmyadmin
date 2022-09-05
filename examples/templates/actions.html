@@ -1,0 +1,9 @@
+{% extends 'ohmyadmin/layout/app.html' %}
+
+{% block content %}
+    <div class="flex gap-2 items-center">
+        {% for action in actions %}
+            {{ action(request) }}
+        {% endfor %}
+    </div>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends 'ohmyadmin/layout/app.html' %}
+{% import 'ohmyadmin/lib/pagination.html' as pagination %}
+{% import 'ohmyadmin/lib/actions.html' as actions %}
+
+{% set header_cell_classes = 'text-left p-2' %}
+
+{% macro sortable_header_cell(request, column, sorting_helper) %}
+    {% set current_ordering = sorting_helper.get_current_ordering(request, column.sort_by) %}
+    {% set ordering_index = sorting_helper.get_current_ordering_index(request, column.sort_by) %}
+    {% set next_ordering_url = sorting_helper.get_url(request, column.sort_by) %}
+    {% set should_show_index = sorting_helper.should_show_index(request) %}
+
+    <a href="{{ next_ordering_url }}" class="flex gap-2 items-center">
+        <span>{{ column.label }}</span>
+        <span class="flex items-center gap-1 text-gray-500">
+            {% if current_ordering == 'asc' %}
+                {{ icon('arrow-narrow-down') }}
+            {% elif current_ordering == 'desc' %}
+                {{ icon('arrow-narrow-up') }}
+            {% else %}
+                {{ icon('arrows-sort') }}
+            {% endif %}
+
+            {% if should_show_index and ordering_index %}
+                <span class="text-sm">{{ ordering_index }}</span>
+            {% endif %}
+        </span>
+    </a>
+{% endmacro %}
+
+{% macro header_cell(request, column) %}
+    {% if column.sortable %}
+        {{ sortable_header_cell(request, column, sorting_helper) }}
+    {% else %}
+        <span>{{ column.label }}</span>
+    {% endif %}
+{% endmacro %}
+
+
+{% block content %}
+    <div class="flex items-center justify-between mb-6">
+        <form method="get">
+            <input
+                type="search" name="search" value="{{ search_query }}"
+                class="rounded-md border border-slate-300 shadow-sm bg-white px-3 py-1.5 w-96"
+                placeholder="{{ table.search_placeholder }}">
+        </form>
+        <div class="flex items-center gap-3">
+            {% for action in table.table_actions(request) %}
+                {{ actions.action(action) }}
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="mb-6">
+        <table class="w-full">
+            <thead class="border-b border-slate-300">
+            <tr>
+                <th class="text-left p-2">
+                    <input type="checkbox" class="rounded border border-slate-400">
+                </th>
+                {% for column in table.columns %}
+                    <th class="text-left p-2">{{ header_cell(request, column) }}</th>
+                {% endfor %}
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for object in objects %}
+                <tr
+                    class="hover:bg-slate-100 border-b border-slate-200"
+                    x-bind:class="{'bg-blue-100': selected}"
+                    x-data="{selected: false}"
+                >
+                    <td class="p-2">
+                        <input type="checkbox" class="rounded border border-slate-400"
+                               @click="selected = !selected">
+                    </td>
+                    {% for column in table.columns %}
+                        <td class="p-2">
+                            {{ column.get_display_value(object) }}
+                        </td>
+                    {% endfor %}
+                    <td class="p-2 flex justify-end items-center">
+                        {% for action in table.row_actions(request, object) %}
+                            {{ action(request) }}
+                        {% endfor %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {{ pagination.pagination(request, objects) }}
+{% endblock %}

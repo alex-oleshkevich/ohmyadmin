@@ -1,0 +1,9 @@
+{% import 'ohmyadmin/lib/buttons.html' as buttons %}
+
+{% macro button_action(action) %}
+    {{ buttons.link_button(action.text, action.url, action.icon, color=action.color) }}
+{% endmacro %}
+
+{% macro action(action) %}
+    {{ button_action(action) }}
+{% endmacro %}

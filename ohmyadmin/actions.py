@@ -1,43 +1,24 @@
-import dataclasses
+from __future__ import annotations
 
 import typing
 from starlette.requests import Request
 
+from ohmyadmin.helpers import render_to_string
 from ohmyadmin.layout import View
 
+ActionColor = typing.Literal['default', 'primary', 'text', 'danger']
 
-@dataclasses.dataclass
-class LinkAction(View):
-    text: str
-    url: str
-    icon: str = ''
+
+class Action(View):
+    pass
+
+
+class LinkAction(Action):
+    def __init__(self, text: str, url: str, icon: str = '', color: ActionColor = 'text') -> None:
+        self.text = text
+        self.url = url
+        self.icon = icon
+        self.color = color
 
     def render(self, request: Request) -> str:
-        return super().render(request)
-
-
-@dataclasses.dataclass
-class ConfirmAction:
-    title: str
-    action_url: str
-    message: str = ''
-    dangerous: bool = False
-    method: typing.Literal['get', 'post'] = 'post'
-
-
-@dataclasses.dataclass
-class Action:
-    @classmethod
-    def link(cls, text: str, url: str, icon: str = '') -> LinkAction:
-        return LinkAction(text=text, url=url, icon=icon)
-
-    @classmethod
-    def confirm(
-        cls,
-        title: str,
-        action_url: str,
-        message: str = '',
-        dangerous: bool = False,
-        method: typing.Literal['get', 'post'] = 'post',
-    ) -> ConfirmAction:
-        return ConfirmAction(title=title, message=message, dangerous=dangerous, action_url=action_url, method=method)
+        return render_to_string(request, 'ohmyadmin/ui/action_link.html', {'action': self})
