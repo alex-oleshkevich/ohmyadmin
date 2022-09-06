@@ -1,4 +1,4 @@
-import dataclasses
+from __future__ import annotations
 
 import abc
 import itertools
@@ -6,9 +6,9 @@ import sqlalchemy as sa
 import typing
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
-from starlette.datastructures import URL, MultiDict
+from starlette.datastructures import URL, FormData, MultiDict
 from starlette.requests import Request
-from starlette.responses import Response
+from starlette.responses import RedirectResponse, Response
 from starlette.types import Receive, Scope, Send
 from urllib.parse import parse_qsl, urlencode
 
@@ -76,15 +76,15 @@ class ActionGroup(Action):
         return iter(self.children)
 
 
-@dataclasses.dataclass
 class BatchAction(abc.ABC):
     id: str
-    label: str
+    label: str = 'Unlabelled'
     confirmation: str = ''
     dangerous: bool = False
 
+    @abc.abstractmethod
     async def apply(self, request: Request, ids: list[str], params: dict[str, str]) -> Response:
-        return Response()
+        ...
 
 
 def get_ordering_value(request: Request, param_name: str) -> list[str]:
@@ -99,7 +99,7 @@ def get_page_value(request: Request, param_name: str) -> int:
     page = 1
     try:
         page = max(1, int(request.query_params.get(param_name, 1)))
-    except TypeError:
+    except (TypeError, ValueError):
         pass
     return page
 
@@ -108,7 +108,7 @@ def get_page_size_value(request: Request, param_name: str, allowed: list[int], d
     page_size = default
     try:
         page_size = int(request.query_params.get(param_name, default))
-    except TypeError:
+    except (TypeError, ValueError):
         pass
     if page_size not in allowed:
         page_size = default
@@ -216,7 +216,7 @@ class TableView:
     columns: list[Column] = []
     page: int = 1
     page_param: str = 'page'
-    page_size: int = 50
+    page_size: int = 20
     page_sizes: list[int] = [25, 50, 75, 100]
     page_size_param: str = 'page_size'
     search_param: str = 'search'
@@ -277,24 +277,39 @@ class TableView:
     def table_actions(self, request: Request) -> typing.Iterable[Action]:
         return []
 
+    async def _dispatch_batch_action(self, request: Request, action_name: str, body: FormData) -> Response:
+        for action in self.batch_actions(request):
+            if action.id == action_name:
+                ids = body.getlist('selected')
+                return await action.apply(request, ids, body)
+        raise RuntimeError('Unknown batch action: ' + action_name)
+
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         async with self.dbsession() as session:
             request = Request(scope, receive, send)
             request.state.dbsession = session
 
-            queryset = self.get_queryset(request)
-            queryset = self.apply_filters(request, queryset)
-            objects = await self.paginate_queryset(request, queryset)
+            if request.method == 'POST':
+                data = await request.form()
+                match data:
+                    case {'_batch': action_name}:
+                        response = await self._dispatch_batch_action(request, action_name, data)
+                    case _:
+                        response = RedirectResponse(request.headers.get('referrer'))
+            else:
+                queryset = self.get_queryset(request)
+                queryset = self.apply_filters(request, queryset)
+                objects = await self.paginate_queryset(request, queryset)
 
-            response = request.state.admin.render_to_response(
-                request,
-                'ohmyadmin/tables/table.html',
-                {
-                    'table': self,
-                    'objects': objects,
-                    'page_title': self.label,
-                    'sorting_helper': SortingHelper(self.ordering_param),
-                    'search_query': get_search_value(request, self.search_param),
-                },
-            )
+                response = request.state.admin.render_to_response(
+                    request,
+                    'ohmyadmin/tables/table.html',
+                    {
+                        'table': self,
+                        'objects': objects,
+                        'page_title': self.label,
+                        'sorting_helper': SortingHelper(self.ordering_param),
+                        'search_query': get_search_value(request, self.search_param),
+                    },
+                )
             await response(scope, receive, send)

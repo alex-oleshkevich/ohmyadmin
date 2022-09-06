@@ -1,3 +1,73 @@
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
+
+@layer components {
+    input[type="text"],
+    input[type="url"],
+    input[type="password"],
+    input[type="search"],
+    input[type="date"],
+    input[type="datetime-local"],
+    input[type="time"],
+    input[type="month"],
+    input[type="number"],
+    input[type="week"],
+    input[type="email"],
+    select, textarea, [multiple] {
+        @apply rounded-md border border-slate-300 shadow-sm bg-white px-3 py-1.5 w-full leading-5
+    }
+
+    input[type="checkbox"], input[type="radio"] {
+        @apply rounded border border-slate-400
+    }
+
+    .btn {
+        @apply inline-flex gap-1 items-center rounded-md border border-transparent px-3 py-1.5 font-medium leading-5;
+        @apply border-slate-300 bg-white hover:bg-slate-100 active:bg-slate-200;
+    }
+
+    .btn[disabled] {
+        @apply cursor-not-allowed bg-slate-200 text-slate-400 hover:bg-slate-200 active:bg-slate-200;
+    }
+
+    .btn-primary {
+        @apply bg-blue-600 hover:bg-blue-600/75 active:bg-blue-700 text-white;
+    }
+
+    .btn-danger {
+        @apply bg-red-600 hover:bg-red-600/75 active:bg-red-700 text-white;
+    }
+
+    .btn-text {
+        @apply bg-transparent hover:bg-slate-100 active:bg-slate-200 text-slate-900 shadow-none;
+    }
+
+    .modal {
+        @apply fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity;
+    }
+
+    .modal .modal-spacer {
+        @apply flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0;
+    }
+
+    .modal .modal-actions {
+        @apply mt-5 sm:mt-4 sm:flex sm:flex-row-reverse gap-2;
+    }
+
+    .modal .modal-content {
+        @apply relative transform overflow-hidden rounded-lg bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6;
+    }
+
+    .dropdown {
+        @apply absolute right-0 bg-white shadow-lg border border-slate-200 py-1 rounded-md w-48 z-10;
+    }
+
+    .dropdown > ul {
+        @apply space-y-1;
+    }
+
+    .dropdown > ul li > a {
+        @apply rounded px-2 py-1.5 flex items-center gap-3 hover:bg-slate-100 active:bg-slate-200;
+    }
+}

@@ -7,7 +7,7 @@ from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
-from starlette.responses import Response
+from starlette.responses import RedirectResponse, Response
 from starlette.routing import Mount, Route
 
 from examples.models import User
@@ -19,6 +19,16 @@ from ohmyadmin.tables import ActionGroup, BatchAction, Column, TableView
 
 metadata = sa.MetaData()
 Base = declarative_base()
+
+
+class DeleteAllAction(BatchAction):
+    id = 'delete'
+    label = 'Delete all'
+    confirmation = 'Do you want to delete all items?'
+    dangerous = True
+
+    async def apply(self, request: Request, ids: list[str], params: dict[str, str]) -> Response:
+        return RedirectResponse(request.headers.get('referer') + "?done", 302)
 
 
 class UserTable(TableView):
@@ -54,7 +64,7 @@ class UserTable(TableView):
 
     def batch_actions(self, request: Request) -> typing.Iterable[BatchAction]:
         return [
-            BatchAction('bulk_delete', 'Delete', confirmation='Do you want to delete all these items?', dangerous=True),
+            DeleteAllAction(),
         ]
 
 
