@@ -45,7 +45,7 @@
                 <ul>
                     {% for action in action.children %}
                         <li>
-                            <a href="{{ action.url }}">
+                            <a href="{{ action.url }}" class="dropdown-item-{{ action.color }}">
                                 {{ icon(action.icon) if action.icon else '' }} {{ action.text }}
                             </a>
                         </li>
@@ -54,7 +54,7 @@
             </div>
         </button>
     {% else %}
-        <a href="{{ action.url }}" class="row-action">
+        <a href="{{ action.url }}" class="row-action row-action-{{ action.color }}">
             {{ tabler_icon(action.icon) if action.icon else '' }}
             <span>{{ action.text }}</span>
         </a>

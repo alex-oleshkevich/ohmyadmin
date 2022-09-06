@@ -1,8 +1,4 @@
 {% macro pagination(request, page) %}
-    {% set default_styles = 'hover:bg-slate-100 active:bg-slate-200' %}
-    {% set active_styles = 'bg-blue-700 hover:bg-blue-600 text-white' %}
-
-    <!-- pagination -->
     {% with start_index = page.start_index, end_index = page.end_index, total_rows = page.total_rows %}
         <div class="flex items-center justify-between">
             <div class="font-medium">
@@ -10,31 +6,27 @@
             </div>
 
             {% if page.total_pages > 1 %}
-                <div class="flex items-center justify-end gap-1">
+                <div class="pagination">
                     {% if page.has_previous %}
-                        <a
-                            href="{{ request.url.include_query_params(page=page.previous_page) }}"
-                            class="rounded py-2 px-3 font-medium flex items-center gap-2 {{ default_styles }}">
+                        <a href="{{ request.url.include_query_params(page=page.previous_page) }}">
                             {{ icon('arrow-left') }} {{ _('Previous') }}
                         </a>
                     {% endif %}
 
                     {% for page_number in page.iter_pages() %}
-                        {% set styles = active_styles if page_number == page.page else default_styles %}
                         {% if page_number %}
                             <a
                                 href="{{ request.url.include_query_params(page=page_number) }}"
-                                class="rounded py-2 px-3 ≈ font-medium {{ styles }}">
+                                class="{{ 'active' if page_number == page.page else '' }}">
                                 {{ page_number }}
                             </a>
                         {% else %}
-                            <span class="rounded py-2 px-3 font-medium">...</span>
+                            <span>...</span>
                         {% endif %}
                     {% endfor %}
 
                     {% if page.has_next %}
-                        <a href="{{ request.url.include_query_params(page=page.next_page) }}"
-                           class="rounded py-2 px-3 font-medium flex items-center gap-2 {{ default_styles }}">
+                        <a href="{{ request.url.include_query_params(page=page.next_page) }}">
                             {{ _('Next') }} {{ icon('arrow-right') }}
                         </a>
                     {% endif %}
@@ -42,5 +34,4 @@
             {% endif %}
         </div>
     {% endwith %}
-    <!-- end pagination -->
 {% endmacro %}

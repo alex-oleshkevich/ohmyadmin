@@ -550,6 +550,16 @@ select {
 [type='file']:focus {
   outline: 1px auto -webkit-focus-ring-color;
 }
+    body {
+  --tw-text-opacity: 1;
+  color: rgb(0 0 0 / var(--tw-text-opacity));
+}
+
+    a {
+  --tw-text-opacity: 1;
+  color: rgb(29 78 216 / var(--tw-text-opacity));
+}
+
     table {
   width: 100%;
 }
@@ -563,6 +573,16 @@ select {
     table th, table td {
   padding: 0.5rem;
   text-align: left;
+}
+
+    table th a {
+  --tw-text-opacity: 1;
+  color: rgb(0 0 0 / var(--tw-text-opacity));
+}
+
+    table th a:hover {
+  -webkit-text-decoration-line: underline;
+          text-decoration-line: underline;
 }
 
     table tbody tr {
@@ -1297,7 +1317,7 @@ input[type="checkbox"], input[type="radio"] {
   margin-top: calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));
   margin-bottom: calc(0.25rem * var(--tw-space-y-reverse));
 }
-.dropdown > ul li > a {
+.dropdown > ul li > a.dropdown-item, .dropdown > ul li > a {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -1306,14 +1326,20 @@ input[type="checkbox"], input[type="radio"] {
   padding-right: 0.5rem;
   padding-top: 0.375rem;
   padding-bottom: 0.375rem;
+  --tw-text-opacity: 1;
+  color: rgb(0 0 0 / var(--tw-text-opacity));
 }
-.dropdown > ul li > a:hover {
+.dropdown > ul li > a.dropdown-item:hover, .dropdown > ul li > a:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(241 245 249 / var(--tw-bg-opacity));
 }
-.dropdown > ul li > a:active {
+.dropdown > ul li > a.dropdown-item:active, .dropdown > ul li > a:active {
   --tw-bg-opacity: 1;
   background-color: rgb(226 232 240 / var(--tw-bg-opacity));
+}
+.dropdown > ul li > a.dropdown-item-danger {
+  --tw-text-opacity: 1;
+  color: rgb(185 28 28 / var(--tw-text-opacity));
 }
 /* tables */
 .row-action-dropdown {
@@ -1332,10 +1358,85 @@ input[type="checkbox"], input[type="radio"] {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
+  padding: 0.25rem;
+  --tw-text-opacity: 1;
+  color: rgb(0 0 0 / var(--tw-text-opacity));
 }
 .row-action:hover {
   -webkit-text-decoration-line: underline;
           text-decoration-line: underline;
+}
+.row-action.row-action-danger {
+  --tw-text-opacity: 1;
+  color: rgb(185 28 28 / var(--tw-text-opacity));
+}
+/* main menu */
+.main-menu-item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 0.375rem;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+  --tw-text-opacity: 1;
+  color: rgb(0 0 0 / var(--tw-text-opacity));
+}
+.main-menu-item:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(226 232 240 / var(--tw-bg-opacity));
+}
+.main-menu-item.active {
+  --tw-bg-opacity: 1;
+  background-color: rgb(219 234 254 / var(--tw-bg-opacity));
+  --tw-text-opacity: 1;
+  color: rgb(29 78 216 / var(--tw-text-opacity));
+}
+.main-menu-item.active:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(191 219 254 / var(--tw-bg-opacity));
+}
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
+}
+.pagination > a, .pagination > span {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 0.25rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  font-weight: 500;
+  --tw-text-opacity: 1;
+  color: rgb(0 0 0 / var(--tw-text-opacity));
+}
+.pagination > a:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(241 245 249 / var(--tw-bg-opacity));
+}
+.pagination > a:active {
+  --tw-bg-opacity: 1;
+  background-color: rgb(226 232 240 / var(--tw-bg-opacity));
+}
+.pagination > a.active {
+  --tw-bg-opacity: 1;
+  background-color: rgb(37 99 235 / var(--tw-bg-opacity));
+  --tw-text-opacity: 1;
+  color: rgb(255 255 255 / var(--tw-text-opacity));
+}
+.pagination > a.active:hover {
+  background-color: rgb(37 99 235 / 0.75);
+}
+.pagination > a.active:active {
+  --tw-bg-opacity: 1;
+  background-color: rgb(29 78 216 / var(--tw-bg-opacity));
 }
 .sr-only {
   position: absolute;
@@ -36562,14 +36663,6 @@ input[type="checkbox"], input[type="radio"] {
 .hover\:bg-slate-200:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(226 232 240 / var(--tw-bg-opacity));
-}
-.hover\:bg-blue-200:hover {
-  --tw-bg-opacity: 1;
-  background-color: rgb(191 219 254 / var(--tw-bg-opacity));
-}
-.hover\:bg-blue-600:hover {
-  --tw-bg-opacity: 1;
-  background-color: rgb(37 99 235 / var(--tw-bg-opacity));
 }
 .hover\:bg-gray-50:hover {
   --tw-bg-opacity: 1;

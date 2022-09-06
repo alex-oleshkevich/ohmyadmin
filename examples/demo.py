@@ -44,6 +44,7 @@ class UserTable(TableView):
             searchable=True,
             search_in=['first_name', 'last_name'],
             sort_by='last_name',
+            link_factory=lambda r, o: '/admin/example-table?from-link',
         ),
         Column('email', label='Email', searchable=True),
         Column('is_active', label='Active'),
@@ -51,24 +52,25 @@ class UserTable(TableView):
 
     def table_actions(self, request: Request) -> typing.Iterable[Action]:
         return [
-            LinkAction('Export', url='/admin', icon='download'),
-            LinkAction(text='New user', url='/admin/users/create', icon='plus', color='primary'),
+            LinkAction('/admin', 'Export', icon='download'),
+            LinkAction('/admin/users/create', 'New user', icon='plus', color='primary'),
         ]
 
     def row_actions(self, request: Request, entity: typing.Any) -> typing.Iterable[Action]:
         return [
             ActionGroup(
                 [
-                    LinkAction('Impersonate', '/admin/edit'),
-                    LinkAction('Deactivate', '/admin/edit'),
-                    LinkAction('Preview', '/admin/edit'),
-                    LinkAction('Export as CSV', '/admin/edit'),
-                    LinkAction('Transfer License', '/admin/edit'),
-                    LinkAction('View', '/admin/view', icon='eye'),
-                    LinkAction('Delete', '/admin/delete', icon='trash'),
+                    LinkAction('/admin/edit', 'Impersonate'),
+                    LinkAction('/admin/edit', 'Deactivate'),
+                    LinkAction('/admin/edit', 'Preview'),
+                    LinkAction('/admin/edit', 'Export as CSV'),
+                    LinkAction('/admin/edit', 'Transfer License'),
+                    LinkAction('/admin/view', 'View', icon='eye'),
+                    LinkAction('/admin/delete', 'Delete', icon='trash', color='danger'),
                 ]
             ),
-            LinkAction('Edit', '/admin/edit', icon='pencil'),
+            LinkAction('/admin/edit', 'Edit', icon='pencil'),
+            LinkAction('/admin/delete', icon='trash', color='danger'),
         ]
 
     def batch_actions(self, request: Request) -> typing.Iterable[BatchAction]:

@@ -3,6 +3,14 @@
 @import "tailwindcss/utilities";
 
 @layer base {
+    body {
+        @apply text-black
+    }
+
+    a {
+        @apply text-blue-700;
+    }
+
     table {
         @apply w-full;
     }
@@ -13,6 +21,10 @@
 
     table th, table td {
         @apply text-left p-2;
+    }
+
+    table th a {
+        @apply text-black hover:underline;
     }
 
     table tbody tr {
@@ -93,8 +105,12 @@
         @apply space-y-1;
     }
 
-    .dropdown > ul li > a {
-        @apply rounded px-2 py-1.5 flex items-center gap-3 hover:bg-slate-100 active:bg-slate-200;
+    .dropdown > ul li > a.dropdown-item, .dropdown > ul li > a {
+        @apply rounded px-2 py-1.5 flex items-center gap-3 hover:bg-slate-100 active:bg-slate-200 text-black;
+    }
+
+    .dropdown > ul li > a.dropdown-item-danger {
+        @apply text-red-700;
     }
 
     /* tables */
@@ -103,6 +119,34 @@
     }
 
     .row-action {
-        @apply inline-flex items-center gap-1 hover:underline;
+        @apply inline-flex items-center gap-1 hover:underline text-black p-1;
+    }
+
+    .row-action.row-action-danger {
+        @apply text-red-700;
+    }
+
+    /* main menu */
+    .main-menu-item {
+        @apply rounded-md flex items-center gap-3 w-full px-2 py-1 hover:bg-slate-200 text-black;
+    }
+
+    .main-menu-item.active {
+        @apply bg-blue-100 text-blue-700 hover:bg-blue-200;
+    }
+
+    .pagination {
+        @apply flex items-center justify-end gap-1;
+    }
+
+    .pagination > a, .pagination > span {
+        @apply rounded py-2 px-3 font-medium flex items-center gap-2 text-black;
+    }
+     .pagination > a {
+         @apply hover:bg-slate-100 active:bg-slate-200;
+     }
+
+    .pagination > a.active {
+        @apply bg-blue-600 hover:bg-blue-600/75 active:bg-blue-700 text-white;
     }
 }
