@@ -39,7 +39,7 @@
 
 {% macro row_action(action) %}
     {% if action.children %}
-        <button x-data="{open: false}" class="relative hover:bg-slate-200 rounded px-2 py-0.5" @click="open = !open">
+        <button x-data="{open: false}" class="row-action-dropdown" @click="open = !open">
             {{ icon('dots') }}
             <div x-show="open" @click.outside="open = false" class="dropdown">
                 <ul>
@@ -54,7 +54,7 @@
             </div>
         </button>
     {% else %}
-        <a href="{{ action.url }}" class="inline-flex items-center gap-1">
+        <a href="{{ action.url }}" class="row-action">
             {{ tabler_icon(action.icon) if action.icon else '' }}
             <span>{{ action.text }}</span>
         </a>
@@ -92,11 +92,11 @@
         </div>
 
         <div class="mb-6">
-            <table class="w-full">
-                <thead class="border-b border-slate-300">
+            <table>
+                <thead>
                 <tr>
                     {% if table.batch_actions(request) %}
-                        <th class="text-left p-2 w-8">
+                        <th class="w-8">
                             <input type="checkbox" name="selected" @click="toggleSelectAll">
                         </th>
                     {% endif %}
@@ -108,26 +108,24 @@
                 </thead>
                 <tbody>
                 {% for object in objects %}
-                    <tr
-                        class="hover:bg-slate-100 border-b border-slate-200"
-                        x-bind:class="{'bg-blue-100': selected.includes('{{ object.id }}')}"
-                    >
+                    <tr x-bind:class="{'selected': selected.includes('{{ object.id }}')}">
                         {% if table.batch_actions(request) %}
-                            <td class="p-2">
-                                <input
-                                    type="checkbox"
-                                    class="rounded border border-slate-400"
-                                    x-model="selected"
-                                    value="{{ object.id }}"
-                                >
+                            <td>
+                                <input type="checkbox" x-model="selected" value="{{ object.id }}">
                             </td>
                         {% endif %}
                         {% for column in table.columns %}
-                            <td class="p-2">
-                                {{ column.get_display_value(object) }}
+                            <td>
+                                {% if column.link_factory %}
+                                    <a href="{{ column.link_factory(request, object) }}">
+                                        {{ column.get_display_value(object) }}
+                                    </a>
+                                {% else %}
+                                    {{ column.get_display_value(object) }}
+                                {% endif %}
                             </td>
                         {% endfor %}
-                        <td class="p-2 flex justify-end items-center gap-1">
+                        <td class="actions">
                             {% for action in table.row_actions(request, object) %}
                                 {{ row_action(action) }}
                             {% endfor %}

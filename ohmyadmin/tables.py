@@ -37,6 +37,7 @@ class Column:
         value_format: str | Formatter | None = None,
         sort_by: str = '',
         search_in: list[str] | None = None,
+        link_factory: typing.Callable[[Request, typing.Any], str] | None = None,
     ) -> None:
         self.name = name
         self.label = label or name.replace('_', ' ').title()
@@ -46,6 +47,7 @@ class Column:
         self.value_format = value_format
         self.sort_by = sort_by or self.source
         self.search_in = search_in or [self.source]
+        self.link_factory = link_factory
 
     def get_value(self, obj: typing.Any) -> typing.Any:
         parts = self.source.split('.')
@@ -235,7 +237,7 @@ class TableView:
         filters: list[BaseFilter] = []
 
         # attach ordering filter
-        if sortables := [column.name for column in self.columns if column.sortable]:
+        if sortables := [column.sort_by for column in self.columns if column.sortable]:
             filters.append(OrderingFilter(sortables, self.ordering_param))
 
         # make search filter

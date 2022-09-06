@@ -2,6 +2,32 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+@layer base {
+    table {
+        @apply w-full;
+    }
+
+    table thead {
+        @apply border-b border-slate-300;
+    }
+
+    table th, table td {
+        @apply text-left p-2;
+    }
+
+    table tbody tr {
+        @apply hover:bg-slate-100 border-b border-slate-200;
+    }
+
+    table tbody tr.selected {
+        @apply bg-blue-100;
+    }
+
+    td.actions {
+        @apply flex justify-end items-center gap-1;
+    }
+}
+
 @layer components {
     input[type="text"],
     input[type="url"],
@@ -60,7 +86,7 @@
     }
 
     .dropdown {
-        @apply absolute right-0 bg-white shadow-lg border border-slate-200 py-1 rounded-md w-48 z-10;
+        @apply absolute right-0 bg-white shadow-xl border border-slate-200 py-1 rounded-md w-48 z-10;
     }
 
     .dropdown > ul {
@@ -69,5 +95,14 @@
 
     .dropdown > ul li > a {
         @apply rounded px-2 py-1.5 flex items-center gap-3 hover:bg-slate-100 active:bg-slate-200;
+    }
+
+    /* tables */
+    .row-action-dropdown {
+        @apply relative hover:bg-slate-200 rounded px-2 py-0.5;
+    }
+
+    .row-action {
+        @apply inline-flex items-center gap-1 hover:underline;
     }
 }

@@ -28,7 +28,7 @@ class DeleteAllAction(BatchAction):
     dangerous = True
 
     async def apply(self, request: Request, ids: list[str], params: dict[str, str]) -> Response:
-        return RedirectResponse(request.headers.get('referer') + "?done", 302)
+        return RedirectResponse(request.headers.get('referer'), 302)
 
 
 class UserTable(TableView):
@@ -37,8 +37,14 @@ class UserTable(TableView):
     queryset = sa.select(User)
     columns = [
         Column('id', label='ID'),
-        Column('first_name', label='First name', sortable=True, searchable=True),
-        Column('last_name', label='Last name', sortable=True, searchable=True),
+        Column(
+            'full_name',
+            label='Name',
+            sortable=True,
+            searchable=True,
+            search_in=['first_name', 'last_name'],
+            sort_by='last_name',
+        ),
         Column('email', label='Email', searchable=True),
         Column('is_active', label='Active'),
     ]
@@ -53,8 +59,11 @@ class UserTable(TableView):
         return [
             ActionGroup(
                 [
-                    LinkAction('Impersonate', '/admin/edit', icon='eye'),
-                    LinkAction('Deactivate', '/admin/edit', icon='eye'),
+                    LinkAction('Impersonate', '/admin/edit'),
+                    LinkAction('Deactivate', '/admin/edit'),
+                    LinkAction('Preview', '/admin/edit'),
+                    LinkAction('Export as CSV', '/admin/edit'),
+                    LinkAction('Transfer License', '/admin/edit'),
                     LinkAction('View', '/admin/view', icon='eye'),
                     LinkAction('Delete', '/admin/delete', icon='trash'),
                 ]

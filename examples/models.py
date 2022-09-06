@@ -16,6 +16,10 @@ class User(Base):
     is_active = sa.Column(sa.Boolean)
     created_at = sa.Column(sa.DateTime)
 
+    @property
+    def full_name(self) -> str:
+        return f'{self.first_name} {self.last_name}'
+
 
 class Country(Base):
     __tablename__ = 'countries'
