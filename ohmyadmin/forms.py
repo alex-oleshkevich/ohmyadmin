@@ -13,92 +13,9 @@ from starlette.types import Receive, Scope, Send
 from ohmyadmin.helpers import render_to_response, render_to_string
 
 Choices = typing.Iterable[tuple[str, str]]
-SyncChoices = typing.Callable[[Request], Choices]
-AsyncChoices = typing.Callable[[Request], typing.Awaitable[Choices]]
+SyncChoices = typing.Callable[['Form'], Choices]
+AsyncChoices = typing.Callable[['Form'], typing.Awaitable[Choices]]
 Validator = typing.Callable[[wtforms.Field, wtforms.Field], typing.Awaitable[None] | None]
-
-
-class Form(wtforms.Form):
-    _creation_counter = 0
-    _fields: dict[str, wtforms.Field]
-
-    def __init__(
-        self,
-        request: Request,
-        form_data: FormData | None = None,
-        instance: typing.Any | None = None,
-        prefix: str = '',
-        data: typing.Mapping | None = None,
-    ) -> None:
-        self.request = request
-        super().__init__(formdata=form_data, obj=instance, prefix=prefix, data=data)
-
-    @classmethod
-    async def from_request(
-        cls,
-        request: Request,
-        instance: typing.Any | None = None,
-        data: typing.Mapping | None = None,
-    ) -> Form:
-        form_data: FormData | None = None
-        if request.method == 'POST':
-            form_data = await request.form()
-        form = cls(request=request, form_data=form_data, instance=instance, data=data)
-
-        # process choices
-        for name, field in form._fields.items():
-            if choices_factory := getattr(field, 'choices_factory', None):
-                if inspect.iscoroutinefunction(choices_factory):
-                    field.choices = await choices_factory(request)
-                elif callable(choices_factory):
-                    field.choices = choices_factory(request)
-                else:
-                    field.choices = choices_factory.copy()
-
-                empty_choice = getattr(field, 'empty_choice', None)
-                if empty_choice is not None:
-                    field.choices.insert(0, ('', empty_choice))
-
-        return form
-
-    @classmethod
-    def from_layout(cls, layout: list[Layout], name: str | None = None) -> typing.Type[Form]:
-        fields = []
-        for element in layout:
-            fields.extend(list(element.get_form_fields()))
-
-        cls._creation_counter += 1
-        name = name or f'AutoForm{cls._creation_counter}'
-        form_fields = {field.name: field.create_form_field() for field in fields}
-        form_class = type(name, (Form,), form_fields)
-        return typing.cast(typing.Type[Form], form_class)
-
-    async def validate_async(self) -> bool:
-        success = True
-        for name, field in self._fields.items():
-            async_validators = [validator for validator in field.validators if inspect.iscoroutinefunction(validator)]
-            field.validators = [validator for validator in field.validators if validator not in async_validators]
-            if not field.validate(self):
-                success = False
-
-            for async_validator in async_validators:
-                try:
-                    await async_validator(self, field)
-                except wtforms.validators.StopValidation as ex:
-                    if ex.args and ex.args[0]:
-                        field.errors.append(ex.args[0])
-                        break
-                except wtforms.ValidationError as ex:
-                    success = False
-                    field.errors.append(ex.args[0])
-
-        return success
-
-    async def validate_on_submit(self, request: Request) -> bool:
-        if request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
-            return await self.validate_async()
-
-        return False
 
 
 class Layout(abc.ABC):
@@ -181,6 +98,9 @@ class Field(Layout):
 
         setattr(field, 'bind', binder)
         return field
+
+    async def prepare(self, form: Form) -> None:
+        pass
 
     def render(self, request: Request) -> str:
         return render_to_string(request, self.template, {'field': self})
@@ -393,23 +313,8 @@ class NestedField(Field):
 # ListField = FieldList
 
 
-class _SelectFormField(wtforms.SelectField):
-    def __init__(
-        self,
-        label: str | None = None,
-        validators: list[Validator] | None = None,
-        coerce: typing.Callable = str,
-        choices: Choices | None = None,
-        validate_choice: bool = True,
-        **kwargs: typing.Any,
-    ):
-        self.choices_factory = choices
-        self.empty_choice = kwargs.pop('empty_choice', None)
-        super().__init__(label, validators, coerce, validate_choice=validate_choice, **kwargs)
-
-
 class SelectField(Field):
-    field_class = _SelectFormField
+    field_class = wtforms.SelectField
 
     def __init__(
         self,
@@ -420,32 +325,30 @@ class SelectField(Field):
         empty_choice: str | None = '',
         **kwargs: typing.Any,
     ) -> None:
-        self.choices = choices or []
+        self.choices: Choices = []
+        self.choice_factory = choices
         self.coerce = coerce
         self.empty_choice = empty_choice
 
         super().__init__(name, **kwargs)
 
+    async def prepare(self, form: Form) -> None:
+        if inspect.iscoroutinefunction(self.choice_factory):
+            self.choices = await self.choice_factory(form)
+        elif callable(self.choice_factory):
+            self.choices = self.choice_factory(form)
+        elif self.choice_factory is not None:
+            self.choices = self.choice_factory
+
+        if self.empty_choice is not None:
+            self.choices.insert(0, ('', self.empty_choice))
+
     def get_form_field_options(self) -> dict[str, typing.Any]:
-        return {'choices': self.choices, 'coerce': self.coerce, 'empty_choice': self.empty_choice}
-
-
-class _SelectMultipleField(wtforms.SelectMultipleField):
-    def __init__(
-        self,
-        label: str | None = None,
-        validators: list[Validator] | None = None,
-        coerce: typing.Callable = str,
-        choices: Choices | None = None,
-        validate_choice: bool = True,
-        **kwargs: typing.Any,
-    ):
-        self.choices_factory = choices
-        super().__init__(label, validators, coerce, validate_choice=validate_choice, **kwargs)
+        return {'choices': self.choices, 'coerce': self.coerce}
 
 
 class SelectMultipleField(Field):
-    field_class = _SelectMultipleField
+    field_class = wtforms.SelectMultipleField
 
     def __init__(
         self,
@@ -455,52 +358,114 @@ class SelectMultipleField(Field):
         coerce: typing.Callable = str,
         **kwargs: typing.Any,
     ) -> None:
-        self.choices = choices or []
+        self.choices: Choices = []
+        self.choice_factory = choices or []
         self.coerce = coerce
 
         super().__init__(name, **kwargs)
+
+    async def prepare(self, form: Form) -> None:
+        if self.choice_factory is not None:
+            if inspect.iscoroutinefunction(self.choice_factory):
+                self.choices = await self.choice_factory(form)
+            elif callable(self.choice_factory):
+                self.choices = self.choice_factory(form)
+            elif self.choice_factory:
+                self.choices = self.choice_factory
 
     def get_form_field_options(self) -> dict[str, typing.Any]:
         return {'choices': self.choices, 'coerce': self.coerce}
 
 
-class _RadioFormField(wtforms.RadioField):
-    def __init__(
-        self,
-        label: str | None = None,
-        validators: list[Validator] | None = None,
-        coerce: typing.Callable = str,
-        choices: Choices | None = None,
-        validate_choice: bool = True,
-        **kwargs: typing.Any,
-    ):
-        self.choices_factory = choices
-        super().__init__(label, validators, coerce, validate_choice=validate_choice, **kwargs)
-
-
-class RadioField(Field):
-    field_class = _RadioFormField
+class RadioField(SelectMultipleField):
+    field_class = wtforms.RadioField
     template = 'ohmyadmin/forms/radio.html'
-
-    def __init__(
-        self,
-        name: str,
-        *,
-        choices: Choices | SyncChoices | AsyncChoices | None = None,
-        coerce: typing.Callable = str,
-        **kwargs: typing.Any,
-    ) -> None:
-        self.choices = choices or []
-        self.coerce = coerce
-
-        super().__init__(name, **kwargs)
-
-    def get_form_field_options(self) -> dict[str, typing.Any]:
-        return {'choices': self.choices, 'coerce': self.coerce}
 
 
 class TextareaField(Field):
     field_class = wtforms.TextAreaField
+
+
+def create_wtf_form_class(fields: typing.Iterable[Field]) -> typing.Type[wtforms.Form]:
+    counter = getattr(create_wtf_form_class, '_counter', 0) + 1
+    setattr(create_wtf_form_class, '_counter', counter)
+    form_class = type(
+        f'AutoWtfForm{counter}', (wtforms.Form,), {field.name: field.create_form_field() for field in fields}
+    )
+    return typing.cast(typing.Type[wtforms.Form], form_class)
+
+
+def collect_fields(layout: typing.Iterable[Layout]) -> typing.Iterable[Field]:
+    for element in layout:
+        yield from element.get_form_fields()
+
+
+class Form:
+    _creation_counter = 0
+    _fields: dict[str, wtforms.Field]
+
+    def __init__(
+        self,
+        fields: typing.Iterable[Layout],
+        form_data: FormData | None = None,
+        instance: typing.Any | None = None,
+        prefix: str = '',
+        data: typing.Mapping | None = None,
+    ) -> None:
+        self.layout = list(fields)
+        self.fields = list(collect_fields(self.layout))
+        self.instance = instance
+        self.prefix = prefix
+        self._data = data
+        self._form_data = form_data
+
+        self._form: wtforms.Form | None = None
+
+    async def validate_async(self) -> bool:
+        assert self._form, 'The form is not prepared.'
+        success = True
+        for name, field in self._form._fields.items():
+            async_validators = [validator for validator in field.validators if inspect.iscoroutinefunction(validator)]
+            field.validators = [validator for validator in field.validators if validator not in async_validators]
+            if not field.validate(self):
+                success = False
+
+            for async_validator in async_validators:
+                try:
+                    await async_validator(self, field)
+                except wtforms.validators.StopValidation as ex:
+                    if ex.args and ex.args[0]:
+                        field.errors.append(ex.args[0])
+                        break
+                except wtforms.ValidationError as ex:
+                    success = False
+                    field.errors.append(ex.args[0])
+
+        return success
+
+    async def validate_on_submit(self, request: Request) -> bool:
+        if request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
+            return await self.validate_async()
+
+        return False
+
+    async def prepare(self) -> None:
+        for field in self.fields:
+            await field.prepare(self)
+
+        form_class = create_wtf_form_class(self.fields)
+        self._form = form_class(formdata=self._form_data, obj=self.instance, prefix=self.prefix, data=self._data)
+
+    @classmethod
+    async def new(cls, request: Request, fields: typing.Iterable[Layout], instance: typing.Any | None = None) -> Form:
+        form_data = await request.form() if request.method in ['POST', 'PUT', 'PATCH', 'DELETE'] else None
+        form = cls(fields, form_data=form_data, instance=instance)
+        await form.prepare()
+        return form
+
+    def __iter__(self) -> typing.Iterator[Layout]:
+        assert self._form, 'The form is not prepared.'
+        return iter(self.layout)
 
 
 class FormView:
@@ -517,9 +482,8 @@ class FormView:
         pass
 
     async def view(self, request: Request) -> Response:
-        form_layout = self.get_layout()
-        form_class = Form.from_layout(form_layout)
-        form = await form_class.from_request(request)
+        form = await Form.new(request, fields=self.get_layout())
+
         if await form.validate_on_submit(request):
             await self.handle_form(request, form)
             return RedirectResponse(request.headers.get('referer'), 302)
@@ -530,7 +494,7 @@ class FormView:
             {
                 'request': request,
                 'page_title': self.label,
-                'layout': form_layout,
+                'layout': form,
             },
         )
 

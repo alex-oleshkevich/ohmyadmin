@@ -32,7 +32,6 @@ from ohmyadmin.forms import (
     Layout,
     MonthField,
     MultipleFileField,
-    NestedField,
     PasswordField,
     RadioField,
     SelectField,
@@ -119,11 +118,11 @@ async def not_admin_validator(form: wtforms.Form, field: wtforms.Field) -> None:
         raise wtforms.ValidationError('admin cannot be used')
 
 
-def sync_user_choices(request: Request):
+def sync_user_choices(form: Form):
     return [('1', 'Alex'), ('2', 'Jenny')]
 
 
-async def async_user_choices(request: Request):
+async def async_user_choices(form: Form):
     return [('1', 'Alex'), ('2', 'Jenny')]
 
 
@@ -154,7 +153,7 @@ class UserForm(FormView):
             TextField('last_name', label='Last name'),
             FileField('photo', label='Photo'),
             MultipleFileField('documents'),
-            NestedField('nested', form_class=ProfileForm.from_layout(ProfileForm.layout)),
+            # NestedField('nested', form_class=ProfileForm.from_layout(ProfileForm.layout)),
             EmailField('email', label='Email', autocomplete='email', placeholder='Current email'),
             PasswordField('password', label='Password', autocomplete='off'),
             CheckboxField('is_active', label='Is active?'),
