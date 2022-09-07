@@ -384,6 +384,11 @@ class NestedField(Field):
         self.form_class = form_class
         super().__init__(name, **kwargs)
 
+    def get_form_field_options(self) -> dict[str, typing.Any]:
+        options = super().get_form_field_options()
+        options.update({'form_class': self.form_class})
+        return options
+
 
 # ListField = FieldList
 
