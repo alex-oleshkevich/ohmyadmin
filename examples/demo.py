@@ -30,8 +30,10 @@ from ohmyadmin.forms import (
     IntegerField,
     IntegerRangeField,
     Layout,
+    ListField,
     MonthField,
     MultipleFileField,
+    NestedField,
     PasswordField,
     RadioField,
     SelectField,
@@ -118,25 +120,12 @@ async def not_admin_validator(form: wtforms.Form, field: wtforms.Field) -> None:
         raise wtforms.ValidationError('admin cannot be used')
 
 
-def sync_user_choices(form: Form):
+def sync_user_choices():
     return [('1', 'Alex'), ('2', 'Jenny')]
 
 
-async def async_user_choices(form: Form):
+async def async_user_choices():
     return [('1', 'Alex'), ('2', 'Jenny')]
-
-
-class ProfileForm(Form):
-    layout = [
-        TextField(
-            'first_name',
-            label='First name',
-            help_text="Summaries can't contain Markdown or HTML contents; only plain text.",
-            validators=[not_root_validator, not_admin_validator],
-        ),
-        TextField('last_name', label='Last name'),
-        PasswordField('password', label='Password', autocomplete='off'),
-    ]
 
 
 class UserForm(FormView):
@@ -153,14 +142,43 @@ class UserForm(FormView):
             TextField('last_name', label='Last name'),
             FileField('photo', label='Photo'),
             MultipleFileField('documents'),
-            # NestedField('nested', form_class=ProfileForm.from_layout(ProfileForm.layout)),
+            NestedField(
+                'embed',
+                Form(
+                    [
+                        TextField(
+                            'first_name',
+                            label='First name',
+                            help_text="Summaries can't contain Markdown or HTML contents; only plain text.",
+                            validators=[not_root_validator, not_admin_validator],
+                        ),
+                        TextField('last_name', label='Last name'),
+                        PasswordField('password', label='Password', autocomplete='off'),
+                    ]
+                ),
+            ),
+            ListField('list_text', TextField('_')),
+            ListField(
+                'list_forms',
+                NestedField(
+                    '_',
+                    [
+                        TextField(
+                            'first_name',
+                            label='First name',
+                            help_text="Summaries can't contain Markdown or HTML contents; only plain text.",
+                            validators=[not_root_validator, not_admin_validator],
+                        ),
+                        TextField('last_name', label='Last name'),
+                    ],
+                ),
+            ),
             EmailField('email', label='Email', autocomplete='email', placeholder='Current email'),
             PasswordField('password', label='Password', autocomplete='off'),
             CheckboxField('is_active', label='Is active?'),
             TextareaField('description', label='Bio'),
             SelectField('select', label='Static choices', choices=[('1', 'Alex'), ('2', 'Jenny')]),
             SelectField('select2', label='Sync choices', choices=sync_user_choices),
-            SelectField('select3', label='Async choices', choices=async_user_choices),
             URLField('website', label='Website'),
             IntegerField('age', label='Age', min=0, max=100, step=1, default=0),
             DecimalField('salary', label='Salary', min=100, max=1000.50, step=100, default=1000),
@@ -175,10 +193,8 @@ class UserForm(FormView):
             MonthField('month', label='Month'),
             SelectMultipleField('select_many', label='Static choices', choices=[('1', 'Alex'), ('2', 'Jenny')]),
             SelectMultipleField('select_many2', label='Sync choices', choices=sync_user_choices),
-            SelectMultipleField('select_many3', label='Async choices', choices=async_user_choices),
             RadioField('radio', label='Static choices', choices=[('1', 'Alex'), ('2', 'Jenny')]),
             RadioField('radio2', label='Sync choices', choices=sync_user_choices),
-            RadioField('radio3', label='Async choices', choices=async_user_choices),
         ]
 
 
