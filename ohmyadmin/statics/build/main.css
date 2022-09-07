@@ -601,11 +601,6 @@ select {
   background-color: rgb(219 234 254 / var(--tw-bg-opacity));
 }
 
-    table tbody tr.\!selected {
-  --tw-bg-opacity: 1;
-  background-color: rgb(219 234 254 / var(--tw-bg-opacity));
-}
-
     td.actions {
   display: flex;
   align-items: center;
@@ -1103,7 +1098,8 @@ select {
   bottom: auto;
   left: auto;
 }
-input[type="text"], input[type="url"], input[type="password"], input[type="search"], input[type="date"], input[type="datetime-local"], input[type="time"], input[type="month"], input[type="number"], input[type="week"], input[type="email"], select, textarea, [multiple] {
+input[type="text"], input[type="url"], input[type="password"], input[type="search"], input[type="date"], input[type="datetime"], input[type="datetime-local"], input[type="time"], input[type="month"], input[type="number"], input[type="week"], input[type="email"], input[type="tel"], input[type="file"], select, textarea, [multiple] {
+  display: block;
   width: 100%;
   border-radius: 0.375rem;
   border-width: 1px;
@@ -1121,7 +1117,7 @@ input[type="text"], input[type="url"], input[type="password"], input[type="searc
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
 }
 input[type="checkbox"], input[type="radio"] {
-  border-radius: 0.25rem;
+  border-radius: 9999px;
   border-width: 1px;
   --tw-border-opacity: 1;
   border-color: rgb(148 163 184 / var(--tw-border-opacity));
@@ -1398,6 +1394,7 @@ input[type="checkbox"], input[type="radio"] {
   --tw-bg-opacity: 1;
   background-color: rgb(191 219 254 / var(--tw-bg-opacity));
 }
+/* pagination */
 .pagination {
   display: flex;
   align-items: center;
@@ -1438,6 +1435,56 @@ input[type="checkbox"], input[type="radio"] {
   --tw-bg-opacity: 1;
   background-color: rgb(29 78 216 / var(--tw-bg-opacity));
 }
+/* forms */
+.form-group {
+  margin-bottom: 1rem;
+}
+.form-group label, .form-group .form-label {
+  margin-bottom: 0.25rem;
+  display: block;
+  font-weight: 500;
+}
+.form-errors {
+  margin-top: 0.25rem;
+  list-style-type: none;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  --tw-text-opacity: 1;
+  color: rgb(239 68 68 / var(--tw-text-opacity));
+}
+.form-help {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  --tw-text-opacity: 1;
+  color: rgb(71 85 105 / var(--tw-text-opacity));
+}
+.form-group input:not([type="checkbox"]), .form-group input:not([type="radio"]), .form-group input:not([type="radio"]), select {
+  max-width: 28rem;
+}
+.form-group-checkbox > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.form-group-checkbox label, .form-group-checkbox .form-label {
+  margin-bottom: 0px;
+}
+.form-radio-list {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.form-radio-list label {
+  margin-right: 0.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+textarea {
+        min-height: 128px;
+        max-width: 42rem;
+    }
 .sr-only {
   position: absolute;
   width: 1px;
@@ -36656,10 +36703,6 @@ input[type="checkbox"], input[type="radio"] {
   --tw-bg-opacity: 1;
   background-color: rgb(241 245 249 / var(--tw-bg-opacity));
 }
-.hover\:bg-blue-700:hover {
-  --tw-bg-opacity: 1;
-  background-color: rgb(29 78 216 / var(--tw-bg-opacity));
-}
 .hover\:bg-slate-200:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(226 232 240 / var(--tw-bg-opacity));
@@ -36695,10 +36738,6 @@ input[type="checkbox"], input[type="radio"] {
 .hover\:text-indigo-500:hover {
   --tw-text-opacity: 1;
   color: rgb(99 102 241 / var(--tw-text-opacity));
-}
-.hover\:underline:hover {
-  -webkit-text-decoration-line: underline;
-          text-decoration-line: underline;
 }
 .hover\:shadow-sm:hover {
   --tw-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -36740,10 +36779,6 @@ input[type="checkbox"], input[type="radio"] {
 .active\:bg-slate-200:active {
   --tw-bg-opacity: 1;
   background-color: rgb(226 232 240 / var(--tw-bg-opacity));
-}
-.active\:bg-blue-800:active {
-  --tw-bg-opacity: 1;
-  background-color: rgb(30 64 175 / var(--tw-bg-opacity));
 }
 .group:hover .group-hover\:text-indigo-600 {
   --tw-text-opacity: 1;

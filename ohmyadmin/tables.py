@@ -305,7 +305,7 @@ class TableView:
 
                 response = request.state.admin.render_to_response(
                     request,
-                    'ohmyadmin/tables/table.html',
+                    'ohmyadmin/table.html',
                     {
                         'table': self,
                         'objects': objects,

@@ -46,18 +46,21 @@
     input[type="password"],
     input[type="search"],
     input[type="date"],
+    input[type="datetime"],
     input[type="datetime-local"],
     input[type="time"],
     input[type="month"],
     input[type="number"],
     input[type="week"],
     input[type="email"],
+    input[type="tel"],
+    input[type="file"],
     select, textarea, [multiple] {
-        @apply rounded-md border border-slate-300 shadow-sm bg-white px-3 py-1.5 w-full leading-5
+        @apply rounded-md border border-slate-300 shadow-sm bg-white px-3 py-1.5 w-full leading-5 block;
     }
 
     input[type="checkbox"], input[type="radio"] {
-        @apply rounded border border-slate-400
+        @apply rounded-full border border-slate-400
     }
 
     .btn {
@@ -135,6 +138,7 @@
         @apply bg-blue-100 text-blue-700 hover:bg-blue-200;
     }
 
+    /* pagination */
     .pagination {
         @apply flex items-center justify-end gap-1;
     }
@@ -142,11 +146,56 @@
     .pagination > a, .pagination > span {
         @apply rounded py-2 px-3 font-medium flex items-center gap-2 text-black;
     }
-     .pagination > a {
-         @apply hover:bg-slate-100 active:bg-slate-200;
-     }
+
+    .pagination > a {
+        @apply hover:bg-slate-100 active:bg-slate-200;
+    }
 
     .pagination > a.active {
         @apply bg-blue-600 hover:bg-blue-600/75 active:bg-blue-700 text-white;
+    }
+
+    /* forms */
+    .form-group {
+        @apply mb-4;
+    }
+
+    .form-group label, .form-group .form-label {
+        @apply font-medium mb-1 block;
+    }
+
+    .form-errors {
+        @apply list-none text-sm mt-1 text-red-500;
+    }
+
+    .form-help {
+        @apply text-slate-600 mt-1 text-sm;
+    }
+
+    .form-group input:not([type="checkbox"]),
+    .form-group input:not([type="radio"]),
+    .form-group input:not([type="radio"]), select {
+        @apply max-w-md;
+    }
+
+    .form-group-checkbox > div:first-child {
+        @apply flex items-center gap-2;
+    }
+
+    .form-group-checkbox label, .form-group-checkbox .form-label {
+        @apply mb-0;
+    }
+
+    .form-radio-list {
+        @apply flex items-center gap-3;
+    }
+
+    .form-radio-list label {
+        @apply mr-1 inline-flex gap-2 items-center;
+    }
+
+    textarea {
+        min-height: 128px;
+        @apply max-w-2xl;
     }
 }

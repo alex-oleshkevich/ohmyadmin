@@ -1,0 +1,15 @@
+{% extends 'ohmyadmin/layout/app.html' %}
+{% import 'ohmyadmin/lib/buttons.html' as buttons %}
+
+{% block content %}
+    <form method="post" enctype="multipart/form-data">
+        {% for element in layout %}
+            {{ element.render(request) }}
+        {% endfor %}
+        <div class="flex items-center gap-2 mt-10">
+            {{ buttons.primary_button(_('Save'), type='submit') }}
+            {{ buttons.button(_('Save and return to list'), type='submit') }}
+            {{ buttons.button(_('Save and add new'), type='submit') }}
+        </div>
+    </form>
+{% endblock %}

@@ -11,16 +11,20 @@
     'text': text_styles,
 } %}
 
-{% macro link_button(text, url, icon='', classes='', color='default') %}
-    <a href="{{ url }}" class="{{ button_styles }} {{ classes }}{{ color_map[color] }}">
+{% macro link_button(text, url, icon='',  color='default') %}
+    <a href="{{ url }}" class="{{ button_styles }} {{ color_map[color] }}">
         {{ tabler_icon(icon) if icon else '' }}
         <span>{{ text }}</span>
     </a>
 {% endmacro %}
 
-{% macro button(text, type='button', icon='', classes='', color='default', attrs={}) %}
-    <button type="button" class="{{ button_styles }} {{ classes }}{{ color_map[color] }}" {{ attrs|dict_to_attrs }}>
+{% macro button(text, type='button', icon='',  color='default', attrs={}) %}
+    <button type="{{ type }}" class="{{ button_styles }} {{ color_map[color] }}" {{ attrs|dict_to_attrs }}>
         {{ tabler_icon(icon) if icon else '' }}
         <span>{{ text }}</span>
     </button>
+{% endmacro %}
+
+{% macro primary_button(text, type='button', icon='', attrs={}) %}
+    {{ button(text=text, type=type, icon=icon, color='primary', attrs=attrs ) }}
 {% endmacro %}

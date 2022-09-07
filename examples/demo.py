@@ -1,6 +1,7 @@
 import pathlib
 import sqlalchemy as sa
 import typing
+import wtforms
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 from starlette.applications import Starlette
@@ -13,6 +14,33 @@ from starlette.routing import Mount, Route
 from examples.models import User
 from ohmyadmin.actions import Action, LinkAction
 from ohmyadmin.app import OhMyAdmin, UserMenu
+from ohmyadmin.forms import (
+    CheckboxField,
+    DateField,
+    DateTimeField,
+    DecimalField,
+    DecimalRangeField,
+    EmailField,
+    Field,
+    FileField,
+    FloatField,
+    Form,
+    FormView,
+    HiddenField,
+    IntegerField,
+    IntegerRangeField,
+    MonthField,
+    MultipleFileField,
+    PasswordField,
+    RadioField,
+    SelectField,
+    SelectMultipleField,
+    TelField,
+    TextareaField,
+    TextField,
+    TimeField,
+    URLField,
+)
 from ohmyadmin.helpers import render_to_response
 from ohmyadmin.nav import MenuGroup, MenuItem
 from ohmyadmin.tables import ActionGroup, BatchAction, Column, TableView
@@ -24,8 +52,8 @@ Base = declarative_base()
 class DeleteAllAction(BatchAction):
     id = 'delete'
     label = 'Delete all'
-    confirmation = 'Do you want to delete all items?'
     dangerous = True
+    confirmation = 'Do you want to delete all items?'
 
     async def apply(self, request: Request, ids: list[str], params: dict[str, str]) -> Response:
         return RedirectResponse(request.headers.get('referer'), 302)
@@ -77,6 +105,78 @@ class UserTable(TableView):
         return [
             DeleteAllAction(),
         ]
+
+
+def not_root_validator(form: wtforms.Form, field: wtforms.Field) -> None:
+    if field.data == 'root':
+        raise wtforms.ValidationError('root cannot be used')
+
+
+async def not_admin_validator(form: wtforms.Form, field: wtforms.Field) -> None:
+    if field.data == 'admin':
+        raise wtforms.ValidationError('admin cannot be used')
+
+
+def sync_user_choices(request: Request):
+    return [('1', 'Alex'), ('2', 'Jenny')]
+
+
+async def async_user_choices(request: Request):
+    return [('1', 'Alex'), ('2', 'Jenny')]
+
+
+class ProfileForm(Form):
+    layout = [
+        TextField(
+            'first_name',
+            label='First name',
+            help_text="Summaries can't contain Markdown or HTML contents; only plain text.",
+            validators=[not_root_validator, not_admin_validator],
+        ),
+        TextField('last_name', label='Last name'),
+        PasswordField('password', label='Password', autocomplete='off'),
+    ]
+
+
+class UserForm(FormView):
+    form_layout = (
+        Field('field', label='Base field'),
+        TextField(
+            'first_name',
+            label='First name',
+            required=True,
+            help_text="Summaries can't contain Markdown or HTML contents; only plain text.",
+            validators=[not_root_validator, not_admin_validator],
+        ),
+        TextField('last_name', label='Last name'),
+        FileField('photo', label='Photo'),
+        MultipleFileField('documents'),
+        EmailField('email', label='Email', autocomplete='email', placeholder='Current email'),
+        PasswordField('password', label='Password', autocomplete='off'),
+        CheckboxField('is_active', label='Is active?'),
+        TextareaField('description', label='Bio'),
+        SelectField('select', label='Static choices', choices=[('1', 'Alex'), ('2', 'Jenny')]),
+        SelectField('select2', label='Sync choices', choices=sync_user_choices),
+        SelectField('select3', label='Async choices', choices=async_user_choices),
+        URLField('website', label='Website'),
+        IntegerField('age', label='Age', min=0, max=100, step=1, default=0),
+        DecimalField('salary', label='Salary', min=100, max=1000.50, step=100, default=1000),
+        FloatField('score', label='Score', default=3.5),
+        TelField('phone', label='Phone'),
+        IntegerRangeField('number_range', label='Integer range'),
+        DecimalRangeField('decimal_range', label='Decimal range'),
+        HiddenField('hidden', label='Hidden'),
+        DateTimeField('date_time', label='Date time'),
+        DateField('date', label='Date'),
+        TimeField('time', label='Time'),
+        MonthField('month', label='Month'),
+        SelectMultipleField('select_many', label='Static choices', choices=[('1', 'Alex'), ('2', 'Jenny')]),
+        SelectMultipleField('select_many2', label='Sync choices', choices=sync_user_choices),
+        SelectMultipleField('select_many3', label='Async choices', choices=async_user_choices),
+        RadioField('radio', label='Static choices', choices=[('1', 'Alex'), ('2', 'Jenny')]),
+        RadioField('radio2', label='Sync choices', choices=sync_user_choices),
+        RadioField('radio3', label='Async choices', choices=async_user_choices),
+    )
 
 
 def index_view(request: Request) -> Response:
@@ -145,6 +245,7 @@ class Admin(OhMyAdmin):
                 [
                     MenuItem.to_route('Example page', 'example_page'),
                     MenuItem.to_route('Example table', 'UserTable'),
+                    MenuItem.to_route('Example form', 'UserForm'),
                     MenuItem.to_route('Actions', 'actions'),
                 ],
             ),
@@ -170,6 +271,7 @@ app = Starlette(
                     Route('/example-page', example_page),
                     Route('/actions', actions_overview, name='actions'),
                     Route('/example-table', UserTable(dbsession=async_session)),
+                    Route('/example-form', UserForm(dbsession=async_session)),
                 ],
             ),
         ),

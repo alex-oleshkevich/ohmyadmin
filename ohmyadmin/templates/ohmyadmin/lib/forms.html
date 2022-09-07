@@ -1,0 +1,61 @@
+{% macro form_help(field) %}
+    {% if field.help_text %}
+        <div class="form-help">{{ field.help_text }}</div>
+    {% endif %}
+{% endmacro %}
+
+{% macro form_label(field) %}
+    <label for="{{ field.form_field.label.field_id }}">
+        {{ field.label }}
+        {% if field.form_field.flags.required %}
+            <span class="text-red-500">*</span>
+        {% endif %}
+    </label>
+{% endmacro %}
+
+{% macro form_errors(field) %}
+    <ul class="form-errors">
+        {% for error in field.form_field.errors %}
+            <li>{{ error }}</li>
+        {% endfor %}
+    </ul>
+
+{% endmacro %}
+
+{% macro form_input(field) %}
+    {{ field.form_field }}
+{% endmacro %}
+
+{% macro form_field(field) %}
+    <div class="form-group">
+        {{ form_label(field) }}
+        {{ form_input(field) }}
+        {{ form_help(field) if field.help_text else '' }}
+        {{ form_errors(field) if field.form_field.errors else '' }}
+    </div>
+{% endmacro %}
+
+{% macro checkbox_field(field) %}
+    <div class="form-group form-group-checkbox">
+        <div>
+            {{ form_input(field) }}
+            {{ form_label(field) }}
+        </div>
+        {{ form_help(field) if field.help_text else '' }}
+        {{ form_errors(field) if field.form_field.errors else '' }}
+    </div>
+{% endmacro %}
+
+
+{% macro radio_field(field) %}
+    <div class="form-group form-group-radio">
+        {{ form_label(field) }}
+        <div class="form-radio-list">
+            {% for element in field.form_field %}
+                <label for="{{ element.label.field_id }}">{{ element }} {{ element.label.text }}</label>
+            {% endfor %}
+        </div>
+        {{ form_help(field) if field.help_text else '' }}
+        {{ form_errors(field) if field.form_field.errors else '' }}
+    </div>
+{% endmacro %}
