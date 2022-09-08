@@ -9,7 +9,7 @@ import wtforms
 from sqlalchemy.orm import sessionmaker
 from starlette.datastructures import FormData, UploadFile
 from starlette.requests import Request
-from starlette.responses import RedirectResponse, Response
+from starlette.responses import Response
 from starlette.types import Receive, Scope, Send
 from wtforms.fields.core import UnboundField
 from wtforms.utils import unset_value
@@ -498,6 +498,7 @@ class Form(wtforms.Form):
 class FormView:
     label: str = 'Edit'
     form_fields: list[UnboundField] | None = None
+    initial_data: dict[str, typing.Any] | None = None
 
     def __init__(self, dbsession: sessionmaker) -> None:
         self.dbsession = dbsession
@@ -505,27 +506,30 @@ class FormView:
     def get_form_fields(self) -> typing.Iterable[UnboundField]:
         return list(self.form_fields or [])
 
-    async def handle_form(self, request: Request, form: wtforms.Form) -> Response:
-        print(form.data)
-        return Response('form handled')
-
     def get_layout(self, form: Form) -> Layout:
         return FormLayout(
             child=Grid([FormField(field) for field in form], cols=1),
-            actions=[
-                SubmitAction('Save', color='primary'),
-                SubmitAction('Save and return to list'),
-                SubmitAction('Save and add new'),
-            ],
+            actions=[SubmitAction('Save', color='primary')],
         )
 
+    def get_initial_data(self, request: Request) -> dict[str, typing.Any]:
+        return self.initial_data or {}
+
+    def get_object(self, request: Request) -> typing.Any | None:
+        return None
+
+    async def handle_form(self, request: Request, form: wtforms.Form) -> Response:
+        raise NotImplementedError()
+
     async def view(self, request: Request) -> Response:
-        form = await Form.new(request, fields=self.get_form_fields())
+        instance = self.get_object(request)
+        form = await Form.new(
+            request, fields=self.get_form_fields(), instance=instance, data=self.get_initial_data(request)
+        )
         layout = self.get_layout(form)
 
         if await form.validate_on_submit(request):
-            await self.handle_form(request, form)
-            return RedirectResponse(request.headers.get('referer'), 302)
+            return await self.handle_form(request, form)
 
         return render_to_response(
             request,
