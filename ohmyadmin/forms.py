@@ -6,7 +6,6 @@ import inspect
 import typing
 import wtforms
 from sqlalchemy.orm import sessionmaker
-from starlette.datastructures import FormData
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
 from starlette.types import Receive, Scope, Send
@@ -461,25 +460,12 @@ def collect_fields(layout: typing.Iterable[Layout]) -> typing.Iterable[Field]:
         yield from element.get_form_fields()
 
 
-class Form:
-    def __init__(
-        self,
-        fields: typing.Iterable[Layout],
-        form_data: FormData | None = None,
-        instance: typing.Any | None = None,
-        prefix: str = '',
-        data: typing.Mapping | None = None,
-    ) -> None:
-        self.layout = list(fields)
-        self.fields = list(collect_fields(self.layout))
-        self.instance = instance
-
-        form_class = create_wtf_form_class(self.fields)
-        self.form = form_class(formdata=form_data, obj=instance, prefix=prefix, data=data)
+class Form(wtforms.Form):
+    _creation_counter = 0
 
     async def validate_async(self) -> bool:
         success = True
-        for name, field in self.form._fields.items():
+        for name, field in self._fields.items():
             async_validators = [validator for validator in field.validators if inspect.iscoroutinefunction(validator)]
             field.validators = [validator for validator in field.validators if validator not in async_validators]
             if not field.validate(self):
@@ -505,33 +491,54 @@ class Form:
         return False
 
     @classmethod
-    async def new(cls, request: Request, fields: typing.Iterable[Layout], instance: typing.Any | None = None) -> Form:
-        form_data = await request.form() if request.method in ['POST', 'PUT', 'PATCH', 'DELETE'] else None
-        return cls(fields, form_data=form_data, instance=instance)
+    def from_fields(cls, fields: typing.Iterable[Field]) -> typing.Type[Form]:
+        cls._creation_counter += 1
+        form_class = type(
+            f'AutoForm{cls._creation_counter}', (cls,), {field.name: field.create_form_field() for field in fields}
+        )
+        return typing.cast(typing.Type[Form], form_class)
 
-    def __iter__(self) -> typing.Iterator[Layout]:
-        return iter(self.layout)
+    @classmethod
+    async def from_request(
+        cls,
+        request: Request,
+        instance: typing.Any | None = None,
+        data: dict[str, typing.Any] | None = None,
+    ) -> Form:
+        form_data = await request.form() if request.method in ['POST', 'PUT', 'PATCH', 'DELETE'] else None
+        return cls(formdata=form_data, obj=instance, data=data)
+
+    @classmethod
+    async def new(
+        cls,
+        request: Request,
+        fields: typing.Iterable[Field],
+        instance: typing.Any | None = None,
+        data: dict[str, typing.Any] | None = None,
+    ) -> Form:
+        form_class = cls.from_fields(fields)
+        return await form_class.from_request(request, instance=instance, data=data)
 
 
 class FormView:
     label: str = 'Edit'
-    form_layout: list[Layout] = []
+    form_fields: list[Field] | None = None
 
     def __init__(self, dbsession: sessionmaker) -> None:
         self.dbsession = dbsession
 
-    def get_layout(self) -> list[Layout]:
-        return self.form_layout
+    def get_form_fields(self) -> typing.Iterable[Field]:
+        return list(self.form_fields or [])
 
     async def handle_form(self, request: Request, form: wtforms.Form) -> Response:
         print(form.data)
-        return
+        return Response('form handled')
 
     async def view(self, request: Request) -> Response:
-        form = await Form.new(request, fields=self.get_layout())
+        form = await Form.new(request, fields=self.get_form_fields())
 
         if await form.validate_on_submit(request):
-            await self.handle_form(request, form.form)
+            await self.handle_form(request, form)
             return RedirectResponse(request.headers.get('referer'), 302)
 
         return render_to_response(

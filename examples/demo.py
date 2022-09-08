@@ -4,6 +4,7 @@ import typing
 import wtforms
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
+from starception import StarceptionMiddleware
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.middleware.sessions import SessionMiddleware
@@ -131,7 +132,7 @@ async def async_user_choices():
 
 
 class UserForm(FormView):
-    def get_layout(self) -> list[Layout]:
+    def get_form_fields(self) -> list[Field]:
         return [
             Field('field', label='Base field'),
             TextField(
@@ -141,59 +142,59 @@ class UserForm(FormView):
                 help_text="Summaries can't contain Markdown or HTML contents; only plain text.",
                 validators=[not_root_validator, not_admin_validator],
             ),
-            TextField('last_name', label='Last name'),
-            FileField('photo', label='Photo'),
-            MultipleFileField('documents'),
-            EmbedField(
-                'embed',
-                [
-                    TextField(
-                        'first_name',
-                        label='First name',
-                        help_text="Summaries can't contain Markdown or HTML contents; only plain text.",
-                        validators=[not_root_validator, not_admin_validator],
-                    ),
-                    TextField('last_name', label='Last name'),
-                    PasswordField('password', label='Password', autocomplete='off'),
-                ],
-                cols=3,
-            ),
-            ListField('list_text', TextField('_')),
-            EmbedManyField(
-                'embed_many',
-                [
-                    TextField(
-                        'first_name',
-                        label='First name',
-                        help_text="Summaries can't contain Markdown or HTML contents; only plain text.",
-                        validators=[not_root_validator, not_admin_validator],
-                    ),
-                    TextField('last_name', label='Last name'),
-                    SelectField('select', label='Static choices', choices=[('1', 'Alex'), ('2', 'Jenny')]),
-                ],
-            ),
-            EmailField('email', label='Email', autocomplete='email', placeholder='Current email'),
-            PasswordField('password', label='Password', autocomplete='off'),
-            CheckboxField('is_active', label='Is active?'),
-            TextareaField('description', label='Bio'),
-            SelectField('select', label='Static choices', choices=[('1', 'Alex'), ('2', 'Jenny')]),
-            SelectField('select2', label='Sync choices', choices=sync_user_choices),
-            URLField('website', label='Website'),
-            IntegerField('age', label='Age', min=0, max=100, step=1, default=0),
-            DecimalField('salary', label='Salary', min=100, max=1000.50, step=100, default=1000),
-            FloatField('score', label='Score', default=3.5),
-            TelField('phone', label='Phone'),
-            IntegerRangeField('number_range', label='Integer range'),
-            DecimalRangeField('decimal_range', label='Decimal range'),
-            HiddenField('hidden', label='Hidden'),
-            DateTimeField('date_time', label='Date time'),
-            DateField('date', label='Date'),
-            TimeField('time', label='Time'),
-            MonthField('month', label='Month'),
-            SelectMultipleField('select_many', label='Static choices', choices=[('1', 'Alex'), ('2', 'Jenny')]),
-            SelectMultipleField('select_many2', label='Sync choices', choices=sync_user_choices),
-            RadioField('radio', label='Static choices', choices=[('1', 'Alex'), ('2', 'Jenny')]),
-            RadioField('radio2', label='Sync choices', choices=sync_user_choices),
+            # TextField('last_name', label='Last name'),
+            # FileField('photo', label='Photo'),
+            # MultipleFileField('documents'),
+            # EmbedField(
+            #     'embed',
+            #     [
+            #         TextField(
+            #             'first_name',
+            #             label='First name',
+            #             help_text="Summaries can't contain Markdown or HTML contents; only plain text.",
+            #             validators=[not_root_validator, not_admin_validator],
+            #         ),
+            #         TextField('last_name', label='Last name'),
+            #         PasswordField('password', label='Password', autocomplete='off'),
+            #     ],
+            #     cols=3,
+            # ),
+            # ListField('list_text', TextField('_')),
+            # EmbedManyField(
+            #     'embed_many',
+            #     [
+            #         TextField(
+            #             'first_name',
+            #             label='First name',
+            #             help_text="Summaries can't contain Markdown or HTML contents; only plain text.",
+            #             validators=[not_root_validator, not_admin_validator],
+            #         ),
+            #         TextField('last_name', label='Last name'),
+            #         SelectField('select', label='Static choices', choices=[('1', 'Alex'), ('2', 'Jenny')]),
+            #     ],
+            # ),
+            # EmailField('email', label='Email', autocomplete='email', placeholder='Current email'),
+            # PasswordField('password', label='Password', autocomplete='off'),
+            # CheckboxField('is_active', label='Is active?'),
+            # TextareaField('description', label='Bio'),
+            # SelectField('select', label='Static choices', choices=[('1', 'Alex'), ('2', 'Jenny')]),
+            # SelectField('select2', label='Sync choices', choices=sync_user_choices),
+            # URLField('website', label='Website'),
+            # IntegerField('age', label='Age', min=0, max=100, step=1, default=0),
+            # DecimalField('salary', label='Salary', min=100, max=1000.50, step=100, default=1000),
+            # FloatField('score', label='Score', default=3.5),
+            # TelField('phone', label='Phone'),
+            # IntegerRangeField('number_range', label='Integer range'),
+            # DecimalRangeField('decimal_range', label='Decimal range'),
+            # HiddenField('hidden', label='Hidden'),
+            # DateTimeField('date_time', label='Date time'),
+            # DateField('date', label='Date'),
+            # TimeField('time', label='Time'),
+            # MonthField('month', label='Month'),
+            # SelectMultipleField('select_many', label='Static choices', choices=[('1', 'Alex'), ('2', 'Jenny')]),
+            # SelectMultipleField('select_many2', label='Sync choices', choices=sync_user_choices),
+            # RadioField('radio', label='Static choices', choices=[('1', 'Alex'), ('2', 'Jenny')]),
+            # RadioField('radio2', label='Sync choices', choices=sync_user_choices),
         ]
 
 
@@ -277,6 +278,7 @@ async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession
 app = Starlette(
     debug=True,
     middleware=[
+        Middleware(StarceptionMiddleware),
         Middleware(SessionMiddleware, secret_key='key!', path='/'),
     ],
     routes=[
