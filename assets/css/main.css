@@ -170,7 +170,7 @@
     }
 
     .form-group label, .form-group .form-label {
-        @apply font-medium mb-1 block;
+        @apply font-medium mb-1 flex items-center gap-1;
     }
 
     .form-errors {

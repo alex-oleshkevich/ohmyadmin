@@ -1464,7 +1464,9 @@ textarea {
 }
 .form-group label, .form-group .form-label {
   margin-bottom: 0.25rem;
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
   font-weight: 500;
 }
 .form-errors {

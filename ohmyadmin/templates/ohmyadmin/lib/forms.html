@@ -1,13 +1,13 @@
 {% macro form_help(field) %}
-    {% if field.help_text %}
-        <div class="form-help">{{ field.help_text }}</div>
+    {% if field.description %}
+        <div class="form-help">{{ field.description }}</div>
     {% endif %}
 {% endmacro %}
 
 {% macro form_label(field) %}
-    <label for="{{ field.form_field.label.field_id }}">
+    <label for="{{ field.label.field_id }}">
         {{ field.label }}
-        {% if field.form_field.flags.required %}
+        {% if field.flags.required %}
             <span class="text-red-500">*</span>
         {% endif %}
     </label>
@@ -15,7 +15,7 @@
 
 {% macro form_errors(field) %}
     <ul class="form-errors">
-        {% for error in field.form_field.errors %}
+        {% for error in field.errors %}
             <li>{{ error }}</li>
         {% endfor %}
     </ul>
@@ -23,15 +23,15 @@
 {% endmacro %}
 
 {% macro form_input(field) %}
-    {{ field.form_field }}
+    {{ field }}
 {% endmacro %}
 
 {% macro form_field(field) %}
     <div class="form-group">
         {{ form_label(field) }}
         {{ form_input(field) }}
-        {{ form_help(field) if field.help_text else '' }}
-        {{ form_errors(field) if field.form_field.errors else '' }}
+        {{ form_help(field) if field.description else '' }}
+        {{ form_errors(field) if field.errors else '' }}
     </div>
 {% endmacro %}
 
@@ -41,8 +41,8 @@
             {{ form_input(field) }}
             {{ form_label(field) }}
         </div>
-        {{ form_help(field) if field.help_text else '' }}
-        {{ form_errors(field) if field.form_field.errors else '' }}
+        {{ form_help(field) if field.description else '' }}
+        {{ form_errors(field) if field.errors else '' }}
     </div>
 {% endmacro %}
 
@@ -50,49 +50,42 @@
     <div class="form-group form-group-radio">
         {{ form_label(field) }}
         <div class="form-radio-list">
-            {% for element in field.form_field %}
+            {% for element in field %}
                 <label for="{{ element.label.field_id }}">{{ element }} {{ element.label.text }}</label>
             {% endfor %}
         </div>
-        {{ form_help(field) if field.help_text else '' }}
-        {{ form_errors(field) if field.form_field.errors else '' }}
+        {{ form_help(field) if field.description else '' }}
+        {{ form_errors(field) if field.errors else '' }}
     </div>
 {% endmacro %}
 
-{% macro list_field_item(form, index, override_index = False) %}
-    {% if override_index %}
-        <template x-if="!deleted.includes(index + startIndex)">
-    {% else %}
-        <template x-if="!deleted.includes({{ index }})" x-data="{ startIndex: 0, index: {{ index }} }">
-    {% endif %}
-<div class="flex items-center justify-between gap-5 mb-2">
-    <div class="flex-1">
-        {{ form(**{
-                        'x-bind:id': "`{}`".format(form.name|replace(index, '${index + startIndex}')),
-                        'x-bind:name': "`{}`".format(form.name|replace(index, '${index + startIndex}')),
-                    }) }}
+{% macro list_field_item(form) %}
+    <div class="flex items-center justify-between gap-5 mb-2">
+        <div class="flex-1">{{ form }}</div>
+        <div>
+            <button type="button" class="delete-icon" @click="deleted.push(index)">
+                {{ tabler_icon('trash') }}
+            </button>
+        </div>
     </div>
-    <div>
-        <button type="button" class="delete-icon" @click="deleted.push(index + startIndex)">
-            {{ tabler_icon('trash') }}
-        </button>
-    </div>
-</div>
-</template>
 {% endmacro %}
 
 {% macro list_field(field) %}
     <div
         class="form-group form-group-list max-w-lg"
-        x-data="{deleted: [], startIndex: {{ field.form_field|length }}, newCounter: 0}"
+        x-data="{deleted: [], newCounter: 0, startIndex: {{ field|length }} }"
     >
         {{ form_label(field) }}
         <div>
-            {% for form in field.form_field %}
-                {{ list_field_item(form, loop.index0) }}
+            {% for form in field %}
+                <template x-if="!deleted.includes({{ loop.index0 }})" x-data="{ index: {{ loop.index0 }} }">
+                    {{ list_field_item(form) }}
+                </template>
             {% endfor %}
-            <template x-for="index in newCounter">
-                {{ list_field_item(field.form_field|first, 0, override_index=true) }}
+            <template x-for="_index in newCounter">
+                <template x-if="!deleted.includes(_index + startIndex)" x-data="{index: _index + startIndex}">
+                    {{ list_field_item(field.create_empty_entry()) }}
+                </template>
             </template>
         </div>
         <div>
@@ -109,27 +102,27 @@
         {{ form_label(field) }}
         <div class="border rounded-md border-gray-300 p-2 gap-5 grid grid-cols-{{ field.cols }}">
             {% for form in field %}
-                {{ form }}
+                {{ form.render() }}
             {% endfor %}
         </div>
     </div>
 {% endmacro %}
 
-{% macro embed_many_field_item(form, field, index, override_index=false) %}
-    <section class="border border-gray-300 rounded-md p-2">
-        <header class="flex items-center justify-between">
+{% macro embed_many_field_item(form) %}
+    <section class="border border-gray-300 rounded-md mb-2" :index="index">
+        <header class="flex items-center justify-between bg-slate-100">
             <div></div>
             <div>
-                <button type="button" class="delete-icon" @click="deleted.push(index + startIndex)">
+                <button type="button" class="delete-icon" @click="deleted.push(index)">
                     {{ tabler_icon('trash') }}
                 </button>
             </div>
         </header>
-        <main>
+        <main class="p-2">
             <div class="flex items-center gap-5 mb-2">
                 <div class="grid grid-cols-3 gap-5 flex-1">
-                    {% for form_field, field_field  in form|zip(field.fields) %}
-                        {{ field_field.clone_with(form_field) }}
+                    {% for form_field in form %}
+                        {{ form_field.render() }}
                     {% endfor %}
                 </div>
             </div>
@@ -138,20 +131,23 @@
 {% endmacro %}
 
 {% macro embed_many_field(field) %}
-    <div class="form-group" x-data="{deleted: [], newCounter: 0, startIndex: {{ field.form_field|length }},}">
+    <div class="form-group" x-data="{deleted: [], newCounter: 0, startIndex: {{ field|length }}}">
         {{ form_label(field) }}
-        <div class="space-y-3">
-            {% for form in field.form_field %}
-                {{ embed_many_field_item(form, field) }}
+        <div>
+            {% for form in field %}
+                <template x-if="!deleted.includes({{ loop.index0 }})" x-data="{ index: {{ loop.index0 }} }">
+                    {{ embed_many_field_item(form) }}
+                </template>
             {% endfor %}
-            <template x-for="index in newCounter">
-                {{ embed_many_field_item(field.form_field|first, field, 0, override_index=true) }}
+            <template x-for="_index in newCounter">
+                <template x-if="!deleted.includes(_index + startIndex)" x-data="{index: _index + startIndex}">
+                    {{ embed_many_field_item(field.create_empty_entry()) }}
+                </template>
             </template>
         </div>
         <div>
             <button type="button" class="btn btn-link" @click="newCounter += 1">
-                {{ tabler_icon('plus') }}
-                {{ _('Add a new item') }}
+                {{ tabler_icon('plus') }} {{ _('Add a new item') }}
             </button>
         </div>
     </div>

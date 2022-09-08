@@ -1,3 +1,4 @@
+import datetime
 import pathlib
 import sqlalchemy as sa
 import typing
@@ -29,11 +30,9 @@ from ohmyadmin.forms import (
     FloatField,
     Form,
     FormView,
-    Grid,
     HiddenField,
     IntegerField,
     IntegerRangeField,
-    Layout,
     ListField,
     MonthField,
     MultipleFileField,
@@ -134,67 +133,71 @@ async def async_user_choices():
 class UserForm(FormView):
     def get_form_fields(self) -> list[Field]:
         return [
-            Field('field', label='Base field'),
             TextField(
-                'first_name',
-                label='First name',
+                'field',
+                label='Field demo',
                 required=True,
-                help_text="Summaries can't contain Markdown or HTML contents; only plain text.",
+                description='This is a help text',
+                default='Hello',
                 validators=[not_root_validator, not_admin_validator],
+                placeholder='Like in passport',
             ),
-            # TextField('last_name', label='Last name'),
-            # FileField('photo', label='Photo'),
-            # MultipleFileField('documents'),
-            # EmbedField(
-            #     'embed',
-            #     [
-            #         TextField(
-            #             'first_name',
-            #             label='First name',
-            #             help_text="Summaries can't contain Markdown or HTML contents; only plain text.",
-            #             validators=[not_root_validator, not_admin_validator],
-            #         ),
-            #         TextField('last_name', label='Last name'),
-            #         PasswordField('password', label='Password', autocomplete='off'),
-            #     ],
-            #     cols=3,
-            # ),
-            # ListField('list_text', TextField('_')),
-            # EmbedManyField(
-            #     'embed_many',
-            #     [
-            #         TextField(
-            #             'first_name',
-            #             label='First name',
-            #             help_text="Summaries can't contain Markdown or HTML contents; only plain text.",
-            #             validators=[not_root_validator, not_admin_validator],
-            #         ),
-            #         TextField('last_name', label='Last name'),
-            #         SelectField('select', label='Static choices', choices=[('1', 'Alex'), ('2', 'Jenny')]),
-            #     ],
-            # ),
-            # EmailField('email', label='Email', autocomplete='email', placeholder='Current email'),
-            # PasswordField('password', label='Password', autocomplete='off'),
-            # CheckboxField('is_active', label='Is active?'),
-            # TextareaField('description', label='Bio'),
-            # SelectField('select', label='Static choices', choices=[('1', 'Alex'), ('2', 'Jenny')]),
-            # SelectField('select2', label='Sync choices', choices=sync_user_choices),
-            # URLField('website', label='Website'),
-            # IntegerField('age', label='Age', min=0, max=100, step=1, default=0),
-            # DecimalField('salary', label='Salary', min=100, max=1000.50, step=100, default=1000),
-            # FloatField('score', label='Score', default=3.5),
-            # TelField('phone', label='Phone'),
-            # IntegerRangeField('number_range', label='Integer range'),
-            # DecimalRangeField('decimal_range', label='Decimal range'),
-            # HiddenField('hidden', label='Hidden'),
-            # DateTimeField('date_time', label='Date time'),
-            # DateField('date', label='Date'),
-            # TimeField('time', label='Time'),
-            # MonthField('month', label='Month'),
-            # SelectMultipleField('select_many', label='Static choices', choices=[('1', 'Alex'), ('2', 'Jenny')]),
-            # SelectMultipleField('select_many2', label='Sync choices', choices=sync_user_choices),
-            # RadioField('radio', label='Static choices', choices=[('1', 'Alex'), ('2', 'Jenny')]),
-            # RadioField('radio2', label='Sync choices', choices=sync_user_choices),
+            CheckboxField('is_active', label='Is active?'),
+            PasswordField('password', label='Password', autocomplete='off'),
+            EmailField('email', label='Email', autocomplete='email', placeholder='Current email'),
+            URLField('website', label='Website'),
+            IntegerField('age', label='Age', min_value=10, max_value=100, step=1, default=10),
+            FloatField('score', label='Score', default=3.5, min_value=1, max_value=5, step=0.1),
+            DecimalField('salary', label='Salary', min_value=100, max_value=1000.50, step=100, default=1000),
+            TelField('phone', label='Phone'),
+            IntegerRangeField('number_range', label='Integer range'),
+            DecimalRangeField('decimal_range', label='Decimal range'),
+            FileField('photo', label='Photo'),
+            MultipleFileField('documents'),
+            HiddenField('hidden', label='Hidden', default='hidden value'),
+            DateTimeField('date_time', label='Date time', default=datetime.datetime.now()),
+            DateField('date', label='Date', default=datetime.datetime.now().date()),
+            TimeField('time', label='Time', default=datetime.datetime.now().time()),
+            MonthField('month', label='Month', default=datetime.datetime.now().date()),
+            TextareaField(
+                'description', label='Bio', placeholder='Type here', min_length=1, max_length=100, default='s'
+            ),
+            RadioField('radio', label='Static choices', default=1, choices=[('1', 'Alex'), ('2', 'Jenny')]),
+            RadioField('radio2', label='Sync choices', default=2, choices=sync_user_choices),
+            SelectField('select', label='Static choices', choices=[('1', 'Alex'), ('2', 'Jenny')]),
+            SelectField('select2', label='Sync choices', choices=sync_user_choices),
+            SelectMultipleField('select_many', label='Static choices', choices=[('1', 'Alex'), ('2', 'Jenny')]),
+            SelectMultipleField('select_many2', label='Sync choices', choices=sync_user_choices),
+            ListField('list_text', TextField('_'), default=['buslik', 'zeniotka']),
+            EmbedField(
+                'embed',
+                Form.from_fields(
+                    [
+                        TextField(
+                            'first_name', label='First name', validators=[not_root_validator, not_admin_validator]
+                        ),
+                        TextField('last_name', label='Last name'),
+                        PasswordField('password', label='Password', autocomplete='off'),
+                    ]
+                ),
+                cols=3,
+            ),
+            EmbedManyField(
+                'embed_many',
+                Form.from_fields(
+                    [
+                        TextField(
+                            'first_name', label='First name', validators=[not_root_validator, not_admin_validator]
+                        ),
+                        TextField('last_name', label='Last name'),
+                        PasswordField('password', label='Password', autocomplete='off'),
+                    ]
+                ),
+                default=[
+                    {'first_name': 'Alex', 'last_name': 'Oleshkevich', 'password': 'password'},
+                    {'first_name': 'Jenny', 'last_name': 'Korzun', 'password': 'password'},
+                ],
+            ),
         ]
 
 

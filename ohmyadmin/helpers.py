@@ -15,10 +15,10 @@ _template_context: contextvars.ContextVar[dict[str, typing.Any]] = contextvars.C
 
 
 @contextlib.contextmanager
-def globalize_admin(admin: OhMyAdmin) -> typing.Iterable[None]:
-    _app.set(admin)
+def globalize_admin(admin: OhMyAdmin) -> typing.Iterator[None]:
+    reset_token = _app.set(admin)
     yield
-    _app.reset()
+    _app.reset(reset_token)
 
 
 def get_current_admin() -> OhMyAdmin:
@@ -26,10 +26,10 @@ def get_current_admin() -> OhMyAdmin:
 
 
 @contextlib.contextmanager
-def globalize_template_context(context: dict[str, typing.Any]) -> typing.Iterable[None]:
-    _template_context.set(context)
+def globalize_template_context(context: dict[str, typing.Any]) -> typing.Iterator[None]:
+    token = _template_context.set(context)
     yield
-    _template_context.reset()
+    _template_context.reset(token)
 
 
 def get_current_template_context() -> dict[str, typing.Any]:

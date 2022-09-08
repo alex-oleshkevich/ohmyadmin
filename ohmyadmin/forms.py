@@ -1,14 +1,18 @@
 from __future__ import annotations
 
 import abc
-import copy
+import datetime
+import decimal
 import inspect
 import typing
 import wtforms
 from sqlalchemy.orm import sessionmaker
+from starlette.datastructures import FormData, UploadFile
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
 from starlette.types import Receive, Scope, Send
+from wtforms.fields.core import UnboundField
+from wtforms.utils import unset_value
 
 from ohmyadmin.helpers import render_to_response, render_to_string
 
@@ -19,9 +23,6 @@ Validator = typing.Callable[[wtforms.Field, wtforms.Field], typing.Awaitable[Non
 
 class Layout(abc.ABC):
     template = ''
-
-    def get_form_fields(self) -> typing.Iterable[Field]:
-        raise NotImplementedError()
 
     def render(self) -> str:
         if not self.template:
@@ -39,425 +40,383 @@ class Grid(Layout):
         self.gap = gap
         self.children = children
 
-    def get_form_fields(self) -> typing.Iterable[Field]:
-        yield from self.children
-
     def __iter__(self) -> typing.Iterator[Layout]:
         return iter(self.children)
 
 
-class Field(Layout):
+T = typing.TypeVar('T')
+
+
+class Field(typing.Generic[T], wtforms.Field):
     template = 'ohmyadmin/forms/field.html'
-    field_class: typing.Type[wtforms.Field] = wtforms.StringField
+    data: T
 
     def __init__(
         self,
-        name: str,
+        attr_name: str,
         *,
-        label: str = '',
+        label: str | None = None,
         required: bool = False,
-        help_text: str = '',
+        description: str = '',
         read_only: bool = False,
-        default: typing.Any = None,
+        default: T | None = None,
         validators: typing.Iterable[Validator] | None = None,
         widget_attrs: dict[str, str | bool] | None = None,
         template: str | None = None,
+        **kwargs: typing.Any,
     ) -> None:
-        self.name = name
-        self.label = label or name.replace('_', ' ').title()
-        self.help_text = help_text
-        self.default = default
-        self.read_only = read_only
-        self.validators = validators or []
-        self.required = required
+        self.attr_name = attr_name
+        self.validators = list(validators or [])
         self.widget_attrs = widget_attrs or {}
         self.template = template or self.template
 
-        # this value will be set on form construction
-        self.form_field: wtforms.Field | None = None
+        if read_only:
+            self.widget_attrs.update({'readonly': 'readonly'})
 
-    def get_validators(self) -> typing.Iterable[Validator]:
-        for validator in self.validators:
-            yield validator
+        if required:
+            self.validators.append(wtforms.validators.data_required())
 
-        if self.required:
-            yield wtforms.validators.data_required()
-
-    def get_widget_attrs(self) -> dict[str, str | bool]:
-        attrs = self.widget_attrs
-        if self.required:
-            attrs['required'] = ''
-        if self.read_only:
-            attrs['readonly'] = ''
-        return attrs
-
-    def get_form_fields(self) -> typing.Iterable[Field]:
-        yield self
-
-    def get_form_field_options(self) -> dict[str, typing.Any]:
-        return {}
-
-    def create_form_field(self) -> wtforms.Field:
-        field = self.field_class(
-            label=self.label,
-            default=self.default,
-            description=self.help_text,
-            validators=list(self.get_validators()),
-            render_kw=self.get_widget_attrs(),
-            **self.get_form_field_options(),
+        super().__init__(
+            label=label,
+            validators=validators,
+            description=description,
+            default=default,
+            render_kw=widget_attrs,
+            **kwargs,
         )
-        original_binder = getattr(field, 'bind')
-
-        def binder(*args: typing.Any, **kwargs: typing.Any) -> wtforms.Field:
-            self.form_field = original_binder(*args, **kwargs)
-            return self.form_field
-
-        setattr(field, 'bind', binder)
-        return field
 
     def render(self) -> str:
         return render_to_string(self.template, {'field': self})
 
-    def clone_with(self, form_field: wtforms.Field | None = None) -> Field:
-        clone = copy.deepcopy(self)
-        if form_field:
-            clone.form_field = form_field
-        return clone
-
     def __repr__(self) -> str:
-        return f'<{self.__class__.__name__}: name={self.name}, label={self.label}>'
-
-    __str__ = render
-    __call__ = render
+        return f'<{self.__class__.__name__}: name={self.attr_name}>'
 
 
-class CheckboxField(Field):
+class CheckboxField(Field[bool], wtforms.BooleanField):
     template = 'ohmyadmin/forms/checkbox.html'
-    field_class = wtforms.BooleanField
 
 
-class TextField(Field):
+class TextField(Field[str], wtforms.StringField):
     inputmode: str = 'text'
+    template = 'ohmyadmin/forms/text.html'
 
     def __init__(
         self,
-        name: str,
+        attr_name: str,
         *,
-        label: str = '',
-        required: bool = False,
         placeholder: str = '',
-        help_text: str = '',
-        read_only: bool = False,
-        default: typing.Any = None,
-        validators: typing.Iterable[Validator] | None = None,
         autocomplete: str = '',
         inputmode: str = '',
-        widget_attrs: dict[str, str | bool] | None = None,
+        **kwargs: typing.Any,
     ) -> None:
-        widget_attrs = widget_attrs or {}
+        widget_attrs = kwargs.pop('widget_attrs', {})
         inputmode = inputmode or self.inputmode
-        widget_attrs['inputmode'] = inputmode or self.inputmode
-
+        if inputmode:
+            widget_attrs['inputmode'] = inputmode
         if autocomplete:
             widget_attrs['autocomplete'] = autocomplete
         if placeholder:
             widget_attrs['placeholder'] = placeholder
 
-        super().__init__(
-            name,
-            label=label,
-            required=required,
-            help_text=help_text,
-            read_only=read_only,
-            default=default,
-            validators=validators,
-            widget_attrs=widget_attrs,
-        )
+        super().__init__(attr_name, widget_attrs=widget_attrs, **kwargs)
 
 
-class PasswordField(TextField):
-    field_class = wtforms.PasswordField
+class PasswordField(TextField, wtforms.PasswordField):
+    template = 'ohmyadmin/forms/password.html'
 
 
-class EmailField(TextField):
+class EmailField(TextField, wtforms.EmailField):
     inputmode = 'email'
-    field_class = wtforms.EmailField
+    template = 'ohmyadmin/forms/email.html'
 
 
-class URLField(TextField):
+class URLField(TextField, wtforms.URLField):
     inputmode = 'url'
-    field_class = wtforms.URLField
+    template = 'ohmyadmin/forms/email.html'
 
 
-class IntegerField(TextField):
+class IntegerField(Field[int], wtforms.IntegerField):
     inputmode = 'numeric'
-    field_class = wtforms.IntegerField
+    template = 'ohmyadmin/forms/integer.html'
 
     def __init__(
         self,
-        name: str,
+        attr_name: str,
         *,
-        min: int | None = None,
-        max: int | None = None,
+        min_value: int | None = None,
+        max_value: int | None = None,
         step: int | None = None,
         **kwargs: typing.Any,
     ) -> None:
-        self.min = min
-        self.max = max
-        self.step = step
+        validators = kwargs.pop('validators', [])
+        attrs = kwargs.pop('widget_attrs', {})
+        if min_value or max_value:
+            validators.append(wtforms.validators.number_range(min=min_value, max=max_value))
+        if step:
+            attrs['step'] = step
 
-        super().__init__(name, **kwargs)
-
-    def get_widget_attrs(self) -> dict[str, str | bool]:
-        attrs = super().get_widget_attrs()
-        if self.min is not None:
-            attrs['min'] = str(self.min)
-        if self.max is not None:
-            attrs['max'] = str(self.max)
-        if self.step is not None:
-            attrs['step'] = str(self.step)
-        return attrs
+        super().__init__(attr_name, validators=validators, widget_attrs=attrs, **kwargs)
 
 
-class FloatField(TextField):
+class FloatField(Field[float], wtforms.FloatField):
     inputmode = 'numeric'
-    field_class = wtforms.FloatField
+    template = 'ohmyadmin/forms/float.html'
+    widget = wtforms.widgets.NumberInput()
 
     def __init__(
         self,
-        name: str,
+        attr_name: str,
         *,
-        min: float | None = None,
-        max: float | None = None,
+        min_value: float | None = None,
+        max_value: float | None = None,
         step: float | None = None,
         **kwargs: typing.Any,
     ) -> None:
-        self.min = min
-        self.max = max
-        self.step = step
-        super().__init__(name, **kwargs)
+        validators = kwargs.pop('validators', [])
+        attrs = kwargs.pop('widget_attrs', {})
+        if min_value or max_value:
+            if min_value:
+                attrs['min'] = min_value
+            if max_value:
+                attrs['max'] = max_value
+            validators.append(wtforms.validators.number_range(min=min_value, max=max_value))
+        if step:
+            attrs['step'] = step
 
-    def get_validators(self) -> typing.Iterable[Validator]:
-        yield from super().get_validators()
-        if self.min or self.max:
-            yield wtforms.validators.number_range(min=self.min, max=self.max)
+        super().__init__(attr_name, validators=validators, widget_attrs=attrs, **kwargs)
 
 
 class DecimalField(FloatField):
     inputmode = 'decimal'
-    field_class = wtforms.DecimalField
-
-    def __init__(
-        self,
-        name: str,
-        *,
-        places: int = 2,
-        rounding: int | None = None,
-        **kwargs: typing.Any,
-    ) -> None:
-        self.places = places
-        self.rounding = rounding
-        super().__init__(name, **kwargs)
-
-    def get_form_field_options(self) -> dict[str, typing.Any]:
-        options = super().get_form_field_options()
-        options.update({'places': self.places, 'rounding': self.rounding})
-        return options
+    template = 'ohmyadmin/forms/decimal.html'
 
 
-class TelField(TextField):
+class TelField(TextField, wtforms.TelField):
     inputmode = 'tel'
-    field_class = wtforms.TelField
+    template = 'ohmyadmin/forms/tel.html'
 
 
-class IntegerRangeField(Field):
-    field_class = wtforms.IntegerRangeField
+class IntegerRangeField(Field[int], wtforms.IntegerRangeField):
+    template = 'ohmyadmin/forms/integer_range.html'
 
 
-class DecimalRangeField(Field):
-    field_class = wtforms.DecimalRangeField
+class DecimalRangeField(Field[decimal.Decimal], wtforms.DecimalRangeField):
+    template = 'ohmyadmin/forms/decimal_range.html'
 
 
-class FileField(Field):
-    field_class = wtforms.FileField
+class FileField(Field[UploadFile], wtforms.FileField):
+    template = 'ohmyadmin/forms/file.html'
 
 
-class MultipleFileField(Field):
-    field_class = wtforms.MultipleFileField
+class MultipleFileField(Field[list[UploadFile]], wtforms.MultipleFileField):
+    template = 'ohmyadmin/forms/file_multiple.html'
 
 
-class HiddenField(Field):
-    field_class = wtforms.HiddenField
+class HiddenField(Field[typing.Any], wtforms.HiddenField):
+    template = 'ohmyadmin/forms/hidden.html'
 
 
-class DateTimeField(Field):
-    field_class = wtforms.DateTimeLocalField
+class DateTimeField(Field[datetime.datetime], wtforms.DateTimeLocalField):
+    template = 'ohmyadmin/forms/datetime.html'
 
-    def get_form_field_options(self) -> dict[str, typing.Any]:
-        options = super().get_form_field_options()
-        options.setdefault(
-            'format',
-            [
-                "%Y-%m-%d %H:%M",
-                "%Y-%m-%dT%H:%M",
-                "%Y-%m-%d %H:%M:%S",
-                "%Y-%m-%dT%H:%M:%S",
-            ],
-        )
-        return options
+    def __init__(self, attr_name: str, *, format: list[str] | None = None, **kwargs: typing.Any) -> None:
+        format = format or [
+            "%Y-%m-%d %H:%M",
+            "%Y-%m-%dT%H:%M",
+            "%Y-%m-%d %H:%M:%S",
+            "%Y-%m-%dT%H:%M:%S",
+        ]
+        super().__init__(attr_name, format=format, **kwargs)
 
 
-class DateField(Field):
-    field_class = wtforms.DateField
+class DateField(Field[datetime.date], wtforms.DateField):
+    template = 'ohmyadmin/forms/date.html'
+
+    def __init__(self, attr_name: str, *, format: str = "%Y-%m-%d", **kwargs: typing.Any) -> None:
+        super().__init__(attr_name, format=format, **kwargs)
 
 
-class TimeField(Field):
-    field_class = wtforms.TimeField
+class TimeField(Field[datetime.time], wtforms.TimeField):
+    template = 'ohmyadmin/forms/time.html'
 
 
-class MonthField(Field):
-    field_class = wtforms.MonthField
+class MonthField(Field[datetime.date], wtforms.MonthField):
+    template = 'ohmyadmin/forms/month.html'
+
+    def __init__(self, attr_name: str, *, format: str = "%Y-%m", **kwargs: typing.Any) -> None:
+        super().__init__(attr_name, format=format, **kwargs)
 
 
-class ListField(Field):
-    field_class = wtforms.FieldList
-    template = 'ohmyadmin/forms/list.html'
-
-    def __init__(
-        self, name: str, field: Field, min_entries: int = 1, max_entries: int | None = None, **kwargs: typing.Any
-    ) -> None:
-        self.field = field
-        self.min_entries = min_entries
-        self.max_entries = max_entries
-        kwargs.setdefault('default', [])
-        super().__init__(name, **kwargs)
-
-    def get_form_field_options(self) -> dict[str, typing.Any]:
-        options = super().get_form_field_options()
-        options.update(
-            {
-                'min_entries': self.min_entries,
-                'max_entries': self.max_entries,
-                'unbound_field': self.field.create_form_field(),
-            }
-        )
-        return options
-
-
-class EmbedField(Field):
-    field_class = wtforms.FormField
-    template = 'ohmyadmin/forms/embed.html'
-
-    def __init__(self, name: str, fields: typing.Iterable[Layout], cols: int = 2, **kwargs: typing.Any) -> None:
-        self.cols = cols
-        self.fields = list(collect_fields(fields))
-        super().__init__(name, **kwargs)
-
-    def get_form_field_options(self) -> dict[str, typing.Any]:
-        options = super().get_form_field_options()
-        options.update({'form_class': create_wtf_form_class(self.fields)})
-        return options
-
-    def __iter__(self) -> typing.Iterator[Layout]:
-        return iter(self.fields)
-
-
-class EmbedManyField(Field):
-    field_class = wtforms.FieldList
-    template = 'ohmyadmin/forms/embed_many.html'
+class TextareaField(Field[str], wtforms.TextAreaField):
+    template = 'ohmyadmin/forms/textarea.html'
 
     def __init__(
         self,
-        name: str,
-        fields: typing.Iterable[Field],
-        min_entries: int = 1,
-        max_entries: int | None = None,
+        attr_name: str,
+        *,
+        placeholder: str = '',
+        min_length: int = -1,
+        max_length: int = -1,
         **kwargs: typing.Any,
     ) -> None:
-        self.min_entries = min_entries
-        self.max_entries = max_entries
-        self.fields = list(collect_fields(fields))
-        kwargs.setdefault('default', [])
-        super().__init__(name, **kwargs)
+        widget_attrs = kwargs.pop('widget_attrs', {})
+        if placeholder:
+            widget_attrs['placeholder'] = placeholder
 
-    def get_form_field_options(self) -> dict[str, typing.Any]:
-        form_class = create_wtf_form_class(self.fields)
+        validators = kwargs.pop('validators', [])
+        if min_length or max_length:
+            validators.append(wtforms.validators.length(min=min_length, max=max_length))
 
-        options = super().get_form_field_options()
-        options.update(
-            {
-                'min_entries': self.min_entries,
-                'max_entries': self.max_entries,
-                'unbound_field': wtforms.FormField(form_class=form_class),
-            }
-        )
-        return options
+        super().__init__(attr_name, validators=validators, widget_attrs=widget_attrs, **kwargs)
 
 
-class SelectField(Field):
-    field_class = wtforms.SelectField
+class SelectField(Field[typing.Any], wtforms.SelectField):
+    template = 'ohmyadmin/forms/select.html'
 
     def __init__(
         self,
-        name: str,
+        attr_name: str,
         *,
         choices: Choices | SyncChoices | None = None,
         coerce: typing.Callable = str,
         empty_choice: str | None = '',
         **kwargs: typing.Any,
     ) -> None:
-        self.coerce = coerce
-        self.choices = list(choices() if callable(choices) else (choices or []))
+        coerce = coerce
+        choices = list(choices() if callable(choices) else (choices or []))
         if empty_choice:
-            self.choices.insert(0, ('', empty_choice))
+            choices.insert(0, ('', empty_choice))
 
-        super().__init__(name, **kwargs)
-
-    def get_form_field_options(self) -> dict[str, typing.Any]:
-        return {'choices': self.choices, 'coerce': self.coerce}
+        super().__init__(attr_name, choices=choices, coerce=coerce, **kwargs)
 
 
-class SelectMultipleField(Field):
-    field_class = wtforms.SelectMultipleField
+class SelectMultipleField(Field[list[typing.Any]], wtforms.SelectMultipleField):
+    template = 'ohmyadmin/forms/select_multiple.html'
 
     def __init__(
         self,
-        name: str,
+        attr_name: str,
         *,
         choices: Choices | SyncChoices | None = None,
         coerce: typing.Callable = str,
         **kwargs: typing.Any,
     ) -> None:
-        self.coerce = coerce
-        self.choices = choices() if callable(choices) else choices or []
+        coerce = coerce
+        choices = choices() if callable(choices) else choices or []
 
-        super().__init__(name, **kwargs)
-
-    def get_form_field_options(self) -> dict[str, typing.Any]:
-        return {'choices': self.choices, 'coerce': self.coerce}
+        super().__init__(attr_name, choices=choices, coerce=coerce, **kwargs)
 
 
-class RadioField(SelectMultipleField):
-    field_class = wtforms.RadioField
+class RadioField(Field[typing.Any], wtforms.RadioField):
     template = 'ohmyadmin/forms/radio.html'
 
 
-class TextareaField(Field):
-    field_class = wtforms.TextAreaField
+class ListField(Field[typing.Any], wtforms.FieldList):
+    template = 'ohmyadmin/forms/list.html'
+
+    def __init__(
+        self,
+        attr_name: str,
+        unbound_field: UnboundField,
+        min_entries: int = 1,
+        max_entries: int | None = None,
+        **kwargs: typing.Any,
+    ) -> None:
+        kwargs.setdefault('default', [])
+        super().__init__(
+            attr_name,
+            unbound_field=unbound_field,
+            min_entries=min_entries,
+            max_entries=max_entries,
+            **kwargs,
+        )
+
+    def create_empty_entry(self) -> Form:
+        id = "%s%s${index}" % (self.id, self._separator)
+        name = "%s%s${index}" % (self.short_name, self._separator)
+        field = self.unbound_field.bind(
+            form=None,
+            id=id,
+            name=name,
+            prefix=self._prefix,
+            _meta=self.meta,
+            translations=self._translations,
+        )
+        field.process(None)
+        field.render_kw['x-bind:id'] = "`{}`".format(id)
+        field.render_kw['x-bind:name'] = "`{}`".format(name)
+        return field
+
+    def _add_entry(
+        self, formdata: FormData | None = None, data: typing.Any = unset_value, index: int | None = None
+    ) -> wtforms.Field:
+        field: wtforms.Field = super()._add_entry(formdata, data, index)
+        field.render_kw['x-bind:id'] = "`{}`".format(field.id.replace(str(index), '${index}'))
+        field.render_kw['x-bind:name'] = "`{}`".format(field.name.replace(str(index), '${index}'))
+        return field
 
 
-def create_wtf_form_class(fields: typing.Iterable[Field]) -> typing.Type[wtforms.Form]:
-    counter = getattr(create_wtf_form_class, '_counter', 0) + 1
-    setattr(create_wtf_form_class, '_counter', counter)
-    form_class = type(
-        f'AutoWtfForm{counter}', (wtforms.Form,), {field.name: field.create_form_field() for field in fields}
-    )
-    return typing.cast(typing.Type[wtforms.Form], form_class)
+class EmbedField(Field[T], wtforms.FormField):
+    template = 'ohmyadmin/forms/embed.html'
+
+    def __init__(
+        self,
+        attr_name: str,
+        form_class: typing.Type[Form],
+        cols: int = 2,
+        **kwargs: typing.Any,
+    ) -> None:
+        self.cols = cols
+        super().__init__(attr_name, form_class=form_class, **kwargs)
 
 
-def collect_fields(layout: typing.Iterable[Layout]) -> typing.Iterable[Field]:
-    for element in layout:
-        yield from element.get_form_fields()
+class EmbedManyField(Field[list[T]], wtforms.FieldList):
+    field_class = wtforms.FieldList
+    template = 'ohmyadmin/forms/embed_many.html'
+
+    def __init__(
+        self,
+        attr_name: str,
+        form_class: typing.Type[Form],
+        min_entries: int = 1,
+        max_entries: int | None = None,
+        **kwargs: typing.Any,
+    ) -> None:
+        self.form_class = form_class
+        kwargs.setdefault('default', [])
+        super().__init__(
+            attr_name,
+            unbound_field=wtforms.FormField(form_class),
+            min_entries=min_entries,
+            max_entries=max_entries,
+            **kwargs,
+        )
+
+    def create_empty_entry(self) -> Form:
+        id = "%s%s${index}" % (self.id, self._separator)
+        name = "%s%s${index}" % (self.short_name, self._separator)
+        form = self.form_class(
+            form=None,
+            id=id,
+            name=name,
+            prefix=self._prefix,
+            _meta=self.meta,
+            translations=self._translations,
+        )
+        form.process(None)
+        for index, field in enumerate(form):
+            field.render_kw['x-bind:id'] = f"`{id}{self._separator}{field.id}`"
+            field.render_kw['x-bind:name'] = f"`{name}{self._separator}{field.name}`"
+        return form
+
+    def _add_entry(
+        self, formdata: FormData | None = None, data: typing.Any = unset_value, index: int | None = None
+    ) -> wtforms.Form:
+        field: wtforms.FormField = super()._add_entry(formdata, data, index)
+        for index, field in enumerate(field):
+            field.render_kw['x-bind:id'] = "`{}`".format(field.id.replace(str(index), '${index}'))
+            field.render_kw['x-bind:name'] = "`{}`".format(field.name.replace(str(index), '${index}'))
+        return field
 
 
 class Form(wtforms.Form):
@@ -491,11 +450,11 @@ class Form(wtforms.Form):
         return False
 
     @classmethod
-    def from_fields(cls, fields: typing.Iterable[Field]) -> typing.Type[Form]:
+    def from_fields(cls, fields: typing.Iterable[UnboundField]) -> typing.Type[Form]:
         cls._creation_counter += 1
-        form_class = type(
-            f'AutoForm{cls._creation_counter}', (cls,), {field.name: field.create_form_field() for field in fields}
-        )
+        form_class = type(f'AutoForm{cls._creation_counter}', (cls,), {})
+        for field in fields:
+            setattr(form_class, field.args[0], field)
         return typing.cast(typing.Type[Form], form_class)
 
     @classmethod
@@ -512,7 +471,7 @@ class Form(wtforms.Form):
     async def new(
         cls,
         request: Request,
-        fields: typing.Iterable[Field],
+        fields: typing.Iterable[UnboundField],
         instance: typing.Any | None = None,
         data: dict[str, typing.Any] | None = None,
     ) -> Form:
@@ -522,12 +481,12 @@ class Form(wtforms.Form):
 
 class FormView:
     label: str = 'Edit'
-    form_fields: list[Field] | None = None
+    form_fields: list[UnboundField] | None = None
 
     def __init__(self, dbsession: sessionmaker) -> None:
         self.dbsession = dbsession
 
-    def get_form_fields(self) -> typing.Iterable[Field]:
+    def get_form_fields(self) -> typing.Iterable[UnboundField]:
         return list(self.form_fields or [])
 
     async def handle_form(self, request: Request, form: wtforms.Form) -> Response:

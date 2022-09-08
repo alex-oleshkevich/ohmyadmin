@@ -95,6 +95,7 @@ exclude_lines = [
 [tool.mypy]
 disallow_untyped_defs = true
 ignore_missing_imports = true
+show_error_codes = true
 files = ["ohmyadmin", "examples", "tests"]
 
 [tool.pytest.ini_options]
