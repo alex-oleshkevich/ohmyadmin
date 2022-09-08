@@ -3,13 +3,28 @@ from __future__ import annotations
 import typing
 
 from ohmyadmin.helpers import render_to_string
-from ohmyadmin.layout import View
 
 ActionColor = typing.Literal['default', 'primary', 'text', 'danger']
 
 
-class Action(View):
-    pass
+class Action:
+    template = ''
+
+    def render(self) -> str:
+        assert self.template, 'Template for action is not defined'
+        return render_to_string(self.template, {'action': self})
+
+    __call__ = render
+    __str__ = render
+
+
+class SubmitAction(Action):
+    template = 'ohmyadmin/ui/action_submit.html'
+
+    def __init__(self, text: str, icon: str = '', color: ActionColor = 'default') -> None:
+        self.text = text
+        self.icon = icon
+        self.color = color
 
 
 class LinkAction(Action):

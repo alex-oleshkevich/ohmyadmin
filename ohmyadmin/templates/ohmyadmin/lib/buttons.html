@@ -18,13 +18,13 @@
     </a>
 {% endmacro %}
 
-{% macro button(text, type='button', icon='',  color='default', attrs={}) %}
-    <button type="{{ type }}" class="{{ button_styles }} {{ color_map[color] }}" {{ attrs|dict_to_attrs }}>
+{% macro button(text, type='button', icon='',  color='default', name='', attrs={}) %}
+    <button type="{{ type }}" class="{{ button_styles }} {{ color_map[color] }}"{{ name if name else '' }} {{ attrs|dict_to_attrs }}>
         {{ tabler_icon(icon) if icon else '' }}
         <span>{{ text }}</span>
     </button>
 {% endmacro %}
 
-{% macro primary_button(text, type='button', icon='', attrs={}) %}
-    {{ button(text=text, type=type, icon=icon, color='primary', attrs=attrs ) }}
+{% macro primary_button(text, type='button', icon='', name='', attrs={}) %}
+    {{ button(text=text, type=type, icon=icon, color='primary', name=name, attrs=attrs ) }}
 {% endmacro %}

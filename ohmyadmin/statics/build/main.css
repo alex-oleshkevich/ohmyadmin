@@ -1460,8 +1460,8 @@ textarea {
 }
 /* forms */
 .form-group {
-  margin-bottom: 1rem;
-}
+
+    }
 .form-group label, .form-group .form-label {
   margin-bottom: 0.25rem;
   display: flex;
@@ -1509,6 +1509,12 @@ textarea {
 .form-group-embed {
 
     }
+.form-actions {
+  margin-top: 2.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
 .delete-icon {
   border-radius: 0.5rem;
   padding: 0.25rem;

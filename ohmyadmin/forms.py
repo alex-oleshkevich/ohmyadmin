@@ -14,6 +14,7 @@ from starlette.types import Receive, Scope, Send
 from wtforms.fields.core import UnboundField
 from wtforms.utils import unset_value
 
+from ohmyadmin.actions import Action, SubmitAction
 from ohmyadmin.helpers import render_to_response, render_to_string
 
 Choices = typing.Iterable[tuple[str, str]]
@@ -33,7 +34,7 @@ class Layout(abc.ABC):
 
 
 class Grid(Layout):
-    template = 'ohmyadmin/forms/grid.html'
+    template = 'ohmyadmin/forms/layout_grid.html'
 
     def __init__(self, children: typing.Iterable[Layout], cols: int = 2, gap: int = 5) -> None:
         self.cols = cols
@@ -42,6 +43,21 @@ class Grid(Layout):
 
     def __iter__(self) -> typing.Iterator[Layout]:
         return iter(self.children)
+
+
+class FormLayout(Layout):
+    template = 'ohmyadmin/forms/layout_form.html'
+
+    def __init__(self, child: Layout, actions: list[Action]) -> None:
+        self.child = child
+        self.actions = actions
+
+
+class FormField(Layout):
+    template = 'ohmyadmin/forms/layout_field.html'
+
+    def __init__(self, field: wtforms.Field) -> None:
+        self.field = field
 
 
 T = typing.TypeVar('T')
@@ -493,8 +509,19 @@ class FormView:
         print(form.data)
         return Response('form handled')
 
+    def get_layout(self, form: Form) -> Layout:
+        return FormLayout(
+            child=Grid([FormField(field) for field in form], cols=1),
+            actions=[
+                SubmitAction('Save', color='primary'),
+                SubmitAction('Save and return to list'),
+                SubmitAction('Save and add new'),
+            ],
+        )
+
     async def view(self, request: Request) -> Response:
         form = await Form.new(request, fields=self.get_form_fields())
+        layout = self.get_layout(form)
 
         if await form.validate_on_submit(request):
             await self.handle_form(request, form)
@@ -506,7 +533,7 @@ class FormView:
             {
                 'request': request,
                 'page_title': self.label,
-                'layout': form,
+                'layout': layout,
             },
         )
 

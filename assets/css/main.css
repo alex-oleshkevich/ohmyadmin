@@ -166,7 +166,7 @@
 
     /* forms */
     .form-group {
-        @apply mb-4;
+
     }
 
     .form-group label, .form-group .form-label {
@@ -205,6 +205,10 @@
 
     .form-group-embed {
 
+    }
+
+    .form-actions {
+        @apply flex items-center gap-2 mt-10;
     }
 
     .delete-icon {
