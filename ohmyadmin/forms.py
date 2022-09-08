@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import abc
+import copy
 import inspect
 import typing
 import wtforms
@@ -23,10 +24,27 @@ class Layout(abc.ABC):
     def get_form_fields(self) -> typing.Iterable[Field]:
         raise NotImplementedError()
 
-    def render(self, request: Request) -> str:
+    def render(self) -> str:
         if not self.template:
             raise ValueError(f'Layout {self.__class__.__name__} does not define template name.')
-        return render_to_string(request, self.template, {'request': request, 'element': self})
+        return render_to_string(self.template, {'element': self})
+
+    __str__ = render
+
+
+class Grid(Layout):
+    template = 'ohmyadmin/forms/grid.html'
+
+    def __init__(self, children: typing.Iterable[Layout], cols: int = 2, gap: int = 5) -> None:
+        self.cols = cols
+        self.gap = gap
+        self.children = children
+
+    def get_form_fields(self) -> typing.Iterable[Field]:
+        yield from self.children
+
+    def __iter__(self) -> typing.Iterator[Layout]:
+        return iter(self.children)
 
 
 class Field(Layout):
@@ -98,14 +116,20 @@ class Field(Layout):
         setattr(field, 'bind', binder)
         return field
 
-    async def prepare(self, form: Form) -> None:
-        pass
+    def render(self) -> str:
+        return render_to_string(self.template, {'field': self})
 
-    def render(self, request: Request) -> str:
-        return render_to_string(request, self.template, {'field': self})
+    def clone_with(self, form_field: wtforms.Field | None = None) -> Field:
+        clone = copy.deepcopy(self)
+        if form_field:
+            clone.form_field = form_field
+        return clone
 
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__}: name={self.name}, label={self.label}>'
+
+    __str__ = render
+    __call__ = render
 
 
 class CheckboxField(Field):
@@ -296,30 +320,17 @@ class MonthField(Field):
     field_class = wtforms.MonthField
 
 
-class NestedField(Field):
-    field_class = wtforms.FormField
-
-    def __init__(self, name: str, fields: typing.Iterable[Layout], **kwargs: typing.Any) -> None:
-        self.layout = list(fields)
-        self.fields = list(collect_fields(fields))
-        super().__init__(name, **kwargs)
-
-    def get_form_field_options(self) -> dict[str, typing.Any]:
-        options = super().get_form_field_options()
-        options.update({'form_class': create_wtf_form_class(self.fields)})
-        return options
-
-
 class ListField(Field):
     field_class = wtforms.FieldList
+    template = 'ohmyadmin/forms/list.html'
 
     def __init__(
-        self, name: str, field: Field, min_entries: int = 3, max_entries: int | None = None, **kwargs: typing.Any
+        self, name: str, field: Field, min_entries: int = 1, max_entries: int | None = None, **kwargs: typing.Any
     ) -> None:
         self.field = field
         self.min_entries = min_entries
         self.max_entries = max_entries
-        kwargs['default'] = []
+        kwargs.setdefault('default', [])
         super().__init__(name, **kwargs)
 
     def get_form_field_options(self) -> dict[str, typing.Any]:
@@ -329,6 +340,56 @@ class ListField(Field):
                 'min_entries': self.min_entries,
                 'max_entries': self.max_entries,
                 'unbound_field': self.field.create_form_field(),
+            }
+        )
+        return options
+
+
+class EmbedField(Field):
+    field_class = wtforms.FormField
+    template = 'ohmyadmin/forms/embed.html'
+
+    def __init__(self, name: str, fields: typing.Iterable[Layout], cols: int = 2, **kwargs: typing.Any) -> None:
+        self.cols = cols
+        self.fields = list(collect_fields(fields))
+        super().__init__(name, **kwargs)
+
+    def get_form_field_options(self) -> dict[str, typing.Any]:
+        options = super().get_form_field_options()
+        options.update({'form_class': create_wtf_form_class(self.fields)})
+        return options
+
+    def __iter__(self) -> typing.Iterator[Layout]:
+        return iter(self.fields)
+
+
+class EmbedManyField(Field):
+    field_class = wtforms.FieldList
+    template = 'ohmyadmin/forms/embed_many.html'
+
+    def __init__(
+        self,
+        name: str,
+        fields: typing.Iterable[Field],
+        min_entries: int = 1,
+        max_entries: int | None = None,
+        **kwargs: typing.Any,
+    ) -> None:
+        self.min_entries = min_entries
+        self.max_entries = max_entries
+        self.fields = list(collect_fields(fields))
+        kwargs.setdefault('default', [])
+        super().__init__(name, **kwargs)
+
+    def get_form_field_options(self) -> dict[str, typing.Any]:
+        form_class = create_wtf_form_class(self.fields)
+
+        options = super().get_form_field_options()
+        options.update(
+            {
+                'min_entries': self.min_entries,
+                'max_entries': self.max_entries,
+                'unbound_field': wtforms.FormField(form_class=form_class),
             }
         )
         return options

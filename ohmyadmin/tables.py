@@ -71,8 +71,8 @@ class ActionGroup(Action):
     def __init__(self, children: list[Action]) -> None:
         self.children = children
 
-    def render(self, request: Request) -> str:
-        return render_to_string(request, 'ohmyadmin/ui/action_group.html', {'action': self, 'request': request})
+    def render(self) -> str:
+        return render_to_string('ohmyadmin/ui/action_group.html', {'action': self})
 
     def __iter__(self) -> typing.Iterator[Action]:
         return iter(self.children)

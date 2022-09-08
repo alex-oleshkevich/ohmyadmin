@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import typing
-from starlette.requests import Request
 
 from ohmyadmin.helpers import render_to_string
 from ohmyadmin.layout import View
@@ -21,5 +20,5 @@ class LinkAction(Action):
         self.icon = icon
         self.color = color
 
-    def render(self, request: Request) -> str:
-        return render_to_string(request, 'ohmyadmin/ui/action_link.html', {'action': self})
+    def render(self) -> str:
+        return render_to_string('ohmyadmin/ui/action_link.html', {'action': self})

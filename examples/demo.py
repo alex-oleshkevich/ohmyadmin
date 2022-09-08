@@ -21,11 +21,14 @@ from ohmyadmin.forms import (
     DecimalField,
     DecimalRangeField,
     EmailField,
+    EmbedField,
+    EmbedManyField,
     Field,
     FileField,
     FloatField,
     Form,
     FormView,
+    Grid,
     HiddenField,
     IntegerField,
     IntegerRangeField,
@@ -33,7 +36,6 @@ from ohmyadmin.forms import (
     ListField,
     MonthField,
     MultipleFileField,
-    NestedField,
     PasswordField,
     RadioField,
     SelectField,
@@ -142,36 +144,33 @@ class UserForm(FormView):
             TextField('last_name', label='Last name'),
             FileField('photo', label='Photo'),
             MultipleFileField('documents'),
-            NestedField(
+            EmbedField(
                 'embed',
-                Form(
-                    [
-                        TextField(
-                            'first_name',
-                            label='First name',
-                            help_text="Summaries can't contain Markdown or HTML contents; only plain text.",
-                            validators=[not_root_validator, not_admin_validator],
-                        ),
-                        TextField('last_name', label='Last name'),
-                        PasswordField('password', label='Password', autocomplete='off'),
-                    ]
-                ),
+                [
+                    TextField(
+                        'first_name',
+                        label='First name',
+                        help_text="Summaries can't contain Markdown or HTML contents; only plain text.",
+                        validators=[not_root_validator, not_admin_validator],
+                    ),
+                    TextField('last_name', label='Last name'),
+                    PasswordField('password', label='Password', autocomplete='off'),
+                ],
+                cols=3,
             ),
             ListField('list_text', TextField('_')),
-            ListField(
-                'list_forms',
-                NestedField(
-                    '_',
-                    [
-                        TextField(
-                            'first_name',
-                            label='First name',
-                            help_text="Summaries can't contain Markdown or HTML contents; only plain text.",
-                            validators=[not_root_validator, not_admin_validator],
-                        ),
-                        TextField('last_name', label='Last name'),
-                    ],
-                ),
+            EmbedManyField(
+                'embed_many',
+                [
+                    TextField(
+                        'first_name',
+                        label='First name',
+                        help_text="Summaries can't contain Markdown or HTML contents; only plain text.",
+                        validators=[not_root_validator, not_admin_validator],
+                    ),
+                    TextField('last_name', label='Last name'),
+                    SelectField('select', label='Static choices', choices=[('1', 'Alex'), ('2', 'Jenny')]),
+                ],
             ),
             EmailField('email', label='Email', autocomplete='email', placeholder='Current email'),
             PasswordField('password', label='Password', autocomplete='off'),

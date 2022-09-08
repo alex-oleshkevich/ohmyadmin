@@ -11,10 +11,9 @@ from starlette.responses import Response
 from starlette.routing import BaseRoute, Mount, Route, Router
 from starlette.staticfiles import StaticFiles
 from starlette.types import Receive, Scope, Send
-from tabler_icons import tabler_icon
 
-from ohmyadmin.helpers import dict_to_attrs
 from ohmyadmin.nav import MenuGroup, MenuItem
+from ohmyadmin.templating import jinja_env
 
 this_dir = pathlib.Path(__file__).parent
 
@@ -36,7 +35,9 @@ class OhMyAdmin(Router):
         routes: list[BaseRoute] | None = None,
         template_dirs: list[str | os.PathLike] | None = None,
     ) -> None:
-        self.jinja_env = self._create_jinja_env(template_dirs or [])
+        self.jinja_env = jinja_env
+        self.jinja_env.globals.update({'admin': self})
+        self.jinja_env.loader.add_loader(jinja2.FileSystemLoader(template_dirs))
 
         super().__init__(
             routes=[
@@ -74,45 +75,18 @@ class OhMyAdmin(Router):
             {
                 'request': request,
                 'url': request.url_for,
-                'static': functools.partial(self.static_url, request),
                 'main_menu': self.build_main_menu(request),
                 'user_menu': self.build_user_menu(request),
+                'static': functools.partial(self.static_url, request),
             }
         )
         content = self.render(template_name, context)
         return Response(content, status_code=status_code, media_type='text/html')
 
-    def _create_jinja_env(self, template_dirs: list[str | os.PathLike]) -> jinja2.Environment:
-        jinja_env = jinja2.Environment(
-            extensions=['jinja2.ext.i18n', 'jinja2.ext.do'],
-            loader=jinja2.ChoiceLoader(
-                [
-                    jinja2.loaders.FileSystemLoader(template_dirs),
-                    jinja2.loaders.PackageLoader('ohmyadmin'),
-                ]
-            ),
-        )
-        jinja_env.globals.update(
-            {
-                'admin': self,
-                'icon': tabler_icon,
-                'tabler_icon': tabler_icon,
-            }
-        )
-        jinja_env.tests.update(
-            {
-                'is_menu_group': lambda x: isinstance(x, MenuGroup),
-            }
-        )
-        jinja_env.filters.update(
-            {
-                'dict_to_attrs': dict_to_attrs,
-            }
-        )
-        jinja_env.install_null_translations()  # type: ignore
-        return jinja_env
-
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        scope.setdefault('state', {})
-        scope['state']['admin'] = self
-        return await super().__call__(scope, receive, send)
+        from ohmyadmin.helpers import globalize_admin
+
+        with globalize_admin(self):
+            scope.setdefault('state', {})
+            scope['state']['admin'] = self
+            return await super().__call__(scope, receive, send)

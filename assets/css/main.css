@@ -56,11 +56,16 @@
     input[type="tel"],
     input[type="file"],
     select, textarea, [multiple] {
-        @apply rounded-md border border-slate-300 shadow-sm bg-white px-3 py-1.5 w-full leading-5 block;
+        @apply rounded-md border border-slate-300 shadow-sm bg-white px-3 py-1.5 w-full leading-5 block text-sm;
     }
 
     input[type="checkbox"], input[type="radio"] {
         @apply rounded-full border border-slate-400
+    }
+
+    textarea {
+        min-height: 128px;
+        @apply max-w-2xl;
     }
 
     .btn {
@@ -82,6 +87,10 @@
 
     .btn-text {
         @apply bg-transparent hover:bg-slate-100 active:bg-slate-200 text-slate-900 shadow-none;
+    }
+
+    .btn-link {
+        @apply bg-transparent hover:bg-slate-50 active:bg-slate-100 text-slate-900 shadow-none text-blue-700 border-transparent;
     }
 
     .modal {
@@ -194,8 +203,13 @@
         @apply mr-1 inline-flex gap-2 items-center;
     }
 
-    textarea {
-        min-height: 128px;
-        @apply max-w-2xl;
+    .form-group-embed {
+
     }
+
+    .delete-icon {
+        @apply text-red-700 hover:bg-red-50 hover:text-red-700/75 active:text-red-800 rounded-lg p-1;
+    }
+
+
 }

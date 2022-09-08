@@ -46,7 +46,6 @@
     </div>
 {% endmacro %}
 
-
 {% macro radio_field(field) %}
     <div class="form-group form-group-radio">
         {{ form_label(field) }}
@@ -57,5 +56,103 @@
         </div>
         {{ form_help(field) if field.help_text else '' }}
         {{ form_errors(field) if field.form_field.errors else '' }}
+    </div>
+{% endmacro %}
+
+{% macro list_field_item(form, index, override_index = False) %}
+    {% if override_index %}
+        <template x-if="!deleted.includes(index + startIndex)">
+    {% else %}
+        <template x-if="!deleted.includes({{ index }})" x-data="{ startIndex: 0, index: {{ index }} }">
+    {% endif %}
+<div class="flex items-center justify-between gap-5 mb-2">
+    <div class="flex-1">
+        {{ form(**{
+                        'x-bind:id': "`{}`".format(form.name|replace(index, '${index + startIndex}')),
+                        'x-bind:name': "`{}`".format(form.name|replace(index, '${index + startIndex}')),
+                    }) }}
+    </div>
+    <div>
+        <button type="button" class="delete-icon" @click="deleted.push(index + startIndex)">
+            {{ tabler_icon('trash') }}
+        </button>
+    </div>
+</div>
+</template>
+{% endmacro %}
+
+{% macro list_field(field) %}
+    <div
+        class="form-group form-group-list max-w-lg"
+        x-data="{deleted: [], startIndex: {{ field.form_field|length }}, newCounter: 0}"
+    >
+        {{ form_label(field) }}
+        <div>
+            {% for form in field.form_field %}
+                {{ list_field_item(form, loop.index0) }}
+            {% endfor %}
+            <template x-for="index in newCounter">
+                {{ list_field_item(field.form_field|first, 0, override_index=true) }}
+            </template>
+        </div>
+        <div>
+            <button type="button" class="btn btn-link" @click="newCounter += 1">
+                {{ tabler_icon('plus') }}
+                {{ _('Add a new item') }}
+            </button>
+        </div>
+    </div>
+{% endmacro %}
+
+{% macro embed_field(field) %}
+    <div class="form-group form-group-embed">
+        {{ form_label(field) }}
+        <div class="border rounded-md border-gray-300 p-2 gap-5 grid grid-cols-{{ field.cols }}">
+            {% for form in field %}
+                {{ form }}
+            {% endfor %}
+        </div>
+    </div>
+{% endmacro %}
+
+{% macro embed_many_field_item(form, field, index, override_index=false) %}
+    <section class="border border-gray-300 rounded-md p-2">
+        <header class="flex items-center justify-between">
+            <div></div>
+            <div>
+                <button type="button" class="delete-icon" @click="deleted.push(index + startIndex)">
+                    {{ tabler_icon('trash') }}
+                </button>
+            </div>
+        </header>
+        <main>
+            <div class="flex items-center gap-5 mb-2">
+                <div class="grid grid-cols-3 gap-5 flex-1">
+                    {% for form_field, field_field  in form|zip(field.fields) %}
+                        {{ field_field.clone_with(form_field) }}
+                    {% endfor %}
+                </div>
+            </div>
+        </main>
+    </section>
+{% endmacro %}
+
+{% macro embed_many_field(field) %}
+    <div class="form-group" x-data="{deleted: [], newCounter: 0, startIndex: {{ field.form_field|length }},}">
+        {{ form_label(field) }}
+        <div class="space-y-3">
+            {% for form in field.form_field %}
+                {{ embed_many_field_item(form, field) }}
+            {% endfor %}
+            <template x-for="index in newCounter">
+                {{ embed_many_field_item(field.form_field|first, field, 0, override_index=true) }}
+            </template>
+        </div>
+        <div>
+            <button type="button" class="btn btn-link" @click="newCounter += 1">
+                {{ tabler_icon('plus') }}
+                {{ _('Add a new item') }}
+            </button>
+        </div>
     </div>
 {% endmacro %}
