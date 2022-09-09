@@ -32,6 +32,7 @@ class Resource(Router, metaclass=ResourceMeta):
     id: str = ''
     label: str = ''
     label_plural: str = ''
+    icon: str = ''
     entity_class: typing.Any | None = None
     queryset: sa.sql.Select | None = None
     pk_type: typing.Literal['str', 'int'] = 'int'

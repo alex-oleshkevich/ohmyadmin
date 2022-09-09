@@ -1,7 +1,6 @@
-{% macro main_menu_item(request, item) %}
-    <a href="{{ item.render_to_url(request) }}"
-       class="main-menu-item{% if x == 0 %} active{% endif %}">
-        {{ icon(item.icon) if item.icon else '' }} {{ item.text }}
+{% macro main_menu_item(url, text, icon) %}
+    <a href="{{ url }}" class="main-menu-item{% if x == 0 %} active{% endif %}">
+        {{ tabler_icon(icon) if icon else '' }} {{ text }}
     </a>
 {% endmacro %}
 
@@ -9,7 +8,7 @@
     <div class="mt-5">
         <div class="text-slate-600 uppercase mb-2 text-sm">{{ group.label }}</div>
         {% for item in group %}
-            {{ main_menu_item(request, item) }}
+            {{ main_menu_item(item.url, item.text, item.icon) }}
         {% endfor %}
     </div>
 {% endmacro %}

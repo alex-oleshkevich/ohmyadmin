@@ -18,11 +18,7 @@
             <!-- main menu -->
             <nav class="grid grid-cols-1 gap-1 mb-10">
                 {% for item in main_menu %}
-                    {% if item is is_menu_group %}
-                        {{ nav.main_menu_group(request, item) }}
-                    {% else %}
-                        {{ nav.main_menu_item(request, item) }}
-                    {% endif %}
+                    {{ item(request) }}
                 {% endfor %}
             </nav>
             <!-- end main menu -->
@@ -78,7 +74,7 @@
                             <ul class="py-1">
                                 {% for item in user_menu.menu %}
                                     <li>
-                                        <a href="{{ item.render_to_url(request) }}"
+                                        <a href="{{ item(request) }}"
                                            class="rounded-md px-2 py-1.5 flex items-center gap-3 hover:bg-slate-100 active:bg-slate-200">
                                             {{ icon(item.icon) }} {{ item.text }}
                                         </a>

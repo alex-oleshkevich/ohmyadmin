@@ -1,11 +1,15 @@
+from __future__ import annotations
+
 import contextlib
 import contextvars
 import typing
 from starlette.requests import Request
 from starlette.responses import Response
 
-from ohmyadmin.app import OhMyAdmin
 from ohmyadmin.templating import jinja_env
+
+if typing.TYPE_CHECKING:
+    from ohmyadmin.app import OhMyAdmin
 
 _app: contextvars.ContextVar[OhMyAdmin] = contextvars.ContextVar('_app')
 _template_context: contextvars.ContextVar[dict[str, typing.Any]] = contextvars.ContextVar(

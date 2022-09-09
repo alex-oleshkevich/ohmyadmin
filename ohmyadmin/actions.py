@@ -19,7 +19,7 @@ class Action:
 
 
 class SubmitAction(Action):
-    template = 'ohmyadmin/ui/action_submit.html'
+    template = 'ohmyadmin/actions/action_submit.html'
 
     def __init__(self, text: str, icon: str = '', color: ActionColor = 'default', name: str | None = '') -> None:
         self.text = text
@@ -37,4 +37,4 @@ class LinkAction(Action):
         self.color = color
 
     def render(self) -> str:
-        return render_to_string('ohmyadmin/ui/action_link.html', {'action': self})
+        return render_to_string('ohmyadmin/actions/action_link.html', {'action': self})

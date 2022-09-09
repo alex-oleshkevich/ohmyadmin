@@ -2,8 +2,6 @@ import jinja2
 import typing
 from tabler_icons import tabler_icon
 
-from ohmyadmin.nav import MenuGroup
-
 
 def dict_to_attrs(attrs: dict[str, typing.Any]) -> str:
     result: list[str] = []
@@ -38,11 +36,7 @@ jinja_env.globals.update(
         'tabler_icon': tabler_icon,
     }
 )
-jinja_env.tests.update(
-    {
-        'is_menu_group': lambda x: isinstance(x, MenuGroup),
-    }
-)
+jinja_env.tests.update({})
 jinja_env.filters.update(
     {
         'dict_to_attrs': dict_to_attrs,

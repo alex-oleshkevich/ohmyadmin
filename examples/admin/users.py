@@ -40,6 +40,7 @@ class ActivateAllAction(BatchAction):
 
 
 class UserResource(Resource):
+    icon = 'users'
     label = 'User'
     label_plural = 'Users'
     entity_class = User
