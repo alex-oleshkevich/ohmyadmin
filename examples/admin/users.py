@@ -52,6 +52,7 @@ class UserResource(Resource):
             searchable=True,
             search_in=['first_name', 'last_name'],
             sort_by='last_name',
+            link_factory=lambda r, o: r.url_for(UserResource.get_route_name('edit'), pk=o.id),
         ),
         Column('email', label='Email', searchable=True),
         Column('is_active', label='Active'),
