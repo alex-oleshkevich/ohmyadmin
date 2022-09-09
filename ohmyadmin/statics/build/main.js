@@ -2754,38 +2754,36 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
   var src_default = alpine_default;
   var module_default = src_default;
 
-  // js/forms.ts
-  function removeRow(e) {
-    e.target.closest(".subforms").removeChild(e.target.closest(".subform"));
-  }
-  function bindSubform(multiform) {
-    let subforms = multiform.querySelector(".subforms");
-    let template = multiform.querySelector("template");
-    let addButton = multiform.querySelector(".add-row");
-    subforms.querySelectorAll(".delete-row").forEach((delEl) => {
-      delEl.addEventListener("click", removeRow);
-    });
-    addButton.addEventListener("click", () => {
-      let rowCount = subforms.querySelectorAll(".subform").length;
-      let docClone = template.content.cloneNode(true);
-      docClone.querySelectorAll("input, textarea, select").forEach((input) => {
-        input.id = input.id.replace(/-([\d]+)-/, `-${rowCount}-`);
-        input.name = input.name.replace(/-([\d]+)-/, `-${rowCount}-`);
-        input.value = null;
-      });
-      docClone.querySelector(".delete-row").addEventListener("click", removeRow);
-      subforms.appendChild(docClone);
-    });
-  }
-  function bindSubforms() {
-    document.querySelectorAll(".multirow").forEach(bindSubform);
-  }
+  // js/tables.ts
+  document.addEventListener("alpine:init", () => {
+    module_default.data("table", () => ({
+      selected: [],
+      batchAction: "",
+      openBatchModal: false,
+      select(id) {
+        if (this.selected.includes(id)) {
+          this.selected.splice(this.selected.indexOf(id), 1);
+        } else {
+          this.selected.push(id);
+        }
+      },
+      toggleSelectAll(e) {
+        let checkboxes = e.target.closest("table").querySelectorAll('tbody input[type="checkbox"]');
+        if (e.target.checked) {
+          checkboxes.forEach((el) => {
+            this.selected.push(el.value);
+          });
+        } else {
+          this.selected = [];
+        }
+      },
+      runBatchAction() {
+        this.openBatchModal = true;
+      }
+    }));
+  });
 
   // js/main.ts
   window.Alpine = module_default;
   module_default.start();
-  function onDocumentLoaded() {
-    bindSubforms();
-  }
-  document.addEventListener("DOMContentLoaded", onDocumentLoaded);
 })();

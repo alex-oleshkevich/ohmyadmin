@@ -1,0 +1,33 @@
+{% macro sortable_header_cell(request, column, sorting_helper) %}
+    {% set current_ordering = sorting_helper.get_current_ordering(request, column.sort_by) %}
+    {% set ordering_index = sorting_helper.get_current_ordering_index(request, column.sort_by) %}
+    {% set next_ordering_url = sorting_helper.get_url(request, column.sort_by) %}
+    {% set should_show_index = sorting_helper.should_show_index(request) %}
+
+    <a href="{{ next_ordering_url }}" class="flex gap-2 items-center">
+        <span>{{ column.label }}</span>
+        <span class="flex items-center gap-1 text-gray-500">
+            {% if current_ordering == 'asc' %}
+                {{ icon('arrow-narrow-down') }}
+            {% elif current_ordering == 'desc' %}
+                {{ icon('arrow-narrow-up') }}
+            {% else %}
+                {{ icon('arrows-sort') }}
+            {% endif %}
+
+            {% if should_show_index and ordering_index %}
+                <span class="text-sm">{{ ordering_index }}</span>
+            {% endif %}
+        </span>
+    </a>
+{% endmacro %}
+
+{% macro header_cell(request, column) %}
+    {% if column.sortable %}
+        {{ sortable_header_cell(request, column, sorting_helper) }}
+    {% else %}
+        <span>{{ column.label }}</span>
+    {% endif %}
+{% endmacro %}
+
+{{ header_cell(request, column) }}

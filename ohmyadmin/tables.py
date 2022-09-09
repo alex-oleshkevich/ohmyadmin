@@ -23,6 +23,8 @@ class Column:
     label: str
     sortable: bool = False
     searchable: bool = False
+    head_template: str = 'ohmyadmin/tables/cell_head.html'
+    template: str = 'ohmyadmin/tables/cell_text.html'
 
     def __init__(
         self,
@@ -64,16 +66,37 @@ class Column:
     def get_display_value(self, obj: typing.Any) -> str:
         return self.format_value(self.get_value(obj))
 
+    def render_head_cell(self, request: Request, sorting_helper: SortingHelper) -> str:
+        return render_to_string(
+            self.head_template,
+            {
+                'column': self,
+                'request': request,
+                'sorting_helper': sorting_helper,
+            },
+        )
+
+    def render(self, entity: typing.Any) -> str:
+        return render_to_string(self.template, {'column': self, 'object': entity})
+
+    __call__ = render
+
 
 class BatchAction(abc.ABC):
     id: str
     label: str = 'Unlabelled'
     confirmation: str = ''
     dangerous: bool = False
+    template: str = 'ohmyadmin/tables/batch_action.html'
 
     @abc.abstractmethod
     async def apply(self, request: Request, ids: list[str], params: FormData) -> Response:
         ...
+
+    def render(self) -> str:
+        return render_to_string(self.template, {'action': self})
+
+    __str__ = render
 
 
 class RowAction(abc.ABC):
