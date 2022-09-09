@@ -63,6 +63,14 @@
         @apply rounded-full border border-slate-400
     }
 
+    input[type="checkbox"] {
+        @apply rounded
+    }
+
+    input[type="radio"] {
+        @apply rounded-full
+    }
+
     textarea {
         min-height: 128px;
         @apply max-w-2xl;
@@ -131,11 +139,11 @@
     }
 
     .row-action {
-        @apply inline-flex items-center gap-1 hover:underline text-black p-1;
+        @apply inline-flex items-center gap-1 hover:underline hover:text-slate-600 text-black p-1;
     }
 
     .row-action.row-action-danger {
-        @apply text-red-700;
+        @apply text-red-700 hover:text-red-600;
     }
 
     /* main menu */

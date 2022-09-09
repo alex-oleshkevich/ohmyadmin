@@ -1,0 +1,14 @@
+<button x-data="{open: false}" class="row-action-dropdown" @click="open = !open">
+    {{ icon('dots') }}
+    <div x-show="open" @click.outside="open = false" class="dropdown">
+        <ul>
+            {% for action in action.children %}
+                <li>
+                    <a href="{{ action.generate_url(object) }}" class="dropdown-item-{{ action.color }}">
+                        {{ icon(action.icon) if action.icon else '' }} {{ action.text }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</button>

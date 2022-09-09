@@ -1123,6 +1123,12 @@ input[type="checkbox"], input[type="radio"] {
   --tw-border-opacity: 1;
   border-color: rgb(148 163 184 / var(--tw-border-opacity));
 }
+input[type="checkbox"] {
+  border-radius: 0.25rem;
+}
+input[type="radio"] {
+  border-radius: 9999px;
+}
 textarea {
         min-height: 128px;
         max-width: 42rem;
@@ -1382,12 +1388,18 @@ textarea {
   color: rgb(0 0 0 / var(--tw-text-opacity));
 }
 .row-action:hover {
+  --tw-text-opacity: 1;
+  color: rgb(71 85 105 / var(--tw-text-opacity));
   -webkit-text-decoration-line: underline;
           text-decoration-line: underline;
 }
 .row-action.row-action-danger {
   --tw-text-opacity: 1;
   color: rgb(185 28 28 / var(--tw-text-opacity));
+}
+.row-action.row-action-danger:hover {
+  --tw-text-opacity: 1;
+  color: rgb(220 38 38 / var(--tw-text-opacity));
 }
 /* main menu */
 .main-menu-item {

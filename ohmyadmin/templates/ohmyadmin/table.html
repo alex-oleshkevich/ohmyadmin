@@ -37,30 +37,6 @@
     {% endif %}
 {% endmacro %}
 
-{% macro row_action(action) %}
-    {% if action.children %}
-        <button x-data="{open: false}" class="row-action-dropdown" @click="open = !open">
-            {{ icon('dots') }}
-            <div x-show="open" @click.outside="open = false" class="dropdown">
-                <ul>
-                    {% for action in action.children %}
-                        <li>
-                            <a href="{{ action.url }}" class="dropdown-item-{{ action.color }}">
-                                {{ icon(action.icon) if action.icon else '' }} {{ action.text }}
-                            </a>
-                        </li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </button>
-    {% else %}
-        <a href="{{ action.url }}" class="row-action row-action-{{ action.color }}">
-            {{ tabler_icon(action.icon) if action.icon else '' }}
-            <span>{{ action.text }}</span>
-        </a>
-    {% endif %}
-{% endmacro %}
-
 {% block content %}
     <div x-data="table()">
         <div class="flex items-center justify-between mb-6">
@@ -68,7 +44,7 @@
                 <div x-show="selected.length" class="flex items-center gap-2">
                     <select class="w-64" x-model="batchAction">
                         <option></option>
-                        {% for action in table.batch_actions(request) %}
+                        {% for action in table.batch_actions %}
                             <option value="{{ action.id }}">{{ action.label }}</option>
                         {% endfor %}
                     </select>
@@ -85,7 +61,7 @@
                         class="w-96"
                         placeholder="{{ table.search_placeholder }}">
                 </form>
-                {% for action in table.table_actions(request) %}
+                {% for action in table.table_actions %}
                     {{ actions.action(action) }}
                 {% endfor %}
             </div>
@@ -95,7 +71,7 @@
             <table>
                 <thead>
                 <tr>
-                    {% if table.batch_actions(request) %}
+                    {% if table.batch_actions %}
                         <th class="w-8">
                             <input type="checkbox" name="selected" @click="toggleSelectAll">
                         </th>
@@ -109,7 +85,7 @@
                 <tbody>
                 {% for object in objects %}
                     <tr x-bind:class="{'selected': selected.includes('{{ object.id }}')}">
-                        {% if table.batch_actions(request) %}
+                        {% if table.batch_actions %}
                             <td>
                                 <input type="checkbox" x-model="selected" value="{{ object.id }}">
                             </td>
@@ -126,8 +102,8 @@
                             </td>
                         {% endfor %}
                         <td class="actions">
-                            {% for action in table.row_actions(request, object) %}
-                                {{ row_action(action) }}
+                            {% for action in table.row_actions %}
+                                {{ action(object) }}
                             {% endfor %}
                         </td>
                     </tr>
@@ -138,7 +114,7 @@
 
         {{ pagination.pagination(request, objects) }}
 
-        {% for batch_action in table.batch_actions(request) %}
+        {% for batch_action in table.batch_actions %}
             <template x-teleport="body">
                 <form method="post" x-show="openBatchModal && batchAction == '{{ batch_action.id }}'">
                     <input type="hidden" name="_batch" value="{{ batch_action.id }}">

@@ -6,6 +6,9 @@ import abc
 import typing
 from starlette.requests import Request
 
+if typing.TYPE_CHECKING:
+    from ohmyadmin.resources import Resource
+
 
 class MenuItem(abc.ABC):
     @abc.abstractmethod
@@ -17,8 +20,14 @@ class MenuItem(abc.ABC):
         return Link(text=text, href=url, icon=icon)
 
     @classmethod
-    def to_route(cls, text: str, name: str, icon: str = '', params: dict[str, str | int] | None = None) -> RouteLink:
-        return RouteLink(text=text, path_name=name, path_params=params or {}, icon=icon)
+    def to_route(
+        cls,
+        text: str,
+        path_name: str,
+        icon: str = '',
+        path_params: dict[str, str | int] | None = None,
+    ) -> RouteLink:
+        return RouteLink(text=text, path_name=path_name, path_params=path_params or {}, icon=icon)
 
 
 @dataclasses.dataclass
@@ -40,6 +49,14 @@ class RouteLink(MenuItem):
 
     def render_to_url(self, request: Request) -> str:
         return request.url_for(self.path_name, **self.path_params)
+
+
+class ResourceLink(MenuItem):
+    def __init__(self, resource: typing.Type[Resource]) -> None:
+        self.resource = resource
+
+    def render_to_url(self, request: Request) -> str:
+        return request.url_for(self.resource.get_route_name('list'))
 
 
 class MenuGroup:

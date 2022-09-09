@@ -5,14 +5,12 @@ import itertools
 import sqlalchemy as sa
 import typing
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import sessionmaker
 from starlette.datastructures import URL, FormData, MultiDict
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
-from starlette.types import Receive, Scope, Send
 from urllib.parse import parse_qsl, urlencode
 
-from ohmyadmin.actions import Action
+from ohmyadmin.actions import Action, ActionColor
 from ohmyadmin.helpers import render_to_string
 from ohmyadmin.i18n import _
 from ohmyadmin.pagination import Page
@@ -67,17 +65,6 @@ class Column:
         return self.format_value(self.get_value(obj))
 
 
-class ActionGroup(Action):
-    def __init__(self, children: list[Action]) -> None:
-        self.children = children
-
-    def render(self) -> str:
-        return render_to_string('ohmyadmin/ui/action_group.html', {'action': self})
-
-    def __iter__(self) -> typing.Iterator[Action]:
-        return iter(self.children)
-
-
 class BatchAction(abc.ABC):
     id: str
     label: str = 'Unlabelled'
@@ -85,8 +72,47 @@ class BatchAction(abc.ABC):
     dangerous: bool = False
 
     @abc.abstractmethod
-    async def apply(self, request: Request, ids: list[str], params: dict[str, str]) -> Response:
+    async def apply(self, request: Request, ids: list[str], params: FormData) -> Response:
         ...
+
+
+class RowAction(abc.ABC):
+    template = ''
+
+    def render(self, entity: typing.Any) -> str:
+        assert self.template, 'RowAction does not define template.'
+        return render_to_string(self.template, {'action': self, 'object': entity})
+
+    __call__ = render
+
+
+class LinkRowAction(RowAction):
+    template = 'ohmyadmin/tables/row_action_link.html'
+
+    def __init__(
+        self,
+        action_url: typing.Callable[[typing.Any], str],
+        text: str = '',
+        icon: str = '',
+        color: ActionColor = 'default',
+    ) -> None:
+        self.text = text
+        self.icon = icon
+        self.color = color
+        self.action_url = action_url
+
+    def generate_url(self, entity: typing.Any) -> str:
+        return self.action_url(entity)
+
+
+class ActionGroup(RowAction):
+    template = 'ohmyadmin/tables/row_action_group.html'
+
+    def __init__(self, children: list[LinkRowAction]) -> None:
+        self.children = children
+
+    def __iter__(self) -> typing.Iterator[LinkRowAction]:
+        return iter(self.children)
 
 
 def get_ordering_value(request: Request, param_name: str) -> list[str]:
@@ -214,27 +240,47 @@ class SortingHelper:
 
 
 class TableView:
-    label: str = 'Untitled'
-    columns: list[Column] = []
-    page: int = 1
-    page_param: str = 'page'
-    page_size: int = 20
-    page_sizes: list[int] = [25, 50, 75, 100]
-    page_size_param: str = 'page_size'
-    search_param: str = 'search'
-    ordering_param: str = 'ordering'
-    queryset: sa.sql.Select | None = None
-    search_placeholder: str = _('Search...')
-
-    def __init__(self, dbsession: sessionmaker) -> None:
-        self.dbsession = dbsession
+    def __init__(
+        self,
+        session: AsyncSession,
+        queryset: sa.sql.Select,
+        columns: typing.Iterable[Column],
+        label: str = _('Untitled'),
+        page_param: str = 'page',
+        page_size: int = 25,
+        page_sizes: list[int] | None = None,
+        page_size_param: str = 'page_size',
+        search_param: str = 'search',
+        ordering_param: str = 'ordering',
+        search_placeholder: str = _('Search...'),
+        table_actions: typing.Iterable[Action] | None = None,
+        batch_actions: typing.Iterable[BatchAction] | None = None,
+        row_actions: typing.Iterable[RowAction] | None = None,
+        filters: typing.Iterable[BaseFilter] | None = None,
+        template: str = 'ohmyadmin/table.html',
+    ) -> None:
+        self.session = session
+        self.label = label
+        self.columns = columns
+        self.queryset = queryset
+        self.page_param = page_param
+        self.page_size = page_size
+        self.page_sizes = page_sizes or [25, 50, 75, 100]
+        self.page_size_param = page_size_param
+        self.search_param = search_param
+        self.ordering_param = ordering_param
+        self.search_placeholder = search_placeholder
+        self.filters = list(filters or [])
+        self.row_actions = list(row_actions or [])
+        self.table_actions = list(table_actions or [])
+        self.batch_actions = list(batch_actions or [])
+        self.template = template
 
     def get_queryset(self, request: Request) -> sa.sql.Select:
-        assert self.queryset is not None, 'Queryset is not defined.'
         return self.queryset
 
     def get_filters(self) -> typing.Iterable[BaseFilter]:
-        filters: list[BaseFilter] = []
+        filters = self.filters.copy()
 
         # attach ordering filter
         if sortables := [column.sort_by for column in self.columns if column.sortable]:
@@ -256,8 +302,8 @@ class TableView:
         result = await session.scalars(stmt)
         return result.one()
 
-    async def get_objects(self, session: AsyncSession, queryset: sa.sql.Select) -> typing.Iterable:
-        result = await session.scalars(queryset)
+    async def get_objects(self, queryset: sa.sql.Select) -> typing.Iterable:
+        result = await self.session.scalars(queryset)
         return result.all()
 
     async def paginate_queryset(self, request: Request, queryset: sa.sql.Select) -> Page:
@@ -265,53 +311,40 @@ class TableView:
         page_size = get_page_size_value(request, self.page_size_param, self.page_sizes, self.page_size)
         offset = (page_number - 1) * page_size
 
-        row_count = await self.get_object_count(request.state.dbsession, queryset)
+        row_count = await self.get_object_count(self.session, queryset)
         queryset = queryset.limit(page_size).offset(offset)
-        rows = await self.get_objects(request.state.dbsession, queryset)
+        rows = await self.get_objects(queryset)
         return Page(rows=list(rows), total_rows=row_count, page=page_number, page_size=page_size)
 
-    def row_actions(self, request: Request, entity: object) -> typing.Iterable[Action]:
-        return []
-
-    def batch_actions(self, request: Request) -> typing.Iterable[BatchAction]:
-        return []
-
-    def table_actions(self, request: Request) -> typing.Iterable[Action]:
-        return []
-
     async def _dispatch_batch_action(self, request: Request, action_name: str, body: FormData) -> Response:
-        for action in self.batch_actions(request):
+        for action in self.batch_actions:
             if action.id == action_name:
                 ids = body.getlist('selected')
                 return await action.apply(request, ids, body)
         raise RuntimeError('Unknown batch action: ' + action_name)
 
-    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        async with self.dbsession() as session:
-            request = Request(scope, receive, send)
-            request.state.dbsession = session
+    async def dispatch(self, request: Request) -> Response:
+        if request.method == 'POST':
+            data = await request.form()
+            match data:
+                case {'_batch': action_name}:
+                    response = await self._dispatch_batch_action(request, action_name, data)
+                case _:
+                    response = RedirectResponse(request.headers.get('referrer'))
+        else:
+            queryset = self.get_queryset(request)
+            queryset = self.apply_filters(request, queryset)
+            objects = await self.paginate_queryset(request, queryset)
 
-            if request.method == 'POST':
-                data = await request.form()
-                match data:
-                    case {'_batch': action_name}:
-                        response = await self._dispatch_batch_action(request, action_name, data)
-                    case _:
-                        response = RedirectResponse(request.headers.get('referrer'))
-            else:
-                queryset = self.get_queryset(request)
-                queryset = self.apply_filters(request, queryset)
-                objects = await self.paginate_queryset(request, queryset)
-
-                response = request.state.admin.render_to_response(
-                    request,
-                    'ohmyadmin/table.html',
-                    {
-                        'table': self,
-                        'objects': objects,
-                        'page_title': self.label,
-                        'sorting_helper': SortingHelper(self.ordering_param),
-                        'search_query': get_search_value(request, self.search_param),
-                    },
-                )
-            await response(scope, receive, send)
+            response = request.state.admin.render_to_response(
+                request,
+                self.template,
+                {
+                    'table': self,
+                    'objects': objects,
+                    'page_title': self.label,
+                    'sorting_helper': SortingHelper(self.ordering_param),
+                    'search_query': get_search_value(request, self.search_param),
+                },
+            )
+        return response

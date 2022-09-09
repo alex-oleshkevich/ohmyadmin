@@ -13,6 +13,7 @@ from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
 from starlette.routing import Mount, Route
 
+from examples.admin.users import UserResource
 from examples.models import User
 from ohmyadmin.actions import Action, LinkAction
 from ohmyadmin.app import OhMyAdmin, UserMenu
@@ -246,7 +247,7 @@ class Admin(OhMyAdmin):
             MenuGroup(
                 'Resources',
                 [
-                    MenuItem.to_url('Users', '/', icon='users'),
+                    MenuItem.to_route('Users', 'resource_user_list', icon='users'),
                     MenuItem.to_url('Role', '/', icon='fingerprint'),
                     MenuItem.to_url('News', '/', icon='article'),
                 ],
@@ -261,10 +262,10 @@ class Admin(OhMyAdmin):
             MenuGroup(
                 'Pages',
                 [
-                    MenuItem.to_route('Example page', 'example_page'),
-                    MenuItem.to_route('Example table', 'UserTable'),
-                    MenuItem.to_route('Example form', 'UserForm'),
-                    MenuItem.to_route('Actions', 'actions'),
+                    # MenuItem.to_route('Example page', 'example_page'),
+                    # MenuItem.to_route('Example table', 'UserTable'),
+                    # MenuItem.to_route('Example form', 'UserForm'),
+                    # MenuItem.to_route('Actions', 'actions'),
                 ],
             ),
         ]
@@ -289,8 +290,9 @@ app = Starlette(
                 routes=[
                     Route('/example-page', example_page),
                     Route('/actions', actions_overview, name='actions'),
-                    Route('/example-table', UserTable(dbsession=async_session)),
-                    Route('/example-form', UserForm(dbsession=async_session)),
+                    # Route('/example-table', UserTable(dbsession=async_session)),
+                    # Route('/example-form', UserForm(dbsession=async_session)),
+                    Mount('/resources/users', UserResource(dbsession=async_session)),
                 ],
             ),
         ),
