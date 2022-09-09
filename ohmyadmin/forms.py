@@ -6,16 +6,13 @@ import decimal
 import inspect
 import typing
 import wtforms
-from sqlalchemy.orm import sessionmaker
 from starlette.datastructures import FormData, UploadFile
 from starlette.requests import Request
-from starlette.responses import Response
-from starlette.types import Receive, Scope, Send
 from wtforms.fields.core import UnboundField
 from wtforms.utils import unset_value
 
-from ohmyadmin.actions import Action, SubmitAction
-from ohmyadmin.helpers import render_to_response, render_to_string
+from ohmyadmin.actions import Action
+from ohmyadmin.helpers import render_to_string
 
 Choices = typing.Iterable[tuple[str, str]]
 SyncChoices = typing.Callable[[], Choices]
@@ -48,7 +45,7 @@ class Grid(Layout):
 class FormLayout(Layout):
     template = 'ohmyadmin/forms/layout_form.html'
 
-    def __init__(self, child: Layout, actions: list[Action]) -> None:
+    def __init__(self, child: Layout, actions: typing.Iterable[Action]) -> None:
         self.child = child
         self.actions = actions
 
@@ -493,57 +490,3 @@ class Form(wtforms.Form):
     ) -> Form:
         form_class = cls.from_fields(fields)
         return await form_class.from_request(request, instance=instance, data=data)
-
-
-class FormView:
-    label: str = 'Edit'
-    form_fields: list[UnboundField] | None = None
-    initial_data: dict[str, typing.Any] | None = None
-
-    def __init__(self, dbsession: sessionmaker) -> None:
-        self.dbsession = dbsession
-
-    def get_form_fields(self) -> typing.Iterable[UnboundField]:
-        return list(self.form_fields or [])
-
-    def get_layout(self, form: Form) -> Layout:
-        return FormLayout(
-            child=Grid([FormField(field) for field in form], cols=1),
-            actions=[SubmitAction('Save', color='primary')],
-        )
-
-    def get_initial_data(self, request: Request) -> dict[str, typing.Any]:
-        return self.initial_data or {}
-
-    def get_object(self, request: Request) -> typing.Any | None:
-        return None
-
-    async def handle_form(self, request: Request, form: wtforms.Form) -> Response:
-        raise NotImplementedError()
-
-    async def view(self, request: Request) -> Response:
-        instance = self.get_object(request)
-        form = await Form.new(
-            request, fields=self.get_form_fields(), instance=instance, data=self.get_initial_data(request)
-        )
-        layout = self.get_layout(form)
-
-        if await form.validate_on_submit(request):
-            return await self.handle_form(request, form)
-
-        return render_to_response(
-            request,
-            'ohmyadmin/form.html',
-            {
-                'request': request,
-                'page_title': self.label,
-                'layout': layout,
-            },
-        )
-
-    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        async with self.dbsession() as session:
-            request = Request(scope, receive, send)
-            request.state.db = session
-            response = await self.view(request)
-            await response(scope, receive, send)

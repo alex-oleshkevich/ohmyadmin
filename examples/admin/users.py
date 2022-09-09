@@ -3,8 +3,8 @@ from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
 
 from examples.models import User
-from ohmyadmin.actions import LinkAction, SubmitAction
-from ohmyadmin.forms import CheckboxField, EmailField, TextField
+from ohmyadmin.actions import LinkAction
+from ohmyadmin.forms import CheckboxField, EmailField, HiddenField, TextField
 from ohmyadmin.resources import Resource
 from ohmyadmin.tables import ActionGroup, BatchAction, Column, LinkRowAction
 
@@ -42,7 +42,8 @@ class ActivateAllAction(BatchAction):
 class UserResource(Resource):
     label = 'User'
     label_plural = 'Users'
-    queryset = sa.select(User)
+    entity_class = User
+    queryset = sa.select(entity_class).order_by(User.id)
     table_columns = [
         Column('id', label='ID'),
         Column(
@@ -56,6 +57,13 @@ class UserResource(Resource):
         ),
         Column('email', label='Email', searchable=True),
         Column('is_active', label='Active'),
+    ]
+    edit_form = [
+        TextField('first_name'),
+        TextField('last_name'),
+        EmailField('email', required=True),
+        CheckboxField('is_active', default=True),
+        HiddenField('password', default=''),
     ]
     row_actions = [
         ActionGroup(
@@ -76,15 +84,4 @@ class UserResource(Resource):
     ]
     table_actions = [
         LinkAction('/admin', 'Export', icon='download'),
-    ]
-    edit_form = [
-        TextField('first_name'),
-        TextField('last_name'),
-        EmailField('email', required=True),
-        CheckboxField('is_active', default=True),
-    ]
-    form_actions = [
-        SubmitAction('Save', color='primary'),
-        SubmitAction('Save and return to list'),
-        SubmitAction('Save and create new'),
     ]

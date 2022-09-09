@@ -105,7 +105,6 @@ def seed_users(session: AsyncSession) -> None:
     session.add_all(
         [
             User(
-                id=index,
                 first_name=fake.first_name(),
                 last_name=fake.last_name(),
                 email=fake.email(safe=False),
@@ -130,7 +129,6 @@ def seed_customers(session: AsyncSession) -> None:
     session.add_all(
         [
             Customer(
-                id=index,
                 name=fake.name(),
                 email=fake.email(safe=False),
                 phone=fake.phone_number(),
@@ -147,7 +145,6 @@ def seed_addresses(session: AsyncSession) -> None:
     session.add_all(
         [
             Address(
-                id=index,
                 street=fake.street_address(),
                 zip=fake.postcode(),
                 city=fake.city(),
@@ -163,7 +160,6 @@ def seed_payment(session: AsyncSession) -> None:
     session.add_all(
         [
             Payment(
-                id=index,
                 reference=refcode(),
                 amount=random.randint(0, 20),
                 currency=CURRENCIES[random.randint(0, len(CURRENCIES) - 1)]['code'],
@@ -180,7 +176,6 @@ def seed_brands(session: AsyncSession) -> None:
     session.add_all(
         [
             Brand(
-                id=index,
                 name=fake.sentence(3),
                 slug=fake.slug(),
                 website=fake.url(),
@@ -198,7 +193,6 @@ def seed_categories(session: AsyncSession) -> None:
     session.add_all(
         [
             Category(
-                id=index,
                 name=fake.sentence(3),
                 slug=fake.slug(),
                 description=fake.text(),
@@ -216,7 +210,6 @@ def seed_products(session: AsyncSession) -> None:
     session.add_all(
         [
             Product(
-                id=index,
                 name=fake.sentence(3),
                 slug=fake.slug(),
                 description=fake.text(),
@@ -244,7 +237,6 @@ def seed_product_categories(session: AsyncSession) -> None:
     session.add_all(
         [
             ProductCategory(
-                id=index,
                 product_id=random.randint(1, OBJECTS_COUNT),
                 category_id=random.randint(1, 20),
             )
@@ -257,7 +249,6 @@ def seed_product_images(session: AsyncSession) -> None:
     session.add_all(
         [
             Image(
-                id=index,
                 image_path=fake.image_url(1280, 720),
                 product_id=random.randint(1, OBJECTS_COUNT),
             )
@@ -270,7 +261,6 @@ def seed_product_comments(session: AsyncSession) -> None:
     session.add_all(
         [
             Comment(
-                id=index,
                 title=fake.sentence(6),
                 content=fake.text(),
                 public=fake.boolean(),
@@ -287,7 +277,6 @@ def seed_orders(session: AsyncSession) -> None:
     session.add_all(
         [
             Order(
-                id=index,
                 number=refcode(),
                 customer_id=random.randint(1, OBJECTS_COUNT),
                 status=random_status(),
@@ -309,7 +298,6 @@ def seed_order_items(session: AsyncSession) -> None:
     session.add_all(
         [
             OrderItem(
-                id=index,
                 product_id=random.randint(1, OBJECTS_COUNT),
                 quantity=random.randint(1, 100),
                 unit_price=decimal.Decimal(f'{random.randint(1, 500)}.{random.randint(1, 99):02}'),

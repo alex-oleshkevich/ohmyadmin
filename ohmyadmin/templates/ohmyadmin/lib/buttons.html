@@ -19,7 +19,12 @@
 {% endmacro %}
 
 {% macro button(text, type='button', icon='',  color='default', name='', attrs={}) %}
-    <button type="{{ type }}" class="{{ button_styles }} {{ color_map[color] }}"{{ name if name else '' }} {{ attrs|dict_to_attrs }}>
+    <button
+        type="{{ type }}"
+        class="{{ button_styles }} {{ color_map[color] }}"
+        {{ 'name="{name}"'.format(name=name) if name else '' }}
+        {{ attrs|dict_to_attrs }}
+    >
         {{ tabler_icon(icon) if icon else '' }}
         <span>{{ text }}</span>
     </button>
@@ -27,4 +32,8 @@
 
 {% macro primary_button(text, type='button', icon='', name='', attrs={}) %}
     {{ button(text=text, type=type, icon=icon, color='primary', name=name, attrs=attrs ) }}
+{% endmacro %}
+
+{% macro danger_button(text, type='button', icon='', name='', attrs={}) %}
+    {{ button(text=text, type=type, icon=icon, color='danger', name=name, attrs=attrs ) }}
 {% endmacro %}

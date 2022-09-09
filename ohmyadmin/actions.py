@@ -21,10 +21,11 @@ class Action:
 class SubmitAction(Action):
     template = 'ohmyadmin/ui/action_submit.html'
 
-    def __init__(self, text: str, icon: str = '', color: ActionColor = 'default') -> None:
+    def __init__(self, text: str, icon: str = '', color: ActionColor = 'default', name: str | None = '') -> None:
         self.text = text
         self.icon = icon
         self.color = color
+        self.name = name
 
 
 class LinkAction(Action):
