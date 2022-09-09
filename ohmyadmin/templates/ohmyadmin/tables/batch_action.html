@@ -1,5 +1,6 @@
-<form method="post" x-show="openBatchModal && batchAction == '{{ action.id }}'">
-    <input type="hidden" name="_batch" value="{{ action.id }}">
+{% import 'ohmyadmin/lib/buttons.html' as buttons %}
+
+<form method="post" action="?_batch={{ action.id }}" x-show="openBatchModal && batchAction == '{{ action.id }}'">
     <div class="modal">
         <div class="modal-spacer">
             <div
@@ -15,7 +16,7 @@
                 <div class="sm:flex sm:items-start">
                     <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
                         <h3 class="text-lg font-medium leading-6 text-gray-900" id="modal-title">
-                            Run {{ action.label }} action?
+                            {% trans label=action.label %}Run {{ label }} action?{% endtrans %}
                         </h3>
                         {% if action.confirmation %}
                             <div class="mt-2">
@@ -27,13 +28,8 @@
                     </div>
                 </div>
                 <div class="modal-actions">
-                    <button type="submit"
-                            class="btn {{ 'btn-danger' if action.dangerous else 'btn-primary' }}">
-                        {{ _('Run action') }}
-                    </button>
-                    <button type="button" class="btn" @click="openBatchModal = false">
-                        {{ _('Cancel') }}
-                    </button>
+                    {{ buttons.button(_('Run action'), type='submit', color='danger' if action.dangerous else 'primary') }}
+                    {{ buttons.button(_('Cancel'), type='button', attrs={'@click': 'openBatchModal = false'}) }}
                 </div>
             </div>
         </div>
