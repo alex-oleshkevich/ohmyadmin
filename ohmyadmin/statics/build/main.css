@@ -1346,7 +1346,6 @@ textarea {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  border-radius: 0.25rem;
   padding-left: 0.5rem;
   padding-right: 0.5rem;
   padding-top: 0.375rem;
@@ -1418,6 +1417,10 @@ textarea {
 .main-menu-item:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(226 232 240 / var(--tw-bg-opacity));
+}
+.main-menu-item:active {
+  --tw-bg-opacity: 1;
+  background-color: rgb(203 213 225 / var(--tw-bg-opacity));
 }
 .main-menu-item.active {
   --tw-bg-opacity: 1;
@@ -36760,10 +36763,6 @@ textarea {
   --tw-bg-opacity: 1;
   background-color: rgb(241 245 249 / var(--tw-bg-opacity));
 }
-.hover\:bg-slate-200:hover {
-  --tw-bg-opacity: 1;
-  background-color: rgb(226 232 240 / var(--tw-bg-opacity));
-}
 .hover\:bg-gray-50:hover {
   --tw-bg-opacity: 1;
   background-color: rgb(249 250 251 / var(--tw-bg-opacity));
@@ -36832,10 +36831,6 @@ textarea {
 }
 .focus\:ring-offset-2:focus {
   --tw-ring-offset-width: 2px;
-}
-.active\:bg-slate-200:active {
-  --tw-bg-opacity: 1;
-  background-color: rgb(226 232 240 / var(--tw-bg-opacity));
 }
 .group:hover .group-hover\:text-indigo-600 {
   --tw-text-opacity: 1;

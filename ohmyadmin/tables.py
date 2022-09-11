@@ -90,7 +90,7 @@ class BatchAction(abc.ABC):
     template: str = 'ohmyadmin/tables/batch_action.html'
 
     @abc.abstractmethod
-    async def apply(self, request: Request, ids: list[str], params: FormData) -> Response:
+    async def apply(self, request: Request, queryset: sa.sql.Select, params: FormData) -> Response:
         ...
 
     def render(self) -> str:
@@ -268,6 +268,7 @@ class TableView:
         session: AsyncSession,
         queryset: sa.sql.Select,
         columns: typing.Iterable[Column],
+        pk_column: str = 'id',
         label: str = _('Untitled'),
         page_param: str = 'page',
         page_size: int = 25,
@@ -342,8 +343,12 @@ class TableView:
     async def _dispatch_batch_action(self, request: Request, action_name: str, body: FormData) -> Response:
         for action in self.batch_actions:
             if action.id == action_name:
-                ids = body.getlist('selected')
-                return await action.apply(request, ids, body)
+                if body.get('selected') == '__all__':
+                    queryset = self.get_queryset(request)
+                else:
+                    ids = body.getlist('selected')
+                    queryset = self.get_queryset(request).where(sa.column('id').in_(ids))
+                return await action.apply(request, queryset, body)
         raise RuntimeError('Unknown batch action: ' + action_name)
 
     async def dispatch(self, request: Request) -> Response:

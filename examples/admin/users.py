@@ -22,20 +22,18 @@ class DeleteAllAction(BatchAction):
 class DeactivateAllAction(BatchAction):
     id = 'deactivate'
     label = 'Deactivate all'
-    dangerous = True
     confirmation = 'Do you want to run this action?'
 
-    async def apply(self, request: Request, ids: list[str], params: dict[str, str]) -> Response:
-        return RedirectResponse(request.headers.get('referer'), 302)
+    async def apply(self, request: Request, queryset: sa.sql.Select, params: dict[str, str]) -> Response:
+        return RedirectResponse(request.headers.get('/admin/resources/users'), 302)
 
 
 class ActivateAllAction(BatchAction):
     id = 'activate'
     label = 'Activate all'
-    dangerous = True
     confirmation = 'Do you want to run this action?'
 
-    async def apply(self, request: Request, ids: list[str], params: dict[str, str]) -> Response:
+    async def apply(self, request: Request, queryset: sa.sql.Select, params: dict[str, str]) -> Response:
         return RedirectResponse(request.headers.get('referer'), 302)
 
 

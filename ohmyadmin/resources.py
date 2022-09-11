@@ -122,6 +122,7 @@ class Resource(Router, metaclass=ResourceMeta):
         async with self.dbsession() as session:
             table = self.table_view_class(
                 session=session,
+                pk_column=self.pk_column,
                 label=self.label_plural,
                 page_size=self.page_size,
                 page_param=self.page_param,
