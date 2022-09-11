@@ -64,7 +64,7 @@ class Resource(Router, metaclass=ResourceMeta):
     # pagination and default filters
     page_param: str = 'page'
     page_size: int = 25
-    page_sizes: list[int]
+    page_sizes: list[int] | tuple[int, ...] | None = (25, 50, 75)
     page_size_param: str = 'page_size'
     search_param: str = 'search'
     ordering_param: str = 'ordering'
@@ -86,7 +86,6 @@ class Resource(Router, metaclass=ResourceMeta):
 
     def __init__(self, dbsession: sessionmaker) -> None:
         self.dbsession = dbsession
-        self.page_sizes: list[int] = self.page_sizes or [25, 50, 75]
         super().__init__(routes=self.get_routes())
 
     def get_pk_value(self, entity: typing.Any) -> int | str:
@@ -204,7 +203,7 @@ class Resource(Router, metaclass=ResourceMeta):
 
     async def paginate_queryset(self, request: Request, session: AsyncSession, queryset: sa.sql.Select) -> Page:
         page_number = get_page_value(request, self.page_param)
-        page_size = get_page_size_value(request, self.page_size_param, self.page_sizes, self.page_size)
+        page_size = get_page_size_value(request, self.page_size_param, list(self.page_sizes or []), self.page_size)
         offset = (page_number - 1) * page_size
 
         row_count = await self.get_object_count(session, queryset)
@@ -308,6 +307,9 @@ class Resource(Router, metaclass=ResourceMeta):
                     'page_title': self.delete_page_label.format(resource=self.label),
                 },
             )
+
+    async def batch_action_view(self, request: Request) -> Response:
+        pass
 
     @classmethod
     def get_route_name(cls, action: typing.Literal['list', 'create', 'edit', 'delete']) -> str:
