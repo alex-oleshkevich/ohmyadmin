@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import abc
+import re
 import sqlalchemy as sa
 import typing
 from starlette.datastructures import URL, FormData, MultiDict
@@ -12,6 +13,9 @@ from ohmyadmin.actions import ActionColor
 from ohmyadmin.forms import Form, FormField, Grid, Layout
 from ohmyadmin.helpers import render_to_string
 from ohmyadmin.responses import Response
+
+if typing.TYPE_CHECKING:
+    from ohmyadmin.resources import PkType
 
 Formatter = typing.Callable[[typing.Any], str]
 
@@ -82,8 +86,18 @@ class Column:
     __call__ = render
 
 
-class BatchAction(abc.ABC):
-    id: str
+class BatchActionMeta(abc.ABCMeta):
+    def __new__(cls, name: str, bases: tuple, attrs: dict[str, typing.Any], **kwargs: typing.Any) -> typing.Type:
+        name = name.removesuffix('Action')
+        label = re.sub(r'(?<!^)(?=[A-Z])', ' ', name).title()
+
+        attrs['id'] = attrs.get('id', name.lower())
+        attrs['label'] = attrs.get('label', label)
+        return super().__new__(cls, name, bases, attrs)
+
+
+class BatchAction(abc.ABC, metaclass=BatchActionMeta):
+    id: str = ''
     label: str = 'Unlabelled'
     confirmation: str = ''
     dangerous: bool = False
@@ -91,7 +105,7 @@ class BatchAction(abc.ABC):
     fields: typing.Iterable[UnboundField] | None = None
 
     @abc.abstractmethod
-    async def apply(self, request: Request, queryset: sa.sql.Select, params: FormData) -> Response:
+    async def apply(self, request: Request, ids: list[PkType], params: FormData) -> Response:
         ...
 
     def render(self) -> str:

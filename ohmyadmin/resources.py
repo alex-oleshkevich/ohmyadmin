@@ -1,7 +1,7 @@
 import itertools
 import sqlalchemy as sa
 import typing
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
@@ -30,6 +30,7 @@ from ohmyadmin.tables import (
 )
 
 ResourceAction = typing.Literal['list', 'create', 'edit', 'delete', 'batch_action']
+PkType = int | str
 
 
 def label_from_resource_class(class_name: str) -> str:
@@ -49,7 +50,7 @@ class Resource(Router, metaclass=ResourceMeta):
     label: str = ''
     label_plural: str = ''
     icon: str = ''
-    pk_type: typing.Literal['str', 'int'] = 'int'
+    pk_type: typing.Type[PkType] = int
     pk_column: str = 'id'
 
     # orm configuration
@@ -86,8 +87,8 @@ class Resource(Router, metaclass=ResourceMeta):
     edit_view_template: str = 'ohmyadmin/form.html'
     delete_view_template: str = 'ohmyadmin/delete.html'
 
-    def __init__(self, dbsession: sessionmaker) -> None:
-        self.dbsession = dbsession
+    def __init__(self, sa_engine: AsyncEngine) -> None:
+        self.dbsession = sessionmaker(sa_engine, expire_on_commit=False, class_=AsyncSession)
         super().__init__(routes=self.get_routes())
 
     def get_pk_value(self, entity: typing.Any) -> int | str:
@@ -215,10 +216,8 @@ class Resource(Router, metaclass=ResourceMeta):
 
     async def list_objects_view(self, request: Request) -> Response:
         async with self.dbsession() as session:
-            if request.method == 'POST':
-                if '_batch_action' in request.query_params:
-                    return await self.batch_action_view(request, request.query_params['_batch_action'])
-                return RedirectResponse(request).to_resource(self)
+            if '_batch_action' in request.query_params:
+                return await self.batch_action_view(request, request.query_params['_batch_action'])
 
             queryset = self.get_queryset(request)
             queryset = self.apply_filters(request, queryset)
@@ -317,39 +316,35 @@ class Resource(Router, metaclass=ResourceMeta):
 
     async def batch_action_view(self, request: Request, action_id: str) -> Response:
         form_data = await request.form()
-        object_ids = form_data.get('selected', [])
-        queryset = self.get_queryset(request).where(sa.column(self.pk_column).in_(object_ids))
+        object_ids = [self.pk_type(object_id) for object_id in form_data.getlist('selected')]
         batch_action = next((action for action in self.get_batch_actions(request) if action.id == action_id))
         if not batch_action:
             return RedirectResponse(request).to_resource(self).with_error(_('Unknown batch action.'))
 
-        return await batch_action.apply(request, queryset, form_data)
+        return await batch_action.apply(request, object_ids, form_data)
 
     @classmethod
     def get_route_name(cls, action: ResourceAction) -> str:
         return f'resource_{cls.id}_{action}'
 
     def get_routes(self) -> typing.Sequence[BaseRoute]:
+        mapping = {int: 'int', str: 'str'}
+        param_type = mapping[self.pk_type]
+
         return [
             Route('/', self.list_objects_view, methods=['GET', 'POST'], name=self.get_route_name('list')),
             Route('/new', self.create_object_view, methods=['GET', 'POST'], name=self.get_route_name('create')),
             Route(
-                '/{pk:%s}/edit' % self.pk_type,
+                '/{pk:%s}/edit' % param_type,
                 self.edit_object_view,
                 methods=['GET', 'POST'],
                 name=self.get_route_name('edit'),
             ),
             Route(
-                '/{pk:%s}/delete' % self.pk_type,
+                '/{pk:%s}/delete' % param_type,
                 self.delete_object_view,
                 methods=['GET', 'POST'],
                 name=self.get_route_name('delete'),
-            ),
-            Route(
-                '/batch-action',
-                self.batch_action_view,
-                methods=['GET', 'POST'],
-                name=self.get_route_name('batch_action'),
             ),
         ]
 
@@ -369,4 +364,5 @@ class Resource(Router, metaclass=ResourceMeta):
             scope.setdefault('state', {})
             scope['state']['dbsession'] = session
             scope['state']['resource'] = self
-            return await super().__call__(scope, receive, send)
+            await super().__call__(scope, receive, send)
+            await session.commit()

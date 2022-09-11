@@ -14,15 +14,16 @@ class FlashMessage(typing.TypedDict):
 
 class FlashBag:
     def __init__(self, messages: list[FlashMessage] | None = None) -> None:
-        print('FlashBag', messages)
         self.messages = messages or []
 
     def error(self, message: str) -> FlashBag:
-        self.messages.append({'category': 'error', 'message': message})
-        return self
+        return self.add(message, 'error')
 
     def success(self, message: str) -> FlashBag:
-        self.messages.append({'category': 'success', 'message': message})
+        return self.add(message, 'success')
+
+    def add(self, message: str, category: FlashCategory) -> FlashBag:
+        self.messages.append({'category': category, 'message': message})
         return self
 
     def consume(self) -> list[FlashMessage]:
@@ -54,9 +55,6 @@ class FlashMiddleware:
             return await self.app(scope, receive, send)
 
         request = Request(scope, receive)
-        session = request.session
-        if load_method := getattr(session, 'load', None):
-            await load_method()
 
         stored_messages = request.session.get('flash_messages', [])
         bag = FlashBag(stored_messages)

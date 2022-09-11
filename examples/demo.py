@@ -1,7 +1,7 @@
 import pathlib
 import sqlalchemy as sa
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.orm import declarative_base
 from starception import StarceptionMiddleware
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
@@ -12,7 +12,6 @@ from starlette.routing import Mount, Route
 
 from examples.admin.users import UserResource
 from ohmyadmin.app import OhMyAdmin, UserMenu
-from ohmyadmin.flash import FlashMiddleware
 from ohmyadmin.nav import MenuGroup, MenuItem
 
 metadata = sa.MetaData()
@@ -48,14 +47,12 @@ class Admin(OhMyAdmin):
 
 this_dir = pathlib.Path(__file__).parent
 engine = create_async_engine('postgresql+asyncpg://root:postgres@localhost/ohmyadmin', future=True)
-async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
 app = Starlette(
     debug=True,
     middleware=[
         Middleware(StarceptionMiddleware),
         Middleware(SessionMiddleware, secret_key='key!', path='/'),
-        Middleware(FlashMiddleware),
     ],
     routes=[
         Route('/', index_view),
@@ -64,7 +61,7 @@ app = Starlette(
             Admin(
                 template_dirs=[this_dir / 'templates'],
                 routes=[
-                    Mount('/resources/users', UserResource(dbsession=async_session)),
+                    Mount('/resources/users', UserResource(engine)),
                 ],
             ),
         ),

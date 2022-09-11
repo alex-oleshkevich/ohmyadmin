@@ -12,7 +12,7 @@ from starlette.routing import BaseRoute, Mount, Route, Router
 from starlette.staticfiles import StaticFiles
 from starlette.types import Receive, Scope, Send
 
-from ohmyadmin.flash import flash
+from ohmyadmin.flash import FlashMiddleware, flash
 from ohmyadmin.nav import MenuGroup, MenuItem
 from ohmyadmin.templating import jinja_env
 
@@ -91,4 +91,6 @@ class OhMyAdmin(Router):
         with globalize_admin(self):
             scope.setdefault('state', {})
             scope['state']['admin'] = self
-            return await super().__call__(scope, receive, send)
+            app = super().__call__
+            app = FlashMiddleware(app)
+            await app(scope, receive, send)
