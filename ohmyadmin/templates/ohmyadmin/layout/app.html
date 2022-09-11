@@ -1,5 +1,6 @@
 {% extends 'ohmyadmin/layout/base.html' %}
 {% import 'ohmyadmin/lib/nav.html' as nav %}
+{% import 'ohmyadmin/lib/flash_messages.html' as messages %}
 
 {% set html_tag_classes = 'h-full' %}
 {% set body_tag_classes = 'h-full text-sm' %}
@@ -95,6 +96,14 @@
             </header>
 
             <article class="px-10 py-10 max-w-7xl mx-auto">
+                {% if flash_messages %}
+                    <div class="mb-5">
+                        {% for flash_message in flash_messages %}
+                            {{ messages.flash_message(flash_message['category'], flash_message['message']) }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
                 <div class="mb-8 flex items-center justify-between">
                     <div class="text-3xl font-semibold">{{ page_title }}</div>
                     <div>{% block page_actions %}{% endblock %}</div>

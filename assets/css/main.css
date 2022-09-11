@@ -223,5 +223,17 @@
         @apply text-red-700 hover:bg-red-50 hover:text-red-700/75 active:text-red-800 rounded-lg p-1;
     }
 
+    /* alerts */
+    .alert {
+        @apply rounded-md p-4 border flex items-center gap-3 text-sm font-medium;
+    }
+
+    .alert-success {
+        @apply bg-green-50 text-green-800 border-green-100;
+    }
+
+    .alert-error {
+        @apply bg-red-50 text-red-800 border-red-100;
+    }
 
 }

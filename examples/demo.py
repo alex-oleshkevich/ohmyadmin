@@ -12,6 +12,7 @@ from starlette.routing import Mount, Route
 
 from examples.admin.users import UserResource
 from ohmyadmin.app import OhMyAdmin, UserMenu
+from ohmyadmin.flash import FlashMiddleware
 from ohmyadmin.nav import MenuGroup, MenuItem
 
 metadata = sa.MetaData()
@@ -54,6 +55,7 @@ app = Starlette(
     middleware=[
         Middleware(StarceptionMiddleware),
         Middleware(SessionMiddleware, secret_key='key!', path='/'),
+        Middleware(FlashMiddleware),
     ],
     routes=[
         Route('/', index_view),

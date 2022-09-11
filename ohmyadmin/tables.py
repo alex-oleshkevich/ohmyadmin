@@ -5,11 +5,11 @@ import sqlalchemy as sa
 import typing
 from starlette.datastructures import URL, FormData, MultiDict
 from starlette.requests import Request
-from starlette.responses import Response
 from urllib.parse import parse_qsl, urlencode
 
 from ohmyadmin.actions import ActionColor
 from ohmyadmin.helpers import render_to_string
+from ohmyadmin.responses import Response
 
 Formatter = typing.Callable[[typing.Any], str]
 
@@ -33,6 +33,7 @@ class Column:
         value_format: str | Formatter | None = None,
         sort_by: str = '',
         search_in: list[str] | None = None,
+        link: bool = False,
         link_factory: typing.Callable[[Request, typing.Any], str] | None = None,
     ) -> None:
         self.name = name
@@ -43,6 +44,7 @@ class Column:
         self.value_format = value_format
         self.sort_by = sort_by or self.source
         self.search_in = search_in or [self.source]
+        self.link = link
         self.link_factory = link_factory
 
     def get_value(self, obj: typing.Any) -> typing.Any:

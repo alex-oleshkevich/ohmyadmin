@@ -63,8 +63,19 @@
                         {% endif %}
                         {% for column in columns %}
                             <td>
-                                {% if column.link_factory %}
-                                    <a href="{{ column.link_factory(request, object) }}">
+                                {% set link = '' %}
+                                {% if column.link or column.link_factory %}
+                                    {% if column.link_factory %}
+                                        {% set link = column.link_factory(request, object) %}
+                                    {% else %}
+                                        {% set link = url(
+                                        resource.get_route_name('edit'), pk=resource.get_pk_value(object)
+                                        ) %}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if link %}
+                                    <a href="{{ link }}">
                                         {{ column(object) }}
                                     </a>
                                 {% else %}

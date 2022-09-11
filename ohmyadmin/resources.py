@@ -5,7 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
-from starlette.responses import RedirectResponse, Response
 from starlette.routing import BaseRoute, Route, Router
 from starlette.types import Receive, Scope, Send
 from wtforms.fields.core import UnboundField
@@ -15,6 +14,7 @@ from ohmyadmin.forms import Field, Form, FormField, FormLayout, Grid, Layout
 from ohmyadmin.helpers import render_to_response
 from ohmyadmin.i18n import _
 from ohmyadmin.pagination import Page
+from ohmyadmin.responses import RedirectResponse, Response
 from ohmyadmin.tables import (
     BaseFilter,
     BatchAction,
@@ -28,6 +28,8 @@ from ohmyadmin.tables import (
     get_page_value,
     get_search_value,
 )
+
+ResourceAction = typing.Literal['list', 'create', 'edit', 'delete', 'batch_action']
 
 
 def label_from_resource_class(class_name: str) -> str:
@@ -213,6 +215,11 @@ class Resource(Router, metaclass=ResourceMeta):
 
     async def list_objects_view(self, request: Request) -> Response:
         async with self.dbsession() as session:
+            if request.method == 'POST':
+                if '_batch_action' in request.query_params:
+                    return await self.batch_action_view(request, request.query_params['_batch_action'])
+                return RedirectResponse(request).to_resource(self)
+
             queryset = self.get_queryset(request)
             queryset = self.apply_filters(request, queryset)
             objects = await self.paginate_queryset(request, session, queryset)
@@ -221,7 +228,7 @@ class Resource(Router, metaclass=ResourceMeta):
                 request,
                 self.index_view_template,
                 {
-                    'table': self,
+                    'resource': self,
                     'objects': objects,
                     'page_title': self.label,
                     'sorting_helper': SortingHelper(self.ordering_param),
@@ -296,7 +303,7 @@ class Resource(Router, metaclass=ResourceMeta):
             if request.method == 'POST':
                 await session.delete(instance)
                 await session.commit()
-                return RedirectResponse(request.url_for(self.get_route_name('list')), 302)
+                return RedirectResponse(request).to_resource(self)
 
             return render_to_response(
                 request,
@@ -308,11 +315,18 @@ class Resource(Router, metaclass=ResourceMeta):
                 },
             )
 
-    async def batch_action_view(self, request: Request) -> Response:
-        pass
+    async def batch_action_view(self, request: Request, action_id: str) -> Response:
+        form_data = await request.form()
+        object_ids = form_data.get('selected', [])
+        queryset = self.get_queryset(request).where(sa.column(self.pk_column).in_(object_ids))
+        batch_action = next((action for action in self.get_batch_actions(request) if action.id == action_id))
+        if not batch_action:
+            return RedirectResponse(request).to_resource(self).with_error(_('Unknown batch action.'))
+
+        return await batch_action.apply(request, queryset, form_data)
 
     @classmethod
-    def get_route_name(cls, action: typing.Literal['list', 'create', 'edit', 'delete']) -> str:
+    def get_route_name(cls, action: ResourceAction) -> str:
         return f'resource_{cls.id}_{action}'
 
     def get_routes(self) -> typing.Sequence[BaseRoute]:
@@ -331,21 +345,28 @@ class Resource(Router, metaclass=ResourceMeta):
                 methods=['GET', 'POST'],
                 name=self.get_route_name('delete'),
             ),
+            Route(
+                '/batch-action',
+                self.batch_action_view,
+                methods=['GET', 'POST'],
+                name=self.get_route_name('batch_action'),
+            ),
         ]
 
     async def _detect_post_save_action(self, request: Request, instance: typing.Any) -> Response:
         form_data = await request.form()
         pk = self.get_pk_value(instance)
         if '_save' in form_data:
-            return RedirectResponse(request.url_for(self.get_route_name('edit'), pk=pk), 302)
+            return RedirectResponse(request).to_resource(self, 'edit', pk=pk)
         if '_add' in form_data:
-            return RedirectResponse(request.url_for(self.get_route_name('create')), 302)
+            return RedirectResponse(request).to_resource(self, 'create')
         if '_list' in form_data:
-            return RedirectResponse(request.url_for(self.get_route_name('list')), 302)
+            return RedirectResponse(request).to_resource(self)
         raise ValueError('Could not determine redirect route.')
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         async with self.dbsession() as session:
             scope.setdefault('state', {})
             scope['state']['dbsession'] = session
+            scope['state']['resource'] = self
             return await super().__call__(scope, receive, send)

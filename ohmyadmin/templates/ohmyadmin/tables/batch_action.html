@@ -1,6 +1,6 @@
 {% import 'ohmyadmin/lib/buttons.html' as buttons %}
 
-<form method="post" action="?_batch={{ action.id }}" x-show="openBatchModal && batchAction == '{{ action.id }}'">
+<form method="post" action="?_batch_action={{ action.id }}" x-show="openBatchModal && batchAction == '{{ action.id }}'">
     <div class="modal">
         <div class="modal-spacer">
             <div

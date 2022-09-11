@@ -1,11 +1,12 @@
 import sqlalchemy as sa
 from starlette.requests import Request
-from starlette.responses import RedirectResponse, Response
 
 from examples.models import User
 from ohmyadmin.actions import LinkAction
+from ohmyadmin.flash import flash
 from ohmyadmin.forms import CheckboxField, EmailField, HiddenField, TextField
 from ohmyadmin.resources import Resource
+from ohmyadmin.responses import RedirectResponse, Response
 from ohmyadmin.tables import ActionGroup, BatchAction, Column, LinkRowAction
 
 
@@ -16,7 +17,8 @@ class DeleteAllAction(BatchAction):
     confirmation = 'Do you want to delete all items?'
 
     async def apply(self, request: Request, ids: list[str], params: dict[str, str]) -> Response:
-        return RedirectResponse(request.headers.get('referer'), 302)
+        flash(request).success('Object has been removed')
+        return RedirectResponse(request).to_resource(request.state.resource)
 
 
 class DeactivateAllAction(BatchAction):
@@ -25,7 +27,7 @@ class DeactivateAllAction(BatchAction):
     confirmation = 'Do you want to run this action?'
 
     async def apply(self, request: Request, queryset: sa.sql.Select, params: dict[str, str]) -> Response:
-        return RedirectResponse(request.headers.get('/admin/resources/users'), 302)
+        return RedirectResponse(request).to_resource(request.state.resource)
 
 
 class ActivateAllAction(BatchAction):
@@ -34,7 +36,7 @@ class ActivateAllAction(BatchAction):
     confirmation = 'Do you want to run this action?'
 
     async def apply(self, request: Request, queryset: sa.sql.Select, params: dict[str, str]) -> Response:
-        return RedirectResponse(request.headers.get('referer'), 302)
+        return RedirectResponse(request).to_resource(request.state.resource)
 
 
 class UserResource(Resource):
@@ -52,7 +54,7 @@ class UserResource(Resource):
             searchable=True,
             search_in=['first_name', 'last_name'],
             sort_by='last_name',
-            link_factory=lambda r, o: r.url_for(UserResource.get_route_name('edit'), pk=o.id),
+            link=True,
         ),
         Column('email', label='Email', searchable=True),
         Column('is_active', label='Active'),
@@ -78,6 +80,7 @@ class UserResource(Resource):
         ),
     ]
     batch_actions = [
+        DeleteAllAction(),
         ActivateAllAction(),
         DeactivateAllAction(),
     ]

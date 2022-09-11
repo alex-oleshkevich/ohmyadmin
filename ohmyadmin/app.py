@@ -12,6 +12,7 @@ from starlette.routing import BaseRoute, Mount, Route, Router
 from starlette.staticfiles import StaticFiles
 from starlette.types import Receive, Scope, Send
 
+from ohmyadmin.flash import flash
 from ohmyadmin.nav import MenuGroup, MenuItem
 from ohmyadmin.templating import jinja_env
 
@@ -78,6 +79,7 @@ class OhMyAdmin(Router):
                 'main_menu': self.build_main_menu(request),
                 'user_menu': self.build_user_menu(request),
                 'static': functools.partial(self.static_url, request),
+                'flash_messages': flash(request),
             }
         )
         content = self.render(template_name, context)

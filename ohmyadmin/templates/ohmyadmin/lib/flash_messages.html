@@ -1,0 +1,12 @@
+{% macro flash_message(category, message) %}
+    <div class="alert alert-{{ category }}">
+        {% if category == 'success' %}
+            {{ icon('circle-check') }}
+        {% else %}
+            {{ icon('alert-circle') }}
+        {% endif %}
+        <div>
+            {{ message }}
+        </div>
+    </div>
+{% endmacro %}
