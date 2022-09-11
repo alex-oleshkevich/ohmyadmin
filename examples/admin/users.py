@@ -15,6 +15,10 @@ class DeleteAllAction(BatchAction):
     label = 'Delete all'
     dangerous = True
     confirmation = 'Do you want to delete all items?'
+    fields = [
+        TextField('name'),
+        TextField('email'),
+    ]
 
     async def apply(self, request: Request, ids: list[str], params: dict[str, str]) -> Response:
         flash(request).success('Object has been removed')
