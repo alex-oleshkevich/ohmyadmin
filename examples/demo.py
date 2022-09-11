@@ -10,6 +10,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Mount, Route
 
+from examples.admin.products import ProductResource
 from examples.admin.users import UserResource
 from ohmyadmin.app import OhMyAdmin, UserMenu
 from ohmyadmin.nav import MenuGroup, MenuItem
@@ -39,6 +40,7 @@ class Admin(OhMyAdmin):
             MenuGroup(
                 'Resources',
                 [
+                    MenuItem.to_resource(ProductResource),
                     MenuItem.to_resource(UserResource),
                 ],
             ),
@@ -62,6 +64,7 @@ app = Starlette(
                 template_dirs=[this_dir / 'templates'],
                 routes=[
                     Mount('/resources/users', UserResource(engine)),
+                    Mount('/resources/products', ProductResource(engine)),
                 ],
             ),
         ),

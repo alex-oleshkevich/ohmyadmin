@@ -56,8 +56,11 @@ class Column:
     def get_value(self, obj: typing.Any) -> typing.Any:
         parts = self.source.split('.')
         value = obj
-        for part in parts:
-            value = getattr(value, part)
+        try:
+            for part in parts:
+                value = getattr(value, part)
+        except AttributeError:
+            value = ''
         return value
 
     def format_value(self, value: typing.Any) -> str:
@@ -83,7 +86,31 @@ class Column:
     def render(self, entity: typing.Any) -> str:
         return render_to_string(self.template, {'column': self, 'object': entity})
 
-    __call__ = render
+    def __call__(self, entity: typing.Any) -> str:
+        return self.render(entity)
+
+
+class NumberColumn(Column):
+    template: str = 'ohmyadmin/tables/cell_number.html'
+
+
+class BoolColumn(Column):
+    template: str = 'ohmyadmin/tables/cell_bool.html'
+
+
+class ImageColumn(Column):
+    template: str = 'ohmyadmin/tables/cell_image.html'
+
+
+class HasManyColumn(Column):
+    def __init__(self, name: str, child: Column, **kwargs: typing.Any) -> None:
+        self.child = child
+        super().__init__(name, **kwargs)
+
+    def render(self, entity: typing.Any) -> str:
+        values = self.get_value(entity)
+        value = values[0] if values else None
+        return self.child.render(value)
 
 
 class BatchActionMeta(abc.ABCMeta):

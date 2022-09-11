@@ -36,10 +36,11 @@ class MenuItem(abc.ABC):
         return RouteLink(text=text, path_name=path_name, path_params=path_params or {}, icon=icon)
 
     @classmethod
-    def to_resource(cls, resource: typing.Type[Resource]) -> RouteLink:
-        return cls.to_route(resource.label_plural, resource.get_route_name('list'), resource.icon)
+    def to_resource(cls, resource: typing.Type[Resource]) -> ResourceLink:
+        return ResourceLink(resource)
 
-    __call__ = render
+    def __call__(self, request: Request) -> str:
+        return self.render(request)
 
 
 class MenuGroup(MenuItem):

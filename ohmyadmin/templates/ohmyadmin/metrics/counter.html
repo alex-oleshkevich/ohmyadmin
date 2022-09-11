@@ -1,0 +1,8 @@
+<div class="border border-slate-300 rounded-lg p-3 col-span-{{ metric.cols }}">
+    <div class="font-semibold text-slate-600">{{ metric.label }}</div>
+    <div class="text-2xl mt-3">
+        {{ metric.value_prefix if metric.value_prefix else '' }}
+        {{ value|round(metric.round) if metric.round else value }}
+        {{ metric.value_suffix if metric.value_suffix else '' }}
+    </div>
+</div>

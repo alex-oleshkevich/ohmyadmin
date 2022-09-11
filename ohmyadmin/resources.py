@@ -13,6 +13,7 @@ from ohmyadmin.actions import Action, LinkAction, SubmitAction
 from ohmyadmin.forms import Field, Form, FormField, FormLayout, Grid, Layout
 from ohmyadmin.helpers import render_to_response
 from ohmyadmin.i18n import _
+from ohmyadmin.metrics import Metric
 from ohmyadmin.pagination import Page
 from ohmyadmin.responses import RedirectResponse, Response
 from ohmyadmin.tables import (
@@ -63,6 +64,7 @@ class Resource(Router, metaclass=ResourceMeta):
     batch_actions: typing.Iterable[BatchAction] | None = None
     table_actions: typing.Iterable[Action] | None = None
     row_actions: typing.Iterable[RowAction] | None = None
+    metrics: typing.Iterable[Metric] | None = None
 
     # pagination and default filters
     page_param: str = 'page'
@@ -91,10 +93,14 @@ class Resource(Router, metaclass=ResourceMeta):
         self.dbsession = sessionmaker(sa_engine, expire_on_commit=False, class_=AsyncSession)
         super().__init__(routes=self.get_routes())
 
+    @property
+    def searchable(self) -> bool:
+        return any([column.searchable for column in self.get_table_columns()])
+
     def get_pk_value(self, entity: typing.Any) -> int | str:
         return getattr(entity, self.pk_column)
 
-    def get_table_columns(self, request: Request) -> typing.Iterable[Column]:
+    def get_table_columns(self) -> typing.Iterable[Column]:
         assert self.table_columns is not None, 'Resource must define columns for table view.'
         return self.table_columns
 
@@ -105,9 +111,9 @@ class Resource(Router, metaclass=ResourceMeta):
         return sa.select(self.entity_class)
 
     # region: list
-    def get_filters(self, request: Request) -> typing.Iterable[BaseFilter]:
+    def get_filters(self) -> typing.Iterable[BaseFilter]:
         filters = list(self.filters or []).copy()
-        table_columns = self.get_table_columns(request)
+        table_columns = self.get_table_columns()
 
         # attach ordering filter
         if sortables := [column.sort_by for column in table_columns if column.sortable]:
@@ -120,7 +126,7 @@ class Resource(Router, metaclass=ResourceMeta):
         return filters
 
     def apply_filters(self, request: Request, stmt: sa.sql.Select) -> sa.sql.Select:
-        for filter in self.get_filters(request):
+        for filter in self.get_filters():
             stmt = filter.apply(request, stmt)
         return stmt
 
@@ -153,6 +159,9 @@ class Resource(Router, metaclass=ResourceMeta):
 
     def get_batch_actions(self, request: Request) -> typing.Iterable[BatchAction]:
         yield from self.batch_actions or []
+
+    def get_metrics(self, request: Request) -> typing.Iterable[Metric]:
+        yield from self.metrics or []
 
     # endregion
 
@@ -229,14 +238,15 @@ class Resource(Router, metaclass=ResourceMeta):
                 {
                     'resource': self,
                     'objects': objects,
-                    'page_title': self.label,
+                    'page_title': self.label_plural,
                     'sorting_helper': SortingHelper(self.ordering_param),
                     'search_placeholder': self.search_placeholder,
                     'search_query': get_search_value(request, self.search_param),
-                    'columns': self.get_table_columns(request),
+                    'columns': self.get_table_columns(),
                     'row_actions': list(self.get_row_actions(request)),
                     'batch_actions': list(self.get_batch_actions(request)),
                     'table_actions': list(self.get_table_actions(request)),
+                    'metrics': [await metric.render(request) for metric in self.get_metrics(request)],
                 },
             )
 

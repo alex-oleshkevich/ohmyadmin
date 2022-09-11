@@ -1,3 +1,6 @@
-{% import 'ohmyadmin/lib/nav.html' as nav %}
-
-{{ nav.main_menu_group(request, item) }}
+<div class="mt-5">
+    <div class="text-slate-600 uppercase mb-2 text-sm">{{ item.text }}</div>
+    {% for subitem in item %}
+        {{ subitem(request) }}
+    {% endfor %}
+</div>

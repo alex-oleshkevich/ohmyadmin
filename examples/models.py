@@ -1,5 +1,5 @@
 import sqlalchemy as sa
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base, relationship
 
 metadata = sa.MetaData()
 Base = declarative_base()
@@ -112,6 +112,9 @@ class Product(Base):
     can_be_shipped = sa.Column(sa.Boolean)
     created_at = sa.Column(sa.DateTime(True))
     updated_at = sa.Column(sa.DateTime(True))
+
+    brand = relationship(Brand)
+    images = relationship('Image')
 
 
 class ProductCategory(Base):

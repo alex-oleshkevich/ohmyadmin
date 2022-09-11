@@ -1,3 +1,3 @@
-{% import 'ohmyadmin/lib/nav.html' as nav %}
-
-{{ nav.main_menu_item(item.url, item.text, item.icon) }}
+<a href="{{ url }}" class="main-menu-item">
+    {{ tabler_icon(item.icon) if item.icon else '' }} {{ item.text }}
+</a>
