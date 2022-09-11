@@ -1,19 +1,15 @@
 from __future__ import annotations
 
 import abc
-import itertools
 import sqlalchemy as sa
 import typing
-from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.datastructures import URL, FormData, MultiDict
 from starlette.requests import Request
-from starlette.responses import RedirectResponse, Response
+from starlette.responses import Response
 from urllib.parse import parse_qsl, urlencode
 
-from ohmyadmin.actions import Action, ActionColor
+from ohmyadmin.actions import ActionColor
 from ohmyadmin.helpers import render_to_string
-from ohmyadmin.i18n import _
-from ohmyadmin.pagination import Page
 
 Formatter = typing.Callable[[typing.Any], str]
 
@@ -260,119 +256,3 @@ class SortingHelper:
 
     def should_show_index(self, request: Request) -> bool:
         return len(get_ordering_value(request, self.query_param_name)) > 1
-
-
-class TableView:
-    def __init__(
-        self,
-        session: AsyncSession,
-        queryset: sa.sql.Select,
-        columns: typing.Iterable[Column],
-        pk_column: str = 'id',
-        label: str = _('Untitled'),
-        page_param: str = 'page',
-        page_size: int = 25,
-        page_sizes: list[int] | None = None,
-        page_size_param: str = 'page_size',
-        search_param: str = 'search',
-        ordering_param: str = 'ordering',
-        search_placeholder: str = _('Search...'),
-        table_actions: typing.Iterable[Action] | None = None,
-        batch_actions: typing.Iterable[BatchAction] | None = None,
-        row_actions: typing.Iterable[RowAction] | None = None,
-        filters: typing.Iterable[BaseFilter] | None = None,
-        template: str = 'ohmyadmin/table.html',
-    ) -> None:
-        self.session = session
-        self.label = label
-        self.columns = columns
-        self.queryset = queryset
-        self.page_param = page_param
-        self.page_size = page_size
-        self.page_sizes = page_sizes or [25, 50, 75, 100]
-        self.page_size_param = page_size_param
-        self.search_param = search_param
-        self.ordering_param = ordering_param
-        self.search_placeholder = search_placeholder
-        self.filters = list(filters or [])
-        self.row_actions = list(row_actions or [])
-        self.table_actions = list(table_actions or [])
-        self.batch_actions = list(batch_actions or [])
-        self.template = template
-
-    def get_queryset(self, request: Request) -> sa.sql.Select:
-        return self.queryset
-
-    def get_filters(self) -> typing.Iterable[BaseFilter]:
-        filters = self.filters.copy()
-
-        # attach ordering filter
-        if sortables := [column.sort_by for column in self.columns if column.sortable]:
-            filters.append(OrderingFilter(sortables, self.ordering_param))
-
-        # make search filter
-        if searchables := list(itertools.chain.from_iterable([c.search_in for c in self.columns if c.searchable])):
-            filters.append(SearchFilter(columns=searchables, query_param=self.search_param))
-
-        return filters
-
-    def apply_filters(self, request: Request, stmt: sa.sql.Select) -> sa.sql.Select:
-        for filter in self.get_filters():
-            stmt = filter.apply(request, stmt)
-        return stmt
-
-    async def get_object_count(self, session: AsyncSession, queryset: sa.sql.Select) -> int:
-        stmt = sa.select(sa.func.count('*')).select_from(queryset)
-        result = await session.scalars(stmt)
-        return result.one()
-
-    async def get_objects(self, queryset: sa.sql.Select) -> typing.Iterable:
-        result = await self.session.scalars(queryset)
-        return result.all()
-
-    async def paginate_queryset(self, request: Request, queryset: sa.sql.Select) -> Page:
-        page_number = get_page_value(request, self.page_param)
-        page_size = get_page_size_value(request, self.page_size_param, self.page_sizes, self.page_size)
-        offset = (page_number - 1) * page_size
-
-        row_count = await self.get_object_count(self.session, queryset)
-        queryset = queryset.limit(page_size).offset(offset)
-        rows = await self.get_objects(queryset)
-        return Page(rows=list(rows), total_rows=row_count, page=page_number, page_size=page_size)
-
-    async def _dispatch_batch_action(self, request: Request, action_name: str, body: FormData) -> Response:
-        for action in self.batch_actions:
-            if action.id == action_name:
-                if body.get('selected') == '__all__':
-                    queryset = self.get_queryset(request)
-                else:
-                    ids = body.getlist('selected')
-                    queryset = self.get_queryset(request).where(sa.column('id').in_(ids))
-                return await action.apply(request, queryset, body)
-        raise RuntimeError('Unknown batch action: ' + action_name)
-
-    async def dispatch(self, request: Request) -> Response:
-        if request.method == 'POST':
-            data = await request.form()
-            match data:
-                case {'_batch': action_name}:
-                    response = await self._dispatch_batch_action(request, action_name, data)
-                case _:
-                    response = RedirectResponse(request.headers.get('referrer'))
-        else:
-            queryset = self.get_queryset(request)
-            queryset = self.apply_filters(request, queryset)
-            objects = await self.paginate_queryset(request, queryset)
-
-            response = request.state.admin.render_to_response(
-                request,
-                self.template,
-                {
-                    'table': self,
-                    'objects': objects,
-                    'page_title': self.label,
-                    'sorting_helper': SortingHelper(self.ordering_param),
-                    'search_query': get_search_value(request, self.search_param),
-                },
-            )
-        return response

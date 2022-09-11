@@ -6,11 +6,12 @@
 {% block content %}
     <div x-data="table()">
         <div class="flex items-center justify-between mb-6">
+            <!-- batch actions -->
             <div>
                 <div x-show="selected.length" class="flex items-center gap-2">
                     <select class="w-64" x-model="batchAction">
                         <option></option>
-                        {% for action in table.batch_actions %}
+                        {% for action in batch_actions %}
                             <option value="{{ action.id }}">{{ action.label }}</option>
                         {% endfor %}
                     </select>
@@ -20,29 +21,33 @@
                     </button>
                 </div>
             </div>
+            <!-- end batch actions -->
+
+            <!-- search and actions -->
             <div class="flex items-center gap-3">
                 <form method="get">
                     <input
                         type="search" name="search" value="{{ search_query }}"
                         class="w-96"
-                        placeholder="{{ table.search_placeholder }}">
+                        placeholder="{{ search_placeholder }}">
                 </form>
-                {% for action in table.table_actions %}
+                {% for action in table_actions %}
                     {{ actions.action(action) }}
                 {% endfor %}
             </div>
+            <!-- end search and actions -->
         </div>
 
         <div class="mb-6">
             <table>
                 <thead>
                 <tr>
-                    {% if table.batch_actions %}
+                    {% if batch_actions %}
                         <th class="w-8">
                             <input type="checkbox" name="selected" @click="toggleSelectAll">
                         </th>
                     {% endif %}
-                    {% for column in table.columns %}
+                    {% for column in columns %}
                         <th class="text-left p-2">{{ column.render_head_cell(request, sorting_helper) }}</th>
                     {% endfor %}
                     <th></th>
@@ -51,12 +56,12 @@
                 <tbody>
                 {% for object in objects %}
                     <tr x-bind:class="{'selected': selected.includes('{{ object.id }}')}">
-                        {% if table.batch_actions %}
+                        {% if batch_actions %}
                             <td>
                                 <input type="checkbox" x-model="selected" value="{{ object.id }}">
                             </td>
                         {% endif %}
-                        {% for column in table.columns %}
+                        {% for column in columns %}
                             <td>
                                 {% if column.link_factory %}
                                     <a href="{{ column.link_factory(request, object) }}">
@@ -68,7 +73,7 @@
                             </td>
                         {% endfor %}
                         <td class="actions">
-                            {% for action in table.row_actions %}
+                            {% for action in row_actions %}
                                 {{ action(object) }}
                             {% endfor %}
                         </td>
@@ -80,7 +85,7 @@
 
         {{ pagination.pagination(request, objects) }}
 
-        {% for batch_action in table.batch_actions %}
+        {% for batch_action in batch_actions %}
             <template x-teleport="body">
                 {{ batch_action }}
             </template>

@@ -1,3 +1,4 @@
+import itertools
 import sqlalchemy as sa
 import typing
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,7 +14,20 @@ from ohmyadmin.actions import Action, LinkAction, SubmitAction
 from ohmyadmin.forms import Field, Form, FormField, FormLayout, Grid, Layout
 from ohmyadmin.helpers import render_to_response
 from ohmyadmin.i18n import _
-from ohmyadmin.tables import BaseFilter, BatchAction, Column, LinkRowAction, RowAction, TableView
+from ohmyadmin.pagination import Page
+from ohmyadmin.tables import (
+    BaseFilter,
+    BatchAction,
+    Column,
+    LinkRowAction,
+    OrderingFilter,
+    RowAction,
+    SearchFilter,
+    SortingHelper,
+    get_page_size_value,
+    get_page_value,
+    get_search_value,
+)
 
 
 def label_from_resource_class(class_name: str) -> str:
@@ -33,10 +47,12 @@ class Resource(Router, metaclass=ResourceMeta):
     label: str = ''
     label_plural: str = ''
     icon: str = ''
-    entity_class: typing.Any | None = None
-    queryset: sa.sql.Select | None = None
     pk_type: typing.Literal['str', 'int'] = 'int'
     pk_column: str = 'id'
+
+    # orm configuration
+    entity_class: typing.Any | None = None
+    queryset: sa.sql.Select | None = None
 
     # table settings
     filters: typing.Iterable[BaseFilter] | None = None
@@ -44,11 +60,11 @@ class Resource(Router, metaclass=ResourceMeta):
     batch_actions: typing.Iterable[BatchAction] | None = None
     table_actions: typing.Iterable[Action] | None = None
     row_actions: typing.Iterable[RowAction] | None = None
-    table_view_class: typing.Type[TableView] = TableView
 
+    # pagination and default filters
     page_param: str = 'page'
     page_size: int = 25
-    page_sizes: list[int] | None = None
+    page_sizes: list[int]
     page_size_param: str = 'page_size'
     search_param: str = 'search'
     ordering_param: str = 'ordering'
@@ -70,10 +86,15 @@ class Resource(Router, metaclass=ResourceMeta):
 
     def __init__(self, dbsession: sessionmaker) -> None:
         self.dbsession = dbsession
+        self.page_sizes: list[int] = self.page_sizes or [25, 50, 75]
         super().__init__(routes=self.get_routes())
 
     def get_pk_value(self, entity: typing.Any) -> int | str:
         return getattr(entity, self.pk_column)
+
+    def get_table_columns(self, request: Request) -> typing.Iterable[Column]:
+        assert self.table_columns is not None, 'Resource must define columns for table view.'
+        return self.table_columns
 
     def get_queryset(self, request: Request) -> sa.sql.Select:
         assert self.entity_class is not None, 'entity_class must be defined on resource.'
@@ -82,9 +103,24 @@ class Resource(Router, metaclass=ResourceMeta):
         return sa.select(self.entity_class)
 
     # region: list
-    def get_table_columns(self, request: Request) -> typing.Iterable[Column]:
-        assert self.table_columns is not None, 'Resource must define columns for table view.'
-        return self.table_columns
+    def get_filters(self, request: Request) -> typing.Iterable[BaseFilter]:
+        filters = list(self.filters or []).copy()
+        table_columns = self.get_table_columns(request)
+
+        # attach ordering filter
+        if sortables := [column.sort_by for column in table_columns if column.sortable]:
+            filters.append(OrderingFilter(sortables, self.ordering_param))
+
+        # make search filter
+        if searchables := list(itertools.chain.from_iterable([c.search_in for c in table_columns if c.searchable])):
+            filters.append(SearchFilter(columns=searchables, query_param=self.search_param))
+
+        return filters
+
+    def apply_filters(self, request: Request, stmt: sa.sql.Select) -> sa.sql.Select:
+        for filter in self.get_filters(request):
+            stmt = filter.apply(request, stmt)
+        return stmt
 
     def get_default_table_actions(self, request: Request) -> typing.Iterable[Action]:
         yield LinkAction(
@@ -117,28 +153,6 @@ class Resource(Router, metaclass=ResourceMeta):
         yield from self.batch_actions or []
 
     # endregion
-
-    async def list_objects_view(self, request: Request) -> Response:
-        async with self.dbsession() as session:
-            table = self.table_view_class(
-                session=session,
-                pk_column=self.pk_column,
-                label=self.label_plural,
-                page_size=self.page_size,
-                page_param=self.page_param,
-                search_param=self.search_param,
-                columns=self.get_table_columns(request),
-                ordering_param=self.ordering_param,
-                queryset=self.get_queryset(request),
-                page_size_param=self.page_size_param,
-                search_placeholder=self.search_placeholder,
-                page_sizes=self.page_sizes or [25, 50, 75, 100],
-                row_actions=self.get_row_actions(request),
-                table_actions=self.get_table_actions(request),
-                batch_actions=self.get_batch_actions(request),
-                template=self.index_view_template,
-            )
-            return await table.dispatch(request)
 
     # region: form
     def get_default_form_actions(self, request: Request) -> typing.Iterable[Action]:
@@ -178,6 +192,48 @@ class Resource(Router, metaclass=ResourceMeta):
         stmt = self.get_queryset(request).limit(2).where(sa.sql.column('id') == pk)
         result = await session.scalars(stmt)
         return result.one()
+
+    async def get_object_count(self, session: AsyncSession, queryset: sa.sql.Select) -> int:
+        stmt = sa.select(sa.func.count('*')).select_from(queryset)
+        result = await session.scalars(stmt)
+        return result.one()
+
+    async def get_objects(self, session: AsyncSession, queryset: sa.sql.Select) -> typing.Iterable:
+        result = await session.scalars(queryset)
+        return result.all()
+
+    async def paginate_queryset(self, request: Request, session: AsyncSession, queryset: sa.sql.Select) -> Page:
+        page_number = get_page_value(request, self.page_param)
+        page_size = get_page_size_value(request, self.page_size_param, self.page_sizes, self.page_size)
+        offset = (page_number - 1) * page_size
+
+        row_count = await self.get_object_count(session, queryset)
+        queryset = queryset.limit(page_size).offset(offset)
+        rows = await self.get_objects(session, queryset)
+        return Page(rows=list(rows), total_rows=row_count, page=page_number, page_size=page_size)
+
+    async def list_objects_view(self, request: Request) -> Response:
+        async with self.dbsession() as session:
+            queryset = self.get_queryset(request)
+            queryset = self.apply_filters(request, queryset)
+            objects = await self.paginate_queryset(request, session, queryset)
+
+            return render_to_response(
+                request,
+                self.index_view_template,
+                {
+                    'table': self,
+                    'objects': objects,
+                    'page_title': self.label,
+                    'sorting_helper': SortingHelper(self.ordering_param),
+                    'search_placeholder': self.search_placeholder,
+                    'search_query': get_search_value(request, self.search_param),
+                    'columns': self.get_table_columns(request),
+                    'row_actions': list(self.get_row_actions(request)),
+                    'batch_actions': list(self.get_batch_actions(request)),
+                    'table_actions': list(self.get_table_actions(request)),
+                },
+            )
 
     async def create_object_view(self, request: Request) -> Response:
         assert self.entity_class, 'Resource must define entity_class attribute.'
