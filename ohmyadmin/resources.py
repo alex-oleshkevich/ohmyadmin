@@ -315,13 +315,16 @@ class Resource(Router, metaclass=ResourceMeta):
             )
 
     async def batch_action_view(self, request: Request, action_id: str) -> Response:
-        form_data = await request.form()
-        object_ids = [self.pk_type(object_id) for object_id in form_data.getlist('selected')]
         batch_action = next((action for action in self.get_batch_actions(request) if action.id == action_id))
         if not batch_action:
             return RedirectResponse(request).to_resource(self).with_error(_('Unknown batch action.'))
 
-        return await batch_action.apply(request, object_ids, form_data)
+        if request.method == 'POST':
+            form_data = await request.form()
+            object_ids = [self.pk_type(object_id) for object_id in form_data.getlist('selected')]
+            return await batch_action.apply(request, object_ids, form_data)
+
+        return Response(batch_action.render())
 
     @classmethod
     def get_route_name(cls, action: ResourceAction) -> str:
