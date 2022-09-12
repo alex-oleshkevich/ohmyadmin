@@ -1,0 +1,15 @@
+{% import 'ohmyadmin/lib/actions.html' as actions %}
+<div class="empty-state">
+    <figure>
+        {% include element.image_template %}
+    </figure>
+    <section>
+        <header>{{ element.heading }}</header>
+        <main>{{ element.message }}</main>
+        <footer>
+            {% for action in element.actions %}
+                {{ actions.action(action) }}
+            {% endfor %}
+        </footer>
+    </section>
+</div>

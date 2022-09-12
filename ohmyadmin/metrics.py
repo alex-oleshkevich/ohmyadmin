@@ -24,4 +24,6 @@ class CountMetric(Metric):
         raise NotImplementedError()
 
     async def render(self, request: Request) -> str:
-        return render_to_string(self.template, {'metric': self, 'value': await self.calculate(request)})
+        value = await self.calculate(request)
+        value = value or 0
+        return render_to_string(self.template, {'metric': self, 'value': value})

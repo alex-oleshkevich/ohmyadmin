@@ -15,7 +15,9 @@ from wtforms.fields.core import UnboundField
 from wtforms.form import FormMeta
 from wtforms.utils import unset_value
 
+from ohmyadmin.actions import Action
 from ohmyadmin.helpers import render_to_string
+from ohmyadmin.i18n import _
 from ohmyadmin.query import query
 from ohmyadmin.storage import FileStorage
 
@@ -92,6 +94,22 @@ class FormPlaceholder(Layout):
         self.text = text
         self.label = label
         self.colspan = colspan
+
+
+class EmptyState(Layout):
+    template = 'ohmyadmin/layouts/empty_state.html'
+
+    def __init__(
+        self,
+        message: str,
+        actions: list[Action],
+        heading: str = _('Empty page'),
+        image_template: str = 'ohmyadmin/images/empty.svg',
+    ) -> None:
+        self.heading = heading
+        self.message = message
+        self.actions = actions
+        self.image_template = image_template
 
 
 T = typing.TypeVar('T')

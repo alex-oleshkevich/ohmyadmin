@@ -1575,6 +1575,30 @@ textarea {
   --tw-text-opacity: 1;
   color: rgb(153 27 27 / var(--tw-text-opacity));
 }
+/* empty state */
+.empty-state {
+  text-align: center;
+}
+.empty-state figure {
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 5rem;
+  display: flex;
+  max-width: 24rem;
+  justify-content: center;
+}
+.empty-state figure svg {
+        height: 100%;
+    }
+.empty-state section header {
+  margin-bottom: 1.25rem;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 600;
+}
+.empty-state section footer {
+  margin-top: 1.25rem;
+}
 .sr-only {
   position: absolute;
   width: 1px;

@@ -235,4 +235,23 @@
         @apply bg-red-50 text-red-800 border-red-100;
     }
 
+    /* empty state */
+    .empty-state {
+        @apply text-center;
+    }
+
+    .empty-state figure {
+        @apply flex justify-center max-w-sm mx-auto mb-20;
+    }
+    .empty-state figure svg {
+        height: 100%;
+    }
+
+    .empty-state section header {
+        @apply text-2xl font-semibold mb-5;
+    }
+
+    .empty-state section footer {
+        @apply mt-5;
+    }
 }

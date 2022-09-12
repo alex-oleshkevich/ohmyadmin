@@ -11,7 +11,7 @@ from wtforms.fields.core import UnboundField
 
 from ohmyadmin.actions import Action, LinkAction, SubmitAction
 from ohmyadmin.flash import flash
-from ohmyadmin.forms import Field, Form, FormField, Grid, HandlesFiles, Layout
+from ohmyadmin.forms import EmptyState, Field, Form, FormField, Grid, HandlesFiles, Layout
 from ohmyadmin.helpers import render_to_response
 from ohmyadmin.i18n import _
 from ohmyadmin.metrics import Metric
@@ -79,6 +79,7 @@ class Resource(Router, metaclass=ResourceMeta):
     search_placeholder: str = _('Search...')
 
     # form settings
+    form_class: typing.Type[Form] | None = None
     form_fields: typing.Iterable[Field] | None = None
     form_actions: typing.Iterable[Action] | None = None
     create_page_label: str = _('Create {resource}')
@@ -99,6 +100,13 @@ class Resource(Router, metaclass=ResourceMeta):
     @property
     def searchable(self) -> bool:
         return any([column.searchable for column in self.get_table_columns()])
+
+    def get_empty_state(self, request: Request) -> Layout:
+        return EmptyState(
+            heading=_('Empty page'),
+            message=_('This page currently has no data.'),
+            actions=list(self.get_default_table_actions(request)),
+        )
 
     def get_pk_value(self, entity: typing.Any) -> int | str:
         return getattr(entity, self.pk_column)
@@ -248,6 +256,7 @@ class Resource(Router, metaclass=ResourceMeta):
                     'row_actions': list(self.get_row_actions(request)),
                     'batch_actions': list(self.get_batch_actions()),
                     'table_actions': list(self.get_table_actions(request)),
+                    'empty_state': self.get_empty_state(request),
                     'metrics': [await metric.render(request) for metric in self.get_metrics()],
                 },
             )

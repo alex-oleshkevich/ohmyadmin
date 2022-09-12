@@ -3,109 +3,118 @@
 {% import 'ohmyadmin/lib/buttons.html' as buttons %}
 {% import 'ohmyadmin/lib/actions.html' as actions %}
 
+{% block page_actions %}
+    {% for action in table_actions %}
+        {{ actions.action(action) }}
+    {% endfor %}
+{% endblock %}
+
 {% block content %}
     {% include 'ohmyadmin/tables/metrics.html' %}
 
-    <div x-data="table()">
-        <div class="flex items-center justify-between mb-6">
-            <!-- batch actions -->
-            <div>
-                <div x-show="selected.length" class="flex items-center gap-2">
-                    <select class="w-64" x-model="batchAction">
-                        <option></option>
-                        {% for action in batch_actions %}
-                            <option value="{{ action.id }}">{{ action.label }}</option>
-                        {% endfor %}
-                    </select>
-                    <button class="btn btn-primary" type="button" @click="runBatchAction" :disabled="!batchAction">
-                        {{ tabler_icon('player-play') }}
-                        {{ _('Run') }}
-                    </button>
-                </div>
-            </div>
-            <!-- end batch actions -->
-
-            <!-- search and actions -->
-            <div class="flex items-center gap-3">
+    {% if objects %}
+        <div x-data="table()">
+            <div class="flex items-center justify-between mb-6">
+                <!-- batch actions -->
                 <div>
-                    {% if resource.searchable %}
-                        <form method="get">
-                            <input
-                                type="search" name="search" value="{{ search_query }}"
-                                class="w-96"
-                                placeholder="{{ search_placeholder }}">
-                        </form>
-                    {% endif %}
+                    <div x-show="selected.length" class="flex items-center gap-2">
+                        <select class="w-64" x-model="batchAction">
+                            <option></option>
+                            {% for action in batch_actions %}
+                                <option value="{{ action.id }}">{{ action.label }}</option>
+                            {% endfor %}
+                        </select>
+                        <button class="btn btn-primary" type="button" @click="runBatchAction" :disabled="!batchAction">
+                            {{ tabler_icon('player-play') }}
+                            {{ _('Run') }}
+                        </button>
+                    </div>
                 </div>
-                {% for action in table_actions %}
-                    {{ actions.action(action) }}
-                {% endfor %}
-            </div>
-            <!-- end search and actions -->
-        </div>
+                <!-- end batch actions -->
 
-        <div class="mb-6">
-            <table>
-                <thead>
-                <tr>
-                    {% if batch_actions %}
-                        <th class="w-8">
-                            <input type="checkbox" name="selected" @click="toggleSelectAll">
-                        </th>
-                    {% endif %}
-                    {% for column in columns %}
-                        <th class="text-left p-2">{{ column.render_head_cell(request, sorting_helper) }}</th>
-                    {% endfor %}
-                    <th></th>
-                </tr>
-                </thead>
-                <tbody>
-                {% for object in objects %}
-                    <tr x-bind:class="{'selected': selected.includes('{{ object.id }}')}">
+                <!-- search and actions -->
+                <div class="flex items-center gap-3">
+                    <div>
+                        {% if resource.searchable %}
+                            <form method="get">
+                                <input
+                                    type="search" name="search" value="{{ search_query }}"
+                                    class="w-96"
+                                    placeholder="{{ search_placeholder }}">
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+                <!-- end search and actions -->
+            </div>
+
+            <div class="mb-6">
+                <table>
+                    <thead>
+                    <tr>
                         {% if batch_actions %}
-                            <td>
-                                <input type="checkbox" x-model="selected" value="{{ object.id }}">
-                            </td>
+                            <th class="w-8">
+                                <input type="checkbox" name="selected" @click="toggleSelectAll">
+                            </th>
                         {% endif %}
                         {% for column in columns %}
-                            <td>
-                                {% set link = '' %}
-                                {% if column.link or column.link_factory %}
-                                    {% if column.link_factory %}
-                                        {% set link = column.link_factory(request, object) %}
-                                    {% else %}
-                                        {% set link = url(
+                            <th class="text-left p-2">{{ column.render_head_cell(request, sorting_helper) }}</th>
+                        {% endfor %}
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for object in objects %}
+                        <tr x-bind:class="{'selected': selected.includes('{{ object.id }}')}">
+                            {% if batch_actions %}
+                                <td>
+                                    <input type="checkbox" x-model="selected" value="{{ object.id }}">
+                                </td>
+                            {% endif %}
+                            {% for column in columns %}
+                                <td>
+                                    {% set link = '' %}
+                                    {% if column.link or column.link_factory %}
+                                        {% if column.link_factory %}
+                                            {% set link = column.link_factory(request, object) %}
+                                        {% else %}
+                                            {% set link = url(
                                         resource.get_route_name('edit'), pk=resource.get_pk_value(object)
                                         ) %}
+                                        {% endif %}
                                     {% endif %}
-                                {% endif %}
 
-                                {% if link %}
-                                    <a href="{{ link }}">
+                                    {% if link %}
+                                        <a href="{{ link }}">
+                                            {{ column(object) }}
+                                        </a>
+                                    {% else %}
                                         {{ column(object) }}
-                                    </a>
-                                {% else %}
-                                    {{ column(object) }}
-                                {% endif %}
-                            </td>
-                        {% endfor %}
-                        <td class="actions">
-                            {% for action in row_actions %}
-                                {{ action(object) }}
+                                    {% endif %}
+                                </td>
                             {% endfor %}
-                        </td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
+                            <td class="actions">
+                                {% for action in row_actions %}
+                                    {{ action(object) }}
+                                {% endfor %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {{ pagination.pagination(request, objects) }}
+
+            {% for batch_action in batch_actions %}
+                <template x-teleport="body">
+                    {{ batch_action }}
+                </template>
+            {% endfor %}
         </div>
-
-        {{ pagination.pagination(request, objects) }}
-
-        {% for batch_action in batch_actions %}
-            <template x-teleport="body">
-                {{ batch_action }}
-            </template>
-        {% endfor %}
-    </div>
+    {% else %}
+        <div class="mt-20">
+            {{ empty_state }}
+        </div>
+    {% endif %}
 {% endblock %}

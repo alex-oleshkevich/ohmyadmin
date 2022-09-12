@@ -3,6 +3,7 @@ create table users
     id         bigserial primary key,
     first_name text,
     last_name  text,
+    photo      text,
     email      text not null,
     password   text not null,
     created_at timestamptz default current_timestamp,
@@ -71,7 +72,7 @@ create table categories
     name                 text,
     slug                 text,
     description          text,
-    parent               bigint      null references brands,
+    parent_id            bigint      null references brands,
     visible_to_customers boolean     default 't',
     created_at           timestamptz default current_timestamp,
     updated_at           timestamptz null
