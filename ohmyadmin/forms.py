@@ -171,6 +171,10 @@ class TextField(Field[str], wtforms.StringField):
         super().__init__(attr_name, widget_attrs=widget_attrs, **kwargs)
 
 
+class SlugField(TextField, wtforms.StringField):
+    template = 'ohmyadmin/forms/slug.html'
+
+
 class PasswordField(TextField, wtforms.PasswordField):
     template = 'ohmyadmin/forms/password.html'
 
@@ -535,6 +539,10 @@ class EmbedManyField(Field[list[T]], wtforms.FieldList):
             field.render_kw['x-bind:id'] = "`{}`".format(field.id.replace(str(index), '${index}'))
             field.render_kw['x-bind:name'] = "`{}`".format(field.name.replace(str(index), '${index}'))
         return field
+
+
+class MarkdownField(Field, wtforms.TextAreaField):
+    template = 'ohmyadmin/forms/markdown.html'
 
 
 _E = typing.TypeVar('_E')

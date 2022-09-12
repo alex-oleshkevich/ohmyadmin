@@ -103,6 +103,10 @@ class ImageColumn(Column):
     template: str = 'ohmyadmin/tables/cell_image.html'
 
 
+class DateColumn(Column):
+    template: str = 'ohmyadmin/tables/cell_date.html'
+
+
 class HasManyColumn(Column):
     def __init__(self, name: str, child: Column, **kwargs: typing.Any) -> None:
         self.child = child

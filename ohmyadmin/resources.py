@@ -80,7 +80,6 @@ class Resource(Router, metaclass=ResourceMeta):
 
     # form settings
     form_fields: typing.Iterable[Field] | None = None
-    create_form_fields: typing.Iterable[Field] | None = None
     form_actions: typing.Iterable[Action] | None = None
     create_page_label: str = _('Create {resource}')
     edit_page_label: str = _('Edit {resource}')
@@ -88,7 +87,6 @@ class Resource(Router, metaclass=ResourceMeta):
 
     # templates
     index_view_template: str = 'ohmyadmin/table.html'
-    create_view_template: str = 'ohmyadmin/form.html'
     edit_view_template: str = 'ohmyadmin/form.html'
     delete_view_template: str = 'ohmyadmin/delete.html'
 
