@@ -1,18 +1,8 @@
 from starlette.requests import Request
 
 from examples.models import Customer
-from ohmyadmin.forms import (
-    Card,
-    DateField,
-    EmailField,
-    Form,
-    FormField,
-    FormPlaceholder,
-    Grid,
-    Group,
-    Layout,
-    TextField,
-)
+from ohmyadmin.forms import DateField, EmailField, Form, TextField
+from ohmyadmin.layout import Card, FormField, FormPlaceholder, Grid, Group, Layout
 from ohmyadmin.resources import Resource
 from ohmyadmin.tables import Column
 

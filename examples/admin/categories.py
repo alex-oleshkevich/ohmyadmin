@@ -1,21 +1,8 @@
 from starlette.requests import Request
 
 from examples.models import Category
-from ohmyadmin.forms import (
-    Card,
-    CheckboxField,
-    Form,
-    FormField,
-    FormPlaceholder,
-    Grid,
-    Group,
-    Layout,
-    MarkdownField,
-    SelectField,
-    SlugField,
-    TextField,
-    choices_from,
-)
+from ohmyadmin.forms import CheckboxField, Form, MarkdownField, SelectField, SlugField, TextField, choices_from
+from ohmyadmin.layout import Card, FormField, FormPlaceholder, Grid, Group, Layout
 from ohmyadmin.resources import Resource
 from ohmyadmin.tables import BoolColumn, Column, DateColumn
 

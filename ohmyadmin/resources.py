@@ -11,10 +11,11 @@ from wtforms.fields.core import UnboundField
 
 from ohmyadmin.actions import Action, LinkAction, SubmitAction
 from ohmyadmin.flash import flash
-from ohmyadmin.forms import EmptyState, Field, Form, FormField, Grid, HandlesFiles, Layout
-from ohmyadmin.globals import with_dbsession
+from ohmyadmin.forms import Field, Form, HandlesFiles
+from ohmyadmin.globals import globalize_dbsession
 from ohmyadmin.helpers import render_to_response
 from ohmyadmin.i18n import _
+from ohmyadmin.layout import EmptyState, FormField, Grid, Layout
 from ohmyadmin.metrics import Metric
 from ohmyadmin.pagination import Page
 from ohmyadmin.responses import RedirectResponse, Response
@@ -394,7 +395,7 @@ class Resource(Router, metaclass=ResourceMeta):
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         async with self.dbsession() as session:
-            with with_dbsession(session):
+            with globalize_dbsession(session):
                 scope.setdefault('state', {})
                 scope['state']['dbsession'] = session
                 scope['state']['resource'] = self

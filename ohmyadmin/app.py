@@ -90,7 +90,7 @@ class OhMyAdmin(Router):
         return Response(content, status_code=status_code, media_type='text/html')
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        from ohmyadmin.helpers import globalize_admin
+        from ohmyadmin.globals import globalize_admin
 
         with globalize_admin(self):
             scope.setdefault('state', {})
