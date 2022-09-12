@@ -9,6 +9,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Mount, Route
+from starlette.staticfiles import StaticFiles
 
 from examples.admin.brands import BrandResource
 from examples.admin.categories import CategoryResource
@@ -57,6 +58,7 @@ class Admin(OhMyAdmin):
 
 
 this_dir = pathlib.Path(__file__).parent
+uploads_dir = this_dir / 'uploads'
 engine = create_async_engine('postgresql+asyncpg://root:postgres@localhost/ohmyadmin', future=True)
 
 app = Starlette(
@@ -67,6 +69,7 @@ app = Starlette(
     ],
     routes=[
         Route('/', index_view),
+        Mount('/media', StaticFiles(directory=uploads_dir)),
         Mount(
             '/admin',
             Admin(

@@ -278,23 +278,17 @@ class Resource(Router, metaclass=ResourceMeta):
             layout = self.get_form_layout(request, form)
 
             if await form.validate_on_submit(request):
-                exclude_fields: list[str] = []
-
-                # handle uploads
                 for field in form:
                     if isinstance(field, HandlesFiles):
                         assert file_store, _('Cannot save uploaded file because file storage is not configured.')
+                        setattr(field, 'data', await field.save(file_store, instance))
 
-                        exclude_fields.append(field.name)
-                        if destinations := await field.save(file_store, instance):
-                            method = getattr(instance, f'add_file_paths_for_{field.name}')
-                            method(*map(str, destinations))
-
-                form.populate_obj(instance, exclude=exclude_fields)
+                form.populate_obj(instance)
                 await session.commit()
                 flash(request).success(self.message_object_saved.format(label=self.label))
                 return await self._detect_post_save_action(request, instance)
 
+            object_label = str(instance) if pk else self.label
             label_template = self.edit_page_label if pk else self.create_page_label
 
             return render_to_response(
@@ -305,7 +299,7 @@ class Resource(Router, metaclass=ResourceMeta):
                     'layout': layout,
                     'request': request,
                     'form_actions': self.get_form_actions(request),
-                    'page_title': label_template.format(resource=self.label),
+                    'page_title': label_template.format(resource=object_label),
                 },
             )
 
@@ -313,7 +307,7 @@ class Resource(Router, metaclass=ResourceMeta):
         async with self.dbsession() as session:
             instance = await self.get_object(request, session, pk=request.path_params['pk'])
             if not instance:
-                raise HTTPException(404, 'Object does not exists.')
+                raise HTTPException(404, _('Object does not exists.'))
 
             if request.method == 'POST':
                 await session.delete(instance)

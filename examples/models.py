@@ -13,6 +13,7 @@ class User(Base):
     last_name = sa.Column(sa.Text)
     email = sa.Column(sa.Text)
     password = sa.Column(sa.Text)
+    photo = sa.Column(sa.Text)
     is_active = sa.Column(sa.Boolean)
     created_at = sa.Column(sa.DateTime)
 
@@ -103,7 +104,7 @@ class Category(Base):
     name = sa.Column(sa.Text)
     slug = sa.Column(sa.Text)
     description = sa.Column(sa.Text)
-    parent = sa.Column(sa.ForeignKey('categories.id'))
+    parent_id = sa.Column(sa.ForeignKey('categories.id'))
     visible_to_customers = sa.Column(sa.Boolean, default=True)
     created_at = sa.Column(sa.DateTime(True))
     updated_at = sa.Column(sa.DateTime(True))

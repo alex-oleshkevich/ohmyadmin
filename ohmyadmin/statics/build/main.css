@@ -598,7 +598,7 @@ select {
 
     table tbody tr.selected {
   --tw-bg-opacity: 1;
-  background-color: rgb(219 234 254 / var(--tw-bg-opacity));
+  background-color: rgb(239 246 255 / var(--tw-bg-opacity));
 }
 
     td.actions {

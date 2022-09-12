@@ -12,10 +12,11 @@ class FileStorage:
 
 
 class LocalDirectoryStorage(FileStorage):
-    def __init__(self, directory: str | os.PathLike) -> None:
+    def __init__(self, directory: str | os.PathLike, url_prefix: str = '/') -> None:
         if str(directory).startswith('.'):
             raise ValueError('Directory must be absolute path.')
 
+        self.url_prefix = url_prefix
         self.directory = pathlib.Path(directory)
         os.makedirs(directory, exist_ok=True)
 

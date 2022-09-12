@@ -102,6 +102,16 @@ class BoolColumn(Column):
 class ImageColumn(Column):
     template: str = 'ohmyadmin/tables/cell_image.html'
 
+    def __init__(self, name: str, url_prefix: str = '/', **kwargs: typing.Any) -> None:
+        self.url_prefix = url_prefix
+        super().__init__(name, **kwargs)
+
+    def get_display_value(self, obj: typing.Any) -> str:
+        value = self.format_value(self.get_value(obj))
+        if value.startswith('http'):
+            return value
+        return self.url_prefix + self.format_value(self.get_value(obj))
+
 
 class DateColumn(Column):
     template: str = 'ohmyadmin/tables/cell_date.html'

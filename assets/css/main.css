@@ -32,7 +32,7 @@
     }
 
     table tbody tr.selected {
-        @apply bg-blue-100;
+        @apply bg-blue-50;
     }
 
     td.actions {

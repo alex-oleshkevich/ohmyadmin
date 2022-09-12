@@ -105,7 +105,7 @@
 
                 <div class="mb-8 flex items-center justify-between">
                     <div class="text-3xl font-semibold">{{ page_title }}</div>
-                    <div>{% block page_actions %}{% endblock %}</div>
+                    <div class="flex items-center gap-2">{% block page_actions %}{% endblock %}</div>
                 </div>
                 {% block content %}Page content goes here...{% endblock %}
             </article>
