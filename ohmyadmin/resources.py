@@ -12,6 +12,7 @@ from wtforms.fields.core import UnboundField
 from ohmyadmin.actions import Action, LinkAction, SubmitAction
 from ohmyadmin.flash import flash
 from ohmyadmin.forms import EmptyState, Field, Form, FormField, Grid, HandlesFiles, Layout
+from ohmyadmin.globals import with_dbsession
 from ohmyadmin.helpers import render_to_response
 from ohmyadmin.i18n import _
 from ohmyadmin.metrics import Metric
@@ -54,8 +55,6 @@ class Resource(Router, metaclass=ResourceMeta):
     label: str = ''
     label_plural: str = ''
     icon: str = ''
-    pk_type: typing.Type[PkType] = int
-    pk_column: str = 'id'
 
     # orm configuration
     entity_class: typing.Any | None = None
@@ -100,6 +99,27 @@ class Resource(Router, metaclass=ResourceMeta):
     @property
     def searchable(self) -> bool:
         return any([column.searchable for column in self.get_table_columns()])
+
+    @property
+    def pk_column(self) -> str:
+        for column in vars(self.entity_class).values():
+            if hasattr(column, 'primary_key') and column.primary_key:
+                return column.name
+
+        raise ValueError(
+            f'Could not determine automatically primary key column for resource {self.__class__.__name__}. '
+            f'Please, specify it manually via Resource.pk_column attribute.'
+        )
+
+    @property
+    def pk_type(self) -> typing.Type[PkType]:
+        column = getattr(self.entity_class, self.pk_column)
+        match column.type:
+            case sa.Integer():
+                return int
+            case sa.String():
+                return str
+        return int
 
     def get_empty_state(self, request: Request) -> Layout:
         return EmptyState(
@@ -374,8 +394,9 @@ class Resource(Router, metaclass=ResourceMeta):
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         async with self.dbsession() as session:
-            scope.setdefault('state', {})
-            scope['state']['dbsession'] = session
-            scope['state']['resource'] = self
-            await super().__call__(scope, receive, send)
-            await session.commit()
+            with with_dbsession(session):
+                scope.setdefault('state', {})
+                scope['state']['dbsession'] = session
+                scope['state']['resource'] = self
+                await super().__call__(scope, receive, send)
+                await session.commit()

@@ -13,6 +13,8 @@ from starlette.staticfiles import StaticFiles
 
 from examples.admin.brands import BrandResource
 from examples.admin.categories import CategoryResource
+from examples.admin.countries import CountryResource
+from examples.admin.currencies import CurrencyResource
 from examples.admin.customers import CustomerResource
 from examples.admin.orders import OrderResource
 from examples.admin.products import ProductResource
@@ -51,6 +53,8 @@ class Admin(OhMyAdmin):
                     MenuItem.to_resource(OrderResource),
                     MenuItem.to_resource(CategoryResource),
                     MenuItem.to_resource(BrandResource),
+                    MenuItem.to_resource(CurrencyResource),
+                    MenuItem.to_resource(CountryResource),
                     MenuItem.to_resource(UserResource),
                 ],
             ),
@@ -82,6 +86,8 @@ app = Starlette(
                     Mount('/resources/categories', CategoryResource(engine)),
                     Mount('/resources/brands', BrandResource(engine)),
                     Mount('/resources/users', UserResource(engine)),
+                    Mount('/resources/currencies', CurrencyResource(engine)),
+                    Mount('/resources/countries', CountryResource(engine)),
                 ],
             ),
         ),

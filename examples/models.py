@@ -30,11 +30,17 @@ class Country(Base):
     code = sa.Column(sa.Text, primary_key=True)
     name = sa.Column(sa.Text)
 
+    def __str__(self) -> str:
+        return self.name
+
 
 class Currency(Base):
     __tablename__ = 'currencies'
     code = sa.Column(sa.Text, primary_key=True)
     name = sa.Column(sa.Text)
+
+    def __str__(self) -> str:
+        return self.name
 
 
 class Customer(Base):
@@ -65,6 +71,9 @@ class Address(Base):
     country = sa.Column(sa.ForeignKey('countries.code'))
     customer_id = sa.Column(sa.ForeignKey('customers.id'))
 
+    def __str__(self) -> str:
+        return self.street
+
 
 class Payment(Base):
     __tablename__ = 'payments'
@@ -75,6 +84,9 @@ class Payment(Base):
     provider = sa.Column(sa.Text)
     method = sa.Column(sa.Text)
     customer_id = sa.Column(sa.ForeignKey('customers.id'))
+
+    def __str__(self) -> str:
+        return self.reference
 
 
 class Brand(Base):
@@ -87,6 +99,9 @@ class Brand(Base):
     visible_to_customers = sa.Column(sa.Boolean, default=True)
     created_at = sa.Column(sa.DateTime(True))
     updated_at = sa.Column(sa.DateTime(True))
+
+    def __str__(self) -> str:
+        return self.name
 
 
 product_categories = sa.Table(
