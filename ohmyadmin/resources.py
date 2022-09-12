@@ -10,6 +10,7 @@ from starlette.types import Receive, Scope, Send
 from wtforms.fields.core import UnboundField
 
 from ohmyadmin.actions import Action, LinkAction, SubmitAction
+from ohmyadmin.flash import flash
 from ohmyadmin.forms import Field, Form, FormField, Grid, HandlesFiles, Layout
 from ohmyadmin.helpers import render_to_response
 from ohmyadmin.i18n import _
@@ -82,7 +83,7 @@ class Resource(Router, metaclass=ResourceMeta):
     create_form_fields: typing.Iterable[Field] | None = None
     form_actions: typing.Iterable[Action] | None = None
     create_page_label: str = _('Create {resource}')
-    edit_page_label: str = _('Create {resource}')
+    edit_page_label: str = _('Edit {resource}')
     delete_page_label: str = _('Delete {resource}')
 
     # templates
@@ -90,6 +91,8 @@ class Resource(Router, metaclass=ResourceMeta):
     create_view_template: str = 'ohmyadmin/form.html'
     edit_view_template: str = 'ohmyadmin/form.html'
     delete_view_template: str = 'ohmyadmin/delete.html'
+
+    message_object_saved: str = _('{label} has been saved.')
 
     def __init__(self, sa_engine: AsyncEngine) -> None:
         self.dbsession = sessionmaker(sa_engine, expire_on_commit=False, class_=AsyncSession)
@@ -195,15 +198,6 @@ class Resource(Router, metaclass=ResourceMeta):
 
     # endregion
 
-    # region: create form
-    def get_create_form_fields(self, request: Request) -> typing.Iterable[UnboundField]:
-        yield from self.create_form_fields or self.get_form_fields(request)
-
-    def get_create_form_layout(self, request: Request, form: Form) -> Layout:
-        return self.get_form_layout(request, form)
-
-    # endregion
-
     def get_empty_object(self) -> typing.Any:
         assert self.entity_class, 'entity_class is a mandatory attribute.'
         return self.entity_class()
@@ -291,7 +285,10 @@ class Resource(Router, metaclass=ResourceMeta):
 
                 form.populate_obj(instance, exclude=exclude_fields)
                 await session.commit()
+                flash(request).success(self.message_object_saved.format(label=self.label))
                 return await self._detect_post_save_action(request, instance)
+
+            label_template = self.edit_page_label if pk else self.create_page_label
 
             return render_to_response(
                 request,
@@ -301,7 +298,7 @@ class Resource(Router, metaclass=ResourceMeta):
                     'layout': layout,
                     'request': request,
                     'form_actions': self.get_form_actions(request),
-                    'page_title': self.edit_page_label.format(resource=self.label),
+                    'page_title': label_template.format(resource=self.label),
                 },
             )
 

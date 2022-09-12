@@ -12,6 +12,7 @@ import wtforms
 from starlette.datastructures import FormData, UploadFile
 from starlette.requests import Request
 from wtforms.fields.core import UnboundField
+from wtforms.form import FormMeta
 from wtforms.utils import unset_value
 
 from ohmyadmin.helpers import render_to_string
@@ -81,6 +82,15 @@ class FormField(Layout):
 
     def __init__(self, field: wtforms.Field, colspan: Colspan = 1) -> None:
         self.field = field
+        self.colspan = colspan
+
+
+class FormPlaceholder(Layout):
+    template = 'ohmyadmin/layouts/form_placeholder.html'
+
+    def __init__(self, label: str, text: str, colspan: Colspan = 1) -> None:
+        self.text = text
+        self.label = label
         self.colspan = colspan
 
 
@@ -527,8 +537,25 @@ class EmbedManyField(Field[list[T]], wtforms.FieldList):
         return field
 
 
-class Form(wtforms.Form):
+_E = typing.TypeVar('_E')
+
+
+class Form(typing.Generic[_E], wtforms.Form):
     _creation_counter = 0
+    instance: _E | None
+    __getattr__: typing.Callable[[Form, str], wtforms.Field]
+
+    def __init__(
+        self,
+        formdata: FormData = None,
+        obj: _E | None = None,
+        prefix: str = "",
+        data: dict[str, typing.Any] | None = None,
+        meta: FormMeta | None = None,
+        **kwargs: typing.Any,
+    ):
+        self.instance = obj
+        super().__init__(formdata, obj, prefix, data, meta, **kwargs)
 
     async def validate_async(self) -> bool:
         success = True

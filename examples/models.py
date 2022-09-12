@@ -46,6 +46,14 @@ class Customer(Base):
     created_at = sa.Column(sa.DateTime(True))
     updated_at = sa.Column(sa.DateTime(True))
 
+    addresses = relationship('Address', cascade='all, delete-orphan')
+    payments = relationship('Payment', cascade='all, delete-orphan')
+    comments = relationship('Comment', cascade='all, delete-orphan')
+    orders = relationship('Order', cascade='all, delete-orphan')
+
+    def __str__(self) -> str:
+        return self.name
+
 
 class Address(Base):
     __tablename__ = 'addresses'
