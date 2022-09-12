@@ -143,6 +143,7 @@ create table orders
 create table order_items
 (
     id         serial primary key,
+    order_id   bigint references orders,
     product_id bigint references products,
     quantity   int check ( quantity > 0 ),
     unit_price numeric

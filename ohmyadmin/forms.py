@@ -4,6 +4,9 @@ import abc
 import datetime
 import decimal
 import inspect
+import os
+import pathlib
+import sqlalchemy as sa
 import typing
 import wtforms
 from starlette.datastructures import FormData, UploadFile
@@ -11,12 +14,14 @@ from starlette.requests import Request
 from wtforms.fields.core import UnboundField
 from wtforms.utils import unset_value
 
-from ohmyadmin.actions import Action
 from ohmyadmin.helpers import render_to_string
+from ohmyadmin.query import query
+from ohmyadmin.storage import FileStorage
 
 Choices = typing.Iterable[tuple[str, str]]
-SyncChoices = typing.Callable[[], Choices]
+ChoicesFactory = typing.Callable[[Request, 'Form'], Choices | typing.Awaitable[Choices]]
 Validator = typing.Callable[[wtforms.Field, wtforms.Field], typing.Awaitable[None] | None]
+Colspan = int | typing.Literal['full']
 
 
 class Layout(abc.ABC):
@@ -31,7 +36,7 @@ class Layout(abc.ABC):
 
 
 class Grid(Layout):
-    template = 'ohmyadmin/forms/layout_grid.html'
+    template = 'ohmyadmin/layouts/grid.html'
 
     def __init__(self, children: typing.Iterable[Layout], cols: int = 2, gap: int = 5) -> None:
         self.cols = cols
@@ -42,19 +47,41 @@ class Grid(Layout):
         return iter(self.children)
 
 
-class FormLayout(Layout):
-    template = 'ohmyadmin/forms/layout_form.html'
+class Group(Layout):
+    template = 'ohmyadmin/layouts/group.html'
 
-    def __init__(self, child: Layout, actions: typing.Iterable[Action]) -> None:
-        self.child = child
-        self.actions = actions
+    def __init__(self, children: typing.Iterable[Layout], colspan: Colspan = 'full', columns: int = 1) -> None:
+        self.colspan = colspan
+        self.columns = columns
+        self.children = children
+
+    def __iter__(self) -> typing.Iterator[Layout]:
+        return iter(self.children)
+
+
+class Card(Layout):
+    template = 'ohmyadmin/layouts/card.html'
+
+    def __init__(
+        self,
+        children: typing.Iterable[Layout],
+        title: str = '',
+        columns: int = 1,
+    ) -> None:
+        self.title = title
+        self.columns = columns
+        self.children = children
+
+    def __iter__(self) -> typing.Iterator[Layout]:
+        return iter(self.children)
 
 
 class FormField(Layout):
-    template = 'ohmyadmin/forms/layout_field.html'
+    template = 'ohmyadmin/layouts/form_field.html'
 
-    def __init__(self, field: wtforms.Field) -> None:
+    def __init__(self, field: wtforms.Field, colspan: Colspan = 1) -> None:
         self.field = field
+        self.colspan = colspan
 
 
 T = typing.TypeVar('T')
@@ -199,7 +226,7 @@ class FloatField(Field[float], wtforms.FloatField):
         super().__init__(attr_name, validators=validators, widget_attrs=attrs, **kwargs)
 
 
-class DecimalField(FloatField):
+class DecimalField(Field[decimal.Decimal], wtforms.DecimalField):
     inputmode = 'decimal'
     template = 'ohmyadmin/forms/decimal.html'
 
@@ -217,12 +244,79 @@ class DecimalRangeField(Field[decimal.Decimal], wtforms.DecimalRangeField):
     template = 'ohmyadmin/forms/decimal_range.html'
 
 
-class FileField(Field[UploadFile], wtforms.FileField):
+UploadTo = typing.Callable[[UploadFile, typing.Any | None], str]
+
+
+class HandlesFiles:
+    name: str
+
+    def __init__(self, upload_to: str | os.PathLike | UploadTo, **kwargs: typing.Any) -> None:
+        self.upload_to = pathlib.Path(upload_to) if isinstance(upload_to, str) else upload_to
+        super().__init__(**kwargs)
+
+    async def save(self, file_storage: FileStorage, entity: typing.Any) -> list[str]:
+        uploads: list[str] = []
+        for upload_file in self.iter_files():
+            if not upload_file.filename:
+                continue
+
+            destination = (
+                self.upload_to(upload_file, entity)
+                if callable(self.upload_to)
+                else str(self.upload_to / upload_file.filename)
+            )
+            await file_storage.write(destination, upload_file)
+            uploads.append(destination)
+        return uploads
+
+    @abc.abstractmethod
+    def iter_files(self) -> typing.Iterable[UploadFile]:
+        ...
+
+
+def choices_from(
+    entity_class: typing.Any,
+    where: typing.Callable[[sa.sql.Select], sa.sql.Select] | None = None,
+) -> ChoicesFactory:
+    async def loader(request: Request, form: Form) -> Choices:
+        stmt = sa.select(entity_class)
+        stmt = where(stmt) if where else stmt
+        return await query(request.state.dbsession).choices(stmt)
+
+    return loader
+
+
+class HasChoices:
+    choices: Choices | None
+
+    def __init__(self, choices: Choices | ChoicesFactory | None = None, **kwargs: typing.Any) -> None:
+        self._choices = choices
+        super().__init__(**kwargs)
+
+    async def get_choices(self, request: Request, form: Form) -> Choices:
+        choices: Choices = []
+        if self._choices is None:
+            return choices
+
+        if callable(self._choices):
+            maybe_choices = self._choices(request, form)
+            if inspect.iscoroutine(maybe_choices):
+                choices = await maybe_choices
+        return choices
+
+
+class FileField(Field[UploadFile], HandlesFiles, wtforms.FileField):
     template = 'ohmyadmin/forms/file.html'
 
+    def iter_files(self) -> typing.Iterable[UploadFile]:
+        yield self.data
 
-class MultipleFileField(Field[list[UploadFile]], wtforms.MultipleFileField):
+
+class MultipleFileField(Field[list[UploadFile]], HandlesFiles, wtforms.MultipleFileField):
     template = 'ohmyadmin/forms/file_multiple.html'
+
+    def iter_files(self) -> typing.Iterable[UploadFile]:
+        yield from self.data
 
 
 class HiddenField(Field[typing.Any], wtforms.HiddenField):
@@ -268,8 +362,8 @@ class TextareaField(Field[str], wtforms.TextAreaField):
         attr_name: str,
         *,
         placeholder: str = '',
-        min_length: int = -1,
-        max_length: int = -1,
+        min_length: int | None = None,
+        max_length: int | None = None,
         **kwargs: typing.Any,
     ) -> None:
         widget_attrs = kwargs.pop('widget_attrs', {})
@@ -283,41 +377,42 @@ class TextareaField(Field[str], wtforms.TextAreaField):
         super().__init__(attr_name, validators=validators, widget_attrs=widget_attrs, **kwargs)
 
 
-class SelectField(Field[typing.Any], wtforms.SelectField):
+class SelectField(Field[typing.Any], HasChoices, wtforms.SelectField):
     template = 'ohmyadmin/forms/select.html'
 
     def __init__(
         self,
         attr_name: str,
         *,
-        choices: Choices | SyncChoices | None = None,
         coerce: typing.Callable = str,
         empty_choice: str | None = '',
         **kwargs: typing.Any,
     ) -> None:
         coerce = coerce
-        choices = list(choices() if callable(choices) else (choices or []))
-        if empty_choice:
-            choices.insert(0, ('', empty_choice))
+        self.empty_choice = empty_choice
 
-        super().__init__(attr_name, choices=choices, coerce=coerce, **kwargs)
+        super().__init__(attr_name, coerce=coerce, **kwargs)
+
+    async def get_choices(self, request: Request, form: Form) -> Choices:
+        choices = list(await super().get_choices(request, form))
+        if self.empty_choice:
+            choices.insert(0, ('', self.empty_choice))
+        return choices
 
 
-class SelectMultipleField(Field[list[typing.Any]], wtforms.SelectMultipleField):
+class SelectMultipleField(Field[list[typing.Any]], HasChoices, wtforms.SelectMultipleField):
     template = 'ohmyadmin/forms/select_multiple.html'
 
     def __init__(
         self,
         attr_name: str,
         *,
-        choices: Choices | SyncChoices | None = None,
         coerce: typing.Callable = str,
         **kwargs: typing.Any,
     ) -> None:
         coerce = coerce
-        choices = choices() if callable(choices) else choices or []
 
-        super().__init__(attr_name, choices=choices, coerce=coerce, **kwargs)
+        super().__init__(attr_name, coerce=coerce, **kwargs)
 
 
 class RadioField(Field[typing.Any], wtforms.RadioField):
@@ -463,9 +558,9 @@ class Form(wtforms.Form):
         return False
 
     @classmethod
-    def from_fields(cls, fields: typing.Iterable[UnboundField]) -> typing.Type[Form]:
+    def from_fields(cls, fields: typing.Iterable[UnboundField], name: str = 'AutoForm') -> typing.Type[Form]:
         cls._creation_counter += 1
-        form_class = type(f'AutoForm{cls._creation_counter}', (cls,), {})
+        form_class = type(f'{name}{cls._creation_counter}', (cls,), {})
         for field in fields:
             setattr(form_class, field.args[0], field)
         return typing.cast(typing.Type[Form], form_class)
@@ -478,7 +573,11 @@ class Form(wtforms.Form):
         data: dict[str, typing.Any] | None = None,
     ) -> Form:
         form_data = await request.form() if request.method in ['POST', 'PUT', 'PATCH', 'DELETE'] else None
-        return cls(formdata=form_data, obj=instance, data=data)
+        form = cls(formdata=form_data, obj=instance, data=data)
+        for field in form:
+            if isinstance(field, HasChoices):
+                field.choices = await field.get_choices(request, form)
+        return form
 
     @classmethod
     async def new(
@@ -490,3 +589,10 @@ class Form(wtforms.Form):
     ) -> Form:
         form_class = cls.from_fields(fields)
         return await form_class.from_request(request, instance=instance, data=data)
+
+    def populate_obj(self, obj: typing.Any, exclude: list[str] | None = None) -> None:
+        exclude = exclude or []
+        for name, field in self._fields.items():
+            if name in exclude:
+                continue
+            field.populate_obj(obj, name)

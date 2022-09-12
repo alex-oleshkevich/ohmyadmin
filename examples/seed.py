@@ -298,11 +298,12 @@ def seed_order_items(session: AsyncSession) -> None:
     session.add_all(
         [
             OrderItem(
+                order_id=random.randint(1, OBJECTS_COUNT - 1),
                 product_id=random.randint(1, OBJECTS_COUNT),
                 quantity=random.randint(1, 100),
                 unit_price=decimal.Decimal(f'{random.randint(1, 500)}.{random.randint(1, 99):02}'),
             )
-            for index in range(1, OBJECTS_COUNT * 3)
+            for index in range(1, OBJECTS_COUNT * 5)
         ]
     )
 

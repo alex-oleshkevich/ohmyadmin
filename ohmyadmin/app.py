@@ -14,6 +14,7 @@ from starlette.types import Receive, Scope, Send
 
 from ohmyadmin.flash import FlashMiddleware, flash
 from ohmyadmin.nav import MenuGroup, MenuItem
+from ohmyadmin.storage import FileStorage
 from ohmyadmin.templating import jinja_env
 
 this_dir = pathlib.Path(__file__).parent
@@ -35,7 +36,10 @@ class OhMyAdmin(Router):
         self,
         routes: list[BaseRoute] | None = None,
         template_dirs: list[str | os.PathLike] | None = None,
+        file_storage: FileStorage | None = None,
     ) -> None:
+        self.file_storage = file_storage
+
         self.jinja_env = jinja_env
         self.jinja_env.globals.update({'admin': self})
         self.jinja_env.loader.add_loader(jinja2.FileSystemLoader(template_dirs))
@@ -91,6 +95,7 @@ class OhMyAdmin(Router):
         with globalize_admin(self):
             scope.setdefault('state', {})
             scope['state']['admin'] = self
+            scope['state']['file_storage'] = self.file_storage
             app = super().__call__
             app = FlashMiddleware(app)
             await app(scope, receive, send)

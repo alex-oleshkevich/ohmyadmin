@@ -12,7 +12,8 @@ from wtforms.fields.core import UnboundField
 from ohmyadmin.actions import ActionColor
 from ohmyadmin.forms import Form, FormField, Grid, Layout
 from ohmyadmin.helpers import render_to_string
-from ohmyadmin.responses import Response
+from ohmyadmin.i18n import _
+from ohmyadmin.responses import RedirectResponse, Response
 
 if typing.TYPE_CHECKING:
     from ohmyadmin.resources import PkType
@@ -144,6 +145,22 @@ class BatchAction(abc.ABC, metaclass=BatchActionMeta):
         return render_to_string(self.template, {'action': self, 'form': layout})
 
     __str__ = render
+
+
+class DeleteAllAction(BatchAction):
+    dangerous = True
+    confirmation = _('Do you want to delete all items?')
+
+    async def apply(self, request: Request, ids: list[PkType], params: FormData) -> Response:
+        stmt = sa.select(request.state.resource.entity_class).where(
+            sa.column(request.state.resource.pk_column).in_(ids)
+        )
+        result = await request.state.dbsession.scalars(stmt)
+        for row in result.all():
+            await request.state.dbsession.delete(row)
+        return (
+            RedirectResponse(request).to_resource(request.state.resource).with_success(_('Objects has been removed.'))
+        )
 
 
 class RowAction(abc.ABC):

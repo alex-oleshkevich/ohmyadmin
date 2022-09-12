@@ -14,6 +14,7 @@ from examples.admin.products import ProductResource
 from examples.admin.users import UserResource
 from ohmyadmin.app import OhMyAdmin, UserMenu
 from ohmyadmin.nav import MenuGroup, MenuItem
+from ohmyadmin.storage import LocalDirectoryStorage
 
 metadata = sa.MetaData()
 Base = declarative_base()
@@ -61,6 +62,7 @@ app = Starlette(
         Mount(
             '/admin',
             Admin(
+                file_storage=LocalDirectoryStorage(this_dir / 'uploads'),
                 template_dirs=[this_dir / 'templates'],
                 routes=[
                     Mount('/resources/users', UserResource(engine)),

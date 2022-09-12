@@ -1,0 +1,10 @@
+<section class="rounded-lg border border-gray-300">
+    {% if element.title %}
+        <header class="bg-slate-100 p-3">{{ element.title }}</header>
+    {% endif %}
+    <main class="grid grid-cols-{{ element.columns }} col-span-{{ element.colspan }} gap-6 p-3">
+        {% for child in element %}
+            {{ child }}
+        {% endfor %}
+    </main>
+</section>

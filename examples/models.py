@@ -1,5 +1,5 @@
 import sqlalchemy as sa
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import backref, declarative_base, relationship
 
 metadata = sa.MetaData()
 Base = declarative_base()
@@ -80,6 +80,15 @@ class Brand(Base):
     updated_at = sa.Column(sa.DateTime(True))
 
 
+product_categories = sa.Table(
+    'product_categories',
+    Base.metadata,
+    sa.Column('id', sa.BigInteger, primary_key=True),
+    sa.Column('product_id', sa.ForeignKey('products.id')),
+    sa.Column('category_id', sa.ForeignKey('categories.id')),
+)
+
+
 class Category(Base):
     __tablename__ = 'categories'
     id = sa.Column(sa.BigInteger, primary_key=True)
@@ -114,14 +123,17 @@ class Product(Base):
     updated_at = sa.Column(sa.DateTime(True))
 
     brand = relationship(Brand)
-    images = relationship('Image')
+    images = relationship('Image', cascade='all, delete-orphan')
+    comments = relationship('Comment', cascade='all, delete-orphan')
+    categories = relationship('Category', secondary=product_categories, cascade='all')
+
+    def add_file_paths_for_images(self, *paths: str) -> None:
+        for path in paths:
+            self.images.append(Image(image_path=path, product_id=self.id))
 
 
 class ProductCategory(Base):
-    __tablename__ = 'product_categories'
-    id = sa.Column(sa.BigInteger, primary_key=True)
-    product_id = sa.Column(sa.ForeignKey('products.id'))
-    category_id = sa.Column(sa.ForeignKey('categories.id'))
+    __table__ = product_categories
 
 
 class Image(Base):
@@ -161,6 +173,10 @@ class Order(Base):
 class OrderItem(Base):
     __tablename__ = 'order_items'
     id = sa.Column(sa.BigInteger, primary_key=True)
+    order_id = sa.Column(sa.ForeignKey('orders.id'))
     product_id = sa.Column(sa.ForeignKey('products.id'))
     quantity = sa.Column(sa.Integer)
     unit_price = sa.Column(sa.Numeric)
+
+    order = relationship(Order, backref=backref('items', cascade='all, delete-orphan'))
+    product = relationship(Product, backref=backref('items', cascade='all, delete-orphan'))

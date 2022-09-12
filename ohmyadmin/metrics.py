@@ -20,8 +20,8 @@ class CountMetric(Metric):
     round: int | None = None
 
     @abc.abstractmethod
-    async def calc(self, request: Request) -> int:
+    async def calculate(self, request: Request) -> int:
         raise NotImplementedError()
 
     async def render(self, request: Request) -> str:
-        return render_to_string(self.template, {'metric': self, 'value': await self.calc(request)})
+        return render_to_string(self.template, {'metric': self, 'value': await self.calculate(request)})

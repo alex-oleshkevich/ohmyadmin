@@ -1,0 +1,7 @@
+<div class="col-span-{{ element.colspan }}">
+    <div class="grid grid-cols-{{ element.columns }} gap-6">
+        {% for child in element %}
+            {{ child }}
+        {% endfor %}
+    </div>
+</div>

@@ -23,23 +23,11 @@ class Query:
         result = await self.session.scalars(selectable)
         return result.one_or_none()
 
-    async def get(self, entity_class: typing.Type[E], pk: typing.Any, pk_column: str = 'id') -> E:
-        stmt = sa.select(entity_class).where().where(getattr(entity_class, pk_column) == pk).limit(1)
-        return await self.one(stmt)
-
-    async def find(self, entity_class: typing.Type[E], pk: typing.Any, pk_column: str = 'id') -> E | None:
-        stmt = sa.select(entity_class).where().where(getattr(entity_class, pk_column) == pk).limit(1)
-        return await self.one_or_none(stmt)
-
-    async def find_all(self, entity_class: typing.Type[E]) -> Collection[E]:
-        stmt = sa.select(entity_class)
-        return await self.all(stmt)
-
     async def first(self, selectable: sa.sql.Select) -> typing.Any | None:
         result = await self.session.scalars(selectable.limit(1))
         return result.first()
 
-    async def all(self, selectable: sa.sql.Select) -> Collection[typing.Any]:
+    async def all(self, selectable: sa.sql.Select) -> typing.Iterable[typing.Any]:
         result = await self.session.scalars(selectable)
         return Collection(result.all())
 

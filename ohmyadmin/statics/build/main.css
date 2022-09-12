@@ -1131,7 +1131,6 @@ input[type="radio"] {
 }
 textarea {
         min-height: 128px;
-        max-width: 42rem;
     }
 .btn {
   display: inline-flex;
@@ -1499,9 +1498,11 @@ textarea {
   --tw-text-opacity: 1;
   color: rgb(71 85 105 / var(--tw-text-opacity));
 }
-.form-group input:not([type="checkbox"]), .form-group input:not([type="radio"]), .form-group input:not([type="radio"]), select {
-  max-width: 28rem;
-}
+.form-group input:not([type="checkbox"]),
+    .form-group input:not([type="radio"]),
+    .form-group input:not([type="radio"]), select {
+
+    }
 .form-group-checkbox > div:first-child {
   display: flex;
   align-items: center;
@@ -1509,6 +1510,7 @@ textarea {
 }
 .form-group-checkbox label, .form-group-checkbox .form-label {
   margin-bottom: 0px;
+  font-weight: 400;
 }
 .form-radio-list {
   display: flex;
@@ -36891,10 +36893,6 @@ textarea {
     margin-top: 0px;
   }
 
-  .sm\:ml-4 {
-    margin-left: 1rem;
-  }
-
   .sm\:mt-2 {
     margin-top: 0.5rem;
   }
@@ -36930,10 +36928,6 @@ textarea {
 
   .sm\:grid-cols-3 {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .sm\:items-start {
-    align-items: flex-start;
   }
 
   .sm\:gap-x-6 {

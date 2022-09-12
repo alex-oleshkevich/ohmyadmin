@@ -1,6 +1,13 @@
-{% extends 'ohmyadmin/layout/app.html' %}
+{% extends 'ohmyadmin/app.html' %}
 {% import 'ohmyadmin/lib/buttons.html' as buttons %}
 
 {% block content %}
-    {{ layout }}
+    <form method="post" enctype="multipart/form-data">
+        <div>{{ layout }}</div>
+        <div class="flex items-center gap-2 mt-10">
+            {% for action in form_actions %}
+                {{ action }}
+            {% endfor %}
+        </div>
+    </form>
 {% endblock %}

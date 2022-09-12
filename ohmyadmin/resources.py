@@ -10,16 +10,18 @@ from starlette.types import Receive, Scope, Send
 from wtforms.fields.core import UnboundField
 
 from ohmyadmin.actions import Action, LinkAction, SubmitAction
-from ohmyadmin.forms import Field, Form, FormField, FormLayout, Grid, Layout
+from ohmyadmin.forms import Field, Form, FormField, Grid, HandlesFiles, Layout
 from ohmyadmin.helpers import render_to_response
 from ohmyadmin.i18n import _
 from ohmyadmin.metrics import Metric
 from ohmyadmin.pagination import Page
 from ohmyadmin.responses import RedirectResponse, Response
+from ohmyadmin.storage import FileStorage
 from ohmyadmin.tables import (
     BaseFilter,
     BatchAction,
     Column,
+    DeleteAllAction,
     LinkRowAction,
     OrderingFilter,
     RowAction,
@@ -76,8 +78,8 @@ class Resource(Router, metaclass=ResourceMeta):
     search_placeholder: str = _('Search...')
 
     # form settings
-    edit_form: typing.Iterable[Field] | None = None
-    create_form: typing.Iterable[Field] | None = None
+    form_fields: typing.Iterable[Field] | None = None
+    create_form_fields: typing.Iterable[Field] | None = None
     form_actions: typing.Iterable[Action] | None = None
     create_page_label: str = _('Create {resource}')
     edit_page_label: str = _('Create {resource}')
@@ -157,10 +159,14 @@ class Resource(Router, metaclass=ResourceMeta):
         yield from self.row_actions or []
         yield from self.get_default_row_actions(request)
 
-    def get_batch_actions(self, request: Request) -> typing.Iterable[BatchAction]:
+    def get_default_batch_actions(self) -> typing.Iterable[BatchAction]:
+        yield DeleteAllAction()
+
+    def get_batch_actions(self) -> typing.Iterable[BatchAction]:
+        yield from self.get_default_batch_actions()
         yield from self.batch_actions or []
 
-    def get_metrics(self, request: Request) -> typing.Iterable[Metric]:
+    def get_metrics(self) -> typing.Iterable[Metric]:
         yield from self.metrics or []
 
     # endregion
@@ -176,31 +182,35 @@ class Resource(Router, metaclass=ResourceMeta):
         yield from self.get_default_form_actions(request)
 
     def get_form_fields(self, request: Request) -> typing.Iterable[UnboundField]:
-        assert self.edit_form, 'At least edit_form attribute to be defined.'
-        return self.edit_form
+        assert (
+            self.form_fields
+        ), f'At least form_fields attribute must be defined on {self.__class__.__name__} resource.'
+        return self.form_fields
 
     def get_form_class(self, request: Request) -> typing.Type[Form]:
-        return Form.from_fields(self.get_form_fields(request))
+        return Form.from_fields(self.get_form_fields(request), name=f'{self.__class__.__name__}EditForm')
 
     def get_form_layout(self, request: Request, form: Form) -> Layout:
-        return FormLayout(
-            child=Grid(cols=1, children=[FormField(field) for field in form]),
-            actions=self.get_form_actions(request),
-        )
+        return Grid(cols=2, children=[FormField(field) for field in form])
 
     # endregion
 
     # region: create form
     def get_create_form_fields(self, request: Request) -> typing.Iterable[UnboundField]:
-        yield from self.create_form or self.get_form_fields(request)
+        yield from self.create_form_fields or self.get_form_fields(request)
 
     def get_create_form_layout(self, request: Request, form: Form) -> Layout:
         return self.get_form_layout(request, form)
 
     # endregion
 
+    def get_empty_object(self) -> typing.Any:
+        assert self.entity_class, 'entity_class is a mandatory attribute.'
+        return self.entity_class()
+
     async def get_object(self, request: Request, session: AsyncSession, pk: int | str) -> typing.Any:
-        stmt = self.get_queryset(request).limit(2).where(sa.sql.column('id') == pk)
+        column = getattr(self.entity_class, self.pk_column)
+        stmt = self.get_queryset(request).limit(2).where(column == pk)
         result = await session.scalars(stmt)
         return result.one()
 
@@ -244,64 +254,56 @@ class Resource(Router, metaclass=ResourceMeta):
                     'search_query': get_search_value(request, self.search_param),
                     'columns': self.get_table_columns(),
                     'row_actions': list(self.get_row_actions(request)),
-                    'batch_actions': list(self.get_batch_actions(request)),
+                    'batch_actions': list(self.get_batch_actions()),
                     'table_actions': list(self.get_table_actions(request)),
-                    'metrics': [await metric.render(request) for metric in self.get_metrics(request)],
+                    'metrics': [await metric.render(request) for metric in self.get_metrics()],
                 },
             )
 
-    async def create_object_view(self, request: Request) -> Response:
-        assert self.entity_class, 'Resource must define entity_class attribute.'
-
+    async def edit_object_view(self, request: Request) -> Response:
+        file_store: FileStorage = request.state.file_storage
+        pk = request.path_params.get('pk', None)
         async with self.dbsession() as session:
-            form_class = Form.from_fields(self.get_create_form_fields(request))
-            form = await form_class.from_request(request)
-            layout = self.get_create_form_layout(request, form)
+            if pk:
+                instance = await self.get_object(request, session, pk=request.path_params['pk'])
+                if not instance:
+                    raise HTTPException(404, _('Object does not exists.'))
+            else:
+                instance = self.get_empty_object()
+                session.add(instance)
+
+            form_class = self.get_form_class(request)
+            form = await form_class.from_request(request, instance=instance)
+            layout = self.get_form_layout(request, form)
 
             if await form.validate_on_submit(request):
-                instance = self.entity_class()
-                form.populate_obj(instance)
-                session.add(instance)
+                exclude_fields: list[str] = []
+
+                # handle uploads
+                for field in form:
+                    if isinstance(field, HandlesFiles):
+                        assert file_store, _('Cannot save uploaded file because file storage is not configured.')
+
+                        exclude_fields.append(field.name)
+                        if destinations := await field.save(file_store, instance):
+                            method = getattr(instance, f'add_file_paths_for_{field.name}')
+                            method(*map(str, destinations))
+
+                form.populate_obj(instance, exclude=exclude_fields)
                 await session.commit()
                 return await self._detect_post_save_action(request, instance)
 
             return render_to_response(
                 request,
-                self.create_view_template,
+                self.edit_view_template,
                 {
                     'form': form,
                     'layout': layout,
                     'request': request,
-                    'page_title': self.create_page_label.format(resource=self.label),
+                    'form_actions': self.get_form_actions(request),
+                    'page_title': self.edit_page_label.format(resource=self.label),
                 },
             )
-
-    async def edit_object_view(self, request: Request) -> Response:
-        async with self.dbsession() as session:
-            async with session:
-                instance = await self.get_object(request, session, pk=request.path_params['pk'])
-                if not instance:
-                    raise HTTPException(404, 'Object does not exists.')
-
-                form_class = self.get_form_class(request)
-                form = await form_class.from_request(request, instance=instance)
-                layout = self.get_form_layout(request, form)
-
-                if await form.validate_on_submit(request):
-                    form.populate_obj(instance)
-                    await session.commit()
-                    return await self._detect_post_save_action(request, instance)
-
-                return render_to_response(
-                    request,
-                    self.edit_view_template,
-                    {
-                        'form': form,
-                        'layout': layout,
-                        'request': request,
-                        'page_title': self.edit_page_label.format(resource=self.label),
-                    },
-                )
 
     async def delete_object_view(self, request: Request) -> Response:
         async with self.dbsession() as session:
@@ -325,7 +327,7 @@ class Resource(Router, metaclass=ResourceMeta):
             )
 
     async def batch_action_view(self, request: Request, action_id: str) -> Response:
-        batch_action = next((action for action in self.get_batch_actions(request) if action.id == action_id))
+        batch_action = next((action for action in self.get_batch_actions() if action.id == action_id))
         if not batch_action:
             return RedirectResponse(request).to_resource(self).with_error(_('Unknown batch action.'))
 
@@ -346,7 +348,7 @@ class Resource(Router, metaclass=ResourceMeta):
 
         return [
             Route('/', self.list_objects_view, methods=['GET', 'POST'], name=self.get_route_name('list')),
-            Route('/new', self.create_object_view, methods=['GET', 'POST'], name=self.get_route_name('create')),
+            Route('/new', self.edit_object_view, methods=['GET', 'POST'], name=self.get_route_name('create')),
             Route(
                 '/{pk:%s}/edit' % param_type,
                 self.edit_object_view,

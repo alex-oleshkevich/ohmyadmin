@@ -60,7 +60,7 @@ class UserResource(Resource):
         Column('email', label='Email', searchable=True),
         Column('is_active', label='Active'),
     ]
-    edit_form = [
+    form_fields = [
         TextField('first_name'),
         TextField('last_name'),
         EmailField('email', required=True),
