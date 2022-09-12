@@ -1,5 +1,5 @@
 import sqlalchemy as sa
-from sqlalchemy.orm import backref, declarative_base, relationship
+from sqlalchemy.orm import backref, declarative_base, query_expression, relationship
 
 metadata = sa.MetaData()
 Base = declarative_base()
@@ -164,6 +164,13 @@ class Comment(Base):
 
 
 class Order(Base):
+    class Status:
+        NEW = 'New'
+        PROCESSING = 'Processing'
+        SHIPPED = 'Shipped'
+        DELIVERED = 'Delivered'
+        CANCELLED = 'Cancelled'
+
     __tablename__ = 'orders'
     id = sa.Column(sa.BigInteger, primary_key=True)
     number = sa.Column(sa.Text)
@@ -178,6 +185,13 @@ class Order(Base):
     created_at = sa.Column(sa.DateTime(True))
     updated_at = sa.Column(sa.DateTime(True))
 
+    total_price = query_expression()
+    customer = relationship('Customer', cascade='all')
+    items = relationship('OrderItem', cascade='all')
+
+    def __str__(self) -> str:
+        return self.number
+
 
 class OrderItem(Base):
     __tablename__ = 'order_items'
@@ -187,5 +201,5 @@ class OrderItem(Base):
     quantity = sa.Column(sa.Integer)
     unit_price = sa.Column(sa.Numeric)
 
-    order = relationship(Order, backref=backref('items', cascade='all, delete-orphan'))
+    order = relationship(Order, back_populates='items')
     product = relationship(Product, backref=backref('items', cascade='all, delete-orphan'))

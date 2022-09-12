@@ -309,11 +309,13 @@ class HandlesFiles:
 def choices_from(
     entity_class: typing.Any,
     where: typing.Callable[[sa.sql.Select], sa.sql.Select] | None = None,
+    value_column: str = 'id',
+    label_column: str = 'name',
 ) -> ChoicesFactory:
     async def loader(request: Request, form: Form) -> Choices:
         stmt = sa.select(entity_class)
         stmt = where(stmt) if where else stmt
-        return await query(request.state.dbsession).choices(stmt)
+        return await query(request.state.dbsession).choices(stmt, label_column=label_column, value_column=value_column)
 
     return loader
 
@@ -574,6 +576,7 @@ class EmbedManyField(Field[list[T]], wtforms.FieldList):
     ) -> wtforms.Form:
         field: wtforms.FormField = super()._add_entry(formdata, data, index)
         for index, field in enumerate(field):
+            field.render_kw = field.render_kw or {}
             field.render_kw['x-bind:id'] = "`{}`".format(field.id.replace(str(index), '${index}'))
             field.render_kw['x-bind:name'] = "`{}`".format(field.name.replace(str(index), '${index}'))
         return field

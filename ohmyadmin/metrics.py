@@ -1,18 +1,21 @@
 import abc
 from starlette.requests import Request
 
-from ohmyadmin.helpers import render_to_string
+from ohmyadmin.helpers import camel_to_sentence, render_to_string
 
 
 class Metric:
     template: str = ''
+
+    @property
+    def label(self) -> str:
+        return camel_to_sentence(self.__class__.__name__)
 
     async def render(self, request: Request) -> str:
         return render_to_string(self.template, {})
 
 
 class CountMetric(Metric):
-    label: str = 'Counter'
     template = 'ohmyadmin/metrics/counter.html'
     cols: int = 4
     value_prefix: str = ''

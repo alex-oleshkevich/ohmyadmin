@@ -243,6 +243,7 @@
     .empty-state figure {
         @apply flex justify-center max-w-sm mx-auto mb-20;
     }
+
     .empty-state figure svg {
         height: 100%;
     }
@@ -253,5 +254,42 @@
 
     .empty-state section footer {
         @apply mt-5;
+    }
+
+    /* badges */
+    .badge {
+        @apply px-2 py-0.5 text-sm rounded-md inline-flex items-center gap-2;
+    }
+
+    .badge-red {
+        @apply bg-red-50 text-red-800;
+    }
+
+    .badge-pink {
+        @apply bg-pink-50 text-pink-800;
+    }
+
+    .badge-green {
+        @apply bg-green-50 text-green-800;
+    }
+
+    .badge-teal {
+        @apply bg-teal-50 text-teal-800;
+    }
+
+    .badge-blue {
+        @apply bg-blue-50 text-blue-800;
+    }
+
+    .badge-sky {
+        @apply bg-sky-50 text-sky-800;
+    }
+
+    .badge-yellow {
+        @apply bg-yellow-50 text-yellow-800;
+    }
+
+    .badge-gray {
+        @apply bg-slate-50 text-slate-800;
     }
 }

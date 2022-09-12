@@ -19,6 +19,7 @@ if typing.TYPE_CHECKING:
     from ohmyadmin.resources import PkType
 
 Formatter = typing.Callable[[typing.Any], str]
+BadgeColors = typing.Literal['red', 'green', 'blue', 'pink', 'teal', 'sky', 'yellow', 'gray']
 
 
 class Column:
@@ -115,6 +116,23 @@ class ImageColumn(Column):
 
 class DateColumn(Column):
     template: str = 'ohmyadmin/tables/cell_date.html'
+
+    def __init__(self, name: str, format: str = '%d %B, %Y', **kwargs: typing.Any) -> None:
+        kwargs['value_format'] = lambda x: x.strftime(format)
+        super().__init__(name, **kwargs)
+
+
+class BadgeColumn(Column):
+    template: str = 'ohmyadmin/tables/cell_badge.html'
+
+    def __init__(self, name: str, colors: dict[str, str] | None, **kwargs: typing.Any) -> None:
+        super().__init__(name, **kwargs)
+        self.colors = colors or {}
+
+    def render(self, entity: typing.Any) -> str:
+        value = self.get_display_value(entity)
+        color = self.colors.get(value, 'gray')
+        return render_to_string(self.template, {'column': self, 'object': entity, 'color': color})
 
 
 class HasManyColumn(Column):

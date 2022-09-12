@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import contextvars
+import re
 import typing
 from starlette.requests import Request
 from starlette.responses import Response
@@ -49,3 +50,7 @@ def render_to_response(
     request: Request, template_name: str, context: dict[str, typing.Any] | None = None, status_code: int = 200
 ) -> Response:
     return get_current_admin().render_to_response(request, template_name, context, status_code)
+
+
+def camel_to_sentence(text: str) -> str:
+    return re.sub(r'(?<!^)(?=[A-Z])', ' ', text)

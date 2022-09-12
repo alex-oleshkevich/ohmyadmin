@@ -3,7 +3,7 @@ import sqlalchemy as sa
 from examples.models import User
 from ohmyadmin.forms import CheckboxField, EmailField, FileField, HiddenField, TextField
 from ohmyadmin.resources import Resource
-from ohmyadmin.tables import Column, ImageColumn
+from ohmyadmin.tables import BoolColumn, Column, ImageColumn
 
 
 class UserResource(Resource):
@@ -25,7 +25,7 @@ class UserResource(Resource):
             link=True,
         ),
         Column('email', label='Email', searchable=True),
-        Column('is_active', label='Active'),
+        BoolColumn('is_active', label='Active'),
     ]
     form_fields = [
         TextField('first_name'),
