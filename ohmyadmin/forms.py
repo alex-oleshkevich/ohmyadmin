@@ -409,7 +409,7 @@ class SelectField(Field[typing.Any], HasChoices, wtforms.SelectField):
 
     async def get_choices(self, request: Request, form: Form) -> Choices:
         choices = list(await super().get_choices(request, form))
-        if self.empty_choice:
+        if self.empty_choice is not None:
             choices.insert(0, ('', self.empty_choice))
         return choices
 

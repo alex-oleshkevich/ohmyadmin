@@ -104,7 +104,7 @@ class ProductResource(Resource):
         CheckboxField('can_be_shipped', label='This product can be shipped'),
         CheckboxField('visible', description='This product will be hidden from all sales channels.'),
         DateField('availability', required=True),
-        SelectField('brand_id', coerce=int, choices=choices_from(Brand)),
+        SelectField('brand_id', choices=choices_from(Brand)),
         # SelectMultipleField('categories', required=True),
     ]
 

@@ -1,6 +1,6 @@
 from starlette.requests import Request
 
-from examples.models import Category
+from examples.models import Brand
 from ohmyadmin.forms import (
     Card,
     CheckboxField,
@@ -11,41 +11,31 @@ from ohmyadmin.forms import (
     Group,
     Layout,
     MarkdownField,
-    SelectField,
     SlugField,
     TextField,
-    choices_from,
 )
 from ohmyadmin.resources import Resource
 from ohmyadmin.tables import BoolColumn, Column, DateColumn
 
 
-def safe_int(value: int | str) -> int | None:
-    try:
-        return int(value)
-    except ValueError:
-        return None
-
-
-class CategoryResource(Resource):
-    icon = 'category'
-    label_plural = 'Categories'
-    entity_class = Category
+class BrandResource(Resource):
+    icon = 'basket'
+    entity_class = Brand
     table_columns = [
         Column('name', searchable=True, sortable=True, link=True),
-        Column('parent'),
+        Column('website'),
         BoolColumn('visible_to_customers', label='Visibility'),
         DateColumn('updated_at'),
     ]
     form_fields = [
         TextField('name', required=True),
         SlugField('slug', required=True),
-        SelectField('parent', choices=choices_from(Category), empty_choice='', coerce=safe_int),
+        TextField('website'),
         CheckboxField('visible_to_customers'),
         MarkdownField('description'),
     ]
 
-    def get_form_layout(self, request: Request, form: Form[Category]) -> Layout:
+    def get_form_layout(self, request: Request, form: Form[Brand]) -> Layout:
         return Grid(
             cols=3,
             children=[
@@ -57,7 +47,7 @@ class CategoryResource(Resource):
                             children=[
                                 FormField(form.name),
                                 FormField(form.slug),
-                                FormField(form.parent, colspan=2),
+                                FormField(form.website),
                                 FormField(form.visible_to_customers),
                                 FormField(form.description, colspan=2),
                             ],
