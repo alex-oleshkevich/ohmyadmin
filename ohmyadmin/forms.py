@@ -19,7 +19,7 @@ from ohmyadmin.helpers import render_to_string
 from ohmyadmin.query import query
 from ohmyadmin.storage import FileStorage
 
-Choices = typing.Iterable[tuple[str, str]]
+Choices = typing.Iterable[tuple[str | None, str]]
 ChoicesFactory = typing.Callable[[Request, 'Form'], Choices | typing.Awaitable[Choices]]
 Validator = typing.Callable[[wtforms.Field, wtforms.Field], typing.Awaitable[None] | None]
 Colspan = int | typing.Literal['full']
@@ -391,6 +391,23 @@ class TextareaField(Field[str], wtforms.TextAreaField):
         super().__init__(attr_name, validators=validators, widget_attrs=widget_attrs, **kwargs)
 
 
+_SCPS = typing.ParamSpec('_SCPS')
+_SCRT = typing.TypeVar('_SCRT')
+
+
+def safe_coerce(callback: typing.Callable[[typing.Any], _SCRT]) -> typing.Callable[[typing.Any], _SCRT | None]:
+    def coerce(value: float | typing.AnyStr) -> _SCRT | None:
+        if value is None:
+            return None
+
+        try:
+            return callback(value)
+        except ValueError:
+            return None
+
+    return coerce
+
+
 class SelectField(Field[typing.Any], HasChoices, wtforms.SelectField):
     template = 'ohmyadmin/forms/select.html'
 
@@ -402,7 +419,7 @@ class SelectField(Field[typing.Any], HasChoices, wtforms.SelectField):
         empty_choice: str | None = '',
         **kwargs: typing.Any,
     ) -> None:
-        coerce = coerce
+        coerce = safe_coerce(coerce)
         self.empty_choice = empty_choice
 
         super().__init__(attr_name, coerce=coerce, **kwargs)
@@ -410,7 +427,7 @@ class SelectField(Field[typing.Any], HasChoices, wtforms.SelectField):
     async def get_choices(self, request: Request, form: Form) -> Choices:
         choices = list(await super().get_choices(request, form))
         if self.empty_choice is not None:
-            choices.insert(0, ('', self.empty_choice))
+            choices.insert(0, (None, self.empty_choice))
         return choices
 
 
@@ -424,7 +441,7 @@ class SelectMultipleField(Field[list[typing.Any]], HasChoices, wtforms.SelectMul
         coerce: typing.Callable = str,
         **kwargs: typing.Any,
     ) -> None:
-        coerce = coerce
+        coerce = safe_coerce(coerce)
 
         super().__init__(attr_name, coerce=coerce, **kwargs)
 
