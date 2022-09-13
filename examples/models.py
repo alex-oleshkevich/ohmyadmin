@@ -203,6 +203,7 @@ class Order(Base):
     total_price = query_expression()
     customer = relationship('Customer', cascade='all')
     items = relationship('OrderItem', cascade='all')
+    currency_obj = relationship('Currency')
 
     def __str__(self) -> str:
         return self.number

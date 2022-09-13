@@ -45,6 +45,7 @@ class OrderResource(Resource):
         .options(
             with_expression(Order.total_price, OrderItem.unit_price * OrderItem.quantity),
             joinedload(Order.customer),
+            joinedload(Order.currency_obj),
             selectinload(Order.items),
         )
     )
@@ -67,7 +68,7 @@ class OrderResource(Resource):
                 Order.Status.CANCELLED: 'red',
             },
         ),
-        Column('currency'),
+        Column('currency_obj'),
         NumberColumn('total_price'),
         DateColumn('created_at', label='Order date'),
     ]
@@ -110,11 +111,21 @@ class OrderResource(Resource):
                                 FormField(form.notes, colspan='full'),
                             ],
                         ),
-                        Card(
-                            children=[
-                                # FormField(form.items),
-                            ]
-                        ),
+                        # Card(
+                        #     children=[
+                        #         FormRepeater(
+                        #             form.items,
+                        #             layout=lambda f: Card(
+                        #                 columns=3,
+                        #                 children=[
+                        #                     FormField(f.product_id),
+                        #                     FormField(f.quantity),
+                        #                     FormField(f.unit_price),
+                        #                 ]
+                        #             )
+                        #         )
+                        #     ]
+                        # ),
                     ],
                 ),
                 Group(
