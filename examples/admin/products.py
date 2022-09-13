@@ -106,7 +106,7 @@ class ProductResource(Resource):
 
     def get_form_layout(self, request: Request, form: Form) -> Layout:
         return Grid(
-            cols=3,
+            columns=3,
             children=[
                 Group(
                     colspan=2,

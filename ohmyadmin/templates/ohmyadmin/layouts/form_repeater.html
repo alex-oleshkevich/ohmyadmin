@@ -1,0 +1,36 @@
+{% macro render_row(layout) %}
+    <div class="border border-gray-300 rounded-md mb-3">
+        <header class="flex items-center justify-between border-b border-gray-200 bg-slate-50 px-2 py-1">
+            <div></div>
+            <div>
+                <button type="button" class="delete-icon" @click="deleted.push(index)">
+                    {{ tabler_icon('trash') }}
+                </button>
+            </div>
+        </header>
+        <main class="p-2">
+            {{ layout }}
+        </main>
+    </div>
+{% endmacro %}
+
+<div x-data="{deleted: [], newCounter: 0, startIndex: {{ element|length }} }">
+    <div>
+        {% for layout in element %}
+            <template x-if="!deleted.includes({{ loop.index0 }})" x-data="{ index: {{ loop.index0 }} }">
+                {{ render_row(layout) }}
+            </template>
+        {% endfor %}
+
+        <template x-for="_index in newCounter">
+            <template x-if="!deleted.includes(_index + startIndex)" x-data="{index: _index + startIndex}">
+                {{ render_row(element.empty) }}
+            </template>
+        </template>
+    </div>
+    <div>
+        <button type="button" class="btn btn-link" @click="newCounter += 1">
+            {{ tabler_icon('plus') }} {{ _('Add a new item') }}
+        </button>
+    </div>
+</div>

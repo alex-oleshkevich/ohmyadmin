@@ -221,7 +221,7 @@ class Resource(Router, metaclass=ResourceMeta):
         return Form.from_fields(self.get_form_fields(request), name=f'{self.__class__.__name__}EditForm')
 
     def get_form_layout(self, request: Request, form: Form) -> Layout:
-        return Grid(cols=2, children=[FormField(field) for field in form])
+        return Grid(columns=2, children=[FormField(field) for field in form])
 
     # endregion
 
@@ -233,7 +233,7 @@ class Resource(Router, metaclass=ResourceMeta):
         column = getattr(self.entity_class, self.pk_column)
         stmt = self.get_queryset(request).limit(2).where(column == pk)
         result = await session.scalars(stmt)
-        return result.one()
+        return result.unique().one()
 
     async def get_object_count(self, session: AsyncSession, queryset: sa.sql.Select) -> int:
         stmt = sa.select(sa.func.count('*')).select_from(queryset)

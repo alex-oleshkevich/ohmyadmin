@@ -444,13 +444,13 @@ class EmbedField(Field[T], wtforms.FormField):
 
 
 class EmbedManyField(Field[list[T]], wtforms.FieldList):
-    field_class = wtforms.FieldList
     template = 'ohmyadmin/forms/embed_many.html'
 
     def __init__(
         self,
         attr_name: str,
-        form_class: typing.Type[Form],
+        default: typing.Any,
+        form_class: typing.Type[T],
         min_entries: int = 1,
         max_entries: int | None = None,
         **kwargs: typing.Any,
@@ -459,38 +459,11 @@ class EmbedManyField(Field[list[T]], wtforms.FieldList):
         kwargs.setdefault('default', [])
         super().__init__(
             attr_name,
-            unbound_field=wtforms.FormField(form_class),
+            unbound_field=wtforms.FormField(form_class, default=default),
             min_entries=min_entries,
             max_entries=max_entries,
             **kwargs,
         )
-
-    def create_empty_entry(self) -> Form:
-        id = "%s%s${index}" % (self.id, self._separator)
-        name = "%s%s${index}" % (self.short_name, self._separator)
-        form = self.form_class(
-            form=None,
-            id=id,
-            name=name,
-            prefix=self._prefix,
-            _meta=self.meta,
-            translations=self._translations,
-        )
-        form.process(None)
-        for index, field in enumerate(form):
-            field.render_kw['x-bind:id'] = f"`{id}{self._separator}{field.id}`"
-            field.render_kw['x-bind:name'] = f"`{name}{self._separator}{field.name}`"
-        return form
-
-    def _add_entry(
-        self, formdata: FormData | None = None, data: typing.Any = unset_value, index: int | None = None
-    ) -> wtforms.Form:
-        field: wtforms.FormField = super()._add_entry(formdata, data, index)
-        for index, field in enumerate(field):
-            field.render_kw = field.render_kw or {}
-            field.render_kw['x-bind:id'] = "`{}`".format(field.id.replace(str(index), '${index}'))
-            field.render_kw['x-bind:name'] = "`{}`".format(field.name.replace(str(index), '${index}'))
-        return field
 
 
 class MarkdownField(Field, wtforms.TextAreaField):
@@ -544,6 +517,16 @@ class Form(typing.Generic[_E], wtforms.Form):
 
         return False
 
+    async def prefill_choices(self, request: Request) -> None:
+        for field in self:
+            if isinstance(field, HasChoices):
+                field.choices = await field.get_choices(request, self)
+
+            if isinstance(field, wtforms.FieldList):
+                for subfield in field:
+                    if isinstance(subfield, wtforms.FormField):
+                        await subfield.form.prefill_choices(request)
+
     @classmethod
     def from_fields(cls, fields: typing.Iterable[UnboundField], name: str = 'AutoForm') -> typing.Type[Form]:
         cls._creation_counter += 1
@@ -561,9 +544,7 @@ class Form(typing.Generic[_E], wtforms.Form):
     ) -> Form:
         form_data = await request.form() if request.method in ['POST', 'PUT', 'PATCH', 'DELETE'] else None
         form = cls(formdata=form_data, obj=instance, data=data)
-        for field in form:
-            if isinstance(field, HasChoices):
-                field.choices = await field.get_choices(request, form)
+        await form.prefill_choices(request)
         return form
 
     @classmethod

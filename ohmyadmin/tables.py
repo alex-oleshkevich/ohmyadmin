@@ -174,7 +174,7 @@ class BatchAction(abc.ABC, metaclass=BatchActionMeta):
         if self.fields is not None:
             form_class = Form.from_fields(self.fields)
             form = form_class()
-            layout = Grid([FormField(field) for field in form], cols=1)
+            layout = Grid([FormField(field) for field in form], columns=1)
         return render_to_string(self.template, {'action': self, 'form': layout})
 
     __str__ = render

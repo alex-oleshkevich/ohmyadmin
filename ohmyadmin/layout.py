@@ -5,6 +5,7 @@ import typing
 import wtforms
 
 from ohmyadmin.actions import Action
+from ohmyadmin.forms import EmbedManyField
 from ohmyadmin.helpers import render_to_string
 from ohmyadmin.i18n import _
 
@@ -25,8 +26,8 @@ class Layout(abc.ABC):
 class Grid(Layout):
     template = 'ohmyadmin/layouts/grid.html'
 
-    def __init__(self, children: typing.Iterable[Layout], cols: int = 2, gap: int = 5) -> None:
-        self.cols = cols
+    def __init__(self, children: typing.Iterable[Layout], columns: int = 2, gap: int = 5) -> None:
+        self.cols = columns
         self.gap = gap
         self.children = children
 
@@ -78,6 +79,36 @@ class FormPlaceholder(Layout):
         self.text = text
         self.label = label
         self.colspan = colspan
+
+
+class FormRepeater(Layout):
+    template = 'ohmyadmin/layouts/form_repeater.html'
+
+    def __init__(self, form: wtforms.FieldList, layout_builder: typing.Callable[[EmbedManyField], Layout]) -> None:
+        self.form = form
+        self.layout_builder = layout_builder
+
+    @property
+    def empty(self) -> Layout:
+        form_field = next(iter(self.form))
+        form = form_field.form
+        form.process(None)
+        for field in form:
+            field.render_kw = field.render_kw or {}
+            field.render_kw.update(
+                {
+                    'x-bind:id': '`%s`' % field.id.replace('0', '${index}'),
+                    'x-bind:name': '`%s`' % field.name.replace('0', '${index}'),
+                }
+            )
+        return self.layout_builder(form)
+
+    def __iter__(self) -> typing.Iterator[Layout]:
+        for field in self.form:
+            yield self.layout_builder(field)
+
+    def __len__(self) -> int:
+        return len(self.form)
 
 
 class EmptyState(Layout):

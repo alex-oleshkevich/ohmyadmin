@@ -2,9 +2,18 @@ import sqlalchemy as sa
 from sqlalchemy.orm import joinedload, selectinload, with_expression
 from starlette.requests import Request
 
-from examples.models import Country, Currency, Customer, Order, OrderItem
-from ohmyadmin.forms import Form, MarkdownField, SelectField, TextField, choices_from
-from ohmyadmin.layout import Card, FormField, FormPlaceholder, Grid, Group, Layout
+from examples.models import Country, Currency, Customer, Order, OrderItem, Product
+from ohmyadmin.forms import (
+    DecimalField,
+    EmbedManyField,
+    Form,
+    IntegerField,
+    MarkdownField,
+    SelectField,
+    TextField,
+    choices_from,
+)
+from ohmyadmin.layout import Card, FormField, FormPlaceholder, FormRepeater, Grid, Group, Layout
 from ohmyadmin.metrics import CountMetric
 from ohmyadmin.resources import Resource
 from ohmyadmin.tables import BadgeColumn, Column, DateColumn, NumberColumn
@@ -83,16 +92,22 @@ class OrderResource(Resource):
         TextField('zip'),
         TextField('notes'),
         MarkdownField('notes'),
-        # EmbedManyField('items', form_class=Form.from_fields([
-        #     SelectField('product_id', required=True, choices=choices_from(Product)),
-        #     IntegerField('quantity', required=True),
-        #     DecimalField('unit_price', required=True),
-        # ])),
+        EmbedManyField(
+            'items',
+            default=OrderItem,
+            form_class=Form.from_fields(
+                [
+                    SelectField('product_id', required=True, choices=choices_from(Product), coerce=int),
+                    IntegerField('quantity', required=True),
+                    DecimalField('unit_price', required=True),
+                ]
+            ),
+        ),
     ]
 
     def get_form_layout(self, request: Request, form: Form[Order]) -> Layout:
         return Grid(
-            cols=3,
+            columns=3,
             children=[
                 Group(
                     colspan=2,
@@ -111,21 +126,22 @@ class OrderResource(Resource):
                                 FormField(form.notes, colspan='full'),
                             ],
                         ),
-                        # Card(
-                        #     children=[
-                        #         FormRepeater(
-                        #             form.items,
-                        #             layout=lambda f: Card(
-                        #                 columns=3,
-                        #                 children=[
-                        #                     FormField(f.product_id),
-                        #                     FormField(f.quantity),
-                        #                     FormField(f.unit_price),
-                        #                 ]
-                        #             )
-                        #         )
-                        #     ]
-                        # ),
+                        Card(
+                            title='Order items',
+                            children=[
+                                FormRepeater(
+                                    form.items,
+                                    layout_builder=lambda f: Grid(
+                                        columns=3,
+                                        children=[
+                                            FormField(f.product_id),
+                                            FormField(f.quantity),
+                                            FormField(f.unit_price),
+                                        ],
+                                    ),
+                                )
+                            ],
+                        ),
                     ],
                 ),
                 Group(
