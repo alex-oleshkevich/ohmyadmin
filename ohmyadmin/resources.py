@@ -15,7 +15,7 @@ from ohmyadmin.forms import Field, Form, HandlesFiles
 from ohmyadmin.globals import globalize_dbsession
 from ohmyadmin.helpers import render_to_response
 from ohmyadmin.i18n import _
-from ohmyadmin.layout import EmptyState, FormField, Grid, Layout
+from ohmyadmin.layout import EmptyState, FormElement, Grid, Layout
 from ohmyadmin.metrics import Metric
 from ohmyadmin.pagination import Page
 from ohmyadmin.responses import RedirectResponse, Response
@@ -221,7 +221,7 @@ class Resource(Router, metaclass=ResourceMeta):
         return Form.from_fields(self.get_form_fields(request), name=f'{self.__class__.__name__}EditForm')
 
     def get_form_layout(self, request: Request, form: Form) -> Layout:
-        return Grid(columns=2, children=[FormField(field) for field in form])
+        return Grid(columns=2, children=[FormElement(field) for field in form])
 
     # endregion
 

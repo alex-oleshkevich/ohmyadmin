@@ -13,7 +13,6 @@ from starlette.datastructures import FormData, UploadFile
 from starlette.requests import Request
 from wtforms.fields.core import UnboundField
 from wtforms.form import FormMeta
-from wtforms.utils import unset_value
 
 from ohmyadmin.helpers import render_to_string
 from ohmyadmin.query import query
@@ -384,6 +383,20 @@ class RadioField(Field[typing.Any], wtforms.RadioField):
     template = 'ohmyadmin/forms/radio.html'
 
 
+class FormField(Field[typing.Any], wtforms.FormField):
+    def __init__(
+        self,
+        attr_name: str,
+        form_class: typing.Type[Form],
+        **kwargs: typing.Any,
+    ) -> None:
+        super().__init__(
+            attr_name,
+            form_class=form_class,
+            **kwargs,
+        )
+
+
 class ListField(Field[typing.Any], wtforms.FieldList):
     template = 'ohmyadmin/forms/list.html'
 
@@ -399,67 +412,6 @@ class ListField(Field[typing.Any], wtforms.FieldList):
         super().__init__(
             attr_name,
             unbound_field=unbound_field,
-            min_entries=min_entries,
-            max_entries=max_entries,
-            **kwargs,
-        )
-
-    def create_empty_entry(self) -> Form:
-        id = "%s%s${index}" % (self.id, self._separator)
-        name = "%s%s${index}" % (self.short_name, self._separator)
-        field = self.unbound_field.bind(
-            form=None,
-            id=id,
-            name=name,
-            prefix=self._prefix,
-            _meta=self.meta,
-            translations=self._translations,
-        )
-        field.process(None)
-        field.render_kw['x-bind:id'] = "`{}`".format(id)
-        field.render_kw['x-bind:name'] = "`{}`".format(name)
-        return field
-
-    def _add_entry(
-        self, formdata: FormData | None = None, data: typing.Any = unset_value, index: int | None = None
-    ) -> wtforms.Field:
-        field: wtforms.Field = super()._add_entry(formdata, data, index)
-        field.render_kw['x-bind:id'] = "`{}`".format(field.id.replace(str(index), '${index}'))
-        field.render_kw['x-bind:name'] = "`{}`".format(field.name.replace(str(index), '${index}'))
-        return field
-
-
-class EmbedField(Field[T], wtforms.FormField):
-    template = 'ohmyadmin/forms/embed.html'
-
-    def __init__(
-        self,
-        attr_name: str,
-        form_class: typing.Type[Form],
-        cols: int = 2,
-        **kwargs: typing.Any,
-    ) -> None:
-        self.cols = cols
-        super().__init__(attr_name, form_class=form_class, **kwargs)
-
-
-class EmbedManyField(Field[list[T]], wtforms.FieldList):
-    template = 'ohmyadmin/forms/embed_many.html'
-
-    def __init__(
-        self,
-        attr_name: str,
-        default: typing.Any,
-        form_class: typing.Type[T],
-        min_entries: int = 1,
-        max_entries: int | None = None,
-        **kwargs: typing.Any,
-    ) -> None:
-        self.form_class = form_class
-        kwargs.setdefault('default', [])
-        super().__init__(
-            attr_name,
-            unbound_field=wtforms.FormField(form_class, default=default),
             min_entries=min_entries,
             max_entries=max_entries,
             **kwargs,

@@ -5,7 +5,7 @@ import typing
 import wtforms
 
 from ohmyadmin.actions import Action
-from ohmyadmin.forms import EmbedManyField
+from ohmyadmin.forms import ListField
 from ohmyadmin.helpers import render_to_string
 from ohmyadmin.i18n import _
 
@@ -64,7 +64,7 @@ class Card(Layout):
         return iter(self.children)
 
 
-class FormField(Layout):
+class FormElement(Layout):
     template = 'ohmyadmin/layouts/form_field.html'
 
     def __init__(self, field: wtforms.Field, colspan: Colspan = 1) -> None:
@@ -84,7 +84,7 @@ class FormPlaceholder(Layout):
 class FormRepeater(Layout):
     template = 'ohmyadmin/layouts/form_repeater.html'
 
-    def __init__(self, form: wtforms.FieldList, layout_builder: typing.Callable[[EmbedManyField], Layout]) -> None:
+    def __init__(self, form: wtforms.FieldList, layout_builder: typing.Callable[[ListField], Layout]) -> None:
         self.form = form
         self.layout_builder = layout_builder
 

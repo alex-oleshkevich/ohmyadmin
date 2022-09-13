@@ -2,7 +2,7 @@ from starlette.requests import Request
 
 from examples.models import Brand
 from ohmyadmin.forms import CheckboxField, Form, MarkdownField, SlugField, TextField
-from ohmyadmin.layout import Card, FormField, FormPlaceholder, Grid, Group, Layout
+from ohmyadmin.layout import Card, FormElement, FormPlaceholder, Grid, Group, Layout
 from ohmyadmin.resources import Resource
 from ohmyadmin.tables import BoolColumn, Column, DateColumn
 
@@ -34,11 +34,11 @@ class BrandResource(Resource):
                         Card(
                             columns=2,
                             children=[
-                                FormField(form.name),
-                                FormField(form.slug),
-                                FormField(form.website),
-                                FormField(form.visible_to_customers),
-                                FormField(form.description, colspan=2),
+                                FormElement(form.name),
+                                FormElement(form.slug),
+                                FormElement(form.website),
+                                FormElement(form.visible_to_customers),
+                                FormElement(form.description, colspan=2),
                             ],
                         )
                     ],

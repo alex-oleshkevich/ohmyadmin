@@ -13,7 +13,7 @@ from ohmyadmin.actions import ActionColor
 from ohmyadmin.forms import Form
 from ohmyadmin.helpers import render_to_string
 from ohmyadmin.i18n import _
-from ohmyadmin.layout import FormField, Grid, Layout
+from ohmyadmin.layout import FormElement, Grid, Layout
 from ohmyadmin.responses import RedirectResponse, Response
 
 if typing.TYPE_CHECKING:
@@ -174,7 +174,7 @@ class BatchAction(abc.ABC, metaclass=BatchActionMeta):
         if self.fields is not None:
             form_class = Form.from_fields(self.fields)
             form = form_class()
-            layout = Grid([FormField(field) for field in form], columns=1)
+            layout = Grid([FormElement(field) for field in form], columns=1)
         return render_to_string(self.template, {'action': self, 'form': layout})
 
     __str__ = render

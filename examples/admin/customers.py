@@ -2,7 +2,7 @@ from starlette.requests import Request
 
 from examples.models import Customer
 from ohmyadmin.forms import DateField, EmailField, Form, TextField
-from ohmyadmin.layout import Card, FormField, FormPlaceholder, Grid, Group, Layout
+from ohmyadmin.layout import Card, FormElement, FormPlaceholder, Grid, Group, Layout
 from ohmyadmin.resources import Resource
 from ohmyadmin.tables import Column
 
@@ -32,10 +32,10 @@ class CustomerResource(Resource):
                         Card(
                             columns=2,
                             children=[
-                                FormField(form.name),
-                                FormField(form.email),
-                                FormField(form.phone),
-                                FormField(form.birthday),
+                                FormElement(form.name),
+                                FormElement(form.email),
+                                FormElement(form.phone),
+                                FormElement(form.birthday),
                             ],
                         )
                     ],

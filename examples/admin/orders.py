@@ -5,15 +5,16 @@ from starlette.requests import Request
 from examples.models import Country, Currency, Customer, Order, OrderItem, Product
 from ohmyadmin.forms import (
     DecimalField,
-    EmbedManyField,
     Form,
+    FormField,
     IntegerField,
+    ListField,
     MarkdownField,
     SelectField,
     TextField,
     choices_from,
 )
-from ohmyadmin.layout import Card, FormField, FormPlaceholder, FormRepeater, Grid, Group, Layout
+from ohmyadmin.layout import Card, FormElement, FormPlaceholder, FormRepeater, Grid, Group, Layout
 from ohmyadmin.metrics import CountMetric
 from ohmyadmin.resources import Resource
 from ohmyadmin.tables import BadgeColumn, Column, DateColumn, NumberColumn
@@ -92,16 +93,20 @@ class OrderResource(Resource):
         TextField('zip'),
         TextField('notes'),
         MarkdownField('notes'),
-        EmbedManyField(
+        ListField(
             'items',
-            default=OrderItem,
-            form_class=Form.from_fields(
-                [
-                    SelectField('product_id', required=True, choices=choices_from(Product), coerce=int),
-                    IntegerField('quantity', required=True),
-                    DecimalField('unit_price', required=True),
-                ]
+            FormField(
+                '_',
+                default=OrderItem,
+                form_class=Form.from_fields(
+                    [
+                        SelectField('product_id', required=True, choices=choices_from(Product), coerce=int),
+                        IntegerField('quantity', required=True),
+                        DecimalField('unit_price', required=True),
+                    ]
+                ),
             ),
+            default=[],
         ),
     ]
 
@@ -115,15 +120,15 @@ class OrderResource(Resource):
                         Card(
                             columns=6,
                             children=[
-                                FormField(form.number, colspan=3),
-                                FormField(form.customer_id, colspan=3),
-                                FormField(form.status, colspan=3),
-                                FormField(form.currency, colspan=3),
-                                FormField(form.country, colspan=3),
-                                FormField(form.address, colspan='full'),
-                                FormField(form.city, colspan=2),
-                                FormField(form.zip, colspan=2),
-                                FormField(form.notes, colspan='full'),
+                                FormElement(form.number, colspan=3),
+                                FormElement(form.customer_id, colspan=3),
+                                FormElement(form.status, colspan=3),
+                                FormElement(form.currency, colspan=3),
+                                FormElement(form.country, colspan=3),
+                                FormElement(form.address, colspan='full'),
+                                FormElement(form.city, colspan=2),
+                                FormElement(form.zip, colspan=2),
+                                FormElement(form.notes, colspan='full'),
                             ],
                         ),
                         Card(
@@ -134,9 +139,9 @@ class OrderResource(Resource):
                                     layout_builder=lambda f: Grid(
                                         columns=3,
                                         children=[
-                                            FormField(f.product_id),
-                                            FormField(f.quantity),
-                                            FormField(f.unit_price),
+                                            FormElement(f.product_id),
+                                            FormElement(f.quantity),
+                                            FormElement(f.unit_price),
                                         ],
                                     ),
                                 )

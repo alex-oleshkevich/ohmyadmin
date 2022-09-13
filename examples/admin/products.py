@@ -16,7 +16,7 @@ from ohmyadmin.forms import (
     TextField,
     choices_from,
 )
-from ohmyadmin.layout import Card, FormField, Grid, Group, Layout
+from ohmyadmin.layout import Card, FormElement, Grid, Group, Layout
 from ohmyadmin.metrics import CountMetric
 from ohmyadmin.resources import Resource
 from ohmyadmin.tables import BoolColumn, Column, HasManyColumn, ImageColumn, NumberColumn
@@ -114,42 +114,42 @@ class ProductResource(Resource):
                         Card(
                             columns=2,
                             children=[
-                                FormField(form.name),
-                                FormField(form.slug),
-                                FormField(form.description, colspan='full'),
+                                FormElement(form.name),
+                                FormElement(form.slug),
+                                FormElement(form.description, colspan='full'),
                             ],
                         ),
                         Card(
                             title='Images',
                             children=[
-                                FormField(form.images),
+                                FormElement(form.images),
                             ],
                         ),
                         Card(
                             title='Pricing',
                             columns=2,
                             children=[
-                                FormField(form.price),
-                                FormField(form.compare_at_price),
-                                FormField(form.cost_per_item),
+                                FormElement(form.price),
+                                FormElement(form.compare_at_price),
+                                FormElement(form.cost_per_item),
                             ],
                         ),
                         Card(
                             title='Inventory',
                             columns=2,
                             children=[
-                                FormField(form.sku),
-                                FormField(form.barcode),
-                                FormField(form.quantity),
-                                FormField(form.security_stock),
+                                FormElement(form.sku),
+                                FormElement(form.barcode),
+                                FormElement(form.quantity),
+                                FormElement(form.security_stock),
                             ],
                         ),
                         Card(
                             title='Shipping',
                             columns=2,
                             children=[
-                                FormField(form.can_be_returned),
-                                FormField(form.can_be_shipped),
+                                FormElement(form.can_be_returned),
+                                FormElement(form.can_be_shipped),
                             ],
                         ),
                     ],
@@ -160,14 +160,14 @@ class ProductResource(Resource):
                         Card(
                             title='Status',
                             children=[
-                                FormField(form.visible),
-                                FormField(form.availability),
+                                FormElement(form.visible),
+                                FormElement(form.availability),
                             ],
                         ),
                         Card(
                             title='Associations',
                             children=[
-                                FormField(form.brand_id),
+                                FormElement(form.brand_id),
                                 # FormField(form.categories),
                             ],
                         ),
