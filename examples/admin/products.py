@@ -90,7 +90,12 @@ class ProductResource(Resource):
         HasManyColumn('images', child=ImageColumn('image_path')),
         Column('name', sortable=True, searchable=True, link=True),
         Column(
-            'brand', source='brand.name', searchable=True, search_in=['brand.name'], sortable=True, sort_by='brand.name'
+            'brand',
+            searchable=True,
+            search_in=[Brand.name],
+            sortable=True,
+            sort_by='brand.name',
+            link_factory=lambda r, o: r.url_for('resource_brand_edit', pk=o.brand.id),
         ),
         NumberColumn('price', sortable=True),
         NumberColumn('sku', sortable=True),

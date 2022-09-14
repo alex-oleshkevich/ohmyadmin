@@ -4,6 +4,7 @@ import abc
 import re
 import sqlalchemy as sa
 import typing
+from sqlalchemy.orm import InstrumentedAttribute
 from starlette.datastructures import URL, FormData, MultiDict
 from starlette.requests import Request
 from urllib.parse import parse_qsl, urlencode
@@ -54,6 +55,17 @@ class Column:
         self.search_in = search_in or [self.source]
         self.link = link
         self.link_factory = link_factory
+
+    @property
+    def has_link(self) -> bool:
+        return self.link is True or self.link_factory is not None
+
+    def get_link(self, request: Request, entity: typing.Any) -> str:
+        if self.link_factory:
+            return self.link_factory(request, entity)
+        route = request.state.resource.get_route_name('edit')
+        pk = request.state.resource.get_pk_value(entity)
+        return request.url_for(route, pk=pk)
 
     def get_value(self, obj: typing.Any) -> typing.Any:
         parts = self.source.split('.')
@@ -286,19 +298,42 @@ class OrderingFilter(BaseFilter):
 
 
 class SearchFilter(BaseFilter):
-    def __init__(self, columns: list[str], query_param: str) -> None:
+    def __init__(self, columns: list[str | InstrumentedAttribute], query_param: str) -> None:
         self.columns = columns
-        self.query_params = query_param
+        self.query_param = query_param
+
+    def create_search_token(self, column: InstrumentedAttribute, search_query: str) -> sa.sql.ColumnElement:
+        if search_query.startswith('^'):
+            search_token = f'{search_query[1:].lower()}%'
+            return column.ilike(search_token)
+
+        if search_query.startswith('='):
+            search_token = f'{search_query[1:].lower()}'
+            return sa.func.lower(column) == search_token
+
+        if search_query.startswith('@'):
+            search_token = f'{search_query[1:].lower()}'
+            return column.regexp_match(search_token)
+
+        search_token = f'%{search_query.lower()}%'
+        return column.ilike(search_token)
 
     def apply(self, request: Request, queryset: sa.sql.Select) -> sa.sql.Select:
         clauses = []
-        search_query = get_search_value(request, self.query_params)
+        entity_class = request.state.resource.__class__.entity_class
+        search_query = get_search_value(request, self.query_param)
         if not search_query:
             return queryset
 
         for field in self.columns:
-            search_token = f'%{search_query.lower()}%'
-            clauses.append(sa.column(field).ilike(search_token))
+            if isinstance(field, str):
+                column = getattr(entity_class, field)
+            else:
+                queryset = queryset.join(field.class_)
+                column = field
+
+            clause = self.create_search_token(column, search_query)
+            clauses.append(clause)
 
         if clauses:
             queryset = queryset.where(sa.or_(*clauses))

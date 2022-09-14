@@ -142,20 +142,22 @@ class Resource(Router, metaclass=ResourceMeta):
 
     # region: list
     def get_filters(self) -> typing.Iterable[BaseFilter]:
-        filters = list(self.filters or []).copy()
+        return list(self.filters or []).copy()
+
+    def apply_search_filter(self, request: Request, stmt: sa.sql.Select) -> sa.sql.Select:
         table_columns = self.get_table_columns()
+        columns = list(itertools.chain.from_iterable([c.search_in for c in table_columns if c.searchable]))
+        return SearchFilter(columns, query_param=self.search_param).apply(request, stmt) if columns else stmt
 
-        # attach ordering filter
-        if sortables := [column.sort_by for column in table_columns if column.sortable]:
-            filters.append(OrderingFilter(sortables, self.ordering_param))
-
-        # make search filter
-        if searchables := list(itertools.chain.from_iterable([c.search_in for c in table_columns if c.searchable])):
-            filters.append(SearchFilter(columns=searchables, query_param=self.search_param))
-
-        return filters
+    def apply_ordering_filter(self, request: Request, stmt: sa.sql.Select) -> sa.sql.Select:
+        table_columns = self.get_table_columns()
+        columns = [column.sort_by for column in table_columns if column.sortable]
+        return OrderingFilter(columns, query_param=self.ordering_param).apply(request, stmt) if columns else stmt
 
     def apply_filters(self, request: Request, stmt: sa.sql.Select) -> sa.sql.Select:
+        stmt = self.apply_search_filter(request, stmt)
+        stmt = self.apply_ordering_filter(request, stmt)
+
         for filter in self.get_filters():
             stmt = filter.apply(request, stmt)
         return stmt
