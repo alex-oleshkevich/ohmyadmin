@@ -250,7 +250,7 @@ def get_ordering_value(request: Request, param_name: str) -> list[str]:
 
 
 def get_search_value(request: Request, param_name: str) -> str:
-    return request.query_params.get(param_name, '')
+    return request.query_params.get(param_name, '').strip()
 
 
 def get_page_value(request: Request, param_name: str) -> int:
@@ -298,7 +298,7 @@ class OrderingFilter(BaseFilter):
 
 
 class SearchFilter(BaseFilter):
-    def __init__(self, columns: list[str | InstrumentedAttribute], query_param: str) -> None:
+    def __init__(self, columns: typing.Iterable[InstrumentedAttribute], query_param: str) -> None:
         self.columns = columns
         self.query_param = query_param
 
@@ -325,12 +325,9 @@ class SearchFilter(BaseFilter):
         if not search_query:
             return queryset
 
-        for field in self.columns:
-            if isinstance(field, str):
-                column = getattr(entity_class, field)
-            else:
-                queryset = queryset.join(field.class_)
-                column = field
+        for column in self.columns:
+            if column.class_ != entity_class:
+                queryset = queryset.join(column.class_)
 
             clause = self.create_search_token(column, search_query)
             clauses.append(clause)

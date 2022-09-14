@@ -2,7 +2,7 @@ import itertools
 import sqlalchemy as sa
 import typing
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import InstrumentedAttribute, sessionmaker
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
 from starlette.routing import BaseRoute, Route, Router
@@ -147,7 +147,18 @@ class Resource(Router, metaclass=ResourceMeta):
     def apply_search_filter(self, request: Request, stmt: sa.sql.Select) -> sa.sql.Select:
         table_columns = self.get_table_columns()
         columns = list(itertools.chain.from_iterable([c.search_in for c in table_columns if c.searchable]))
-        return SearchFilter(columns, query_param=self.search_param).apply(request, stmt) if columns else stmt
+
+        def ensure_column_elements(
+            columns: list[str | InstrumentedAttribute],
+        ) -> typing.Iterable[InstrumentedAttribute]:
+            for column in columns:
+                if isinstance(column, str):
+                    yield getattr(self.entity_class, column)
+                else:
+                    yield column
+
+        filter_ = SearchFilter(columns=ensure_column_elements(columns), query_param=self.search_param)
+        return filter_.apply(request, stmt)
 
     def apply_ordering_filter(self, request: Request, stmt: sa.sql.Select) -> sa.sql.Select:
         table_columns = self.get_table_columns()

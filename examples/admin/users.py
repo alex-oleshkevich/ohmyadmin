@@ -30,7 +30,7 @@ class UserResource(Resource):
             label='Name',
             sortable=True,
             searchable=True,
-            search_in=['first_name', 'last_name'],
+            search_in=[User.first_name, User.last_name],
             sort_by='last_name',
             link=True,
         ),
