@@ -1,5 +1,7 @@
+from __future__ import annotations
+
 import sqlalchemy as sa
-from sqlalchemy.orm import backref, declarative_base, query_expression, relationship
+from sqlalchemy.orm import ColumnProperty, backref, declarative_base, query_expression, relationship
 
 metadata = sa.MetaData()
 Base = declarative_base()
@@ -31,7 +33,7 @@ class Country(Base):
     name = sa.Column(sa.Text)
 
     def __str__(self) -> str:
-        return self.name
+        return self.name or 'n/a'
 
 
 class Currency(Base):
@@ -40,7 +42,7 @@ class Currency(Base):
     name = sa.Column(sa.Text)
 
     def __str__(self) -> str:
-        return self.name
+        return self.name or 'n/a'
 
 
 class Customer(Base):
@@ -53,13 +55,13 @@ class Customer(Base):
     created_at = sa.Column(sa.DateTime(True))
     updated_at = sa.Column(sa.DateTime(True))
 
-    addresses = relationship('Address', cascade='all, delete-orphan')
-    payments = relationship('Payment', cascade='all, delete-orphan')
-    comments = relationship('Comment', cascade='all, delete-orphan')
-    orders = relationship('Order', cascade='all, delete-orphan')
+    addresses: list[Address] = relationship('Address', cascade='all, delete-orphan')
+    payments: list[Payment] = relationship('Payment', cascade='all, delete-orphan')
+    comments: list[Comment] = relationship('Comment', cascade='all, delete-orphan')
+    orders: list[Order] = relationship('Order', cascade='all, delete-orphan')
 
     def __str__(self) -> str:
-        return self.name
+        return self.name or 'n/a'
 
 
 class Address(Base):
@@ -68,11 +70,11 @@ class Address(Base):
     street = sa.Column(sa.Text)
     zip = sa.Column(sa.Text)
     city = sa.Column(sa.Text)
-    country = sa.Column(sa.ForeignKey('countries.code'))
-    customer_id = sa.Column(sa.ForeignKey('customers.id'))
+    country: str = sa.Column(sa.ForeignKey('countries.code'))
+    customer_id: int = sa.Column(sa.ForeignKey('customers.id'))
 
     def __str__(self) -> str:
-        return self.street
+        return self.street or 'n/a'
 
 
 class Payment(Base):
@@ -80,13 +82,13 @@ class Payment(Base):
     id = sa.Column(sa.BigInteger, primary_key=True)
     reference = sa.Column(sa.Text)
     amount = sa.Column(sa.Numeric)
-    currency = sa.Column(sa.ForeignKey('currencies.code'))
+    currency: str = sa.Column(sa.ForeignKey('currencies.code'))
     provider = sa.Column(sa.Text)
     method = sa.Column(sa.Text)
-    customer_id = sa.Column(sa.ForeignKey('customers.id'))
+    customer_id: int = sa.Column(sa.ForeignKey('customers.id'))
 
     def __str__(self) -> str:
-        return self.reference
+        return self.reference or 'n/a'
 
 
 class Brand(Base):
@@ -101,7 +103,7 @@ class Brand(Base):
     updated_at = sa.Column(sa.DateTime(True))
 
     def __str__(self) -> str:
-        return self.name
+        return self.name or 'n/a'
 
 
 product_categories = sa.Table(
@@ -119,7 +121,7 @@ class Category(Base):
     name = sa.Column(sa.Text)
     slug = sa.Column(sa.Text)
     description = sa.Column(sa.Text)
-    parent_id = sa.Column(sa.ForeignKey('categories.id'))
+    parent_id: int | None = sa.Column(sa.ForeignKey('categories.id'))
     visible_to_customers = sa.Column(sa.Boolean, default=True)
     created_at = sa.Column(sa.DateTime(True))
     updated_at = sa.Column(sa.DateTime(True))
@@ -133,7 +135,7 @@ class Product(Base):
     description = sa.Column(sa.Text)
     visible = sa.Column(sa.Boolean, default=True)
     availability = sa.Column(sa.DateTime(True))
-    brand_id = sa.Column(sa.ForeignKey('brands.id'))
+    brand_id: int = sa.Column(sa.ForeignKey('brands.id'))
     price = sa.Column(sa.Numeric)
     compare_at_price = sa.Column(sa.Numeric)
     cost_per_item = sa.Column(sa.Numeric)
@@ -146,17 +148,15 @@ class Product(Base):
     created_at = sa.Column(sa.DateTime(True))
     updated_at = sa.Column(sa.DateTime(True))
 
-    brand = relationship(Brand)
-    images = relationship('Image', cascade='all, delete-orphan')
-    comments = relationship('Comment', cascade='all, delete-orphan')
-    categories = relationship('Category', secondary=product_categories, cascade='all')
-
-    def add_file_paths_for_images(self, *paths: str) -> None:
-        for path in paths:
-            self.images.append(Image(image_path=path, product_id=self.id))
+    brand: Brand = relationship(Brand)
+    images: list[Image] = relationship('Image', cascade='all, delete-orphan')
+    comments: list[Comment] = relationship('Comment', cascade='all, delete-orphan')
+    categories: list[Category] = relationship('Category', secondary=product_categories, cascade='all')
 
 
 class ProductCategory(Base):
+    product_id: int
+    category_id: int
     __table__ = product_categories
 
 
@@ -164,7 +164,7 @@ class Image(Base):
     __tablename__ = 'images'
     id = sa.Column(sa.BigInteger, primary_key=True)
     image_path = sa.Column(sa.Text)
-    product_id = sa.Column(sa.ForeignKey('products.id'))
+    product_id: int = sa.Column(sa.ForeignKey('products.id'))
 
 
 class Comment(Base):
@@ -173,8 +173,8 @@ class Comment(Base):
     title = sa.Column(sa.Text)
     content = sa.Column(sa.Text)
     public = sa.Column(sa.Boolean)
-    product_id = sa.Column(sa.ForeignKey('products.id'))
-    customer_id = sa.Column(sa.ForeignKey('customers.id'))
+    product_id: int = sa.Column(sa.ForeignKey('products.id'))
+    customer_id: int = sa.Column(sa.ForeignKey('customers.id'))
     created_at = sa.Column(sa.DateTime(True))
 
 
@@ -189,33 +189,33 @@ class Order(Base):
     __tablename__ = 'orders'
     id = sa.Column(sa.BigInteger, primary_key=True)
     number = sa.Column(sa.Text)
-    customer_id = sa.Column(sa.ForeignKey('customers.id'))
+    customer_id: int = sa.Column(sa.ForeignKey('customers.id'))
     status = sa.Column(sa.Text)
     address = sa.Column(sa.Text)
     city = sa.Column(sa.Text)
     zip = sa.Column(sa.Text)
     notes = sa.Column(sa.Text)
-    currency = sa.Column(sa.ForeignKey('currencies.code'))
-    country = sa.Column(sa.ForeignKey('countries.code'))
+    currency: str = sa.Column(sa.ForeignKey('currencies.code'))
+    country: str = sa.Column(sa.ForeignKey('countries.code'))
     created_at = sa.Column(sa.DateTime(True))
     updated_at = sa.Column(sa.DateTime(True))
 
-    total_price = query_expression()
-    customer = relationship('Customer', cascade='all')
-    items = relationship('OrderItem', cascade='all')
-    currency_obj = relationship('Currency')
+    total_price: ColumnProperty = query_expression()
+    customer: Customer = relationship('Customer', cascade='all')
+    items: OrderItem = relationship('OrderItem', cascade='all')
+    currency_obj: Currency = relationship('Currency')
 
     def __str__(self) -> str:
-        return self.number
+        return self.number or 'n/a'
 
 
 class OrderItem(Base):
     __tablename__ = 'order_items'
     id = sa.Column(sa.BigInteger, primary_key=True)
-    order_id = sa.Column(sa.ForeignKey('orders.id'))
-    product_id = sa.Column(sa.ForeignKey('products.id'))
+    order_id: int = sa.Column(sa.ForeignKey('orders.id'))
+    product_id: int = sa.Column(sa.ForeignKey('products.id'))
     quantity = sa.Column(sa.Integer)
     unit_price = sa.Column(sa.Numeric)
 
-    order = relationship(Order, back_populates='items')
-    product = relationship(Product, backref=backref('items', cascade='all, delete-orphan'))
+    order: Order = relationship(Order, back_populates='items')
+    product: Product = relationship(Product, backref=backref('items', cascade='all, delete-orphan'))

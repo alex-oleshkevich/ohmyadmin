@@ -137,7 +137,7 @@ def seed_customers(session: AsyncSession) -> None:
                 created_at=fake.date_between(),
                 updated_at=fake.date_between(),
             )
-            for index in range(1, OBJECTS_COUNT + 1)
+            for _ in range(1, OBJECTS_COUNT + 1)
         ]
     )
 
@@ -152,7 +152,7 @@ def seed_addresses(session: AsyncSession) -> None:
                 country=COUNTRIES[random.randint(0, len(COUNTRIES) - 1)]['code'],
                 customer_id=random.randint(1, OBJECTS_COUNT),
             )
-            for index in range(1, OBJECTS_COUNT + 1)
+            for _ in range(1, OBJECTS_COUNT + 1)
         ]
     )
 
@@ -168,7 +168,7 @@ def seed_payment(session: AsyncSession) -> None:
                 method=PAYMENT_METHOD[random.randint(0, len(PAYMENT_METHOD) - 1)],
                 customer_id=random.randint(1, 500),
             )
-            for index in range(1, OBJECTS_COUNT + 1)
+            for _ in range(1, OBJECTS_COUNT + 1)
         ]
     )
 
@@ -185,7 +185,7 @@ def seed_brands(session: AsyncSession) -> None:
                 created_at=fake.date_between(),
                 updated_at=fake.date_between(),
             )
-            for index in range(1, 21)
+            for _ in range(1, 21)
         ]
     )
 
@@ -229,7 +229,7 @@ def seed_products(session: AsyncSession) -> None:
                 created_at=fake.date_between(),
                 updated_at=fake.date_between(),
             )
-            for index in range(1, OBJECTS_COUNT + 1)
+            for _ in range(1, OBJECTS_COUNT + 1)
         ]
     )
 
@@ -238,10 +238,10 @@ def seed_product_categories(session: AsyncSession) -> None:
     session.add_all(
         [
             ProductCategory(
-                product_id=random.randint(1, OBJECTS_COUNT),
-                category_id=random.randint(1, 20),
+                product_id=random.randint(1, OBJECTS_COUNT),  # type: ignore[call-arg]
+                category_id=random.randint(1, 20),  # type: ignore[call-arg]
             )
-            for index in range(1, (OBJECTS_COUNT + 1 * 20))
+            for _ in range(1, (OBJECTS_COUNT + 1 * 20))
         ]
     )
 
@@ -253,7 +253,7 @@ def seed_product_images(session: AsyncSession) -> None:
                 image_path=fake.image_url(1280, 720),
                 product_id=random.randint(1, OBJECTS_COUNT),
             )
-            for index in range(1, OBJECTS_COUNT * 3)
+            for _ in range(1, OBJECTS_COUNT * 3)
         ]
     )
 
@@ -269,7 +269,7 @@ def seed_product_comments(session: AsyncSession) -> None:
                 customer_id=random.randint(1, OBJECTS_COUNT),
                 created_at=fake.date_between(),
             )
-            for index in range(1, OBJECTS_COUNT * 5)
+            for _ in range(1, OBJECTS_COUNT * 5)
         ]
     )
 
@@ -290,7 +290,7 @@ def seed_orders(session: AsyncSession) -> None:
                 created_at=fake.date_between(),
                 updated_at=fake.date_between(),
             )
-            for index in range(1, OBJECTS_COUNT)
+            for _ in range(1, OBJECTS_COUNT)
         ]
     )
 
@@ -304,12 +304,12 @@ def seed_order_items(session: AsyncSession) -> None:
                 quantity=random.randint(1, 100),
                 unit_price=decimal.Decimal(f'{random.randint(1, 500)}.{random.randint(1, 99):02}'),
             )
-            for index in range(1, OBJECTS_COUNT * 5)
+            for _ in range(1, OBJECTS_COUNT * 5)
         ]
     )
 
 
-async def main():
+async def main() -> None:
     engine = create_async_engine('postgresql+asyncpg://postgres:postgres@localhost/ohmyadmin', future=True)
     async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 

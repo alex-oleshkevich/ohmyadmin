@@ -152,7 +152,7 @@ class OrderResource(Resource):
                                         'Created at',
                                         (
                                             form.instance.created_at.date().isoformat()
-                                            if form.instance.created_at
+                                            if form.instance and form.instance.created_at
                                             else '-'
                                         ),
                                     ),
@@ -160,7 +160,7 @@ class OrderResource(Resource):
                                         'Updated at',
                                         (
                                             form.instance.updated_at.date().isoformat()
-                                            if form.instance.updated_at
+                                            if form.instance and form.instance.updated_at
                                             else '-'
                                         ),
                                     ),

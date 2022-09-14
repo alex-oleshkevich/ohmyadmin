@@ -78,7 +78,7 @@ app = Starlette(
             '/admin',
             Admin(
                 file_storage=LocalDirectoryStorage(this_dir / 'uploads'),
-                template_dirs=[this_dir / 'templates'],
+                template_dir=this_dir / 'templates',
                 routes=[
                     Mount('/resources/products', ProductResource(engine)),
                     Mount('/resources/customers', CustomerResource(engine)),

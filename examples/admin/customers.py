@@ -49,11 +49,19 @@ class CustomerResource(Resource):
                             children=[
                                 FormPlaceholder(
                                     'Created at',
-                                    (form.instance.created_at.date().isoformat() if form.instance.created_at else '-'),
+                                    (
+                                        form.instance.created_at.date().isoformat()
+                                        if form.instance and form.instance.created_at
+                                        else '-'
+                                    ),
                                 ),
                                 FormPlaceholder(
                                     'Updated at',
-                                    (form.instance.updated_at.date().isoformat() if form.instance.updated_at else '-'),
+                                    (
+                                        form.instance.updated_at.date().isoformat()
+                                        if form.instance and form.instance.updated_at
+                                        else '-'
+                                    ),
                                 ),
                             ]
                         )
