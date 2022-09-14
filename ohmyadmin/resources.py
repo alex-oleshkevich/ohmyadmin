@@ -345,7 +345,7 @@ class Resource(Router, metaclass=ResourceMeta):
 
         if request.method == 'POST':
             form_data = await request.form()
-            object_ids = [self.pk_type(object_id) for object_id in form_data.getlist('selected')]
+            object_ids = [self.pk_type(typing.cast(str, object_id)) for object_id in form_data.getlist('selected')]
             return await batch_action.apply(request, object_ids, form_data)
 
         return Response(batch_action.render())

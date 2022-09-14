@@ -3,9 +3,9 @@ from __future__ import annotations
 import re
 import typing
 from starlette.requests import Request
-from starlette.responses import Response
 
 from ohmyadmin.globals import get_current_admin
+from ohmyadmin.responses import Response
 from ohmyadmin.templating import jinja_env
 
 

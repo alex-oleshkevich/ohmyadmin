@@ -7,15 +7,15 @@ import pathlib
 import time
 import typing
 from starlette.requests import Request
-from starlette.responses import Response
 from starlette.routing import BaseRoute, Mount, Route, Router
 from starlette.staticfiles import StaticFiles
 from starlette.types import Receive, Scope, Send
 
 from ohmyadmin.flash import FlashMiddleware, flash
 from ohmyadmin.nav import MenuGroup, MenuItem
+from ohmyadmin.responses import Response
 from ohmyadmin.storage import FileStorage
-from ohmyadmin.templating import jinja_env
+from ohmyadmin.templating import DynamicChoiceLoader, jinja_env
 
 this_dir = pathlib.Path(__file__).parent
 
@@ -35,14 +35,15 @@ class OhMyAdmin(Router):
     def __init__(
         self,
         routes: list[BaseRoute] | None = None,
-        template_dirs: list[str | os.PathLike] | None = None,
+        template_dir: str | os.PathLike | None = None,
         file_storage: FileStorage | None = None,
     ) -> None:
         self.file_storage = file_storage
 
         self.jinja_env = jinja_env
         self.jinja_env.globals.update({'admin': self})
-        self.jinja_env.loader.add_loader(jinja2.FileSystemLoader(template_dirs))
+        if template_dir:
+            typing.cast(DynamicChoiceLoader, self.jinja_env.loader).add_loader(jinja2.FileSystemLoader([template_dir]))
 
         super().__init__(
             routes=[

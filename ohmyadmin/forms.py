@@ -193,13 +193,13 @@ class HandlesFiles:
             if not upload_file.filename:
                 continue
 
-            destination = (
-                self.upload_to(upload_file, entity)
-                if callable(self.upload_to)
-                else str(self.upload_to / upload_file.filename)
-            )
+            if callable(self.upload_to):
+                destination = pathlib.Path(self.upload_to(upload_file, entity))
+            else:
+                destination = pathlib.Path(self.upload_to) / upload_file.filename
+
             await file_storage.write(destination, upload_file)
-            uploads.append(destination)
+            uploads.append(str(destination))
         return uploads
 
     @abc.abstractmethod

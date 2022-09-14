@@ -17,13 +17,15 @@ class Response:
         content: str | None = None,
         status_code: int = 200,
         headers: dict[str, str] | None = None,
+        media_type: str | None = None,
     ) -> None:
         self.headers = headers
         self.content = content
         self.status_code = status_code
+        self.media_type = media_type
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        response = responses.Response(self.content, self.status_code, self.headers)
+        response = responses.Response(self.content, self.status_code, self.headers, media_type=self.media_type)
         await response(scope, receive, send)
 
 
@@ -67,5 +69,6 @@ class RedirectResponse(Response):
             flashes: FlashBag = scope['state']['flash_messages']
             flashes.add(self.message, self.message_category)
 
+        assert self.url
         response = responses.RedirectResponse(self.url, self.status_code, self.headers)
         await response(scope, receive, send)
