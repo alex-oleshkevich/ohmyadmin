@@ -75,7 +75,7 @@ class OrderResource(Resource):
         .options(
             with_expression(Order.total_price, OrderItem.unit_price * OrderItem.quantity),
             joinedload(Order.customer),
-            joinedload(Order.currency_obj),
+            joinedload(Order.currency),
             selectinload(Order.items),
         )
     )
@@ -98,7 +98,7 @@ class OrderResource(Resource):
                 Order.Status.CANCELLED: 'red',
             },
         ),
-        Column('currency_obj'),
+        Column('currency'),
         NumberColumn('total_price'),
         DateColumn('created_at', label='Order date'),
     ]

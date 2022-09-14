@@ -2,7 +2,6 @@
 import asyncio
 import decimal
 import random
-import sqlalchemy as sa
 from faker import Faker
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -22,6 +21,7 @@ from examples.models import (
     Product,
     ProductCategory,
     User,
+    metadata,
 )
 
 fake = Faker()
@@ -163,7 +163,7 @@ def seed_payment(session: AsyncSession) -> None:
             Payment(
                 reference=refcode(),
                 amount=random.randint(0, 20),
-                currency=CURRENCIES[random.randint(0, len(CURRENCIES) - 1)]['code'],
+                currency_code=CURRENCIES[random.randint(0, len(CURRENCIES) - 1)]['code'],
                 provider=PAYMENT_PROVIDER[random.randint(0, len(PAYMENT_PROVIDER) - 1)],
                 method=PAYMENT_METHOD[random.randint(0, len(PAYMENT_METHOD) - 1)],
                 customer_id=random.randint(1, 500),
@@ -285,8 +285,8 @@ def seed_orders(session: AsyncSession) -> None:
                 city=fake.city(),
                 zip=fake.postalcode(),
                 notes=fake.text(),
-                currency=random_currency(),
-                country=random_country(),
+                currency_code=random_currency(),
+                country_code=random_country(),
                 created_at=fake.date_between(),
                 updated_at=fake.date_between(),
             )
@@ -314,8 +314,8 @@ async def main() -> None:
     async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
     async with engine.begin() as conn:
-        for table in TABLES:
-            await conn.execute(sa.text(f'truncate {table} restart identity cascade'))
+        await conn.run_sync(metadata.drop_all)
+        await conn.run_sync(metadata.create_all)
 
     seeders = [
         seed_users,
@@ -340,6 +340,8 @@ async def main() -> None:
             await session.flush()
 
         await session.commit()
+
+    await engine.dispose()
 
 
 asyncio.run(main())
