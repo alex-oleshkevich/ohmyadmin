@@ -55,6 +55,7 @@ repos:
             files: "ohmyadmin"
             additional_dependencies:
                 - types-python-slugify
+                - sqlalchemy[mypy,asyncio]
 
     -   repo: https://github.com/myint/docformatter.git
         rev: v1.4

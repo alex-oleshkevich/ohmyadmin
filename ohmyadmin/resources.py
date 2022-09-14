@@ -51,13 +51,13 @@ class ResourceMeta(type):
 
 
 class Resource(Router, metaclass=ResourceMeta):
-    id: str = ''
-    label: str = ''
-    label_plural: str = ''
-    icon: str = ''
+    id: typing.ClassVar[str] = ''
+    label: typing.ClassVar[str] = ''
+    label_plural: typing.ClassVar[str] = ''
+    icon: typing.ClassVar[str] = ''
 
     # orm configuration
-    entity_class: typing.Any | None = None
+    entity_class: typing.ClassVar[typing.Any] = None
     queryset: sa.sql.Select | None = None
 
     # table settings
