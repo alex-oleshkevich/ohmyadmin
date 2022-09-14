@@ -51,9 +51,36 @@ class AveragePrice(CountMetric):
         return result.one()
 
 
+class EditForm(Form):
+    name = TextField(required=True)
+    slug = TextField(required=True)
+    description = TextareaField()
+    price = DecimalField(required=True)
+    compare_at_price = DecimalField(required=True)
+    cost_per_item = DecimalField(required=True, description="Customers won't see this price.")
+    images = MultipleFileField(upload_to=lambda file, entity: pathlib.Path('products') / str(entity.id) / file.filename)
+    sku = IntegerField(required=True)
+    quantity = IntegerField(required=True)
+    security_stock = IntegerField(
+        required=True,
+        description=(
+            'The safety stock is the limit stock for your products which alerts you '
+            'if the product stock will soon be out of stock.'
+        ),
+    )
+    barcode = TextField(label='Barcode (ISBN, UPC, GTIN, etc.)', required=True)
+    can_be_returned = CheckboxField(label='This product can be returned')
+    can_be_shipped = CheckboxField(label='This product can be shipped')
+    visible = CheckboxField(description='This product will be hidden from all sales channels.')
+    availability = DateField(required=True)
+    brand_id = SelectField(coerce=int, choices=choices_from(Brand))
+    # categories = SelectMultipleField(required=True)
+
+
 class ProductResource(Resource):
     icon = 'assembly'
     entity_class = Product
+    form_class = EditForm
     queryset = sa.select(entity_class).options(
         joinedload(entity_class.brand),
         selectinload(entity_class.images),
@@ -74,34 +101,6 @@ class ProductResource(Resource):
         TotalProducts(),
         ProductInventory(),
         AveragePrice(),
-    ]
-    form_fields = [
-        TextField('name', required=True),
-        TextField('slug', required=True),
-        TextareaField('description'),
-        DecimalField('price', required=True),
-        DecimalField('compare_at_price', required=True),
-        DecimalField('cost_per_item', required=True, description="Customers won't see this price."),
-        MultipleFileField(
-            'images', upload_to=lambda file, entity: pathlib.Path('products') / str(entity.id) / file.filename
-        ),
-        IntegerField('sku', required=True),
-        IntegerField('quantity', required=True),
-        IntegerField(
-            'security_stock',
-            required=True,
-            description=(
-                'The safety stock is the limit stock for your products which alerts you '
-                'if the product stock will soon be out of stock.'
-            ),
-        ),
-        TextField('barcode', label='Barcode (ISBN, UPC, GTIN, etc.)', required=True),
-        CheckboxField('can_be_returned', label='This product can be returned'),
-        CheckboxField('can_be_shipped', label='This product can be shipped'),
-        CheckboxField('visible', description='This product will be hidden from all sales channels.'),
-        DateField('availability', required=True),
-        SelectField('brand_id', coerce=int, choices=choices_from(Brand)),
-        # SelectMultipleField('categories', required=True),
     ]
 
     def get_form_layout(self, request: Request, form: Form) -> Layout:

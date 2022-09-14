@@ -46,9 +46,29 @@ class AveragePrice(CountMetric):
         return result.one()
 
 
+class EditOrderItem(Form):
+    product_id = SelectField(required=True, choices=choices_from(Product), coerce=int)
+    quantity = IntegerField(required=True)
+    unit_price = DecimalField(required=True)
+
+
+class EditForm(Form):
+    number = TextField(required=True)
+    customer_id = SelectField(required=True, coerce=int, choices=choices_from(Customer))
+    status = TextField(required=True)
+    currency = SelectField(required=True, choices=choices_from(Currency, value_column='code'))
+    country = SelectField(choices=choices_from(Country, value_column='code'))
+    address = TextField()
+    city = TextField()
+    zip = TextField()
+    notes = MarkdownField()
+    items = ListField(FormField(default=OrderItem, form_class=EditOrderItem), default=[])
+
+
 class OrderResource(Resource):
     icon = 'shopping-cart'
     entity_class = Order
+    form_class = EditForm
     queryset = (
         sa.select(Order)
         .join(Order.items)
@@ -81,33 +101,6 @@ class OrderResource(Resource):
         Column('currency_obj'),
         NumberColumn('total_price'),
         DateColumn('created_at', label='Order date'),
-    ]
-    form_fields = [
-        TextField('number', required=True),
-        SelectField('customer_id', required=True, coerce=int, choices=choices_from(Customer)),
-        TextField('status', required=True),
-        SelectField('currency', required=True, choices=choices_from(Currency, value_column='code')),
-        SelectField('country', choices=choices_from(Country, value_column='code')),
-        TextField('address'),
-        TextField('city'),
-        TextField('zip'),
-        TextField('notes'),
-        MarkdownField('notes'),
-        ListField(
-            'items',
-            FormField(
-                '_',
-                default=OrderItem,
-                form_class=Form.from_fields(
-                    [
-                        SelectField('product_id', required=True, choices=choices_from(Product), coerce=int),
-                        IntegerField('quantity', required=True),
-                        DecimalField('unit_price', required=True),
-                    ]
-                ),
-            ),
-            default=[],
-        ),
     ]
 
     def get_form_layout(self, request: Request, form: Form[Order]) -> Layout:

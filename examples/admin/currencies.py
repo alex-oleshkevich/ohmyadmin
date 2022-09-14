@@ -16,15 +16,17 @@ async def code_is_unique(form: Form, field: Field) -> None:
         raise wtforms.ValidationError('Country with this core already exists.')
 
 
+class EditForm(Form):
+    name = TextField(required=True)
+    code = TextField(required=True, validators=[code_is_unique])
+
+
 class CurrencyResource(Resource):
     icon = 'currency'
     label_plural = 'Currencies'
     entity_class = Currency
+    form_class = EditForm
     table_columns = [
         Column('name', searchable=True, sortable=True, link=True),
         Column('code', searchable=True),
-    ]
-    form_fields = [
-        TextField('name', required=True),
-        TextField('code', required=True, validators=[code_is_unique]),
     ]

@@ -7,26 +7,28 @@ from ohmyadmin.resources import Resource
 from ohmyadmin.tables import BoolColumn, Column, DateColumn
 
 
+class EditForm(Form):
+    name = TextField(required=True)
+    slug = SlugField(required=True)
+    website = TextField()
+    visible_to_customers = CheckboxField()
+    description = MarkdownField()
+
+
 class BrandResource(Resource):
     icon = 'basket'
     entity_class = Brand
+    form_class = EditForm
     table_columns = [
         Column('name', searchable=True, sortable=True, link=True),
         Column('website'),
         BoolColumn('visible_to_customers', label='Visibility'),
         DateColumn('updated_at'),
     ]
-    form_fields = [
-        TextField('name', required=True),
-        SlugField('slug', required=True),
-        TextField('website'),
-        CheckboxField('visible_to_customers'),
-        MarkdownField('description'),
-    ]
 
     def get_form_layout(self, request: Request, form: Form[Brand]) -> Layout:
         return Grid(
-            cols=3,
+            columns=3,
             children=[
                 Group(
                     colspan=2,

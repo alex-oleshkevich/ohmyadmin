@@ -1,9 +1,18 @@
 import sqlalchemy as sa
 
 from examples.models import User
-from ohmyadmin.forms import CheckboxField, EmailField, FileField, HiddenField, TextField
+from ohmyadmin.forms import CheckboxField, EmailField, FileField, Form, HiddenField, TextField
 from ohmyadmin.resources import Resource
 from ohmyadmin.tables import BoolColumn, Column, ImageColumn
+
+
+class EditForm(Form):
+    first_name = TextField()
+    last_name = TextField()
+    photo = FileField(upload_to='photos')
+    email = EmailField(required=True)
+    is_active = CheckboxField(default=True)
+    password = HiddenField(default='')
 
 
 class UserResource(Resource):
@@ -11,6 +20,7 @@ class UserResource(Resource):
     label = 'User'
     label_plural = 'Users'
     entity_class = User
+    form_class = EditForm
     queryset = sa.select(entity_class).order_by(User.id)
     table_columns = [
         Column('id', label='ID'),
@@ -26,12 +36,4 @@ class UserResource(Resource):
         ),
         Column('email', label='Email', searchable=True),
         BoolColumn('is_active', label='Active'),
-    ]
-    form_fields = [
-        TextField('first_name'),
-        TextField('last_name'),
-        FileField('photo', upload_to='photos'),
-        EmailField('email', required=True),
-        CheckboxField('is_active', default=True),
-        HiddenField('password', default=''),
     ]

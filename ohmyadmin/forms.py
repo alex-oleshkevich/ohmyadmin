@@ -31,7 +31,6 @@ class Field(typing.Generic[T], wtforms.Field):
 
     def __init__(
         self,
-        attr_name: str,
         *,
         label: str | None = None,
         required: bool = False,
@@ -43,7 +42,6 @@ class Field(typing.Generic[T], wtforms.Field):
         template: str | None = None,
         **kwargs: typing.Any,
     ) -> None:
-        self.attr_name = attr_name
         self.validators = list(validators or [])
         self.widget_attrs = widget_attrs or {}
         self.template = template or self.template
@@ -67,7 +65,7 @@ class Field(typing.Generic[T], wtforms.Field):
         return render_to_string(self.template, {'field': self})
 
     def __repr__(self) -> str:
-        return f'<{self.__class__.__name__}: name={self.attr_name}>'
+        return f'<{self.__class__.__name__}: name={self.name}>'
 
 
 class CheckboxField(Field[bool], wtforms.BooleanField):
@@ -80,23 +78,18 @@ class TextField(Field[str], wtforms.StringField):
 
     def __init__(
         self,
-        attr_name: str,
         *,
         placeholder: str = '',
-        autocomplete: str = '',
-        inputmode: str = '',
         **kwargs: typing.Any,
     ) -> None:
         widget_attrs = kwargs.pop('widget_attrs', {})
-        inputmode = inputmode or self.inputmode
+        inputmode = self.inputmode
         if inputmode:
             widget_attrs['inputmode'] = inputmode
-        if autocomplete:
-            widget_attrs['autocomplete'] = autocomplete
         if placeholder:
             widget_attrs['placeholder'] = placeholder
 
-        super().__init__(attr_name, widget_attrs=widget_attrs, **kwargs)
+        super().__init__(widget_attrs=widget_attrs, **kwargs)
 
 
 class SlugField(TextField, wtforms.StringField):
@@ -123,7 +116,6 @@ class IntegerField(Field[int], wtforms.IntegerField):
 
     def __init__(
         self,
-        attr_name: str,
         *,
         min_value: int | None = None,
         max_value: int | None = None,
@@ -137,7 +129,7 @@ class IntegerField(Field[int], wtforms.IntegerField):
         if step:
             attrs['step'] = step
 
-        super().__init__(attr_name, validators=validators, widget_attrs=attrs, **kwargs)
+        super().__init__(validators=validators, widget_attrs=attrs, **kwargs)
 
 
 class FloatField(Field[float], wtforms.FloatField):
@@ -147,7 +139,6 @@ class FloatField(Field[float], wtforms.FloatField):
 
     def __init__(
         self,
-        attr_name: str,
         *,
         min_value: float | None = None,
         max_value: float | None = None,
@@ -165,7 +156,7 @@ class FloatField(Field[float], wtforms.FloatField):
         if step:
             attrs['step'] = step
 
-        super().__init__(attr_name, validators=validators, widget_attrs=attrs, **kwargs)
+        super().__init__(validators=validators, widget_attrs=attrs, **kwargs)
 
 
 class DecimalField(Field[decimal.Decimal], wtforms.DecimalField):
@@ -273,21 +264,21 @@ class HiddenField(Field[typing.Any], wtforms.HiddenField):
 class DateTimeField(Field[datetime.datetime], wtforms.DateTimeLocalField):
     template = 'ohmyadmin/forms/datetime.html'
 
-    def __init__(self, attr_name: str, *, format: list[str] | None = None, **kwargs: typing.Any) -> None:
+    def __init__(self, *, format: list[str] | None = None, **kwargs: typing.Any) -> None:
         format = format or [
             "%Y-%m-%d %H:%M",
             "%Y-%m-%dT%H:%M",
             "%Y-%m-%d %H:%M:%S",
             "%Y-%m-%dT%H:%M:%S",
         ]
-        super().__init__(attr_name, format=format, **kwargs)
+        super().__init__(format=format, **kwargs)
 
 
 class DateField(Field[datetime.date], wtforms.DateField):
     template = 'ohmyadmin/forms/date.html'
 
-    def __init__(self, attr_name: str, *, format: str = "%Y-%m-%d", **kwargs: typing.Any) -> None:
-        super().__init__(attr_name, format=format, **kwargs)
+    def __init__(self, *, format: str = "%Y-%m-%d", **kwargs: typing.Any) -> None:
+        super().__init__(format=format, **kwargs)
 
 
 class TimeField(Field[datetime.time], wtforms.TimeField):
@@ -297,8 +288,8 @@ class TimeField(Field[datetime.time], wtforms.TimeField):
 class MonthField(Field[datetime.date], wtforms.MonthField):
     template = 'ohmyadmin/forms/month.html'
 
-    def __init__(self, attr_name: str, *, format: str = "%Y-%m", **kwargs: typing.Any) -> None:
-        super().__init__(attr_name, format=format, **kwargs)
+    def __init__(self, *, format: str = "%Y-%m", **kwargs: typing.Any) -> None:
+        super().__init__(format=format, **kwargs)
 
 
 class TextareaField(Field[str], wtforms.TextAreaField):
@@ -306,7 +297,6 @@ class TextareaField(Field[str], wtforms.TextAreaField):
 
     def __init__(
         self,
-        attr_name: str,
         *,
         placeholder: str = '',
         min_length: int | None = None,
@@ -321,7 +311,7 @@ class TextareaField(Field[str], wtforms.TextAreaField):
         if min_length or max_length:
             validators.append(wtforms.validators.length(min=min_length, max=max_length))
 
-        super().__init__(attr_name, validators=validators, widget_attrs=widget_attrs, **kwargs)
+        super().__init__(validators=validators, widget_attrs=widget_attrs, **kwargs)
 
 
 _SCPS = typing.ParamSpec('_SCPS')
@@ -346,7 +336,6 @@ class SelectField(Field[typing.Any], HasChoices, wtforms.SelectField):
 
     def __init__(
         self,
-        attr_name: str,
         *,
         coerce: typing.Callable = str,
         empty_choice: str | None = '',
@@ -355,7 +344,7 @@ class SelectField(Field[typing.Any], HasChoices, wtforms.SelectField):
         coerce = safe_coerce(coerce)
         self.empty_choice = empty_choice
 
-        super().__init__(attr_name, coerce=coerce, **kwargs)
+        super().__init__(coerce=coerce, **kwargs)
 
     async def get_choices(self, request: Request, form: Form) -> Choices:
         choices = list(await super().get_choices(request, form))
@@ -369,14 +358,13 @@ class SelectMultipleField(Field[list[typing.Any]], HasChoices, wtforms.SelectMul
 
     def __init__(
         self,
-        attr_name: str,
         *,
         coerce: typing.Callable = str,
         **kwargs: typing.Any,
     ) -> None:
         coerce = safe_coerce(coerce)
 
-        super().__init__(attr_name, coerce=coerce, **kwargs)
+        super().__init__(coerce=coerce, **kwargs)
 
 
 class RadioField(Field[typing.Any], wtforms.RadioField):
@@ -384,17 +372,8 @@ class RadioField(Field[typing.Any], wtforms.RadioField):
 
 
 class FormField(Field[typing.Any], wtforms.FormField):
-    def __init__(
-        self,
-        attr_name: str,
-        form_class: typing.Type[Form],
-        **kwargs: typing.Any,
-    ) -> None:
-        super().__init__(
-            attr_name,
-            form_class=form_class,
-            **kwargs,
-        )
+    def __init__(self, form_class: typing.Type[Form], **kwargs: typing.Any) -> None:
+        super().__init__(form_class=form_class, **kwargs)
 
 
 class ListField(Field[typing.Any], wtforms.FieldList):
@@ -402,20 +381,13 @@ class ListField(Field[typing.Any], wtforms.FieldList):
 
     def __init__(
         self,
-        attr_name: str,
         unbound_field: UnboundField,
         min_entries: int = 1,
         max_entries: int | None = None,
         **kwargs: typing.Any,
     ) -> None:
         kwargs.setdefault('default', [])
-        super().__init__(
-            attr_name,
-            unbound_field=unbound_field,
-            min_entries=min_entries,
-            max_entries=max_entries,
-            **kwargs,
-        )
+        super().__init__(unbound_field=unbound_field, min_entries=min_entries, max_entries=max_entries, **kwargs)
 
 
 class MarkdownField(Field, wtforms.TextAreaField):

@@ -7,24 +7,26 @@ from ohmyadmin.resources import Resource
 from ohmyadmin.tables import Column
 
 
+class EditForm(Form):
+    name = TextField(required=True)
+    email = EmailField(required=True)
+    phone = TextField()
+    birthday = DateField()
+
+
 class CustomerResource(Resource):
     icon = 'friends'
     entity_class = Customer
+    form_class = EditForm
     table_columns = [
         Column('name', sortable=True, link=True, searchable=True),
         Column('email', sortable=True, searchable=True),
         Column('phone', searchable=True),
     ]
-    form_fields = [
-        TextField('name', required=True),
-        EmailField('email', required=True),
-        TextField('phone'),
-        DateField('birthday'),
-    ]
 
     def get_form_layout(self, request: Request, form: Form[Customer]) -> Layout:
         return Grid(
-            cols=3,
+            columns=3,
             children=[
                 Group(
                     colspan=2,

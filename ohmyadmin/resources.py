@@ -7,11 +7,10 @@ from starlette.exceptions import HTTPException
 from starlette.requests import Request
 from starlette.routing import BaseRoute, Route, Router
 from starlette.types import Receive, Scope, Send
-from wtforms.fields.core import UnboundField
 
 from ohmyadmin.actions import Action, LinkAction, SubmitAction
 from ohmyadmin.flash import flash
-from ohmyadmin.forms import Field, Form, HandlesFiles
+from ohmyadmin.forms import Form, HandlesFiles
 from ohmyadmin.globals import globalize_dbsession
 from ohmyadmin.helpers import render_to_response
 from ohmyadmin.i18n import _
@@ -80,7 +79,6 @@ class Resource(Router, metaclass=ResourceMeta):
 
     # form settings
     form_class: typing.Type[Form] | None = None
-    form_fields: typing.Iterable[Field] | None = None
     form_actions: typing.Iterable[Action] | None = None
     create_page_label: str = _('Create {resource}')
     edit_page_label: str = _('Edit {resource}')
@@ -211,14 +209,9 @@ class Resource(Router, metaclass=ResourceMeta):
         yield from self.form_actions or []
         yield from self.get_default_form_actions(request)
 
-    def get_form_fields(self, request: Request) -> typing.Iterable[UnboundField]:
-        assert (
-            self.form_fields
-        ), f'At least form_fields attribute must be defined on {self.__class__.__name__} resource.'
-        return self.form_fields
-
-    def get_form_class(self, request: Request) -> typing.Type[Form]:
-        return Form.from_fields(self.get_form_fields(request), name=f'{self.__class__.__name__}EditForm')
+    def get_form_class(self) -> typing.Type[Form]:
+        assert self.form_class, f'{self.__class__.__name__} must define form_class attribute.'
+        return self.form_class
 
     def get_form_layout(self, request: Request, form: Form) -> Layout:
         return Grid(columns=2, children=[FormElement(field) for field in form])
@@ -294,7 +287,7 @@ class Resource(Router, metaclass=ResourceMeta):
                 instance = self.get_empty_object()
                 session.add(instance)
 
-            form_class = self.get_form_class(request)
+            form_class = self.get_form_class()
             form = await form_class.from_request(request, instance=instance)
             layout = self.get_form_layout(request, form)
 
