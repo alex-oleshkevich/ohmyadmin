@@ -31,7 +31,7 @@ class UserResource(Resource):
             sortable=True,
             searchable=True,
             search_in=[User.first_name, User.last_name],
-            sort_by='last_name',
+            sort_by=User.last_name,
             link=True,
         ),
         Column('email', label='Email', searchable=True),

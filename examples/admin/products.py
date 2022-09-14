@@ -81,10 +81,14 @@ class ProductResource(Resource):
     icon = 'assembly'
     entity_class = Product
     form_class = EditForm
-    queryset = sa.select(entity_class).options(
-        joinedload(entity_class.brand),
-        selectinload(entity_class.images),
-        selectinload(entity_class.categories),
+    queryset = (
+        sa.select(entity_class)
+        .join(Brand)
+        .options(
+            joinedload(entity_class.brand),
+            selectinload(entity_class.images),
+            selectinload(entity_class.categories),
+        )
     )
     table_columns = [
         HasManyColumn('images', child=ImageColumn('image_path')),
@@ -94,7 +98,7 @@ class ProductResource(Resource):
             searchable=True,
             search_in=[Brand.name],
             sortable=True,
-            sort_by='brand.name',
+            sort_by=Brand.name,
             link_factory=lambda r, o: r.url_for('resource_brand_edit', pk=o.brand.id),
         ),
         NumberColumn('price', sortable=True),

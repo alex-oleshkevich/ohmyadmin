@@ -40,8 +40,8 @@ class Column:
         searchable: bool = False,
         source: str = '',
         value_format: str | Formatter | None = None,
-        sort_by: str = '',
-        search_in: list[str] | None = None,
+        sort_by: InstrumentedAttribute | None = None,
+        search_in: list[InstrumentedAttribute] | None = None,
         link: bool = False,
         link_factory: typing.Callable[[Request, typing.Any], str] | None = None,
     ) -> None:
@@ -51,8 +51,8 @@ class Column:
         self.searchable = searchable
         self.source = source or name
         self.value_format = value_format
-        self.sort_by = sort_by or self.source
-        self.search_in = search_in or [self.source]
+        self.sort_by = sort_by
+        self.search_in = search_in or []
         self.link = link
         self.link_factory = link_factory
 
@@ -86,6 +86,11 @@ class Column:
 
     def get_display_value(self, obj: typing.Any) -> str:
         return self.format_value(self.get_value(obj))
+
+    def get_sorting_key(self) -> str:
+        if self.sort_by:
+            return str(self.sort_by.prop.expression)
+        return self.name
 
     def render_head_cell(self, request: Request, sorting_helper: SortingHelper) -> str:
         return render_to_string(
@@ -280,27 +285,36 @@ class BaseFilter(abc.ABC):
 
 
 class OrderingFilter(BaseFilter):
-    def __init__(self, columns: list[str], query_param: str) -> None:
-        self.columns = columns
+    def __init__(self, entity_class: typing.Any, columns: typing.Iterable[Column], query_param: str) -> None:
+        self.entity_class = entity_class
         self.query_param = query_param
+        self.columns = {
+            column.get_sorting_key(): column.sort_by if column.sort_by else getattr(entity_class, column.name)
+            for column in columns
+        }
 
     def apply(self, request: Request, queryset: sa.sql.Select) -> sa.sql.Select:
         ordering = get_ordering_value(request, self.query_param)
         if ordering:
             queryset = queryset.order_by(None)
+
         for order in ordering:
             field_name = order.lstrip('-')
             if field_name not in self.columns:
                 continue
 
-            queryset = queryset.order_by(sa.desc(field_name) if order.startswith('-') else field_name)
+            column = self.columns[field_name]
+            queryset = queryset.order_by(sa.desc(column) if order.startswith('-') else column)
         return queryset
 
 
 class SearchFilter(BaseFilter):
-    def __init__(self, columns: typing.Iterable[InstrumentedAttribute], query_param: str) -> None:
-        self.columns = columns
+    def __init__(self, entity_class: typing.Any, columns: typing.Iterable[Column], query_param: str) -> None:
+        self.entity_class = entity_class
         self.query_param = query_param
+        self.db_columns: list[InstrumentedAttribute] = []
+        for column in columns:
+            self.db_columns.extend(column.search_in or [getattr(entity_class, column.name)])
 
     def create_search_token(self, column: InstrumentedAttribute, search_query: str) -> sa.sql.ColumnElement:
         if search_query.startswith('^'):
@@ -319,14 +333,13 @@ class SearchFilter(BaseFilter):
         return column.ilike(search_token)
 
     def apply(self, request: Request, queryset: sa.sql.Select) -> sa.sql.Select:
-        clauses = []
-        entity_class = request.state.resource.__class__.entity_class
         search_query = get_search_value(request, self.query_param)
         if not search_query:
             return queryset
 
-        for column in self.columns:
-            if column.class_ != entity_class:
+        clauses = []
+        for column in self.db_columns:
+            if column.class_ != self.entity_class:
                 queryset = queryset.join(column.class_)
 
             clause = self.create_search_token(column, search_query)
