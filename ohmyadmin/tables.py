@@ -7,7 +7,6 @@ import typing
 from starlette.datastructures import URL, FormData, MultiDict
 from starlette.requests import Request
 from urllib.parse import parse_qsl, urlencode
-from wtforms.fields.core import UnboundField
 
 from ohmyadmin.actions import ActionColor
 from ohmyadmin.forms import Form
@@ -163,7 +162,7 @@ class BatchAction(abc.ABC, metaclass=BatchActionMeta):
     confirmation: str = ''
     dangerous: bool = False
     template: str = 'ohmyadmin/tables/batch_action.html'
-    fields: typing.Iterable[UnboundField] | None = None
+    form_class: typing.Type[Form] | None = None
 
     @abc.abstractmethod
     async def apply(self, request: Request, ids: list[PkType], params: FormData) -> Response:
@@ -171,9 +170,8 @@ class BatchAction(abc.ABC, metaclass=BatchActionMeta):
 
     def render(self) -> str:
         layout: Layout | None = None
-        if self.fields is not None:
-            form_class = Form.from_fields(self.fields)
-            form = form_class()
+        if self.form_class is not None:
+            form = self.form_class()
             layout = Grid([FormElement(field) for field in form], columns=1)
         return render_to_string(self.template, {'action': self, 'form': layout})
 

@@ -452,14 +452,6 @@ class Form(typing.Generic[_E], wtforms.Form):
                         await subfield.form.prefill_choices(request)
 
     @classmethod
-    def from_fields(cls, fields: typing.Iterable[UnboundField], name: str = 'AutoForm') -> typing.Type[Form]:
-        cls._creation_counter += 1
-        form_class = type(f'{name}{cls._creation_counter}', (cls,), {})
-        for field in fields:
-            setattr(form_class, field.args[0], field)
-        return typing.cast(typing.Type[Form], form_class)
-
-    @classmethod
     async def from_request(
         cls,
         request: Request,
@@ -470,17 +462,6 @@ class Form(typing.Generic[_E], wtforms.Form):
         form = cls(formdata=form_data, obj=instance, data=data)
         await form.prefill_choices(request)
         return form
-
-    @classmethod
-    async def new(
-        cls,
-        request: Request,
-        fields: typing.Iterable[UnboundField],
-        instance: typing.Any | None = None,
-        data: dict[str, typing.Any] | None = None,
-    ) -> Form:
-        form_class = cls.from_fields(fields)
-        return await form_class.from_request(request, instance=instance, data=data)
 
     def populate_obj(self, obj: typing.Any, exclude: list[str] | None = None) -> None:
         exclude = exclude or []
