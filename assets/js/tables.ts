@@ -32,7 +32,7 @@ document.addEventListener('alpine:init', () => {
         onSubmit(event: SubmitEvent) {
             const form: HTMLFormElement = event.target as HTMLFormElement;
             const currentUrl = new URL(form.action);
-            currentUrl.searchParams.append(paramName, this.searchQuery);
+            currentUrl.searchParams.set(paramName, this.searchQuery);
             location.href = currentUrl.toString();
         }
     }));

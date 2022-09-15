@@ -31,7 +31,7 @@ from ohmyadmin.tables import (
     get_search_value,
 )
 
-ResourceAction = typing.Literal['list', 'create', 'edit', 'delete', 'batch_action']
+ResourceAction = typing.Literal['list', 'create', 'edit', 'delete', 'bulk']
 PkType = int | str
 
 
@@ -90,7 +90,7 @@ class Resource(Router, metaclass=ResourceMeta):
 
     def __init__(self, sa_engine: AsyncEngine) -> None:
         self.dbsession = sessionmaker(sa_engine, expire_on_commit=False, class_=AsyncSession)
-        super().__init__(routes=self.get_routes())
+        super().__init__(routes=list(self.get_routes()))
 
     @property
     def searchable(self) -> bool:
@@ -245,6 +245,10 @@ class Resource(Router, metaclass=ResourceMeta):
                 visual_filters.append(filter_)
 
         objects = await self.paginate_queryset(request, request.state.dbsession, queryset)
+        search_query = get_search_value(request, self.search_param)
+
+        # show empty table if no results and search or filters used, otherwise render empty state
+        has_results = objects or search_query or indicators
 
         return render_to_response(
             request,
@@ -254,12 +258,12 @@ class Resource(Router, metaclass=ResourceMeta):
                 'objects': objects,
                 'filters': visual_filters,
                 'indicators': indicators,
-                'page_has_results': True,
+                'page_has_results': has_results,
                 'page_title': self.label_plural,
                 'columns': self.get_table_columns(),
                 'search_placeholder': self.search_placeholder,
                 'sorting_helper': SortingHelper(self.ordering_param),
-                'search_query': get_search_value(request, self.search_param),
+                'search_query': search_query,
                 'empty_state': self.get_empty_state(request),
                 'batch_actions': list(self.get_batch_actions()),
                 'row_actions': list(self.get_row_actions(request)),
@@ -347,26 +351,30 @@ class Resource(Router, metaclass=ResourceMeta):
     def get_route_name(cls, action: ResourceAction) -> str:
         return f'resource_{cls.id}_{action}'
 
-    def get_routes(self) -> typing.Sequence[BaseRoute]:
+    def get_routes(self) -> typing.Iterable[BaseRoute]:
         mapping = {int: 'int', str: 'str'}
         param_type = mapping[self.pk_type]
 
-        return [
-            Route('/', self.list_objects_view, methods=['GET', 'POST'], name=self.get_route_name('list')),
-            Route('/new', self.edit_object_view, methods=['GET', 'POST'], name=self.get_route_name('create')),
-            Route(
-                '/{pk:%s}/edit' % param_type,
-                self.edit_object_view,
-                methods=['GET', 'POST'],
-                name=self.get_route_name('edit'),
-            ),
-            Route(
-                '/{pk:%s}/delete' % param_type,
-                self.delete_object_view,
-                methods=['GET', 'POST'],
-                name=self.get_route_name('delete'),
-            ),
-        ]
+        yield Route('/', self.list_objects_view, methods=['GET', 'POST'], name=self.get_route_name('list'))
+        yield Route('/new', self.edit_object_view, methods=['GET', 'POST'], name=self.get_route_name('create'))
+        yield Route(
+            '/{pk:%s}/edit' % param_type,
+            self.edit_object_view,
+            methods=['GET', 'POST'],
+            name=self.get_route_name('edit'),
+        )
+        yield Route(
+            '/{pk:%s}/delete' % param_type,
+            self.delete_object_view,
+            methods=['GET', 'POST'],
+            name=self.get_route_name('delete'),
+        )
+        yield Route(
+            '/bulk/{action_id}',
+            self.batch_action_view,
+            methods=['GET', 'POST'],
+            name=self.get_route_name('bulk'),
+        )
 
     async def _detect_post_save_action(self, request: Request, instance: typing.Any) -> Response:
         form_data = await request.form()
