@@ -1,15 +1,10 @@
-import { toast } from './notifications';
+import { toast, ToastType } from './notifications';
 
 type ToastOptions = {
     message: string,
-    category: 'error' | 'success',
+    category: ToastType,
 }
 
 document.body.addEventListener('toast', (e: CustomEvent<ToastOptions>) => {
-    if (e.detail.category == 'success') {
-        console.log(e.detail);
-        toast.success(e.detail.message);
-    } else {
-        toast.error(e.detail.message);
-    }
+    toast.open({ type: e.detail.category, message: e.detail.message });
 });
