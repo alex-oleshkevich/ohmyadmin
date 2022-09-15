@@ -26,4 +26,14 @@ document.addEventListener('alpine:init', () => {
             this.openBatchModal = true;
         }
     }));
+
+    Alpine.data('searchForm', (paramName: string, searchQuery: string) => ({
+        searchQuery: searchQuery,
+        onSubmit(event: SubmitEvent) {
+            const form: HTMLFormElement = event.target as HTMLFormElement;
+            const currentUrl = new URL(form.action);
+            currentUrl.searchParams.append(paramName, this.searchQuery);
+            location.href = currentUrl.toString();
+        }
+    }));
 });

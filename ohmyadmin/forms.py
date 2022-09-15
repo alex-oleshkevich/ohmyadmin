@@ -9,7 +9,7 @@ import pathlib
 import sqlalchemy as sa
 import typing
 import wtforms
-from starlette.datastructures import FormData, UploadFile
+from starlette.datastructures import ImmutableMultiDict, UploadFile
 from starlette.requests import Request
 from wtforms.fields.core import UnboundField
 from wtforms.form import FormMeta
@@ -398,16 +398,15 @@ _E = typing.TypeVar('_E')
 
 
 class Form(typing.Generic[_E], wtforms.Form):
-    _creation_counter = 0
     instance: _E | None
     __getattr__: typing.Callable[[Form, str], wtforms.Field]
 
     def __init__(
         self,
-        formdata: FormData = None,
+        formdata: ImmutableMultiDict[str, UploadFile | str] | None = None,
         obj: _E | None = None,
         prefix: str = "",
-        data: dict[str, typing.Any] | None = None,
+        data: ImmutableMultiDict[str, UploadFile | str] | None = None,
         meta: FormMeta | None = None,
         **kwargs: typing.Any,
     ):
@@ -456,9 +455,11 @@ class Form(typing.Generic[_E], wtforms.Form):
         cls,
         request: Request,
         instance: typing.Any | None = None,
-        data: dict[str, typing.Any] | None = None,
+        form_data: ImmutableMultiDict[str, UploadFile | str] | None = None,
+        data: ImmutableMultiDict[str, UploadFile | str] | None = None,
     ) -> Form:
-        form_data = await request.form() if request.method in ['POST', 'PUT', 'PATCH', 'DELETE'] else None
+        if form_data is None:
+            form_data = await request.form() if request.method in ['POST', 'PUT', 'PATCH', 'DELETE'] else None
         form = cls(formdata=form_data, obj=instance, data=data)
         await form.prefill_choices(request)
         return form

@@ -12,9 +12,10 @@
 {% block content %}
     {% include 'ohmyadmin/tables/metrics.html' %}
 
-    {% if objects or search_query %}
-        <div x-data="table()">
-            <div class="flex items-center justify-between mb-6">
+    {% if page_has_results %}
+        <div x-data="table()" class="space-y-6">
+
+            <div class="flex items-center justify-between">
                 <!-- batch actions -->
                 <div>
                     <div x-show="selected.length" class="flex items-center gap-2">
@@ -34,21 +35,70 @@
 
                 <!-- search and actions -->
                 <div class="flex items-center gap-3">
+                    <!-- search form -->
                     <div>
                         {% if resource.searchable %}
-                            <form method="get">
+                            <form
+                                x-data="searchForm('{{ resource.search_param }}', '{{ search_query }}')"
+                                method="get"
+                                action="{{ request.url }}"
+                                @submit.prevent="onSubmit"
+                            >
                                 <input
-                                    type="search" name="search" value="{{ search_query }}"
-                                    class="w-96"
+                                    x-model="searchQuery" class="w-96"
+                                    type="search" name="{{ resource.search_param }}" value="{{ search_query }}"
                                     placeholder="{{ search_placeholder }}">
                             </form>
                         {% endif %}
                     </div>
+                    <!-- end search form -->
+
+                    <!-- filters form -->
+                    <div x-data="{open: false}" class="relative">
+                        <button class="btn" @click="open = !open">
+                            {{ tabler_icon('filter') }}
+                            {{ _('Filters') }}
+                        </button>
+                        <form
+                            class="shadow-lg rounded-md bg-white absolute right-0 translate-y-3 w-96 border border-gray-200"
+                            x-show="open" @click.outside="open = false"
+                        >
+                            <div class="space-y-6">
+                                {% for filter in filters %}
+                                    <section>
+                                        {% if filter.label %}
+                                            <header class="text-lg font-medium p-3 bg-gray-50">
+                                                {{ filter.label }}
+                                            </header>
+                                        {% endif %}
+                                        <main class="p-3">
+                                            {{ filter }}
+                                        </main>
+                                    </section>
+                                {% endfor %}
+                            </div>
+                            <div class="p-3 flex items-center gap-3">
+                                <button class="btn btn-primary" type="submit">{{ _('Apply') }}</button>
+                                <button class="btn" type="reset">{{ _('Clear') }}</button>
+                            </div>
+                        </form>
+                    </div>
+                    <!-- end filters form -->
                 </div>
                 <!-- end search and actions -->
+
             </div>
 
-            <div class="mb-6">
+            {% if indicators %}
+                <div class="flex items-center gap-4">
+                    <div class="font-medium">{{ _('Active filters:') }}</div>
+                    {% for indicator in indicators %}
+                        {{ indicator.render(request) }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div>
                 <table>
                     <thead>
                     <tr>
