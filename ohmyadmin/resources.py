@@ -8,6 +8,7 @@ from starlette.routing import BaseRoute, Route, Router
 from starlette.types import Receive, Scope, Send
 
 from ohmyadmin.actions import Action, LinkAction, SubmitAction
+from ohmyadmin.filters import BaseFilter, FilterIndicator, OrderingFilter, SearchFilter
 from ohmyadmin.flash import flash
 from ohmyadmin.forms import Form, HandlesFiles
 from ohmyadmin.globals import globalize_dbsession
@@ -19,14 +20,11 @@ from ohmyadmin.pagination import Page
 from ohmyadmin.responses import RedirectResponse, Response
 from ohmyadmin.storage import FileStorage
 from ohmyadmin.tables import (
-    BaseFilter,
     BatchAction,
     Column,
     DeleteAllAction,
     LinkRowAction,
-    OrderingFilter,
     RowAction,
-    SearchFilter,
     SortingHelper,
     get_page_size_value,
     get_page_value,
@@ -60,7 +58,7 @@ class Resource(Router, metaclass=ResourceMeta):
     queryset: sa.sql.Select | None = None
 
     # table settings
-    filters: typing.Iterable[BaseFilter] | None = None
+    filters: typing.Iterable[typing.Type[BaseFilter]] | None = None
     table_columns: typing.Iterable[Column] | None = None
     batch_actions: typing.Iterable[BatchAction] | None = None
     table_actions: typing.Iterable[Action] | None = None
@@ -139,29 +137,17 @@ class Resource(Router, metaclass=ResourceMeta):
             return self.queryset
         return sa.select(self.entity_class)
 
-    # region: list
     def get_filters(self) -> typing.Iterable[BaseFilter]:
-        return list(self.filters or []).copy()
-
-    def apply_search_filter(self, request: Request, stmt: sa.sql.Select) -> sa.sql.Select:
         table_columns = self.get_table_columns()
         columns = list([column for column in table_columns if column.searchable])
-        filter_ = SearchFilter(query_param=self.search_param, entity_class=self.entity_class, columns=columns)
-        return filter_.apply(request, stmt)
+        yield SearchFilter(query_param=self.search_param, entity_class=self.entity_class, columns=columns)
 
-    def apply_ordering_filter(self, request: Request, stmt: sa.sql.Select) -> sa.sql.Select:
-        table_columns = self.get_table_columns()
         columns = [column for column in table_columns if column.sortable]
-        filter_ = OrderingFilter(entity_class=self.entity_class, columns=columns, query_param=self.ordering_param)
-        return filter_.apply(request, stmt)
+        yield OrderingFilter(entity_class=self.entity_class, columns=columns, query_param=self.ordering_param)
 
-    def apply_filters(self, request: Request, stmt: sa.sql.Select) -> sa.sql.Select:
-        stmt = self.apply_search_filter(request, stmt)
-        stmt = self.apply_ordering_filter(request, stmt)
-
-        for filter in self.get_filters():
-            stmt = filter.apply(request, stmt)
-        return stmt
+        filter_classes = self.filters or []
+        for filter_class in filter_classes:
+            yield filter_class()
 
     def get_default_table_actions(self, request: Request) -> typing.Iterable[Action]:
         yield LinkAction(
@@ -200,9 +186,6 @@ class Resource(Router, metaclass=ResourceMeta):
     def get_metrics(self) -> typing.Iterable[Metric]:
         yield from self.metrics or []
 
-    # endregion
-
-    # region: form
     def get_default_form_actions(self, request: Request) -> typing.Iterable[Action]:
         yield SubmitAction(_('Save'), color='primary', name='_save')
         yield SubmitAction(_('Save and return to list'), name='_list')
@@ -218,8 +201,6 @@ class Resource(Router, metaclass=ResourceMeta):
 
     def get_form_layout(self, request: Request, form: Form) -> Layout:
         return Grid(columns=2, children=[FormElement(field) for field in form])
-
-    # endregion
 
     def get_empty_object(self) -> typing.Any:
         assert self.entity_class, 'entity_class is a mandatory attribute.'
@@ -256,7 +237,17 @@ class Resource(Router, metaclass=ResourceMeta):
                 return await self.batch_action_view(request, request.query_params['_batch_action'])
 
             queryset = self.get_queryset(request)
-            queryset = self.apply_filters(request, queryset)
+
+            # apply filters
+            filters = list(self.get_filters())
+            indicators: list[FilterIndicator] = []
+            visual_filters: list[BaseFilter] = []
+            for filter_ in filters:
+                queryset = await filter_.dispatch(request, queryset)
+                indicators.extend(filter_.indicators)
+                if filter_.has_ui:
+                    visual_filters.append(filter_)
+
             objects = await self.paginate_queryset(request, session, queryset)
 
             return render_to_response(
@@ -265,15 +256,18 @@ class Resource(Router, metaclass=ResourceMeta):
                 {
                     'resource': self,
                     'objects': objects,
+                    'filters': visual_filters,
+                    'indicators': indicators,
+                    'page_has_results': True,
                     'page_title': self.label_plural,
-                    'sorting_helper': SortingHelper(self.ordering_param),
-                    'search_placeholder': self.search_placeholder,
-                    'search_query': get_search_value(request, self.search_param),
                     'columns': self.get_table_columns(),
-                    'row_actions': list(self.get_row_actions(request)),
-                    'batch_actions': list(self.get_batch_actions()),
-                    'table_actions': list(self.get_table_actions(request)),
+                    'search_placeholder': self.search_placeholder,
+                    'sorting_helper': SortingHelper(self.ordering_param),
+                    'search_query': get_search_value(request, self.search_param),
                     'empty_state': self.get_empty_state(request),
+                    'batch_actions': list(self.get_batch_actions()),
+                    'row_actions': list(self.get_row_actions(request)),
+                    'table_actions': list(self.get_table_actions(request)),
                     'metrics': [await metric.render(request) for metric in self.get_metrics()],
                 },
             )

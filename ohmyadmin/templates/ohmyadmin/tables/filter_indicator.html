@@ -1,0 +1,10 @@
+<div class="flex items-center gap-1 bg-gray-100 rounded-md p-1">
+    <span class="text-gray-700 font-medium">{{ indicator.label }}:</span>
+    <span>{{ indicator.value }}</span>
+    <a
+        href="{{ request.url.remove_query_params(indicator.query_param) }}"
+        class="rounded p-0.5 leading-3 hover:bg-gray-200"
+    >
+        {{ tabler_icon('x') }}
+    </a>
+</div>

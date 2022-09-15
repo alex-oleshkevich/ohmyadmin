@@ -2781,6 +2781,15 @@ ${expression ? 'Expression: "' + expression + '"\n\n' : ""}`, el);
         this.openBatchModal = true;
       }
     }));
+    module_default.data("searchForm", (paramName, searchQuery) => ({
+      searchQuery,
+      onSubmit(event) {
+        const form = event.target;
+        const currentUrl = new URL(form.action);
+        currentUrl.searchParams.append(paramName, this.searchQuery);
+        location.href = currentUrl.toString();
+      }
+    }));
   });
 
   // js/main.ts
