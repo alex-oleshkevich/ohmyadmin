@@ -20,7 +20,7 @@ from examples.admin.orders import OrderResource
 from examples.admin.products import ProductResource
 from examples.admin.users import UserResource
 from ohmyadmin.app import OhMyAdmin, UserMenu
-from ohmyadmin.nav import MenuGroup, MenuItem
+from ohmyadmin.nav import MenuItem
 from ohmyadmin.storage import LocalDirectoryStorage
 
 metadata = sa.MetaData()
@@ -43,27 +43,25 @@ class Admin(OhMyAdmin):
             ],
         )
 
-    def build_main_menu(self, request: Request) -> list[MenuItem]:
-        return [
-            MenuGroup(
-                'Resources',
-                [
-                    MenuItem.to_resource(ProductResource),
-                    MenuItem.to_resource(CustomerResource),
-                    MenuItem.to_resource(OrderResource),
-                    MenuItem.to_resource(CategoryResource),
-                    MenuItem.to_resource(BrandResource),
-                    MenuItem.to_resource(CurrencyResource),
-                    MenuItem.to_resource(CountryResource),
-                    MenuItem.to_resource(UserResource),
-                ],
-            ),
-        ]
-
 
 this_dir = pathlib.Path(__file__).parent
 uploads_dir = this_dir / 'uploads'
 engine = create_async_engine('postgresql+asyncpg://root:postgres@localhost/ohmyadmin', future=True)
+
+admin = Admin(
+    template_dir=this_dir / 'templates',
+    file_storage=LocalDirectoryStorage(this_dir / 'uploads'),
+    resources=[
+        ProductResource(engine),
+        CustomerResource(engine),
+        OrderResource(engine),
+        CategoryResource(engine),
+        BrandResource(engine),
+        UserResource(engine),
+        CurrencyResource(engine),
+        CountryResource(engine),
+    ],
+)
 
 app = Starlette(
     debug=True,
@@ -74,22 +72,6 @@ app = Starlette(
     routes=[
         Route('/', index_view),
         Mount('/media', StaticFiles(directory=uploads_dir)),
-        Mount(
-            '/admin',
-            Admin(
-                file_storage=LocalDirectoryStorage(this_dir / 'uploads'),
-                template_dir=this_dir / 'templates',
-                routes=[
-                    Mount('/resources/products', ProductResource(engine)),
-                    Mount('/resources/customers', CustomerResource(engine)),
-                    Mount('/resources/orders', OrderResource(engine)),
-                    Mount('/resources/categories', CategoryResource(engine)),
-                    Mount('/resources/brands', BrandResource(engine)),
-                    Mount('/resources/users', UserResource(engine)),
-                    Mount('/resources/currencies', CurrencyResource(engine)),
-                    Mount('/resources/countries', CountryResource(engine)),
-                ],
-            ),
-        ),
+        Mount('/admin', admin),
     ],
 )

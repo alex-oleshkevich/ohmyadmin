@@ -12,7 +12,9 @@ from starlette.staticfiles import StaticFiles
 from starlette.types import Receive, Scope, Send
 
 from ohmyadmin.flash import FlashMiddleware, flash
+from ohmyadmin.i18n import _
 from ohmyadmin.nav import MenuGroup, MenuItem
+from ohmyadmin.resources import Resource
 from ohmyadmin.responses import Response
 from ohmyadmin.storage import FileStorage
 from ohmyadmin.templating import DynamicChoiceLoader, jinja_env
@@ -34,11 +36,13 @@ async def index_view(request: Request) -> Response:
 class OhMyAdmin(Router):
     def __init__(
         self,
+        resources: typing.Iterable[Resource],
         routes: list[BaseRoute] | None = None,
         template_dir: str | os.PathLike | None = None,
         file_storage: FileStorage | None = None,
     ) -> None:
         self.file_storage = file_storage
+        self.resources = resources
 
         self.jinja_env = jinja_env
         self.jinja_env.globals.update({'admin': self})
@@ -50,11 +54,14 @@ class OhMyAdmin(Router):
                 Route('/', index_view, name='welcome'),
                 Mount('/static', StaticFiles(directory=this_dir / 'statics'), name='static'),
                 *(routes or []),
+                *(self.get_routes()),
             ]
         )
 
-    def build_main_menu(self, request: Request) -> list[MenuItem | MenuGroup]:
-        return []
+    def build_main_menu(self, request: Request) -> typing.Iterable[MenuItem]:
+        yield MenuGroup(
+            text=_('Resources'), items=[MenuItem.to_resource(resource.__class__) for resource in self.resources]
+        )
 
     def build_user_menu(self, request: Request) -> UserMenu:
         return UserMenu(user_name='anon.')
@@ -81,7 +88,7 @@ class OhMyAdmin(Router):
             {
                 'request': request,
                 'url': request.url_for,
-                'main_menu': self.build_main_menu(request),
+                'main_menu': list(self.build_main_menu(request)),
                 'user_menu': self.build_user_menu(request),
                 'static': functools.partial(self.static_url, request),
                 'flash_messages': flash(request),
@@ -89,6 +96,10 @@ class OhMyAdmin(Router):
         )
         content = self.render(template_name, context)
         return Response(content, status_code=status_code, media_type='text/html')
+
+    def get_routes(self) -> typing.Iterable[BaseRoute]:
+        for resource in self.resources:
+            yield Mount(f'/resources/{resource.id}', resource)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         from ohmyadmin.globals import globalize_admin
