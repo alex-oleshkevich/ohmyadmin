@@ -26,7 +26,7 @@ class Layout(abc.ABC):
 class Grid(Layout):
     template = 'ohmyadmin/layouts/grid.html'
 
-    def __init__(self, children: typing.Iterable[Layout], columns: int = 2, gap: int = 5) -> None:
+    def __init__(self, children: typing.Iterable[Layout], columns: int = 1, gap: int = 5) -> None:
         self.cols = columns
         self.gap = gap
         self.children = children

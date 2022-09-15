@@ -8,6 +8,7 @@ from starlette.routing import BaseRoute, Route, Router
 from starlette.types import Receive, Scope, Send
 
 from ohmyadmin.actions import Action, LinkAction, SubmitAction
+from ohmyadmin.batch_actions import BatchAction, DeleteAllAction
 from ohmyadmin.filters import BaseFilter, FilterIndicator, OrderingFilter, SearchFilter
 from ohmyadmin.flash import flash
 from ohmyadmin.forms import Form, HandlesFiles
@@ -20,9 +21,7 @@ from ohmyadmin.pagination import Page
 from ohmyadmin.responses import RedirectResponse, Response
 from ohmyadmin.storage import FileStorage
 from ohmyadmin.tables import (
-    BatchAction,
     Column,
-    DeleteAllAction,
     LinkRowAction,
     RowAction,
     SortingHelper,
@@ -335,21 +334,13 @@ class Resource(Router, metaclass=ResourceMeta):
                 },
             )
 
-    async def batch_action_view(self, request: Request, action_id: str) -> Response:
-        batch_action = next((action for action in self.get_batch_actions() if action.id == action_id))
-        if not batch_action:
-            return RedirectResponse(request).to_resource(self).with_error(_('Unknown batch action.'))
-
-        if request.method == 'POST':
-            form_data = await request.form()
-            object_ids = [self.pk_type(typing.cast(str, object_id)) for object_id in form_data.getlist('selected')]
-            return await batch_action.apply(request, object_ids, form_data)
-
-        return Response(batch_action.render())
-
     @classmethod
     def get_route_name(cls, action: ResourceAction) -> str:
         return f'resource_{cls.id}_{action}'
+
+    @classmethod
+    def get_bulk_route_name(cls, bulk_action: BatchAction) -> str:
+        return cls.get_route_name('bulk') + '_' + bulk_action.id
 
     def get_routes(self) -> typing.Iterable[BaseRoute]:
         mapping = {int: 'int', str: 'str'}
@@ -369,12 +360,14 @@ class Resource(Router, metaclass=ResourceMeta):
             methods=['GET', 'POST'],
             name=self.get_route_name('delete'),
         )
-        yield Route(
-            '/bulk/{action_id}',
-            self.batch_action_view,
-            methods=['GET', 'POST'],
-            name=self.get_route_name('bulk'),
-        )
+
+        for bulk_action in self.get_batch_actions():
+            yield Route(
+                f'/bulk/{bulk_action.id}',
+                bulk_action,
+                methods=['GET', 'POST'],
+                name=self.get_bulk_route_name(bulk_action),
+            )
 
     async def _detect_post_save_action(self, request: Request, instance: typing.Any) -> Response:
         form_data = await request.form()

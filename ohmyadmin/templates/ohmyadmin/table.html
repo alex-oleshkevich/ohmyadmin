@@ -144,17 +144,20 @@
 
             {{ pagination.pagination(request, objects) }}
 
-            <template x-if="batchAction">
-                <div
-                    hx-trigger="load"
-                    :hx-get="`'{{ url(resource.get_route_name('bulk'), action_id='__id__') }}'.replace('__id__', batchAction)`"
-                ></div>
-            </template>
-{#            {% for batch_action in batch_actions %}#}
-{#                <template x-teleport="body">#}
-{#                    {{ batch_action }}#}
-{#                </template>#}
-{#            {% endfor %}#}
+            {% for batch_action in batch_actions %}
+                <template x-if="batchAction == '{{ batch_action.id }}' && openBatchModal">
+                    <template x-teleport="body">
+                        <div
+                            id="batch-action-{{ batch_action.id }}"
+                            x-init="() => htmx.process(document.querySelector('#batch-action-{{ batch_action.id }}'))"
+                            hx-trigger="load"
+                            hx-get="{{ url(resource.get_bulk_route_name(batch_action)) }}">
+
+                        </div>
+                    </template>
+                </template>
+            {% endfor %}
+
         </div>
     {% else %}
         <div class="mt-20">

@@ -237,6 +237,8 @@ class HasChoices:
             maybe_choices = self._choices(request, form)
             if inspect.iscoroutine(maybe_choices):
                 choices = await maybe_choices
+        else:
+            choices = self._choices
         return choices
 
 

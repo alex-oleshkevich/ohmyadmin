@@ -5,6 +5,13 @@ document.addEventListener('alpine:init', () => {
         selected: [],
         batchAction: '',
         openBatchModal: false,
+        init() {
+            document.body.addEventListener('action_result.success', () => {
+                this.openBatchModal = false;
+                this.selected = [];
+                this.batchAction = '';
+            });
+        },
         select(id) {
             if (this.selected.includes(id)) {
                 this.selected.splice(this.selected.indexOf(id), 1);

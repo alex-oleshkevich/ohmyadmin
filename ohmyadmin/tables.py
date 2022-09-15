@@ -1,23 +1,14 @@
 from __future__ import annotations
 
 import abc
-import re
-import sqlalchemy as sa
 import typing
 from sqlalchemy.orm import InstrumentedAttribute
-from starlette.datastructures import URL, FormData, MultiDict
+from starlette.datastructures import URL, MultiDict
 from starlette.requests import Request
 from urllib.parse import parse_qsl, urlencode
 
 from ohmyadmin.actions import ActionColor
-from ohmyadmin.forms import Form
 from ohmyadmin.helpers import render_to_string
-from ohmyadmin.i18n import _
-from ohmyadmin.layout import FormElement, Grid, Layout
-from ohmyadmin.responses import RedirectResponse, Response
-
-if typing.TYPE_CHECKING:
-    from ohmyadmin.resources import PkType
 
 Formatter = typing.Callable[[typing.Any], str]
 BadgeColors = typing.Literal['red', 'green', 'blue', 'pink', 'teal', 'sky', 'yellow', 'gray']
@@ -161,54 +152,6 @@ class HasManyColumn(Column):
         values = self.get_value(entity)
         value = values[0] if values else None
         return self.child.render(value)
-
-
-class BatchActionMeta(abc.ABCMeta):
-    def __new__(cls, name: str, bases: tuple, attrs: dict[str, typing.Any], **kwargs: typing.Any) -> typing.Type:
-        name = name.removesuffix('Action')
-        label = re.sub(r'(?<!^)(?=[A-Z])', ' ', name).title()
-
-        attrs['id'] = attrs.get('id', name.lower())
-        attrs['label'] = attrs.get('label', label)
-        return super().__new__(cls, name, bases, attrs)
-
-
-class BatchAction(abc.ABC, metaclass=BatchActionMeta):
-    id: str = ''
-    label: str = 'Unlabelled'
-    confirmation: str = ''
-    dangerous: bool = False
-    template: str = 'ohmyadmin/tables/batch_action.html'
-    form_class: typing.Type[Form] | None = None
-
-    @abc.abstractmethod
-    async def apply(self, request: Request, ids: list[PkType], params: FormData) -> Response:
-        ...
-
-    def render(self) -> str:
-        layout: Layout | None = None
-        if self.form_class is not None:
-            form = self.form_class()
-            layout = Grid([FormElement(field) for field in form], columns=1)
-        return render_to_string(self.template, {'action': self, 'form': layout})
-
-    __str__ = render
-
-
-class DeleteAllAction(BatchAction):
-    dangerous = True
-    confirmation = _('Do you want to delete all items?')
-
-    async def apply(self, request: Request, ids: list[PkType], params: FormData) -> Response:
-        stmt = sa.select(request.state.resource.entity_class).where(
-            sa.column(request.state.resource.pk_column).in_(ids)
-        )
-        result = await request.state.dbsession.scalars(stmt)
-        for row in result.all():
-            await request.state.dbsession.delete(row)
-        return (
-            RedirectResponse(request).to_resource(request.state.resource).with_success(_('Objects has been removed.'))
-        )
 
 
 class RowAction(abc.ABC):

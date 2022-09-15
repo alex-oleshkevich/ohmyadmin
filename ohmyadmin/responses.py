@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import typing
 from starlette import responses
+from starlette.datastructures import MutableHeaders
 from starlette.requests import Request
 from starlette.types import Receive, Scope, Send
 
@@ -16,13 +17,22 @@ class Response:
         self,
         content: str | None = None,
         status_code: int = 200,
-        headers: dict[str, str] | None = None,
+        headers: typing.Mapping[str, str] | None = None,
         media_type: str | None = None,
     ) -> None:
-        self.headers = headers
+        self.headers = MutableHeaders(headers)
         self.content = content
         self.status_code = status_code
         self.media_type = media_type
+
+    def add_header(self, name: str, value: str) -> Response:
+        self.headers.append(name, value)
+        return self
+
+    def add_headers(self, headers: typing.Mapping[str, str]) -> Response:
+        for name, value in headers.items():
+            self.add_header(name, value)
+        return self
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         response = responses.Response(self.content, self.status_code, self.headers, media_type=self.media_type)
@@ -51,6 +61,15 @@ class RedirectResponse(Response):
     ) -> RedirectResponse:
         kwargs = {'pk': pk} if pk else {}
         self.url = self.request.url_for(resource.get_route_name(action), **kwargs)
+        return self
+
+    def to_path_name(
+        self,
+        path_name: str,
+        path_params: typing.Mapping[str, str | int] | None = None,
+    ) -> RedirectResponse:
+        path_params = path_params or {}
+        self.url = self.request.url_for(path_name, **path_params)
         return self
 
     def with_message(self, message: str, category: FlashCategory = 'success') -> RedirectResponse:
