@@ -1,5 +1,6 @@
 import pathlib
 import sqlalchemy as sa
+import typing
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import declarative_base
 from starception import StarceptionMiddleware
@@ -42,6 +43,20 @@ class Admin(OhMyAdmin):
                 MenuItem.to_url(text='Settings', url='/settings', icon='settings'),
             ],
         )
+
+
+class AuthPolicy:
+    async def load_user(self, identity: str, password: str) -> typing.Any:
+        ...
+
+    def login(self, request: Request, user: typing.Any) -> None:
+        ...
+
+    def logout(self, request: Request, user: typing.Any) -> None:
+        ...
+
+    def get_user_menu(self, request: Request) -> UserMenu:
+        ...
 
 
 this_dir = pathlib.Path(__file__).parent

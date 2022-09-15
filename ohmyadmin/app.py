@@ -6,6 +6,7 @@ import os
 import pathlib
 import time
 import typing
+from starlette.middleware import Middleware
 from starlette.requests import Request
 from starlette.routing import BaseRoute, Mount, Route, Router
 from starlette.staticfiles import StaticFiles
@@ -40,9 +41,12 @@ class OhMyAdmin(Router):
         routes: list[BaseRoute] | None = None,
         template_dir: str | os.PathLike | None = None,
         file_storage: FileStorage | None = None,
+        middleware: typing.Sequence[Middleware] | None = None,
     ) -> None:
         self.file_storage = file_storage
         self.resources = resources
+        self.middleware = list(middleware or [])
+        self.middleware.append(Middleware(FlashMiddleware))
 
         self.jinja_env = jinja_env
         self.jinja_env.globals.update({'admin': self})
@@ -109,5 +113,7 @@ class OhMyAdmin(Router):
             scope['state']['admin'] = self
             scope['state']['file_storage'] = self.file_storage
             app = super().__call__
-            app = FlashMiddleware(app)
+            for middleware in reversed(self.middleware):
+                app = middleware.cls(app, **middleware.options)
+
             await app(scope, receive, send)
