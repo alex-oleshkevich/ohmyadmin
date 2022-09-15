@@ -14,6 +14,7 @@ from starlette.types import Receive, Scope, Send
 
 from ohmyadmin.flash import FlashMiddleware, flash
 from ohmyadmin.i18n import _
+from ohmyadmin.media_server import MediaServer
 from ohmyadmin.nav import MenuGroup, MenuItem
 from ohmyadmin.resources import Resource
 from ohmyadmin.responses import Response
@@ -55,8 +56,6 @@ class OhMyAdmin(Router):
 
         super().__init__(
             routes=[
-                Route('/', index_view, name='welcome'),
-                Mount('/static', StaticFiles(directory=this_dir / 'statics'), name='static'),
                 *(routes or []),
                 *(self.get_routes()),
             ]
@@ -102,6 +101,12 @@ class OhMyAdmin(Router):
         return Response(content, status_code=status_code, media_type='text/html')
 
     def get_routes(self) -> typing.Iterable[BaseRoute]:
+        yield Route('/', index_view, name='ohmyadmin_welcome')
+        yield Mount('/static', StaticFiles(packages=[__name__.split('.')[0]]), name='static')
+
+        if self.file_storage:
+            yield Mount('/media', MediaServer(self.file_storage), name='media')
+
         for resource in self.resources:
             yield Mount(f'/resources/{resource.id}', resource)
 

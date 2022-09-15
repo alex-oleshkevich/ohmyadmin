@@ -10,7 +10,6 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Mount, Route
-from starlette.staticfiles import StaticFiles
 
 from examples.admin.brands import BrandResource
 from examples.admin.categories import CategoryResource
@@ -29,7 +28,7 @@ Base = declarative_base()
 
 
 def index_view(request: Request) -> Response:
-    url = request.url_for('welcome')
+    url = request.url_for('ohmyadmin_welcome')
     return Response(f'<a href="{url}">admin</a>')
 
 
@@ -86,7 +85,6 @@ app = Starlette(
     ],
     routes=[
         Route('/', index_view),
-        Mount('/media', StaticFiles(directory=uploads_dir)),
         Mount('/admin', admin),
     ],
 )
