@@ -73,6 +73,14 @@ class ActionResponse:
         self.toast_options = toast_options
         self.redirect_options = redirect_options
 
+    def with_success(self, message: str) -> ActionResponse:
+        self.toast_options = self.ToastOptions(message=message, category='success')
+        return self
+
+    def with_error(self, message: str) -> ActionResponse:
+        self.toast_options = self.ToastOptions(message=message, category='error')
+        return self
+
     @classmethod
     def toast(cls, message: str, category: FlashCategory = 'success') -> ActionResponse:
         return ActionResponse(type=cls.Type.TOAST, toast_options=cls.ToastOptions(message=message, category=category))

@@ -10,6 +10,7 @@ from starlette.requests import Request
 from starlette.types import Receive, Scope, Send
 
 from ohmyadmin.actions import ActionResponse
+from ohmyadmin.flash import flash
 from ohmyadmin.forms import Form
 from ohmyadmin.helpers import render_to_response
 from ohmyadmin.i18n import _
@@ -41,7 +42,7 @@ class BatchAction(abc.ABC, metaclass=BatchActionMeta):
     Result = ActionResponse
 
     @abc.abstractmethod
-    async def apply(self, request: Request, ids: list[PkType], form: Form) -> ActionResponse | None:
+    async def apply(self, request: Request, ids: list[PkType], form: Form) -> ActionResponse:
         ...
 
     async def dispatch(self, request: Request) -> Response:
@@ -51,38 +52,7 @@ class BatchAction(abc.ABC, metaclass=BatchActionMeta):
             resource = request.state.resource
             object_ids = [resource.pk_type(typing.cast(str, object_id)) for object_id in form_data.getlist('selected')]
             result = await self.apply(request, object_ids, form)
-
-            match result:
-                case ActionResponse(
-                    type=ActionResponse.Type.TOAST, toast_options=toast_options
-                ) if toast_options is not None:
-                    return Response(status_code=204).add_header(
-                        'HX-Trigger',
-                        json.dumps(
-                            {
-                                'action_result.success': '',
-                                'toast': {'message': toast_options.message, 'category': toast_options.category},
-                            }
-                        ),
-                    )
-                case ActionResponse(
-                    type=ActionResponse.Type.REDIRECT, redirect_options=redirect_options
-                ) if redirect_options is not None:
-                    if redirect_options.url:
-                        url = redirect_options.url
-                    elif redirect_options.path_name:
-                        path_params = redirect_options.path_params or {}
-                        url = request.url_for(redirect_options.path_name, **path_params)
-                    elif redirect_options.resource:
-                        url = request.url_for(
-                            redirect_options.resource.get_route_name(redirect_options.resource_action)
-                        )
-                    else:
-                        raise ValueError("Don't know the redirect destination.")
-                    return Response(status_code=204).add_header('HX-Redirect', url)
-
-                case _:
-                    return Response(status_code=204).add_header('HX-Refresh', 'true')
+            return self.result_to_response(request, result)
 
         layout = self.get_form_layout(form)
         return render_to_response(
@@ -94,6 +64,40 @@ class BatchAction(abc.ABC, metaclass=BatchActionMeta):
                 'resource': request.state.resource,
             },
         )
+
+    def result_to_response(self, request: Request, result: ActionResponse) -> Response:
+        match result:
+            case ActionResponse(
+                type=ActionResponse.Type.TOAST, toast_options=toast_options
+            ) if toast_options is not None:
+                return Response(status_code=204).add_header(
+                    'HX-Trigger',
+                    json.dumps(
+                        {
+                            'action_result.success': '',
+                            'toast': {'message': toast_options.message, 'category': toast_options.category},
+                        }
+                    ),
+                )
+
+            case ActionResponse(
+                type=ActionResponse.Type.REDIRECT, redirect_options=redirect_options
+            ) if redirect_options is not None:
+                if redirect_options.url:
+                    url = redirect_options.url
+                elif redirect_options.path_name:
+                    path_params = redirect_options.path_params or {}
+                    url = request.url_for(redirect_options.path_name, **path_params)
+                elif redirect_options.resource:
+                    url = request.url_for(redirect_options.resource.get_route_name(redirect_options.resource_action))
+                else:
+                    raise ValueError("Don't know the redirect destination.")
+                response = Response(status_code=204).add_header('HX-Redirect', url)
+                if result.toast_options is not None:
+                    flash(request).add(result.toast_options.message, result.toast_options.category)
+                return response
+
+        return Response(status_code=204).add_header('HX-Refresh', 'true')
 
     def respond(self) -> typing.Type[ActionResponse]:
         return ActionResponse
@@ -107,7 +111,7 @@ class BatchAction(abc.ABC, metaclass=BatchActionMeta):
         await response(scope, receive, send)
 
 
-class DeleteAllAction(BatchAction):
+class BulkDeleteAction(BatchAction):
     dangerous = True
     confirmation = _('Do you want to delete all items?')
 

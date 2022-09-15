@@ -8,7 +8,7 @@ from starlette.routing import BaseRoute, Route, Router
 from starlette.types import Receive, Scope, Send
 
 from ohmyadmin.actions import Action, LinkAction, SubmitAction
-from ohmyadmin.batch_actions import BatchAction, DeleteAllAction
+from ohmyadmin.batch_actions import BatchAction, BulkDeleteAction
 from ohmyadmin.filters import BaseFilter, FilterIndicator, OrderingFilter, SearchFilter
 from ohmyadmin.flash import flash
 from ohmyadmin.forms import Form, HandlesFiles
@@ -176,7 +176,7 @@ class Resource(Router, metaclass=ResourceMeta):
         yield from self.get_default_row_actions(request)
 
     def get_default_batch_actions(self) -> typing.Iterable[BatchAction]:
-        yield DeleteAllAction()
+        yield BulkDeleteAction()
 
     def get_batch_actions(self) -> typing.Iterable[BatchAction]:
         yield from self.get_default_batch_actions()

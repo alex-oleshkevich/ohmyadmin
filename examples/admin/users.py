@@ -26,7 +26,7 @@ class ExportAction(BatchAction):
     form_class = ExportActionForm
 
     async def apply(self, request: Request, ids: list[PkType], form: Form) -> ActionResponse:
-        pass
+        return self.respond().redirect_to_resource(UserResource).with_success('User has been scheduled for export.')
 
 
 class EditForm(Form):
