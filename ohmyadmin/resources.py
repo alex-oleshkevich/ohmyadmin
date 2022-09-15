@@ -232,45 +232,41 @@ class Resource(Router, metaclass=ResourceMeta):
         return Page(rows=list(rows), total_rows=row_count, page=page_number, page_size=page_size)
 
     async def list_objects_view(self, request: Request) -> Response:
-        async with self.dbsession() as session:
-            if '_batch_action' in request.query_params:
-                return await self.batch_action_view(request, request.query_params['_batch_action'])
+        queryset = self.get_queryset(request)
 
-            queryset = self.get_queryset(request)
+        # apply filters
+        filters = list(self.get_filters())
+        indicators: list[FilterIndicator] = []
+        visual_filters: list[BaseFilter] = []
+        for filter_ in filters:
+            queryset = await filter_.dispatch(request, queryset)
+            indicators.extend(filter_.indicators)
+            if filter_.has_ui:
+                visual_filters.append(filter_)
 
-            # apply filters
-            filters = list(self.get_filters())
-            indicators: list[FilterIndicator] = []
-            visual_filters: list[BaseFilter] = []
-            for filter_ in filters:
-                queryset = await filter_.dispatch(request, queryset)
-                indicators.extend(filter_.indicators)
-                if filter_.has_ui:
-                    visual_filters.append(filter_)
+        objects = await self.paginate_queryset(request, request.state.dbsession, queryset)
 
-            objects = await self.paginate_queryset(request, session, queryset)
-
-            return render_to_response(
-                request,
-                self.index_view_template,
-                {
-                    'resource': self,
-                    'objects': objects,
-                    'filters': visual_filters,
-                    'indicators': indicators,
-                    'page_has_results': True,
-                    'page_title': self.label_plural,
-                    'columns': self.get_table_columns(),
-                    'search_placeholder': self.search_placeholder,
-                    'sorting_helper': SortingHelper(self.ordering_param),
-                    'search_query': get_search_value(request, self.search_param),
-                    'empty_state': self.get_empty_state(request),
-                    'batch_actions': list(self.get_batch_actions()),
-                    'row_actions': list(self.get_row_actions(request)),
-                    'table_actions': list(self.get_table_actions(request)),
-                    'metrics': [await metric.render(request) for metric in self.get_metrics()],
-                },
-            )
+        return render_to_response(
+            request,
+            self.index_view_template,
+            {
+                'resource': self,
+                'objects': objects,
+                'filters': visual_filters,
+                'indicators': indicators,
+                'page_has_results': True,
+                'page_title': self.label_plural,
+                'columns': self.get_table_columns(),
+                'search_placeholder': self.search_placeholder,
+                'sorting_helper': SortingHelper(self.ordering_param),
+                'search_query': get_search_value(request, self.search_param),
+                'empty_state': self.get_empty_state(request),
+                'batch_actions': list(self.get_batch_actions()),
+                'row_actions': list(self.get_row_actions(request)),
+                'table_actions': list(self.get_table_actions(request)),
+                'metrics': [await metric.render(request) for metric in self.get_metrics()],
+            },
+        )
 
     async def edit_object_view(self, request: Request) -> Response:
         file_store: FileStorage = request.state.file_storage
