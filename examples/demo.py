@@ -66,6 +66,7 @@ engine = create_async_engine('postgresql+asyncpg://root:postgres@localhost/ohmya
 
 admin = OhMyAdmin(
     engine=engine,
+    auth_policy=AuthPolicy(),
     template_dir=this_dir / 'templates',
     file_storage=LocalDirectoryStorage(this_dir / 'uploads'),
     resources=[
