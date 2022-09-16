@@ -278,7 +278,6 @@ class Resource(Router, metaclass=ResourceMeta):
                 raise HTTPException(404, _('Object does not exists.'))
         else:
             instance = self.get_empty_object()
-            session.add(instance)
 
         form_class = self.get_form_class()
         form = await form_class.from_request(request, instance=instance)
@@ -291,6 +290,8 @@ class Resource(Router, metaclass=ResourceMeta):
                     setattr(field, 'data', await field.save(file_store, instance))
 
             form.populate_obj(instance)
+            if not pk:
+                session.add(instance)
             await session.commit()
             flash(request).success(self.message_object_saved.format(label=self.label))
             return await self._detect_post_save_action(request, instance)
