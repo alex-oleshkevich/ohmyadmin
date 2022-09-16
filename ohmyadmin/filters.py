@@ -127,9 +127,6 @@ class SearchFilter(BaseFilter):
 
         clauses = []
         for column in self.db_columns:
-            if column.class_ != self.entity_class:
-                queryset = queryset.join(column.class_)
-
             clause = self.create_search_token(column, search_query)
             clauses.append(clause)
 
