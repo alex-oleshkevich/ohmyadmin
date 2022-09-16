@@ -48,7 +48,7 @@ class UserResource(Resource):
     batch_actions = (ExportAction(),)
     table_columns = [
         Column('id', label='ID'),
-        ImageColumn('photo', url_prefix='/admin/media/'),
+        ImageColumn('photo'),
         Column(
             'full_name',
             label='Name',

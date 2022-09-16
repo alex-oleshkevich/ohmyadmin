@@ -13,6 +13,7 @@ from starlette.staticfiles import StaticFiles
 from starlette.types import Receive, Scope, Send
 
 from ohmyadmin.flash import FlashMiddleware, flash
+from ohmyadmin.globals import globalize_request
 from ohmyadmin.i18n import _
 from ohmyadmin.media_server import MediaServer
 from ohmyadmin.nav import MenuGroup, MenuItem
@@ -73,7 +74,7 @@ class OhMyAdmin(Router):
         return request.url_for(path_name, **path_params)
 
     def static_url(self, request: Request, path: str) -> str:
-        return self.url_for(request, 'static', path=path) + f'?{time.time()}'
+        return self.url_for(request, 'admin_static', path=path) + f'?{time.time()}'
 
     def render(self, template_name: str, context: typing.Mapping | None = None) -> str:
         template = self.jinja_env.get_template(template_name)
@@ -102,10 +103,10 @@ class OhMyAdmin(Router):
 
     def get_routes(self) -> typing.Iterable[BaseRoute]:
         yield Route('/', index_view, name='ohmyadmin_welcome')
-        yield Mount('/static', StaticFiles(packages=[__name__.split('.')[0]]), name='static')
+        yield Mount('/static', StaticFiles(packages=[__name__.split('.')[0]]), name='admin_static')
 
         if self.file_storage:
-            yield Mount('/media', MediaServer(self.file_storage), name='media')
+            yield Mount('/media', MediaServer(self.file_storage), name='admin_media')
 
         for resource in self.resources:
             yield Mount(f'/resources/{resource.id}', resource)
@@ -113,7 +114,9 @@ class OhMyAdmin(Router):
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         from ohmyadmin.globals import globalize_admin
 
-        with globalize_admin(self):
+        request = Request(scope, receive)
+
+        with globalize_admin(self), globalize_request(request):
             scope.setdefault('state', {})
             scope['state']['admin'] = self
             scope['state']['file_storage'] = self.file_storage

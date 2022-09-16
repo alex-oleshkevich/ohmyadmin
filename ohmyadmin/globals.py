@@ -4,12 +4,14 @@ import contextlib
 import contextvars
 import typing
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.requests import Request
 
 if typing.TYPE_CHECKING:
     from ohmyadmin.app import OhMyAdmin
 
 _session: contextvars.ContextVar[AsyncSession] = contextvars.ContextVar('_session')
 _app: contextvars.ContextVar[OhMyAdmin] = contextvars.ContextVar('_app')
+_request: contextvars.ContextVar[Request] = contextvars.ContextVar('_request')
 _template_context: contextvars.ContextVar[dict[str, typing.Any]] = contextvars.ContextVar(
     '_template_context',
     default={},
@@ -47,3 +49,14 @@ def globalize_template_context(context: dict[str, typing.Any]) -> typing.Iterato
 
 def get_current_template_context() -> dict[str, typing.Any]:
     return _template_context.get()
+
+
+@contextlib.contextmanager
+def globalize_request(request: Request) -> typing.Iterator[None]:
+    reset_token = _request.set(request)
+    yield
+    _request.reset(reset_token)
+
+
+def get_current_request() -> Request:
+    return _request.get()

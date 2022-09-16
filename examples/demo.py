@@ -71,9 +71,9 @@ admin = Admin(
         OrderResource(engine),
         CategoryResource(engine),
         BrandResource(engine),
-        UserResource(engine),
         CurrencyResource(engine),
         CountryResource(engine),
+        UserResource(engine),
     ],
 )
 

@@ -8,6 +8,7 @@ from starlette.requests import Request
 from urllib.parse import parse_qsl, urlencode
 
 from ohmyadmin.actions import ActionColor
+from ohmyadmin.globals import get_current_request
 from ohmyadmin.helpers import render_to_string
 
 Formatter = typing.Callable[[typing.Any], str]
@@ -111,15 +112,12 @@ class BoolColumn(Column):
 class ImageColumn(Column):
     template: str = 'ohmyadmin/tables/cell_image.html'
 
-    def __init__(self, name: str, url_prefix: str = '/', **kwargs: typing.Any) -> None:
-        self.url_prefix = url_prefix
-        super().__init__(name, **kwargs)
-
     def get_display_value(self, obj: typing.Any) -> str:
         value = self.format_value(self.get_value(obj))
-        if value.startswith('http'):
+        if value.startswith('http://') or value.startswith('https://'):
             return value
-        return self.url_prefix + self.format_value(self.get_value(obj))
+
+        return get_current_request().url_for('admin_media', path=self.get_value(obj))
 
 
 class DateColumn(Column):
