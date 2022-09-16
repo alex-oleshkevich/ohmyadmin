@@ -136,6 +136,9 @@ class Category(Base):
     created_at = sa.Column(sa.DateTime, default=datetime.datetime.now)
     updated_at = sa.Column(sa.DateTime, default=datetime.datetime.now)
 
+    def __str__(self) -> str:
+        return self.name
+
 
 class Product(Base):
     __tablename__ = 'products'
@@ -161,7 +164,10 @@ class Product(Base):
     brand: Brand = relationship(Brand)
     images: list[Image] = relationship('Image', cascade='all, delete-orphan')
     comments: list[Comment] = relationship('Comment', cascade='all, delete-orphan')
-    categories: list[Category] = relationship('Category', secondary=product_categories, cascade='all')
+    categories: list[Category] = relationship('Category', secondary=product_categories)
+
+    def __str__(self) -> str:
+        return self.name
 
 
 class ProductCategory(Base):
@@ -186,6 +192,9 @@ class Comment(Base):
     product_id: int = sa.Column(sa.ForeignKey('products.id'))
     customer_id: int = sa.Column(sa.ForeignKey('customers.id'))
     created_at = sa.Column(sa.DateTime, default=datetime.datetime.now)
+
+    def __str__(self) -> str:
+        return self.title or ''
 
 
 class Order(Base):

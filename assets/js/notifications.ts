@@ -5,6 +5,7 @@ export type ToastType = 'success' | 'error';
 export const toast = new Notyf({
     position: { x: 'center', y: 'bottom' },
     ripple: false,
+    duration: 3000,
     dismissible: true,
 });
 window.toast = toast;

@@ -319,8 +319,11 @@ class Resource(Router, metaclass=ResourceMeta):
 
         if request.method == 'POST':
             await session.delete(instance)
-            await session.commit()
-            return RedirectResponse(request).to_resource(self)
+            return (
+                RedirectResponse(request)
+                .to_resource(self)
+                .with_success(_('{resource} has been deleted.'.format(resource=str(instance))))
+            )
 
         return render_to_response(
             request,
