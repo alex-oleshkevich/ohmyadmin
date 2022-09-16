@@ -28,10 +28,6 @@ from ohmyadmin.templating import DynamicChoiceLoader, jinja_env
 this_dir = pathlib.Path(__file__).parent
 
 
-async def index_view(request: Request) -> Response:
-    return request.state.admin.render_to_response(request, 'ohmyadmin/index.html')
-
-
 class OhMyAdmin(Router):
     def __init__(
         self,
@@ -81,7 +77,7 @@ class OhMyAdmin(Router):
         return request.url_for(path_name, **path_params)
 
     def static_url(self, request: Request, path: str) -> str:
-        return self.url_for(request, 'admin_static', path=path) + f'?{time.time()}'
+        return self.url_for(request, 'ohmyadmin_static', path=path) + f'?{time.time()}'
 
     def render(self, template_name: str, context: typing.Mapping | None = None) -> str:
         template = self.jinja_env.get_template(template_name)
@@ -109,16 +105,19 @@ class OhMyAdmin(Router):
         return Response(content, status_code=status_code, media_type='text/html')
 
     def get_routes(self) -> typing.Iterable[BaseRoute]:
-        yield Route('/', index_view, name='ohmyadmin_welcome')
+        yield Route('/', self.index_view, name='ohmyadmin_welcome')
         yield Route('/login', self.login_view, name='ohmyadmin_login', methods=['GET', 'POST'])
         yield Route('/logout', self.logout_view, name='ohmyadmin_logout', methods=['POST'])
-        yield Mount('/static', StaticFiles(packages=[__name__.split('.')[0]]), name='admin_static')
+        yield Mount('/static', StaticFiles(packages=[__name__.split('.')[0]]), name='ohmyadmin_static')
 
         if self.file_storage:
-            yield Mount('/media', MediaServer(self.file_storage), name='admin_media')
+            yield Mount('/media', MediaServer(self.file_storage), name='ohmyadmin_media')
 
         for resource in self.resources:
             yield Mount(f'/resources/{resource.id}', resource)
+
+    async def index_view(self, request: Request) -> Response:
+        return self.render_to_response(request, 'ohmyadmin/index.html')
 
     async def login_view(self, request: Request) -> Response:
         next_url = request.query_params.get('next', request.url_for('ohmyadmin_welcome'))
@@ -163,4 +162,3 @@ class OhMyAdmin(Router):
                     app = middleware.cls(app, **middleware.options)
 
                 await app(scope, receive, send)
-            await session.commit()

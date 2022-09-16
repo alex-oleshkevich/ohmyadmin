@@ -333,7 +333,7 @@ class Resource(Router, metaclass=ResourceMeta):
 
     @classmethod
     def get_route_name(cls, action: ResourceAction) -> str:
-        return f'resource_{cls.id}_{action}'
+        return f'ohmyadmin_resource_{cls.id}_{action}'
 
     @classmethod
     def get_bulk_route_name(cls, bulk_action: BatchAction) -> str:
@@ -381,3 +381,4 @@ class Resource(Router, metaclass=ResourceMeta):
         scope.setdefault('state', {})
         scope['state']['resource'] = self
         await super().__call__(scope, receive, send)
+        await scope['state']['dbsession'].commit()

@@ -3,6 +3,7 @@ import sqlalchemy as sa
 from sqlalchemy.orm import joinedload, selectinload
 from starlette.requests import Request
 
+from examples.admin.brands import BrandResource
 from examples.models import Brand, Product
 from ohmyadmin.forms import (
     CheckboxField,
@@ -16,6 +17,7 @@ from ohmyadmin.forms import (
     TextField,
     choices_from,
 )
+from ohmyadmin.helpers import resource_url
 from ohmyadmin.layout import Card, FormElement, Grid, Group, Layout
 from ohmyadmin.metrics import CountMetric
 from ohmyadmin.resources import Resource
@@ -99,7 +101,7 @@ class ProductResource(Resource):
             search_in=[Brand.name],
             sortable=True,
             sort_by=Brand.name,
-            link_factory=lambda r, o: r.url_for('resource_brand_edit', pk=o.brand.id),
+            link_factory=lambda r, o: resource_url(BrandResource, 'edit', pk=o.brand.id),
         ),
         NumberColumn('price', sortable=True),
         NumberColumn('sku', sortable=True),
