@@ -8,8 +8,7 @@ from starlette.requests import Request
 from urllib.parse import parse_qsl, urlencode
 
 from ohmyadmin.actions import ActionColor
-from ohmyadmin.globals import get_current_request
-from ohmyadmin.helpers import render_to_string
+from ohmyadmin.helpers import media_url, render_to_string
 
 Formatter = typing.Callable[[typing.Any], str]
 BadgeColors = typing.Literal['red', 'green', 'blue', 'pink', 'teal', 'sky', 'yellow', 'gray']
@@ -117,7 +116,7 @@ class ImageColumn(Column):
         if value.startswith('http://') or value.startswith('https://'):
             return value
 
-        return get_current_request().url_for('admin_media', path=self.get_value(obj))
+        return media_url(self.get_value(obj))
 
 
 class DateColumn(Column):
