@@ -3,6 +3,7 @@ import asyncio
 import decimal
 import random
 from faker import Faker
+from passlib.handlers.pbkdf2 import pbkdf2_sha256
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -109,7 +110,7 @@ def seed_users(session: AsyncSession) -> None:
                 last_name=fake.last_name(),
                 email=fake.email(safe=False),
                 photo=fake.image_url(600, 400),
-                password=fake.password(),
+                password=pbkdf2_sha256.hash('password'),
                 created_at=fake.date_between(),
                 is_active=False if index % 10 == 0 else True,
             )

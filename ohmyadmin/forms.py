@@ -408,7 +408,7 @@ class Form(typing.Generic[_E], wtforms.Form):
         formdata: ImmutableMultiDict[str, UploadFile | str] | None = None,
         obj: _E | None = None,
         prefix: str = "",
-        data: ImmutableMultiDict[str, UploadFile | str] | None = None,
+        data: dict[str, str] | None = None,
         meta: FormMeta | None = None,
         **kwargs: typing.Any,
     ):
@@ -458,7 +458,7 @@ class Form(typing.Generic[_E], wtforms.Form):
         request: Request,
         instance: typing.Any | None = None,
         form_data: ImmutableMultiDict[str, UploadFile | str] | None = None,
-        data: ImmutableMultiDict[str, UploadFile | str] | None = None,
+        data: dict[str, str] | None = None,
     ) -> Form:
         if form_data is None:
             form_data = await request.form() if request.method in ['POST', 'PUT', 'PATCH', 'DELETE'] else None

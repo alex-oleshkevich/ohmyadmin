@@ -12,12 +12,12 @@ window.toast = toast;
 declare global {
     interface Window {
         toast: Notyf,
-        __TOASTS__: { category: ToastType, message: string }[],
+        __TOASTS__?: { category: ToastType, message: string }[],
     }
 }
 
 
 // show flash messages as toasts
-window.__TOASTS__.forEach(message => {
+(window.__TOASTS__ || []).forEach(message => {
     toast.open({ type: message.category, message: message.message });
 });

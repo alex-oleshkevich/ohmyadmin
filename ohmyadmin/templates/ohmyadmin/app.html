@@ -79,11 +79,15 @@
                                         </a>
                                     </li>
                                 {% endfor %}
-                                <li>
-                                    <a href="#" class="main-menu-item">
-                                        {{ icon('logout') }} Logout
-                                    </a>
-                                </li>
+                                {% if not request.user.is_anonymous %}
+                                    <li>
+                                        <form action="{{ url('ohmyadmin_logout') }}" method="post">
+                                            <button class="main-menu-item">
+                                                {{ icon('logout') }} {{ _('Logout') }}
+                                            </button>
+                                        </form>
+                                    </li>
+                                {% endif %}
                             </ul>
                             <!-- end user menu -->
                         </div>
@@ -105,8 +109,5 @@
 {% endblock %}
 
 {% block page_scripts %}
-    <script>
-        window.__TOASTS__ =
-        {{ flash_messages|list|tojson }}
-    </script>
+
 {% endblock %}

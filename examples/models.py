@@ -4,11 +4,13 @@ import datetime
 import sqlalchemy as sa
 from sqlalchemy.orm import ColumnProperty, backref, declarative_base, query_expression, relationship
 
+from ohmyadmin.auth import UserLike
+
 metadata = sa.MetaData()
 Base = declarative_base(metadata=metadata)
 
 
-class User(Base):
+class User(Base, UserLike):
     __tablename__ = 'users'
 
     id = sa.Column(sa.BigInteger, primary_key=True)
@@ -19,6 +21,13 @@ class User(Base):
     photo = sa.Column(sa.Text)
     is_active = sa.Column(sa.Boolean, default=True)
     created_at = sa.Column(sa.DateTime, default=datetime.datetime.now)
+
+    def get_id(self) -> str:
+        return str(self.id)
+
+    @property
+    def avatar(self) -> str:
+        return self.photo or ''
 
     @property
     def full_name(self) -> str:

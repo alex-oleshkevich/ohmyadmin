@@ -1,7 +1,6 @@
 import sqlalchemy as sa
 import typing
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
 from starlette.routing import BaseRoute, Route, Router
@@ -12,7 +11,6 @@ from ohmyadmin.batch_actions import BatchAction, BulkDeleteAction
 from ohmyadmin.filters import BaseFilter, FilterIndicator, OrderingFilter, SearchFilter
 from ohmyadmin.flash import flash
 from ohmyadmin.forms import Form, HandlesFiles
-from ohmyadmin.globals import globalize_dbsession
 from ohmyadmin.helpers import render_to_response
 from ohmyadmin.i18n import _
 from ohmyadmin.layout import EmptyState, FormElement, Grid, Layout
@@ -87,8 +85,7 @@ class Resource(Router, metaclass=ResourceMeta):
 
     message_object_saved: str = _('{label} has been saved.')
 
-    def __init__(self, sa_engine: AsyncEngine) -> None:
-        self.dbsession = sessionmaker(sa_engine, expire_on_commit=False, class_=AsyncSession)
+    def __init__(self) -> None:
         super().__init__(routes=list(self.get_routes()))
 
     @property
@@ -274,65 +271,65 @@ class Resource(Router, metaclass=ResourceMeta):
     async def edit_object_view(self, request: Request) -> Response:
         file_store: FileStorage = request.state.file_storage
         pk = request.path_params.get('pk', None)
-        async with self.dbsession() as session:
-            if pk:
-                instance = await self.get_object(request, session, pk=request.path_params['pk'])
-                if not instance:
-                    raise HTTPException(404, _('Object does not exists.'))
-            else:
-                instance = self.get_empty_object()
-                session.add(instance)
-
-            form_class = self.get_form_class()
-            form = await form_class.from_request(request, instance=instance)
-            layout = self.get_form_layout(request, form)
-
-            if await form.validate_on_submit(request):
-                for field in form:
-                    if isinstance(field, HandlesFiles):
-                        assert file_store, _('Cannot save uploaded file because file storage is not configured.')
-                        setattr(field, 'data', await field.save(file_store, instance))
-
-                form.populate_obj(instance)
-                await session.commit()
-                flash(request).success(self.message_object_saved.format(label=self.label))
-                return await self._detect_post_save_action(request, instance)
-
-            object_label = str(instance) if pk else self.label
-            label_template = self.edit_page_label if pk else self.create_page_label
-
-            return render_to_response(
-                request,
-                self.edit_view_template,
-                {
-                    'form': form,
-                    'layout': layout,
-                    'request': request,
-                    'form_actions': self.get_form_actions(request),
-                    'page_title': label_template.format(resource=object_label),
-                },
-            )
-
-    async def delete_object_view(self, request: Request) -> Response:
-        async with self.dbsession() as session:
+        session = request.state.dbsession
+        if pk:
             instance = await self.get_object(request, session, pk=request.path_params['pk'])
             if not instance:
                 raise HTTPException(404, _('Object does not exists.'))
+        else:
+            instance = self.get_empty_object()
+            session.add(instance)
 
-            if request.method == 'POST':
-                await session.delete(instance)
-                await session.commit()
-                return RedirectResponse(request).to_resource(self)
+        form_class = self.get_form_class()
+        form = await form_class.from_request(request, instance=instance)
+        layout = self.get_form_layout(request, form)
 
-            return render_to_response(
-                request,
-                self.delete_view_template,
-                {
-                    'request': request,
-                    'object': instance,
-                    'page_title': self.delete_page_label.format(resource=self.label),
-                },
-            )
+        if await form.validate_on_submit(request):
+            for field in form:
+                if isinstance(field, HandlesFiles):
+                    assert file_store, _('Cannot save uploaded file because file storage is not configured.')
+                    setattr(field, 'data', await field.save(file_store, instance))
+
+            form.populate_obj(instance)
+            await session.commit()
+            flash(request).success(self.message_object_saved.format(label=self.label))
+            return await self._detect_post_save_action(request, instance)
+
+        object_label = str(instance) if pk else self.label
+        label_template = self.edit_page_label if pk else self.create_page_label
+
+        return render_to_response(
+            request,
+            self.edit_view_template,
+            {
+                'form': form,
+                'layout': layout,
+                'request': request,
+                'form_actions': self.get_form_actions(request),
+                'page_title': label_template.format(resource=object_label),
+            },
+        )
+
+    async def delete_object_view(self, request: Request) -> Response:
+        session = request.state.dbsession
+        instance = await self.get_object(request, session, pk=request.path_params['pk'])
+        if not instance:
+            raise HTTPException(404, _('Object does not exists.'))
+
+        if request.method == 'POST':
+            await session.delete(instance)
+            await session.commit()
+            return RedirectResponse(request).to_resource(self)
+
+        return render_to_response(
+            request,
+            self.delete_view_template,
+            {
+                'request': request,
+                'object': instance,
+                'page_title': self.delete_page_label.format(resource=self.label),
+            },
+        )
 
     @classmethod
     def get_route_name(cls, action: ResourceAction) -> str:
@@ -381,10 +378,6 @@ class Resource(Router, metaclass=ResourceMeta):
         raise ValueError('Could not determine redirect route.')
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        async with self.dbsession() as session:
-            with globalize_dbsession(session):
-                scope.setdefault('state', {})
-                scope['state']['dbsession'] = session
-                scope['state']['resource'] = self
-                await super().__call__(scope, receive, send)
-                await session.commit()
+        scope.setdefault('state', {})
+        scope['state']['resource'] = self
+        await super().__call__(scope, receive, send)

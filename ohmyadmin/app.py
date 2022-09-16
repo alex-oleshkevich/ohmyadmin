@@ -1,35 +1,31 @@
-import dataclasses
-
 import functools
 import jinja2
 import os
 import pathlib
 import time
 import typing
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
+from sqlalchemy.orm import sessionmaker
 from starlette.middleware import Middleware
+from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.requests import Request
 from starlette.routing import BaseRoute, Mount, Route, Router
 from starlette.staticfiles import StaticFiles
 from starlette.types import Receive, Scope, Send
 
+from ohmyadmin.auth import AnonymousAuthPolicy, BaseAuthPolicy, RequireLoginMiddleware, UserMenu
 from ohmyadmin.flash import FlashMiddleware, flash
-from ohmyadmin.globals import globalize_request
+from ohmyadmin.globals import globalize_dbsession, globalize_request
 from ohmyadmin.i18n import _
+from ohmyadmin.layout import FormElement, Grid
 from ohmyadmin.media_server import MediaServer
 from ohmyadmin.nav import MenuGroup, MenuItem
 from ohmyadmin.resources import Resource
-from ohmyadmin.responses import Response
+from ohmyadmin.responses import RedirectResponse, Response
 from ohmyadmin.storage import FileStorage
 from ohmyadmin.templating import DynamicChoiceLoader, jinja_env
 
 this_dir = pathlib.Path(__file__).parent
-
-
-@dataclasses.dataclass
-class UserMenu:
-    user_name: str = 'Anonymous'
-    avatar: str = ''
-    menu: list[MenuItem | MenuGroup] = dataclasses.field(default_factory=list)
 
 
 async def index_view(request: Request) -> Response:
@@ -39,16 +35,27 @@ async def index_view(request: Request) -> Response:
 class OhMyAdmin(Router):
     def __init__(
         self,
+        engine: AsyncEngine,
         resources: typing.Iterable[Resource],
         routes: list[BaseRoute] | None = None,
         template_dir: str | os.PathLike | None = None,
         file_storage: FileStorage | None = None,
+        auth_policy: BaseAuthPolicy | None = None,
         middleware: typing.Sequence[Middleware] | None = None,
     ) -> None:
+        self.engine = engine
+        self._make_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
         self.file_storage = file_storage
         self.resources = resources
+        self.auth_policy = auth_policy or AnonymousAuthPolicy()
         self.middleware = list(middleware or [])
-        self.middleware.append(Middleware(FlashMiddleware))
+        self.middleware.extend(
+            [
+                Middleware(FlashMiddleware),
+                Middleware(AuthenticationMiddleware, backend=self.auth_policy.get_authentication_backend()),
+                Middleware(RequireLoginMiddleware, exclude_paths=['/login', '/logout', '/static', '/media']),
+            ]
+        )
 
         self.jinja_env = jinja_env
         self.jinja_env.globals.update({'admin': self})
@@ -68,7 +75,7 @@ class OhMyAdmin(Router):
         )
 
     def build_user_menu(self, request: Request) -> UserMenu:
-        return UserMenu(user_name='anon.')
+        return self.auth_policy.get_user_menu(request)
 
     def url_for(self, request: Request, path_name: str, **path_params: typing.Any) -> str:
         return request.url_for(path_name, **path_params)
@@ -103,6 +110,8 @@ class OhMyAdmin(Router):
 
     def get_routes(self) -> typing.Iterable[BaseRoute]:
         yield Route('/', index_view, name='ohmyadmin_welcome')
+        yield Route('/login', self.login_view, name='ohmyadmin_login', methods=['GET', 'POST'])
+        yield Route('/logout', self.logout_view, name='ohmyadmin_logout', methods=['POST'])
         yield Mount('/static', StaticFiles(packages=[__name__.split('.')[0]]), name='admin_static')
 
         if self.file_storage:
@@ -111,17 +120,47 @@ class OhMyAdmin(Router):
         for resource in self.resources:
             yield Mount(f'/resources/{resource.id}', resource)
 
+    async def login_view(self, request: Request) -> Response:
+        next_url = request.query_params.get('next', request.url_for('ohmyadmin_welcome'))
+        form_class = self.auth_policy.get_login_form_class()
+        form = await form_class.from_request(request, data={'next_url': next_url})
+        if await form.validate_on_submit(request):
+            if user := await self.auth_policy.authenticate(request, form.identity.data, form.password.data):
+                self.auth_policy.login(request, user)
+                return RedirectResponse(request, url=form.next_url.data).with_success(_('You have been logged in.'))
+            else:
+                flash(request).error(_('Invalid credentials.'))
+
+        layout = Grid(children=[FormElement(field) for field in form])
+        return self.render_to_response(
+            request,
+            'ohmyadmin/auth/login.html',
+            {
+                'request': request,
+                'form': layout,
+                'next_url': next_url,
+                'page_title': _('Login'),
+            },
+        )
+
+    async def logout_view(self, request: Request) -> Response:
+        self.auth_policy.logout(request)
+        return RedirectResponse(request).to_path_name('ohmyadmin_login').with_success(_('You have been logged out.'))
+
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         from ohmyadmin.globals import globalize_admin
 
         request = Request(scope, receive)
+        async with self._make_session() as session:
+            with globalize_admin(self), globalize_request(request), globalize_dbsession(session):
+                scope.setdefault('state', {})
+                scope['state']['admin'] = self
+                scope['state']['file_storage'] = self.file_storage
+                scope['state']['auth_policy'] = self.auth_policy
+                scope['state']['dbsession'] = session
+                app = super().__call__
+                for middleware in reversed(self.middleware):
+                    app = middleware.cls(app, **middleware.options)
 
-        with globalize_admin(self), globalize_request(request):
-            scope.setdefault('state', {})
-            scope['state']['admin'] = self
-            scope['state']['file_storage'] = self.file_storage
-            app = super().__call__
-            for middleware in reversed(self.middleware):
-                app = middleware.cls(app, **middleware.options)
-
-            await app(scope, receive, send)
+                await app(scope, receive, send)
+            await session.commit()
