@@ -36,6 +36,9 @@ class User(Base, UserLike):
     def __str__(self) -> str:
         return self.full_name
 
+    def add_file_paths_for_photo(self, path: str) -> None:
+        self.photo = path
+
 
 class Country(Base):
     __tablename__ = 'countries'

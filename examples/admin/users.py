@@ -9,21 +9,19 @@ from ohmyadmin.resources import PkType, Resource
 from ohmyadmin.tables import BoolColumn, Column, ImageColumn
 
 
-class ExportActionForm(Form):
-    columns = SelectField(
-        required=True,
-        choices=[
-            ('id', 'ID'),
-            ('first_name', 'First name'),
-            ('last_name', 'Last name'),
-            ('email', 'Email'),
-        ],
-    )
-
-
 class ExportAction(BatchAction):
     label = 'Export'
-    form_class = ExportActionForm
+
+    class ActionForm(Form):
+        columns = SelectField(
+            required=True,
+            choices=[
+                ('id', 'ID'),
+                ('first_name', 'First name'),
+                ('last_name', 'Last name'),
+                ('email', 'Email'),
+            ],
+        )
 
     async def apply(self, request: Request, ids: list[PkType], form: Form) -> ActionResponse:
         return self.respond().redirect_to_resource(UserResource).with_success('User has been scheduled for export.')
@@ -46,6 +44,7 @@ class UserResource(Resource):
     form_class = EditForm
     queryset = sa.select(entity_class).order_by(User.id)
     batch_actions = (ExportAction(),)
+    table_actions = []
     table_columns = [
         Column('id', label='ID'),
         ImageColumn('photo'),

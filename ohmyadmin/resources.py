@@ -282,14 +282,23 @@ class Resource(Router, metaclass=ResourceMeta):
         form_class = self.get_form_class()
         form = await form_class.from_request(request, instance=instance)
         layout = self.get_form_layout(request, form)
-
+        fields_to_exclude: list[str] = []
         if await form.validate_on_submit(request):
             for field in form:
                 if isinstance(field, HandlesFiles):
                     assert file_store, _('Cannot save uploaded file because file storage is not configured.')
-                    setattr(field, 'data', await field.save(file_store, instance))
+                    fields_to_exclude.append(field.name)
+                    if file_paths := await field.save(file_store, instance):
+                        entity_method_name = f'add_file_paths_for_{field.name}'
+                        entity_method = getattr(instance, entity_method_name, None)
+                        if not entity_method:
+                            raise AttributeError(
+                                f'In order to process uploaded files, the model {instance.__class__.__name__} '
+                                f'must define `{entity_method_name}(*file_paths: str) -> None` method. '
+                            )
+                        entity_method(*file_paths)
 
-            form.populate_obj(instance)
+            form.populate_obj(instance, exclude=fields_to_exclude)
             if not pk:
                 session.add(instance)
             await session.commit()

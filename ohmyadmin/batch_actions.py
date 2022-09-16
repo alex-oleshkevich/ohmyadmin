@@ -46,7 +46,7 @@ class BatchAction(abc.ABC, metaclass=BatchActionMeta):
         ...
 
     async def dispatch(self, request: Request) -> Response:
-        form = await self.form_class.from_request(request)
+        form = await self.get_form_class().from_request(request)
         if await form.validate_on_submit(request):
             form_data = await request.form()
             resource = request.state.resource
@@ -104,6 +104,9 @@ class BatchAction(abc.ABC, metaclass=BatchActionMeta):
 
     def get_form_layout(self, form: Form) -> Layout:
         return Grid([FormElement(field) for field in form])
+
+    def get_form_class(self) -> typing.Type[Form]:
+        return getattr(self, 'ActionForm', self.form_class)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         request = Request(scope, receive)

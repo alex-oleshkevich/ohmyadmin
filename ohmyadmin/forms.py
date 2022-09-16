@@ -248,9 +248,6 @@ class FileField(Field[UploadFile], HandlesFiles, wtforms.FileField):
     def iter_files(self) -> typing.Iterable[UploadFile]:
         yield self.data
 
-    async def save(self, file_storage: FileStorage, entity: typing.Any) -> str:  # type: ignore[override]
-        return next(iter(await super().save(file_storage, entity)))
-
 
 class MultipleFileField(Field[list[UploadFile]], HandlesFiles, wtforms.MultipleFileField):
     template = 'ohmyadmin/forms/file_multiple.html'
