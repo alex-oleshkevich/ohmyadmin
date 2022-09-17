@@ -35,9 +35,22 @@ PkType = int | str
 
 class ResourceMeta(type):
     def __new__(cls, name: str, bases: tuple, attrs: dict[str, typing.Any], **kwargs: typing.Any) -> typing.Type:
-        attrs['id'] = attrs.get('id', pluralize(slugify(name.removesuffix('Resource'))))
-        attrs['label'] = attrs.get('label', camel_to_sentence(name.removesuffix('Resource')))
-        attrs['label_plural'] = attrs.get('label_plural', pluralize(attrs['label']))
+        if name != 'Resource':
+            attrs['id'] = attrs.get('id', pluralize(slugify(name.removesuffix('Resource'))))
+            attrs['label'] = attrs.get('label', camel_to_sentence(name.removesuffix('Resource')))
+            attrs['label_plural'] = attrs.get('label_plural', pluralize(attrs['label']))
+
+            if 'pk_column' not in attrs:
+                for column in vars(attrs['entity_class']).values():
+                    if hasattr(column, 'primary_key') and column.primary_key:
+                        attrs['pk_column'] = column.name
+                        break
+                else:
+                    raise ValueError(
+                        f'Could not determine automatically primary key column for resource {name}. '
+                        f'Please, specify it manually via Resource.pk_column attribute.'
+                    )
+
         return super().__new__(cls, name, bases, attrs)
 
 
@@ -50,6 +63,7 @@ class Resource(Router, metaclass=ResourceMeta):
     # orm configuration
     entity_class: typing.ClassVar[typing.Any] = None
     queryset: typing.ClassVar[sa.sql.Select | None] = None
+    pk_column: str
 
     # table settings
     filters: typing.Iterable[typing.Type[BaseFilter]] | None = None
@@ -89,16 +103,16 @@ class Resource(Router, metaclass=ResourceMeta):
     def searchable(self) -> bool:
         return any([column.searchable for column in self.get_table_columns()])
 
-    @property
-    def pk_column(self) -> str:
-        for column in vars(self.entity_class).values():
-            if hasattr(column, 'primary_key') and column.primary_key:
-                return column.name
-
-        raise ValueError(
-            f'Could not determine automatically primary key column for resource {self.__class__.__name__}. '
-            f'Please, specify it manually via Resource.pk_column attribute.'
-        )
+    # @property
+    # def pk_column(self) -> str:
+    #     for column in vars(self.entity_class).values():
+    #         if hasattr(column, 'primary_key') and column.primary_key:
+    #             return column.name
+    #
+    #     raise ValueError(
+    #         f'Could not determine automatically primary key column for resource {self.__class__.__name__}. '
+    #         f'Please, specify it manually via Resource.pk_column attribute.'
+    #     )
 
     @property
     def pk_type(self) -> typing.Type[PkType]:
@@ -170,7 +184,7 @@ class Resource(Router, metaclass=ResourceMeta):
         yield from self.get_default_row_actions(request)
 
     def get_default_batch_actions(self) -> typing.Iterable[BatchAction]:
-        yield BulkDeleteAction()
+        yield BulkDeleteAction.clone_class(self.__class__)()
 
     def get_batch_actions(self) -> typing.Iterable[BatchAction]:
         yield from self.get_default_batch_actions()

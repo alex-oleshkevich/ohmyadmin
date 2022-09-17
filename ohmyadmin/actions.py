@@ -17,7 +17,7 @@ from ohmyadmin.responses import Response
 from ohmyadmin.structures import URLSpec
 
 if typing.TYPE_CHECKING:
-    from ohmyadmin.resources import PkType
+    from ohmyadmin.resources import PkType, Resource
 
 _action_registry: dict[str, typing.Type[Action]] = {}
 
@@ -135,13 +135,27 @@ class BatchAction(BaseAction, FormActionMixin):
 class BulkDeleteAction(BatchAction):
     dangerous = True
     message = _('Do you want to delete all items?')
+    resource_class: typing.ClassVar[typing.Type[Resource]]
 
     async def apply(self, request: Request, ids: list[PkType], form: Form) -> Response:
-        stmt = sa.select(request.state.resource.entity_class).where(
-            sa.column(request.state.resource.pk_column).in_(ids)
-        )
+        stmt = sa.select(self.resource_class.entity_class).where(sa.column(self.resource_class.pk_column).in_(ids))
         result = await request.state.dbsession.scalars(stmt)
         for row in result.all():
             await request.state.dbsession.delete(row)
+        await request.state.dbsession.commit()
 
-        return Response.empty().hx_redirect(URLSpec.to_resource(request.state.resource))
+        return Response.empty().hx_redirect(URLSpec.to_resource(self.resource_class))
+
+    @classmethod
+    def clone_class(cls, resource_class: typing.Type[Resource]) -> typing.Type[BulkDeleteAction]:
+        action_class = type(
+            'ResourceSpecificBulkDeleteAction',
+            (BulkDeleteAction,),
+            {
+                'resource_class': resource_class,
+                'label': BulkDeleteAction.label,
+                '__module__': resource_class.__name__,
+                '__qualname__': 'ResourceSpecificBulkDeleteAction',
+            },
+        )
+        return typing.cast(typing.Type[BulkDeleteAction], action_class)
