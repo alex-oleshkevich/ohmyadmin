@@ -2,10 +2,15 @@ import abc
 import anyio
 import os.path
 import pathlib
+import stat
 from starlette.datastructures import UploadFile
 
 
 class NotSupported(Exception):
+    ...
+
+
+class InvalidFile(Exception):
     ...
 
 
@@ -17,7 +22,7 @@ class FileStorage:
     async def get_url(self, path: str) -> str:
         raise NotSupported()
 
-    def get_local_file_path(self, path: str) -> str:
+    async def get_local_file_path(self, path: str) -> str:
         raise NotImplementedError(f'This method is not supported by {self.__class__.__name__}.')
 
 
@@ -37,8 +42,24 @@ class LocalDirectoryStorage(FileStorage):
                 await f.write(chunk)
         return abs_path
 
-    def get_local_file_path(self, path: str) -> str:
-        full_path = os.path.join(self.directory, path)
-        if not os.path.exists(full_path):
+    async def get_local_file_path(self, path: str) -> str:
+        """
+        Get absolute file path for a given file.
+
+        :raises InvalidFile
+        :raises FileNotFoundError
+        """
+
+        try:
+            full_path = os.path.join(self.directory, path)
+            stat_result: os.stat_result = await anyio.to_thread.run_sync(os.stat, full_path)
+        except OSError as ex:
+            raise InvalidFile('Media file could not be read.') from ex
+
+        if not stat_result:
             raise FileNotFoundError('Media file does not exists.')
-        return full_path
+
+        if stat.S_ISREG(stat_result.st_mode):
+            return full_path
+
+        raise InvalidFile('Do not know how to read file.')

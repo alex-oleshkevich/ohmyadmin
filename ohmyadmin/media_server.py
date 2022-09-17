@@ -3,7 +3,7 @@ from starlette.exceptions import HTTPException
 from starlette.responses import FileResponse, RedirectResponse, Response
 from starlette.types import Receive, Scope, Send
 
-from ohmyadmin.storage import FileStorage, NotSupported
+from ohmyadmin.storage import FileStorage, InvalidFile, NotSupported
 
 
 class MediaServer:
@@ -33,7 +33,9 @@ class MediaServer:
 
         try:
             # local disk storage
-            full_path = self.storage.get_local_file_path(file_path)
+            full_path = await self.storage.get_local_file_path(file_path)
             return FileResponse(full_path)
         except FileNotFoundError:
             raise HTTPException(status_code=404, detail='Media file not found.')
+        except InvalidFile:
+            raise HTTPException(status_code=403, detail='Media file could not be read.')
