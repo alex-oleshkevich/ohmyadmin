@@ -178,7 +178,7 @@
     }
 
     .form-group label, .form-group .form-label {
-        @apply font-medium mb-1 flex items-center gap-1;
+        @apply font-medium mb-2 flex items-center gap-1;
     }
 
     .form-errors {
@@ -193,6 +193,10 @@
     .form-group input:not([type="radio"]),
     .form-group input:not([type="radio"]), select {
 
+    }
+
+    .form-group-checkbox {
+        @apply flex items-center gap-2;
     }
 
     .form-group-checkbox > div:first-child {

@@ -35,25 +35,33 @@
     </div>
 {% endmacro %}
 
+{% macro checkbox_input(field) %}
+    <div class="form-group form-group-checkbox">
+        {{ form_input(field) }}
+        {{ form_label(field) }}
+    </div>
+{% endmacro %}
+
 {% macro checkbox_field(field) %}
     <div class="form-group form-group-checkbox">
-        <div>
-            {{ form_input(field) }}
-            {{ form_label(field) }}
-        </div>
+        {{ checkbox_input(field) }}
         {{ form_help(field) if field.description else '' }}
         {{ form_errors(field) if field.errors else '' }}
+    </div>
+{% endmacro %}
+
+{% macro radio_input(field) %}
+    <div class="form-radio-list">
+        {% for element in field %}
+            <label for="{{ element.label.field_id }}">{{ element }} {{ element.label.text }}</label>
+        {% endfor %}
     </div>
 {% endmacro %}
 
 {% macro radio_field(field) %}
     <div class="form-group form-group-radio">
         {{ form_label(field) }}
-        <div class="form-radio-list">
-            {% for element in field %}
-                <label for="{{ element.label.field_id }}">{{ element }} {{ element.label.text }}</label>
-            {% endfor %}
-        </div>
+        {{ radio_input(field) }}
         {{ form_help(field) if field.description else '' }}
         {{ form_errors(field) if field.errors else '' }}
     </div>
