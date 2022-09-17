@@ -1,11 +1,10 @@
 {% extends 'ohmyadmin/app.html' %}
 {% import 'ohmyadmin/lib/pagination.html' as pagination %}
 {% import 'ohmyadmin/lib/buttons.html' as buttons %}
-{% import 'ohmyadmin/lib/actions.html' as actions %}
 
 {% block page_actions %}
     {% for action in table_actions %}
-        {{ actions.action(action) }}
+        {{ action }}
     {% endfor %}
 {% endblock %}
 
