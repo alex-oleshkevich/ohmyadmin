@@ -1,18 +1,13 @@
 from __future__ import annotations
 
-import dataclasses
-
 import abc
 import typing
 import wtforms
 
 from ohmyadmin.forms import ListField
-from ohmyadmin.globals import get_current_request
 from ohmyadmin.helpers import render_to_string
 from ohmyadmin.i18n import _
-
-if typing.TYPE_CHECKING:
-    from ohmyadmin.resources import Resource, ResourceAction
+from ohmyadmin.structures import URLSpec
 
 Colspan = int | typing.Literal['full']
 ButtonColor = typing.Literal['default', 'primary', 'text', 'danger']
@@ -151,28 +146,6 @@ class EmptyState(Component):
         self.message = message
         self.actions = actions
         self.image_template = image_template
-
-
-@dataclasses.dataclass
-class URLSpec:
-    url: str | None = None
-    path_name: str | None = None
-    path_params: dict[str, str | int] | None = None
-    resource: typing.Type[Resource] | Resource | None = None
-    resource_action: ResourceAction = 'list'
-    resource_action_params: dict[str, str | int] | None = None
-
-    def to_url(self) -> str:
-        request = get_current_request()
-        if self.url:
-            return self.url
-        if self.path_name:
-            return request.url_for(self.path_name, **(self.path_params or {}))
-        if self.resource:
-            return request.url_for(
-                self.resource.get_route_name(self.resource_action, **(self.resource_action_params or {}))
-            )
-        raise ValueError('Cannot generate URL.')
 
 
 class ButtonLink(Component):
