@@ -40,7 +40,7 @@ class ActionMeta(abc.ABCMeta):
         attrs['label'] = attrs.get('label', camel_to_sentence(name))
 
         klass = super().__new__(cls, name, bases, attrs)
-        _action_registry[attrs['id']] = typing.cast(typing.Type[Action], klass)
+        _action_registry[attrs['id']] = typing.cast(typing.Type['Action'], klass)
         return klass
 
 
