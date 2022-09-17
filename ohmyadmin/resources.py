@@ -6,13 +6,13 @@ from starlette.requests import Request
 from starlette.routing import BaseRoute, Route, Router
 from starlette.types import Receive, Scope, Send
 
-from ohmyadmin.actions import Action, LinkAction, SubmitAction
+from ohmyadmin.actions import Action, SubmitAction
 from ohmyadmin.batch_actions import BatchAction, BulkDeleteAction
-from ohmyadmin.components import Component, EmptyState, FormElement, Grid
+from ohmyadmin.components import ButtonLink, Component, EmptyState, FormElement, Grid, URLSpec
 from ohmyadmin.filters import BaseFilter, FilterIndicator, OrderingFilter, SearchFilter
 from ohmyadmin.flash import flash
 from ohmyadmin.forms import Form, HandlesFiles
-from ohmyadmin.helpers import render_to_response
+from ohmyadmin.helpers import camel_to_sentence, pluralize, render_to_response
 from ohmyadmin.i18n import _
 from ohmyadmin.metrics import Metric
 from ohmyadmin.pagination import Page
@@ -39,8 +39,8 @@ def label_from_resource_class(class_name: str) -> str:
 class ResourceMeta(type):
     def __new__(cls, name: str, bases: tuple, attrs: dict[str, typing.Any], **kwargs: typing.Any) -> typing.Type:
         attrs['id'] = attrs.get('id', name.removesuffix('Resource').lower())
-        attrs['label'] = attrs.get('label', name.removesuffix('Resource').title())
-        attrs['label_plural'] = attrs.get('label_plural', attrs['label'] + 's')
+        attrs['label'] = attrs.get('label', camel_to_sentence(name.removesuffix('Resource')))
+        attrs['label_plural'] = attrs.get('label_plural', pluralize(attrs['label']))
         return super().__new__(cls, name, bases, attrs)
 
 
@@ -52,13 +52,13 @@ class Resource(Router, metaclass=ResourceMeta):
 
     # orm configuration
     entity_class: typing.ClassVar[typing.Any] = None
-    queryset: sa.sql.Select | None = None
+    queryset: typing.ClassVar[sa.sql.Select | None] = None
 
     # table settings
     filters: typing.Iterable[typing.Type[BaseFilter]] | None = None
     table_columns: typing.Iterable[Column] | None = None
     batch_actions: typing.Iterable[BatchAction] | None = None
-    table_actions: typing.Iterable[Action] | None = None
+    table_actions: typing.Iterable[Component] | None = None
     row_actions: typing.Iterable[RowAction] | None = None
     metrics: typing.Iterable[Metric] | None = None
 
@@ -117,7 +117,7 @@ class Resource(Router, metaclass=ResourceMeta):
         return EmptyState(
             heading=_('Empty page'),
             message=_('This page currently has no data.'),
-            actions=list(self.get_default_table_actions(request)),
+            actions=list(self.get_default_table_actions()),
         )
 
     def get_pk_value(self, entity: typing.Any) -> int | str:
@@ -145,17 +145,17 @@ class Resource(Router, metaclass=ResourceMeta):
         for filter_class in filter_classes:
             yield filter_class()
 
-    def get_default_table_actions(self, request: Request) -> typing.Iterable[Action]:
-        yield LinkAction(
-            url=request.url_for(self.get_route_name('create')),
+    def get_default_table_actions(self) -> typing.Iterable[Component]:
+        yield ButtonLink(
+            url=URLSpec(resource=self, resource_action='create'),
             text=_('Add {resource}'.format(resource=self.label)),
             icon='plus',
             color='primary',
         )
 
-    def get_table_actions(self, request: Request) -> typing.Iterable[Action]:
+    def get_table_actions(self) -> typing.Iterable[Component]:
         yield from self.table_actions or []
-        yield from self.get_default_table_actions(request)
+        yield from self.get_default_table_actions()
 
     def get_default_row_actions(self, request: Request) -> typing.Iterable[RowAction]:
         yield LinkRowAction(
@@ -263,7 +263,7 @@ class Resource(Router, metaclass=ResourceMeta):
                 'empty_state': self.get_empty_state(request),
                 'batch_actions': list(self.get_batch_actions()),
                 'row_actions': list(self.get_row_actions(request)),
-                'table_actions': list(self.get_table_actions(request)),
+                'table_actions': list(self.get_table_actions()),
                 'metrics': [await metric.render(request) for metric in self.get_metrics()],
             },
         )

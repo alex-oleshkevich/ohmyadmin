@@ -24,7 +24,6 @@ class EditForm(Form):
 
 class CategoryResource(Resource):
     icon = 'category'
-    label_plural = 'Categories'
     entity_class = Category
     form_class = EditForm
     table_columns = [

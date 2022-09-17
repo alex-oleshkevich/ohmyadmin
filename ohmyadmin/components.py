@@ -1,15 +1,22 @@
 from __future__ import annotations
 
+import dataclasses
+
 import abc
 import typing
 import wtforms
 
-from ohmyadmin.actions import Action
 from ohmyadmin.forms import ListField
+from ohmyadmin.globals import get_current_request
 from ohmyadmin.helpers import render_to_string
 from ohmyadmin.i18n import _
 
+if typing.TYPE_CHECKING:
+    from ohmyadmin.resources import Resource, ResourceAction
+
 Colspan = int | typing.Literal['full']
+ButtonColor = typing.Literal['default', 'primary', 'text', 'danger']
+ButtonType = typing.Literal['submit', 'button']
 
 
 class Component(abc.ABC):
@@ -117,7 +124,7 @@ class EmptyState(Component):
     def __init__(
         self,
         message: str,
-        actions: list[Action],
+        actions: list[Component],
         heading: str = _('Empty page'),
         image_template: str = 'ohmyadmin/images/empty.svg',
     ) -> None:
@@ -125,3 +132,53 @@ class EmptyState(Component):
         self.message = message
         self.actions = actions
         self.image_template = image_template
+
+
+@dataclasses.dataclass
+class URLSpec:
+    url: str | None = None
+    path_name: str | None = None
+    path_params: dict[str, str | int] | None = None
+    resource: typing.Type[Resource] | Resource | None = None
+    resource_action: ResourceAction = 'list'
+    resource_action_params: dict[str, str | int] | None = None
+
+    def to_url(self) -> str:
+        request = get_current_request()
+        if self.url:
+            return self.url
+        if self.path_name:
+            return request.url_for(self.path_name, **(self.path_params or {}))
+        if self.resource:
+            return request.url_for(
+                self.resource.get_route_name(self.resource_action, **(self.resource_action_params or {}))
+            )
+        raise ValueError('Cannot generate URL.')
+
+
+class ButtonLink(Component):
+    """
+    A link that looks like a button.
+
+    Commonly used as action button that performs a redirect to another page. A
+    good example is: 'Add new object' primary action on index pages.
+    """
+
+    template = 'ohmyadmin/components/button_link.html'
+
+    def __init__(
+        self,
+        url: str | URLSpec,
+        text: str = '',
+        icon: str = '',
+        color: ButtonColor = 'default',
+    ) -> None:
+        assert text or icon, 'ButtonLink requires either text or icon argument set.'
+        self.text = text
+        self.icon = icon
+        self.color = color
+        self.url_spec = URLSpec(url=url) if isinstance(url, str) else url
+
+    @property
+    def url(self) -> str:
+        return self.url_spec.to_url()

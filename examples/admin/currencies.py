@@ -23,7 +23,6 @@ class EditForm(Form):
 
 class CurrencyResource(Resource):
     icon = 'currency'
-    label_plural = 'Currencies'
     entity_class = Currency
     form_class = EditForm
     table_columns = [

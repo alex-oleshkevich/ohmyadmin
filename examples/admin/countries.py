@@ -23,7 +23,6 @@ class EditForm(Form):
 
 class CountryResource(Resource):
     icon = 'map'
-    label_plural = 'Countries'
     entity_class = Country
     form_class = EditForm
     table_columns = [
