@@ -1,12 +1,13 @@
 import sqlalchemy as sa
 import typing
+from slugify import slugify
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
 from starlette.routing import BaseRoute, Route, Router
 from starlette.types import Receive, Scope, Send
 
-from ohmyadmin.batch_actions import BatchAction, BulkDeleteAction
+from ohmyadmin.actions import BatchAction, BulkDeleteAction
 from ohmyadmin.components import Button, ButtonLink, Component, EmptyState, FormElement, Grid, Row
 from ohmyadmin.filters import BaseFilter, FilterIndicator, OrderingFilter, SearchFilter
 from ohmyadmin.flash import flash
@@ -32,13 +33,9 @@ ResourceAction = typing.Literal['list', 'create', 'edit', 'delete', 'bulk', 'act
 PkType = int | str
 
 
-def label_from_resource_class(class_name: str) -> str:
-    return class_name.removesuffix('Resource').title()
-
-
 class ResourceMeta(type):
     def __new__(cls, name: str, bases: tuple, attrs: dict[str, typing.Any], **kwargs: typing.Any) -> typing.Type:
-        attrs['id'] = attrs.get('id', name.removesuffix('Resource').lower())
+        attrs['id'] = attrs.get('id', pluralize(slugify(name.removesuffix('Resource'))))
         attrs['label'] = attrs.get('label', camel_to_sentence(name.removesuffix('Resource')))
         attrs['label_plural'] = attrs.get('label_plural', pluralize(attrs['label']))
         return super().__new__(cls, name, bases, attrs)

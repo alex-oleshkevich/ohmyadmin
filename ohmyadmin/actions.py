@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import dataclasses
-
 import abc
-import enum
+import sqlalchemy as sa
 import typing
 from slugify import slugify
 from starlette.requests import Request
@@ -16,9 +14,10 @@ from ohmyadmin.globals import get_current_request
 from ohmyadmin.helpers import camel_to_sentence, render_to_response
 from ohmyadmin.i18n import _
 from ohmyadmin.responses import Response
+from ohmyadmin.structures import URLSpec
 
 if typing.TYPE_CHECKING:
-    from ohmyadmin.resources import Resource, ResourceAction
+    from ohmyadmin.resources import PkType
 
 _action_registry: dict[str, typing.Type[Action]] = {}
 
@@ -63,13 +62,18 @@ class BaseAction(Component, abc.ABC, metaclass=ActionMeta):
         request = get_current_request()
         return request.url_for('ohmyadmin_action', action_id=self.id)
 
+    def dismiss(self, message: str = '', category: FlashCategory = 'success') -> Response:
+        response = Response.empty().hx_event(DISMISS_EVENT)
+        if message:
+            response = response.hx_toast(message, category)
+        return response
+
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         response = await self.dispatch(Request(scope, receive, send))
         await response(scope, receive, send)
 
 
-class Action(BaseAction):
-    success_message: str = _('Action has been completed.')
+class FormActionMixin:
     form_class: typing.ClassVar[typing.Type[Form]] = Form
 
     def get_form_class(self) -> typing.Type[Form]:
@@ -78,6 +82,8 @@ class Action(BaseAction):
     def get_form_layout(self, form: Form) -> Component:
         return Grid(columns=1, children=[FormElement(field) for field in form])
 
+
+class Action(BaseAction, FormActionMixin):
     @abc.abstractmethod
     async def apply(self, request: Request, form: Form) -> Response:
         ...
@@ -90,7 +96,7 @@ class Action(BaseAction):
         layout = self.get_form_layout(form)
         return render_to_response(
             request,
-            'ohmyadmin/actions/placeholder.html',
+            'ohmyadmin/actions/action.html',
             {
                 'request': request,
                 'action': self,
@@ -98,84 +104,44 @@ class Action(BaseAction):
             },
         )
 
-    def dismiss(self, message: str = '', category: FlashCategory = 'success') -> Response:
-        response = Response.empty().hx_event(DISMISS_EVENT)
-        if message:
-            response = response.hx_toast(message, category)
-        return response
 
+class BatchAction(BaseAction, FormActionMixin):
+    coerce: typing.Callable = int
+    template: str = ''
 
-class BoundAction:
-    def __init__(self, action: Action, url: str) -> None:
-        self.action = action
-        self.url = url
+    @abc.abstractmethod
+    async def apply(self, request: Request, ids: list[PkType], form: Form) -> Response:
+        ...
 
+    async def dispatch(self, request: Request) -> Response:
+        form = await self.get_form_class().from_request(request)
+        if await form.validate_on_submit(request):
+            form_data = await request.form()
+            object_ids = [self.coerce(typing.cast(str, object_id)) for object_id in form_data.getlist('selected')]
+            return await self.apply(request, object_ids, form)
 
-class ActionResponse:
-    class Type(str, enum.Enum):
-        TOAST = 'toast'
-        REDIRECT = 'redirect'
-        REFRESH = 'refresh'
-
-    @dataclasses.dataclass
-    class ToastOptions:
-        message: str
-        category: FlashCategory
-
-    @dataclasses.dataclass
-    class RedirectOptions:
-        url: str | None = None
-        path_name: str | None = None
-        path_params: typing.Mapping[str, str | int] | None = None
-        resource: typing.Type[Resource] | Resource | None = None
-        resource_action: ResourceAction = 'list'
-
-    def __init__(
-        self, type: str, toast_options: ToastOptions | None = None, redirect_options: RedirectOptions | None = None
-    ) -> None:
-        self.type = type
-        self.toast_options = toast_options
-        self.redirect_options = redirect_options
-
-    def with_success(self, message: str) -> ActionResponse:
-        self.toast_options = self.ToastOptions(message=message, category='success')
-        return self
-
-    def with_error(self, message: str) -> ActionResponse:
-        self.toast_options = self.ToastOptions(message=message, category='error')
-        return self
-
-    @classmethod
-    def toast(cls, message: str, category: FlashCategory = 'success') -> ActionResponse:
-        return ActionResponse(type=cls.Type.TOAST, toast_options=cls.ToastOptions(message=message, category=category))
-
-    @classmethod
-    def redirect(cls, url: str) -> ActionResponse:
-        return ActionResponse(type=cls.Type.REDIRECT, redirect_options=cls.RedirectOptions(url=url))
-
-    @classmethod
-    def redirect_to_path_name(
-        cls, path_name: str | None = None, path_params: typing.Mapping[str, str | int] | None = None
-    ) -> ActionResponse:
-        return ActionResponse(
-            type=cls.Type.REDIRECT,
-            redirect_options=cls.RedirectOptions(path_name=path_name, path_params=path_params or {}),
+        layout = self.get_form_layout(form)
+        return render_to_response(
+            request,
+            'ohmyadmin/actions/batch_action.html',
+            {
+                'request': request,
+                'action': self,
+                'layout': layout,
+            },
         )
 
-    @classmethod
-    def redirect_to_resource(
-        cls,
-        resource: typing.Type[Resource] | Resource,
-        action: ResourceAction = 'list',
-    ) -> ActionResponse:
-        return ActionResponse(
-            type=cls.Type.REDIRECT,
-            redirect_options=cls.RedirectOptions(
-                resource=resource,
-                resource_action=action,
-            ),
-        )
 
-    @classmethod
-    def refresh(cls) -> ActionResponse:
-        return ActionResponse(type=cls.Type.REFRESH)
+class BulkDeleteAction(BatchAction):
+    dangerous = True
+    message = _('Do you want to delete all items?')
+
+    async def apply(self, request: Request, ids: list[PkType], form: Form) -> Response:
+        stmt = sa.select(request.state.resource.entity_class).where(
+            sa.column(request.state.resource.pk_column).in_(ids)
+        )
+        result = await request.state.dbsession.scalars(stmt)
+        for row in result.all():
+            await request.state.dbsession.delete(row)
+
+        return Response.empty().hx_redirect(URLSpec.to_resource(request.state.resource))

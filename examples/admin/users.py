@@ -2,11 +2,21 @@ import sqlalchemy as sa
 from starlette.requests import Request
 
 from examples.models import User
-from ohmyadmin.actions import Action, ActionResponse
-from ohmyadmin.batch_actions import BatchAction
-from ohmyadmin.forms import CheckboxField, EmailField, FileField, Form, HiddenField, IntegerField, RadioField, TextField
+from ohmyadmin.actions import Action, BatchAction
+from ohmyadmin.forms import (
+    CheckboxField,
+    EmailField,
+    FileField,
+    Form,
+    HiddenField,
+    IntegerField,
+    RadioField,
+    SelectField,
+    TextField,
+)
 from ohmyadmin.resources import PkType, Resource
 from ohmyadmin.responses import Response
+from ohmyadmin.structures import URLSpec
 from ohmyadmin.tables import BoolColumn, Column, ImageColumn
 
 
@@ -14,8 +24,8 @@ class DuplicateAction(BatchAction):
     class ActionForm(Form):
         count = IntegerField(min_value=1, default=1)
 
-    async def apply(self, request: Request, ids: list[PkType], form: Form) -> ActionResponse:
-        return self.respond().redirect_to_resource(UserResource).with_success('User has been scheduled for export.')
+    async def apply(self, request: Request, ids: list[PkType], form: Form) -> Response:
+        return Response.empty().hx_redirect(URLSpec.to_resource(UserResource))
 
 
 class ExportAction(Action):
@@ -23,6 +33,13 @@ class ExportAction(Action):
     message = 'This will export all users matching current table filters.'
 
     class ActionForm(Form):
+        format = SelectField(
+            choices=[
+                ('csv', 'CSV'),
+                ('json', 'JSON'),
+                ('xls', 'Excel'),
+            ]
+        )
         range = RadioField(
             choices=[
                 ('all', 'All'),
@@ -32,7 +49,6 @@ class ExportAction(Action):
         )
 
     async def apply(self, request: Request, form: Form) -> Response:
-        print(form.data)
         return self.dismiss('Action completed.')
 
 

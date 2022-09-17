@@ -9,12 +9,14 @@ window.Alpine = Alpine;
 
 document.addEventListener('alpine:init', () => {
     Alpine.data('app', () => ({
-        actionUrl: '',
         init() {
             document.body.addEventListener(Events.DismissModal, () => {
                 this.closeActionModal();
             });
         },
+
+        /* modal handler */
+        actionUrl: '',
         get isActionModalOpen() {
             return this.actionUrl != '';
         },
@@ -23,7 +25,27 @@ document.addEventListener('alpine:init', () => {
         },
         closeActionModal() {
             this.actionUrl = '';
-        }
+        },
+
+        /* index page */
+        selected: [],
+        select(id) {
+            if (this.selected.includes(id)) {
+                this.selected.splice(this.selected.indexOf(id), 1);
+            } else {
+                this.selected.push(id);
+            }
+        },
+        toggleSelectAll(e) {
+            let checkboxes = e.target.closest('table').querySelectorAll('tbody input[type="checkbox"]');
+            if (e.target.checked) {
+                checkboxes.forEach(el => {
+                    this.selected.push(el.value);
+                });
+            } else {
+                this.selected = [];
+            }
+        },
     }));
 });
 

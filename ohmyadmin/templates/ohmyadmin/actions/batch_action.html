@@ -1,0 +1,12 @@
+{% extends 'ohmyadmin/modal_action.html' %}
+
+{% block content %}
+    {{ super() }}
+    <div class="mt-6">{{ layout }}</div>
+
+    <select multiple name="selected" hidden class="hidden">
+        <template x-for="obj_id in selected">
+            <option selected :value="obj_id" x-text="obj_id"></option>
+        </template>
+    </select>
+{% endblock %}
