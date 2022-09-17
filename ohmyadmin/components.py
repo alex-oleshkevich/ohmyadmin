@@ -12,7 +12,7 @@ from ohmyadmin.i18n import _
 Colspan = int | typing.Literal['full']
 
 
-class Layout(abc.ABC):
+class Component(abc.ABC):
     template = ''
 
     def render(self) -> str:
@@ -23,36 +23,36 @@ class Layout(abc.ABC):
     __str__ = render
 
 
-class Grid(Layout):
-    template = 'ohmyadmin/layouts/grid.html'
+class Grid(Component):
+    template = 'ohmyadmin/components/grid.html'
 
-    def __init__(self, children: typing.Iterable[Layout], columns: int = 1, gap: int = 5) -> None:
+    def __init__(self, children: typing.Iterable[Component], columns: int = 1, gap: int = 5) -> None:
         self.cols = columns
         self.gap = gap
         self.children = children
 
-    def __iter__(self) -> typing.Iterator[Layout]:
+    def __iter__(self) -> typing.Iterator[Component]:
         return iter(self.children)
 
 
-class Group(Layout):
-    template = 'ohmyadmin/layouts/group.html'
+class Group(Component):
+    template = 'ohmyadmin/components/group.html'
 
-    def __init__(self, children: typing.Iterable[Layout], colspan: Colspan = 'full', columns: int = 1) -> None:
+    def __init__(self, children: typing.Iterable[Component], colspan: Colspan = 'full', columns: int = 1) -> None:
         self.colspan = colspan
         self.columns = columns
         self.children = children
 
-    def __iter__(self) -> typing.Iterator[Layout]:
+    def __iter__(self) -> typing.Iterator[Component]:
         return iter(self.children)
 
 
-class Card(Layout):
-    template = 'ohmyadmin/layouts/card.html'
+class Card(Component):
+    template = 'ohmyadmin/components/card.html'
 
     def __init__(
         self,
-        children: typing.Iterable[Layout],
+        children: typing.Iterable[Component],
         title: str = '',
         columns: int = 1,
     ) -> None:
@@ -60,20 +60,20 @@ class Card(Layout):
         self.columns = columns
         self.children = children
 
-    def __iter__(self) -> typing.Iterator[Layout]:
+    def __iter__(self) -> typing.Iterator[Component]:
         return iter(self.children)
 
 
-class FormElement(Layout):
-    template = 'ohmyadmin/layouts/form_field.html'
+class FormElement(Component):
+    template = 'ohmyadmin/components/form_field.html'
 
     def __init__(self, field: wtforms.Field, colspan: Colspan = 1) -> None:
         self.field = field
         self.colspan = colspan
 
 
-class FormPlaceholder(Layout):
-    template = 'ohmyadmin/layouts/form_placeholder.html'
+class FormPlaceholder(Component):
+    template = 'ohmyadmin/components/form_placeholder.html'
 
     def __init__(self, label: str, text: str, colspan: Colspan = 1) -> None:
         self.text = text
@@ -81,15 +81,15 @@ class FormPlaceholder(Layout):
         self.colspan = colspan
 
 
-class FormRepeater(Layout):
-    template = 'ohmyadmin/layouts/form_repeater.html'
+class FormRepeater(Component):
+    template = 'ohmyadmin/components/form_repeater.html'
 
-    def __init__(self, form: wtforms.FieldList, layout_builder: typing.Callable[[ListField], Layout]) -> None:
+    def __init__(self, form: wtforms.FieldList, layout_builder: typing.Callable[[ListField], Component]) -> None:
         self.form = form
         self.layout_builder = layout_builder
 
     @property
-    def empty(self) -> Layout:
+    def empty(self) -> Component:
         form_field = next(iter(self.form))
         form = form_field.form
         form.process(None)
@@ -103,7 +103,7 @@ class FormRepeater(Layout):
             )
         return self.layout_builder(form)
 
-    def __iter__(self) -> typing.Iterator[Layout]:
+    def __iter__(self) -> typing.Iterator[Component]:
         for field in self.form:
             yield self.layout_builder(field)
 
@@ -111,8 +111,8 @@ class FormRepeater(Layout):
         return len(self.form)
 
 
-class EmptyState(Layout):
-    template = 'ohmyadmin/layouts/empty_state.html'
+class EmptyState(Component):
+    template = 'ohmyadmin/components/empty_state.html'
 
     def __init__(
         self,

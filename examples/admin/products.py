@@ -5,6 +5,7 @@ from starlette.requests import Request
 
 from examples.admin.brands import BrandResource
 from examples.models import Brand, Product
+from ohmyadmin.components import Card, Component, FormElement, Grid, Group
 from ohmyadmin.forms import (
     CheckboxField,
     DateField,
@@ -18,7 +19,6 @@ from ohmyadmin.forms import (
     choices_from,
 )
 from ohmyadmin.helpers import resource_url
-from ohmyadmin.layout import Card, FormElement, Grid, Group, Layout
 from ohmyadmin.metrics import CountMetric
 from ohmyadmin.resources import Resource
 from ohmyadmin.tables import BoolColumn, Column, HasManyColumn, ImageColumn, NumberColumn
@@ -114,7 +114,7 @@ class ProductResource(Resource):
         AveragePrice(),
     ]
 
-    def get_form_layout(self, request: Request, form: Form) -> Layout:
+    def get_form_layout(self, request: Request, form: Form) -> Component:
         return Grid(
             columns=3,
             children=[

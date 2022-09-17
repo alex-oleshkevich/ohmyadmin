@@ -10,11 +10,11 @@ from starlette.requests import Request
 from starlette.types import Receive, Scope, Send
 
 from ohmyadmin.actions import ActionResponse
+from ohmyadmin.components import Component, FormElement, Grid
 from ohmyadmin.flash import flash
 from ohmyadmin.forms import Form
 from ohmyadmin.helpers import render_to_response
 from ohmyadmin.i18n import _
-from ohmyadmin.layout import FormElement, Grid, Layout
 from ohmyadmin.responses import Response
 
 if typing.TYPE_CHECKING:
@@ -102,7 +102,7 @@ class BatchAction(abc.ABC, metaclass=BatchActionMeta):
     def respond(self) -> typing.Type[ActionResponse]:
         return ActionResponse
 
-    def get_form_layout(self, form: Form) -> Layout:
+    def get_form_layout(self, form: Form) -> Component:
         return Grid([FormElement(field) for field in form])
 
     def get_form_class(self) -> typing.Type[Form]:

@@ -1,8 +1,8 @@
 from starlette.requests import Request
 
 from examples.models import Category
+from ohmyadmin.components import Card, Component, FormElement, FormPlaceholder, Grid, Group
 from ohmyadmin.forms import CheckboxField, Form, MarkdownField, SelectField, SlugField, TextField, choices_from
-from ohmyadmin.layout import Card, FormElement, FormPlaceholder, Grid, Group, Layout
 from ohmyadmin.resources import Resource
 from ohmyadmin.tables import BoolColumn, Column, DateColumn
 
@@ -34,7 +34,7 @@ class CategoryResource(Resource):
         DateColumn('updated_at'),
     ]
 
-    def get_form_layout(self, request: Request, form: Form[Category]) -> Layout:
+    def get_form_layout(self, request: Request, form: Form[Category]) -> Component:
         return Grid(
             columns=3,
             children=[

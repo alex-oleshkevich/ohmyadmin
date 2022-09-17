@@ -8,12 +8,12 @@ from starlette.types import Receive, Scope, Send
 
 from ohmyadmin.actions import Action, LinkAction, SubmitAction
 from ohmyadmin.batch_actions import BatchAction, BulkDeleteAction
+from ohmyadmin.components import Component, EmptyState, FormElement, Grid
 from ohmyadmin.filters import BaseFilter, FilterIndicator, OrderingFilter, SearchFilter
 from ohmyadmin.flash import flash
 from ohmyadmin.forms import Form, HandlesFiles
 from ohmyadmin.helpers import render_to_response
 from ohmyadmin.i18n import _
-from ohmyadmin.layout import EmptyState, FormElement, Grid, Layout
 from ohmyadmin.metrics import Metric
 from ohmyadmin.pagination import Page
 from ohmyadmin.responses import RedirectResponse, Response
@@ -113,7 +113,7 @@ class Resource(Router, metaclass=ResourceMeta):
                 return str
         return int
 
-    def get_empty_state(self, request: Request) -> Layout:
+    def get_empty_state(self, request: Request) -> Component:
         return EmptyState(
             heading=_('Empty page'),
             message=_('This page currently has no data.'),
@@ -195,7 +195,7 @@ class Resource(Router, metaclass=ResourceMeta):
         assert self.form_class, f'{self.__class__.__name__} must define form_class attribute.'
         return self.form_class
 
-    def get_form_layout(self, request: Request, form: Form) -> Layout:
+    def get_form_layout(self, request: Request, form: Form) -> Component:
         return Grid(columns=2, children=[FormElement(field) for field in form])
 
     def get_empty_object(self) -> typing.Any:

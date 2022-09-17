@@ -4,9 +4,9 @@ import sqlalchemy as sa
 from starlette.requests import Request
 
 from examples.models import Customer
+from ohmyadmin.components import Card, Component, FormElement, FormPlaceholder, Grid, Group
 from ohmyadmin.filters import BaseFilter
 from ohmyadmin.forms import DateField, EmailField, Form, TextField
-from ohmyadmin.layout import Card, FormElement, FormPlaceholder, Grid, Group, Layout
 from ohmyadmin.resources import Resource
 from ohmyadmin.tables import Column
 
@@ -44,7 +44,7 @@ class CustomerResource(Resource):
         Column('phone', searchable=True),
     ]
 
-    def get_form_layout(self, request: Request, form: Form[Customer]) -> Layout:
+    def get_form_layout(self, request: Request, form: Form[Customer]) -> Component:
         return Grid(
             columns=3,
             children=[

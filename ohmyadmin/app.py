@@ -14,10 +14,10 @@ from starlette.staticfiles import StaticFiles
 from starlette.types import Receive, Scope, Send
 
 from ohmyadmin.auth import AnonymousAuthPolicy, BaseAuthPolicy, RequireLoginMiddleware, UserMenu
+from ohmyadmin.components import FormElement, Grid
 from ohmyadmin.flash import FlashMiddleware, flash
 from ohmyadmin.globals import globalize_dbsession, globalize_request
 from ohmyadmin.i18n import _
-from ohmyadmin.layout import FormElement, Grid
 from ohmyadmin.media_server import MediaServer
 from ohmyadmin.nav import MenuGroup, MenuItem
 from ohmyadmin.resources import Resource

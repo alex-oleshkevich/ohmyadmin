@@ -8,9 +8,9 @@ import typing
 from sqlalchemy.orm import InstrumentedAttribute
 from starlette.requests import Request
 
+from ohmyadmin.components import Component, FormElement, Grid
 from ohmyadmin.forms import Form
 from ohmyadmin.helpers import render_to_string
-from ohmyadmin.layout import FormElement, Grid, Layout
 from ohmyadmin.tables import Column, get_ordering_value, get_search_value
 
 
@@ -32,7 +32,7 @@ class BaseFilter(abc.ABC):
     label: str = ''
     has_ui: bool = True
     form_class: typing.ClassVar[typing.Type[Form]] = EmptyForm
-    _layout: Layout | None = None
+    _layout: Component | None = None
     _indicators: typing.Iterable[FilterIndicator] | None = None
 
     @property

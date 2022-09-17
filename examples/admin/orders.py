@@ -3,6 +3,7 @@ from sqlalchemy.orm import joinedload, selectinload, with_expression
 from starlette.requests import Request
 
 from examples.models import Country, Currency, Customer, Order, OrderItem, Product
+from ohmyadmin.components import Card, Component, FormElement, FormPlaceholder, FormRepeater, Grid, Group
 from ohmyadmin.forms import (
     DecimalField,
     Form,
@@ -14,7 +15,6 @@ from ohmyadmin.forms import (
     TextField,
     choices_from,
 )
-from ohmyadmin.layout import Card, FormElement, FormPlaceholder, FormRepeater, Grid, Group, Layout
 from ohmyadmin.metrics import CountMetric
 from ohmyadmin.resources import Resource
 from ohmyadmin.tables import BadgeColumn, Column, DateColumn, NumberColumn
@@ -103,7 +103,7 @@ class OrderResource(Resource):
         DateColumn('created_at', label='Order date'),
     ]
 
-    def get_form_layout(self, request: Request, form: Form[Order]) -> Layout:
+    def get_form_layout(self, request: Request, form: Form[Order]) -> Component:
         return Grid(
             columns=3,
             children=[
