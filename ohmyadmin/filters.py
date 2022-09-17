@@ -105,20 +105,21 @@ class SearchFilter(BaseFilter):
             self.db_columns.extend(column.search_in or [getattr(entity_class, column.name)])
 
     def create_search_token(self, column: InstrumentedAttribute, search_query: str) -> sa.sql.ColumnElement:
+        string_column = sa.cast(column, sa.Text)
         if search_query.startswith('^'):
             search_token = f'{search_query[1:].lower()}%'
-            return column.ilike(search_token)
+            return string_column.ilike(search_token)
 
         if search_query.startswith('='):
             search_token = f'{search_query[1:].lower()}'
-            return sa.func.lower(column) == search_token
+            return sa.func.lower(string_column) == search_token
 
         if search_query.startswith('@'):
             search_token = f'{search_query[1:].lower()}'
-            return column.regexp_match(search_token)
+            return string_column.regexp_match(search_token)
 
         search_token = f'%{search_query.lower()}%'
-        return column.ilike(search_token)
+        return string_column.ilike(search_token)
 
     def apply(self, request: Request, queryset: sa.sql.Select, form: Form) -> sa.sql.Select:
         search_query = get_search_value(request, self.query_param)
