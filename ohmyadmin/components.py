@@ -173,7 +173,8 @@ class ButtonLink(Component):
         icon: str = '',
         color: ButtonColor = 'default',
     ) -> None:
-        assert text or icon, 'ButtonLink requires either text or icon argument set.'
+        assert text or icon, 'ButtonLink component requires either text or icon argument set.'
+
         self.text = text
         self.icon = icon
         self.color = color
@@ -182,3 +183,25 @@ class ButtonLink(Component):
     @property
     def url(self) -> str:
         return self.url_spec.to_url()
+
+
+class Button(Component):
+    """Renders a button."""
+
+    template = 'ohmyadmin/components/button.html'
+
+    def __init__(
+        self,
+        text: str = '',
+        icon: str = '',
+        color: ButtonColor = 'default',
+        type: ButtonType = 'submit',
+        name: str | None = None,
+    ) -> None:
+        assert text or icon, 'Button component requires either text or icon argument set.'
+
+        self.text = text
+        self.icon = icon
+        self.type = type
+        self.name = name
+        self.color = color

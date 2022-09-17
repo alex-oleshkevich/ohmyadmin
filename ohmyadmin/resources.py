@@ -6,9 +6,8 @@ from starlette.requests import Request
 from starlette.routing import BaseRoute, Route, Router
 from starlette.types import Receive, Scope, Send
 
-from ohmyadmin.actions import Action, SubmitAction
 from ohmyadmin.batch_actions import BatchAction, BulkDeleteAction
-from ohmyadmin.components import ButtonLink, Component, EmptyState, FormElement, Grid, URLSpec
+from ohmyadmin.components import Button, ButtonLink, Component, EmptyState, FormElement, Grid, URLSpec
 from ohmyadmin.filters import BaseFilter, FilterIndicator, OrderingFilter, SearchFilter
 from ohmyadmin.flash import flash
 from ohmyadmin.forms import Form, HandlesFiles
@@ -72,8 +71,8 @@ class Resource(Router, metaclass=ResourceMeta):
     search_placeholder: str = _('Search...')
 
     # form settings
-    form_class: typing.Type[Form] | None = None
-    form_actions: typing.Iterable[Action] | None = None
+    form_class: typing.ClassVar[typing.Type[Form] | None] = None
+    form_actions: typing.ClassVar[typing.Iterable[Component] | None] = None
     create_page_label: str = _('Create {resource}')
     edit_page_label: str = _('Edit {resource}')
     delete_page_label: str = _('Delete {resource}')
@@ -182,14 +181,14 @@ class Resource(Router, metaclass=ResourceMeta):
     def get_metrics(self) -> typing.Iterable[Metric]:
         yield from self.metrics or []
 
-    def get_default_form_actions(self, request: Request) -> typing.Iterable[Action]:
-        yield SubmitAction(_('Save'), color='primary', name='_save')
-        yield SubmitAction(_('Save and return to list'), name='_list')
-        yield SubmitAction(_('Save and add new'), name='_add')
+    def get_default_form_actions(self) -> typing.Iterable[Component]:
+        yield Button(_('Save'), color='primary', name='_save')
+        yield Button(_('Save and return to list'), name='_list')
+        yield Button(_('Save and add new'), name='_add')
 
-    def get_form_actions(self, request: Request) -> typing.Iterable[Action]:
+    def get_form_actions(self) -> typing.Iterable[Component]:
         yield from self.form_actions or []
-        yield from self.get_default_form_actions(request)
+        yield from self.get_default_form_actions()
 
     def get_form_class(self) -> typing.Type[Form]:
         assert self.form_class, f'{self.__class__.__name__} must define form_class attribute.'
@@ -315,7 +314,7 @@ class Resource(Router, metaclass=ResourceMeta):
                 'form': form,
                 'layout': layout,
                 'request': request,
-                'form_actions': self.get_form_actions(request),
+                'form_actions': self.get_form_actions(),
                 'page_title': label_template.format(resource=object_label),
             },
         )

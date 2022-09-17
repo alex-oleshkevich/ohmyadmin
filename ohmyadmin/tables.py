@@ -7,7 +7,6 @@ from starlette.datastructures import URL, MultiDict
 from starlette.requests import Request
 from urllib.parse import parse_qsl, urlencode
 
-from ohmyadmin.actions import ActionColor
 from ohmyadmin.helpers import media_url, render_to_string
 
 Formatter = typing.Callable[[typing.Any], str]
@@ -169,7 +168,7 @@ class LinkRowAction(RowAction):
         action_url: typing.Callable[[typing.Any], str],
         text: str = '',
         icon: str = '',
-        color: ActionColor = 'default',
+        color: typing.Literal['default', 'danger'] = 'default',
     ) -> None:
         self.text = text
         self.icon = icon
