@@ -33,7 +33,7 @@ class Response:
         self.hx_events[name] = value or ''
         return self
 
-    def hx_toast(self, message: str, category: FlashCategory) -> Response:
+    def hx_toast(self, message: str, category: FlashCategory = 'success') -> Response:
         """
         Show toast (flash message).
 

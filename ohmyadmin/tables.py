@@ -7,10 +7,12 @@ from starlette.datastructures import URL, MultiDict
 from starlette.requests import Request
 from urllib.parse import parse_qsl, urlencode
 
+from ohmyadmin.components import Component
 from ohmyadmin.helpers import media_url, render_to_string
 
 Formatter = typing.Callable[[typing.Any], str]
 BadgeColors = typing.Literal['red', 'green', 'blue', 'pink', 'teal', 'sky', 'yellow', 'gray']
+RowActionsCallback = typing.Callable[[typing.Any], typing.Iterable[Component]]
 
 
 class Column:
@@ -148,6 +150,20 @@ class HasManyColumn(Column):
         values = self.get_value(entity)
         value = values[0] if values else None
         return self.child.render(value)
+
+
+class ActionColumn(Column):
+    template: str = 'ohmyadmin/tables/cell_actions.html'
+
+    def __init__(self, actions: RowActionsCallback) -> None:
+        self.actions = actions
+        super().__init__('__actions__')
+
+    def get_value(self, obj: typing.Any) -> typing.Any:
+        return ''
+
+    def get_actions(self, entity: typing.Any) -> typing.Iterable[Component]:
+        yield from self.actions(entity)
 
 
 class RowAction(abc.ABC):

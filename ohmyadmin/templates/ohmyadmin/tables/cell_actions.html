@@ -1,0 +1,5 @@
+<div class="flex items-center gap-2 justify-end row-actions">
+    {% for action in column.get_actions(object) %}
+        {{ action }}
+    {% endfor %}
+</div>

@@ -1,8 +1,10 @@
 import sqlalchemy as sa
+import typing
 from starlette.requests import Request
 
 from examples.models import User
-from ohmyadmin.actions import Action, BatchAction
+from ohmyadmin.actions import Action, BatchAction, BulkDeleteAction
+from ohmyadmin.components import Component, RowAction
 from ohmyadmin.forms import (
     CheckboxField,
     EmailField,
@@ -16,7 +18,6 @@ from ohmyadmin.forms import (
 )
 from ohmyadmin.resources import PkType, Resource
 from ohmyadmin.responses import Response
-from ohmyadmin.structures import URLSpec
 from ohmyadmin.tables import BoolColumn, Column, ImageColumn
 
 
@@ -25,7 +26,7 @@ class DuplicateAction(BatchAction):
         count = IntegerField(min_value=1, default=1)
 
     async def apply(self, request: Request, ids: list[PkType], form: Form) -> Response:
-        return Response.empty().hx_redirect(URLSpec.to_resource(UserResource))
+        return self.dismiss('Object has been duplicated.')
 
 
 class ExportAction(Action):
@@ -33,20 +34,8 @@ class ExportAction(Action):
     message = 'This will export all users matching current table filters.'
 
     class ActionForm(Form):
-        format = SelectField(
-            choices=[
-                ('csv', 'CSV'),
-                ('json', 'JSON'),
-                ('xls', 'Excel'),
-            ]
-        )
-        range = RadioField(
-            choices=[
-                ('all', 'All'),
-                ('selected', 'Selected'),
-                ('all_matched', 'All matched'),
-            ]
-        )
+        format = SelectField(choices=[('csv', 'CSV'), ('json', 'JSON'), ('xls', 'Excel')])
+        range = RadioField(choices=[('all', 'All'), ('selected', 'Selected'), ('all_matched', 'All matched')])
 
     async def apply(self, request: Request, form: Form) -> Response:
         return self.dismiss('Action completed.')
@@ -61,6 +50,17 @@ class EditForm(Form):
     password = HiddenField(default='')
 
 
+def row_actions(entity: typing.Any) -> typing.Iterable[Component]:
+    yield RowAction(
+        entity,
+        children=[
+            RowAction(entity, action=ExportAction()),
+            RowAction(entity, action=DuplicateAction()),
+            RowAction(entity, action=BulkDeleteAction(), danger=True),
+        ],
+    )
+
+
 class UserResource(Resource):
     icon = 'users'
     label = 'User'
@@ -70,6 +70,7 @@ class UserResource(Resource):
     queryset = sa.select(entity_class).order_by(User.id)
     batch_actions = (DuplicateAction(),)
     table_actions = (ExportAction(),)
+    row_actions = row_actions
     table_columns = [
         Column('id', label='ID'),
         ImageColumn('photo'),

@@ -140,7 +140,7 @@ class Category(Base):
     updated_at = sa.Column(sa.DateTime, default=datetime.datetime.now)
 
     def __str__(self) -> str:
-        return self.name
+        return self.name or 'n/a'
 
 
 class Product(Base):
@@ -170,7 +170,7 @@ class Product(Base):
     categories: list[Category] = relationship('Category', secondary=product_categories)
 
     def __str__(self) -> str:
-        return self.name
+        return self.name or 'n/a'
 
 
 class ProductCategory(Base):

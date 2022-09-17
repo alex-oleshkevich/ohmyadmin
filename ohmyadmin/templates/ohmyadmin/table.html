@@ -114,7 +114,6 @@
                     {% for column in columns %}
                         <th class="text-left p-2">{{ column.render_head_cell(request, sorting_helper) }}</th>
                     {% endfor %}
-                    <th></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -137,11 +136,6 @@
                                 {% endif %}
                             </td>
                         {% endfor %}
-                        <td class="actions">
-                            {% for action in row_actions %}
-                                {{ action(object) }}
-                            {% endfor %}
-                        </td>
                     </tr>
                 {% endfor %}
                 </tbody>
