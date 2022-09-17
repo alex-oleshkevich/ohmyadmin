@@ -71,6 +71,25 @@ class Card(Component):
         return iter(self.children)
 
 
+class Row(Component):
+    """Groups child components in a row."""
+
+    template = 'ohmyadmin/components/row.html'
+
+    def __init__(
+        self,
+        children: typing.Iterable[Component],
+        columns: int = 1,
+        colspan: Colspan = 'full',
+    ) -> None:
+        self.columns = columns
+        self.colspan = colspan
+        self.children = children
+
+    def __iter__(self) -> typing.Iterator[Component]:
+        return iter(self.children)
+
+
 class FormElement(Component):
     template = 'ohmyadmin/components/form_field.html'
 

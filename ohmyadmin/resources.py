@@ -7,7 +7,7 @@ from starlette.routing import BaseRoute, Route, Router
 from starlette.types import Receive, Scope, Send
 
 from ohmyadmin.batch_actions import BatchAction, BulkDeleteAction
-from ohmyadmin.components import Button, ButtonLink, Component, EmptyState, FormElement, Grid, URLSpec
+from ohmyadmin.components import Button, ButtonLink, Component, EmptyState, FormElement, Grid, Row, URLSpec
 from ohmyadmin.filters import BaseFilter, FilterIndicator, OrderingFilter, SearchFilter
 from ohmyadmin.flash import flash
 from ohmyadmin.forms import Form, HandlesFiles
@@ -195,7 +195,7 @@ class Resource(Router, metaclass=ResourceMeta):
         return self.form_class
 
     def get_form_layout(self, request: Request, form: Form) -> Component:
-        return Grid(columns=2, children=[FormElement(field) for field in form])
+        return Grid(columns=1, children=[Row(children=[FormElement(field, colspan=6)], columns=12) for field in form])
 
     def get_empty_object(self) -> typing.Any:
         assert self.entity_class, 'entity_class is a mandatory attribute.'
