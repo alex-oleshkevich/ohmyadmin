@@ -32,7 +32,7 @@ def camel_to_sentence(text: str) -> str:
     return re.sub(r'(?<!^)(?=[A-Z])', ' ', text)
 
 
-def route(path_name: str, **path_params: str | int) -> str:
+def url(path_name: str, **path_params: str | int) -> str:
     return get_current_request().url_for(path_name, **(path_params or {}))
 
 
