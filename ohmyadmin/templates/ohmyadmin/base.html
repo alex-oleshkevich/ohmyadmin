@@ -36,11 +36,23 @@
     {% block head %}{% endblock %}
     {% block head_scripts %}{% endblock %}
 </head>
-<body class="antialiased  h-full {{ body_tag_classes }}">
+<body class="antialiased  h-full {{ body_tag_classes }}" x-data="app" x-cloak>
 {% block main %}{% endblock %}
 {% block page_scripts %}{% endblock %}
 <script>
     window.__TOASTS__ = {{ flash_messages|list|tojson }};
 </script>
+
+<!-- modal actions will be rendered to this container -->
+<template x-if="isActionModalOpen">
+    <div
+        hx-trigger="load"
+        :hx-get="actionUrl"
+        x-ref="action"
+        x-init="() => htmx.process($refs.action)"
+    ></div>
+</template>
+<!-- end modal actions -->
+
 </body>
 </html>

@@ -27,7 +27,7 @@ class URLSpec:
             return request.url_for(self.path_name, **(self.path_params or {}))
         if self.resource:
             return request.url_for(
-                self.resource.get_route_name(self.resource_action, **(self.resource_action_params or {}))
+                self.resource.get_route_name(self.resource_action), **(self.resource_action_params or {})
             )
         raise ValueError('Cannot generate URL.')
 

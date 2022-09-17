@@ -1,18 +1,27 @@
+{% import 'ohmyadmin/lib/buttons.html' as buttons %}
+
 <form class="modal" hx-swap="outerHTML" hx-post="{{ request.url }}">
     <div class="modal-spacer">
         <div class="modal-content">
 
             <div class="mt-3 text-center sm:mt-0 sm:text-left">
                 <h3 class="text-lg font-medium leading-6 text-gray-900">
-                    {% block title %}{% endblock %}
+                    {% block title %}{{ action.title }}{% endblock %}
                 </h3>
-                <div class="mt-2">
-                    {% block content %}{% endblock %}
+                <div class="mt-6">
+                    {% block content %}{{ action.message }}{% endblock %}
                 </div>
             </div>
 
             <div class="modal-actions">
-                {% block actions %}{% endblock %}
+                {% block actions %}
+                    {% if action.dangerous %}
+                        {{ buttons.danger_button(_('Run Action'), type='submit') }}
+                    {% else %}
+                        {{ buttons.primary_button(_('Run Action'), type='submit') }}
+                    {% endif %}
+                    {{ buttons.button(_('Cancel'), attrs={'@click': 'closeActionModal'}, type='button') }}
+                {% endblock %}
             </div>
 
         </div>

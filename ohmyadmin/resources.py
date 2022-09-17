@@ -7,7 +7,7 @@ from starlette.routing import BaseRoute, Route, Router
 from starlette.types import Receive, Scope, Send
 
 from ohmyadmin.batch_actions import BatchAction, BulkDeleteAction
-from ohmyadmin.components import Button, ButtonLink, Component, EmptyState, FormElement, Grid, Row, URLSpec
+from ohmyadmin.components import Button, ButtonLink, Component, EmptyState, FormElement, Grid, Row
 from ohmyadmin.filters import BaseFilter, FilterIndicator, OrderingFilter, SearchFilter
 from ohmyadmin.flash import flash
 from ohmyadmin.forms import Form, HandlesFiles
@@ -17,6 +17,7 @@ from ohmyadmin.metrics import Metric
 from ohmyadmin.pagination import Page
 from ohmyadmin.responses import RedirectResponse, Response
 from ohmyadmin.storage import FileStorage
+from ohmyadmin.structures import URLSpec
 from ohmyadmin.tables import (
     Column,
     LinkRowAction,
@@ -27,7 +28,7 @@ from ohmyadmin.tables import (
     get_search_value,
 )
 
-ResourceAction = typing.Literal['list', 'create', 'edit', 'delete', 'bulk']
+ResourceAction = typing.Literal['list', 'create', 'edit', 'delete', 'bulk', 'action']
 PkType = int | str
 
 
@@ -344,8 +345,9 @@ class Resource(Router, metaclass=ResourceMeta):
         )
 
     @classmethod
-    def get_route_name(cls, action: ResourceAction) -> str:
-        return f'ohmyadmin_resource_{cls.id}_{action}'
+    def get_route_name(cls, action: ResourceAction, sub_action: str | None = None) -> str:
+        sub_action = f'_{sub_action}' if sub_action else ''
+        return f'ohmyadmin_resource_{cls.id}_{action}{sub_action}'
 
     @classmethod
     def get_bulk_route_name(cls, bulk_action: BatchAction) -> str:

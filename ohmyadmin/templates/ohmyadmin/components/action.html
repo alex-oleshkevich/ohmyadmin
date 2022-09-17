@@ -1,0 +1,6 @@
+{% import 'ohmyadmin/lib/buttons.html' as lib %}
+
+{% set attrs = {'@click': 'openActionModal(`{url}`)'.format(url=element.url) } %}
+{{ lib.button(
+    text=element.label, type=element.type, icon=element.icon, color=element.color, name=element.name, attrs=attrs
+) }}

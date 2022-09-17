@@ -10,13 +10,6 @@ export const toast = new Notyf({
 });
 window.toast = toast;
 
-declare global {
-    interface Window {
-        toast: Notyf,
-        __TOASTS__?: { category: ToastType, message: string }[],
-    }
-}
-
 
 // show flash messages as toasts
 (window.__TOASTS__ || []).forEach(message => {

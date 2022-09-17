@@ -13,6 +13,7 @@ from starlette.routing import BaseRoute, Mount, Route, Router
 from starlette.staticfiles import StaticFiles
 from starlette.types import Receive, Scope, Send
 
+from ohmyadmin.actions import get_action_by_id
 from ohmyadmin.auth import AnonymousAuthPolicy, BaseAuthPolicy, RequireLoginMiddleware, UserMenu
 from ohmyadmin.components import FormElement, Grid
 from ohmyadmin.flash import FlashMiddleware, flash
@@ -109,6 +110,7 @@ class OhMyAdmin(Router):
         yield Route('/login', self.login_view, name='ohmyadmin_login', methods=['GET', 'POST'])
         yield Route('/logout', self.logout_view, name='ohmyadmin_logout', methods=['POST'])
         yield Mount('/static', StaticFiles(packages=[__name__.split('.')[0]]), name='ohmyadmin_static')
+        yield Route('/action/{action_id}', self.action_view, name='ohmyadmin_action', methods=['GET', 'POST'])
 
         if self.file_storage:
             yield Mount('/media', MediaServer(self.file_storage), name='ohmyadmin_media')
@@ -145,6 +147,11 @@ class OhMyAdmin(Router):
     async def logout_view(self, request: Request) -> Response:
         self.auth_policy.logout(request)
         return RedirectResponse(request).to_path_name('ohmyadmin_login').with_success(_('You have been logged out.'))
+
+    async def action_view(self, request: Request) -> Response:
+        action_class = get_action_by_id(request.path_params['action_id'])
+        action = action_class()
+        return await action.dispatch(request)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         from ohmyadmin.globals import globalize_admin
