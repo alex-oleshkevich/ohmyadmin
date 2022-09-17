@@ -1,10 +1,12 @@
 {% import 'ohmyadmin/lib/forms.html' as forms %}
 
 <div class="col-span-{{ element.colspan }}">
-    <div class="form-group">
+    <div class="form-group {{ 'form-group-horizontal' if element.horizontal else '' }}">
         {{ forms.form_label(element.field) }}
-        {{ element.field.render() }}
-        {{ forms.form_help(element.field) if element.field.description else '' }}
-        {{ forms.form_errors(element.field) if element.field.errors else '' }}
+        <div>
+            {{ element.field.render() }}
+            {{ forms.form_help(element.field) if element.field.description else '' }}
+            {{ forms.form_errors(element.field) if element.field.errors else '' }}
+        </div>
     </div>
 </div>

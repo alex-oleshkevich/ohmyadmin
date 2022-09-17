@@ -80,7 +80,7 @@ class FormActionMixin:
         return getattr(self, 'ActionForm', self.form_class)
 
     def get_form_layout(self, form: Form) -> Component:
-        return Grid(columns=1, children=[FormElement(field) for field in form])
+        return Grid(columns=1, children=[FormElement(field, horizontal=True) for field in form])
 
 
 class Action(BaseAction, FormActionMixin):

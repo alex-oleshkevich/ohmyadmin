@@ -88,9 +88,15 @@ class Row(Component):
 class FormElement(Component):
     template = 'ohmyadmin/components/form_field.html'
 
-    def __init__(self, field: wtforms.Field, colspan: Colspan = 1) -> None:
+    def __init__(
+        self,
+        field: wtforms.Field,
+        colspan: Colspan = 1,
+        horizontal: bool = False,
+    ) -> None:
         self.field = field
         self.colspan = colspan
+        self.horizontal = horizontal
 
 
 class FormPlaceholder(Component):

@@ -177,6 +177,14 @@
 
     }
 
+    .form-group-horizontal {
+        @apply grid grid-cols-3 gap-3;
+    }
+
+    .form-group-horizontal > *:last-child {
+        @apply col-span-2;
+    }
+
     .form-group label, .form-group .form-label {
         @apply font-medium mb-2 flex items-center gap-1;
     }
