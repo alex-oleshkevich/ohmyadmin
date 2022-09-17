@@ -22,7 +22,8 @@ class Component(abc.ABC):
             raise ValueError(f'Layout {self.__class__.__name__} does not define template name.')
         return render_to_string(self.template, {'element': self})
 
-    __str__ = render
+    def __str__(self) -> str:
+        return self.render()
 
 
 class Grid(Component):
@@ -97,6 +98,10 @@ class FormElement(Component):
         self.field = field
         self.colspan = colspan
         self.horizontal = horizontal
+
+    @property
+    def render_label(self) -> bool:
+        return not isinstance(self.field, wtforms.HiddenField)
 
 
 class FormPlaceholder(Component):
