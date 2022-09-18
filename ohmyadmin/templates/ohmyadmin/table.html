@@ -15,31 +15,10 @@
         <div class="space-y-6">
 
             <div class="flex items-center justify-between">
-                <!-- batch actions -->
-                <div x-data="{selectedAction: ''}">
-                    <div x-show="selected.length" class="flex items-center gap-2">
-                        <select class="w-64" x-model="selectedAction">
-                            <option></option>
-                            {% for action in batch_actions %}
-                                <option value="{{ action.url }}">{{ action.label }}</option>
-                            {% endfor %}
-                        </select>
-                        <button
-                            type="button"
-                            class="btn btn-primary"
-                            :disabled="!selectedAction"
-                            @click="openActionModal(selectedAction)">
-                            {{ tabler_icon('player-play') }}
-                            {{ _('Run') }}
-                        </button>
-                    </div>
-                </div>
-                <!-- end batch actions -->
-
                 <!-- search and actions -->
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 flex-1">
                     <!-- search form -->
-                    <div>
+                    <div class="w-96">
                         {% if resource.searchable %}
                             <form
                                 x-data="searchForm('{{ resource.search_param }}', '{{ search_query }}')"
@@ -48,7 +27,7 @@
                                 @submit.prevent="onSubmit"
                             >
                                 <input
-                                    x-model="searchQuery" class="w-96"
+                                    x-model="searchQuery"
                                     type="search" name="{{ resource.search_param }}" value="{{ search_query }}"
                                     placeholder="{{ search_placeholder }}">
                             </form>
@@ -91,6 +70,27 @@
                     <!-- end filters form -->
                 </div>
                 <!-- end search and actions -->
+
+                <!-- batch actions -->
+                <div x-data="{selectedAction: ''}">
+                    <div x-show="selected.length" class="flex items-center gap-2">
+                        <select class="w-64" x-model="selectedAction">
+                            <option></option>
+                            {% for action in batch_actions %}
+                                <option value="{{ action.url }}">{{ action.label }}</option>
+                            {% endfor %}
+                        </select>
+                        <button
+                            type="button"
+                            class="btn btn-primary"
+                            :disabled="!selectedAction"
+                            @click="openActionModal(selectedAction)">
+                            {{ tabler_icon('player-play') }}
+                            {{ _('Run') }}
+                        </button>
+                    </div>
+                </div>
+                <!-- end batch actions -->
 
             </div>
 
