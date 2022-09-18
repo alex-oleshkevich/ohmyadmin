@@ -17,15 +17,9 @@ from ohmyadmin.responses import Response
 from ohmyadmin.structures import URLSpec
 
 if typing.TYPE_CHECKING:
-    from ohmyadmin.resources import PkType, Resource
-
-_action_registry: dict[str, typing.Type[Action]] = {}
+    from ohmyadmin.resources import PkType
 
 DISMISS_EVENT = 'modals.dismiss'
-
-
-def get_action_by_id(action_id: str) -> typing.Type[Action]:
-    return _action_registry[action_id]
 
 
 class ActionMeta(abc.ABCMeta):
@@ -38,9 +32,7 @@ class ActionMeta(abc.ABCMeta):
         attrs['id'] = attrs.get('id', slugify(qual_name))
         attrs['label'] = attrs.get('label', camel_to_sentence(name))
 
-        klass = super().__new__(cls, name, bases, attrs)
-        _action_registry[attrs['id']] = typing.cast(typing.Type['Action'], klass)
-        return klass
+        return super().__new__(cls, name, bases, attrs)
 
 
 class BaseAction(Component, abc.ABC, metaclass=ActionMeta):
@@ -60,7 +52,10 @@ class BaseAction(Component, abc.ABC, metaclass=ActionMeta):
     @property
     def url(self) -> str:
         request = get_current_request()
-        return request.url_for('ohmyadmin_action', action_id=self.id)
+        if request.state.resource:
+            return request.url_for(request.state.resource.get_route_name('action'), action_id=self.id)
+
+        raise ValueError('Action called from unknown context.')
 
     def dismiss(self, message: str = '', category: FlashCategory = 'success') -> Response:
         response = Response.empty().hx_event(DISMISS_EVENT)
@@ -109,6 +104,14 @@ class BatchAction(BaseAction, FormActionMixin):
     coerce: typing.Callable = int
     template: str = ''
 
+    @property
+    def url(self) -> str:
+        request = get_current_request()
+        if request.state.resource:
+            return request.url_for(request.state.resource.get_route_name('batch'), action_id=self.id)
+
+        raise ValueError('Action called from unknown context.')
+
     @abc.abstractmethod
     async def apply(self, request: Request, ids: list[PkType], form: Form) -> Response:
         ...
@@ -135,27 +138,14 @@ class BatchAction(BaseAction, FormActionMixin):
 class BulkDeleteAction(BatchAction):
     dangerous = True
     message = _('Do you want to delete all items?')
-    resource_class: typing.ClassVar[typing.Type[Resource]]
 
     async def apply(self, request: Request, ids: list[PkType], form: Form) -> Response:
-        stmt = sa.select(self.resource_class.entity_class).where(sa.column(self.resource_class.pk_column).in_(ids))
+        stmt = sa.select(request.state.resource.entity_class).where(
+            sa.column(request.state.resource.pk_column).in_(ids)
+        )
         result = await request.state.dbsession.scalars(stmt)
         for row in result.all():
             await request.state.dbsession.delete(row)
         await request.state.dbsession.commit()
 
-        return Response.empty().hx_redirect(URLSpec.to_resource(self.resource_class))
-
-    @classmethod
-    def clone_class(cls, resource_class: typing.Type[Resource]) -> typing.Type[BulkDeleteAction]:
-        action_class = type(
-            'ResourceSpecificBulkDeleteAction',
-            (BulkDeleteAction,),
-            {
-                'resource_class': resource_class,
-                'label': BulkDeleteAction.label,
-                '__module__': resource_class.__name__,
-                '__qualname__': 'ResourceSpecificBulkDeleteAction',
-            },
-        )
-        return typing.cast(typing.Type[BulkDeleteAction], action_class)
+        return Response.empty().hx_redirect(URLSpec.to_resource(request.state.resource))

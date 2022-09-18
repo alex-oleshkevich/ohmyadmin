@@ -7,7 +7,7 @@ from starlette.requests import Request
 from starlette.routing import BaseRoute, Route, Router
 from starlette.types import Receive, Scope, Send
 
-from ohmyadmin.actions import BatchAction, BulkDeleteAction
+from ohmyadmin.actions import Action, BatchAction, BulkDeleteAction
 from ohmyadmin.components import Button, ButtonLink, Component, EmptyState, FormElement, Grid, Row, RowAction
 from ohmyadmin.filters import BaseFilter, FilterIndicator, OrderingFilter, SearchFilter
 from ohmyadmin.flash import flash
@@ -30,7 +30,7 @@ from ohmyadmin.tables import (
     get_search_value,
 )
 
-ResourceAction = typing.Literal['list', 'create', 'edit', 'delete', 'bulk', 'action', 'metric']
+ResourceAction = typing.Literal['list', 'create', 'edit', 'delete', 'batch', 'action', 'metric']
 PkType = int | str
 
 _RowActionsArgs = typing.ParamSpec('_RowActionsArgs')
@@ -190,7 +190,7 @@ class Resource(Router, metaclass=ResourceMeta):
         yield from self.get_default_row_actions(entity)
 
     def get_default_batch_actions(self) -> typing.Iterable[BatchAction]:
-        yield BulkDeleteAction.clone_class(self.__class__)()
+        yield BulkDeleteAction()
 
     def get_batch_actions(self) -> typing.Iterable[BatchAction]:
         yield from self.get_default_batch_actions()
@@ -363,20 +363,43 @@ class Resource(Router, metaclass=ResourceMeta):
         )
 
     async def metric_view(self, request: Request) -> Response:
+        """A backend for resource metric cards."""
         metric_id = request.path_params['metric_id']
         metric = next((metric for metric in self.get_metrics() if metric.id == metric_id))
         if not metric:
             raise HTTPException(404, 'Metric does not exists.')
         return await metric.dispatch(request)
 
+    async def action_view(self, request: Request) -> Response:
+        """A backend for standalone resource actions."""
+        try:
+            action_id = request.path_params['action_id']
+            action = next(
+                (action for action in self.get_page_actions() if isinstance(action, Action) and action.id == action_id)
+            )
+            return await action.dispatch(request)
+        except StopIteration:
+            raise HTTPException(404, 'Action does not exists.')
+
+    async def batch_action_view(self, request: Request) -> Response:
+        """A backend for batch resource actions."""
+        try:
+            action_id = request.path_params['action_id']
+            action = next(
+                (
+                    action
+                    for action in self.get_batch_actions()
+                    if isinstance(action, BatchAction) and action.id == action_id
+                )
+            )
+            return await action.dispatch(request)
+        except StopIteration:
+            raise HTTPException(404, 'Batch action does not exists.')
+
     @classmethod
     def get_route_name(cls, action: ResourceAction, sub_action: str | None = None) -> str:
         sub_action = f'_{sub_action}' if sub_action else ''
         return f'ohmyadmin_resource_{cls.id}_{action}{sub_action}'
-
-    @classmethod
-    def get_bulk_route_name(cls, bulk_action: BatchAction) -> str:
-        return cls.get_route_name('bulk') + '_' + bulk_action.id
 
     def get_metric_url(self, request: Request, metric: Metric) -> str:
         return request.url_for(self.get_route_name('metric'))
@@ -400,15 +423,13 @@ class Resource(Router, metaclass=ResourceMeta):
             name=self.get_route_name('delete'),
         )
 
-        for bulk_action in self.get_batch_actions():
-            yield Route(
-                f'/bulk/{bulk_action.id}',
-                bulk_action,
-                methods=['GET', 'POST'],
-                name=self.get_bulk_route_name(bulk_action),
-            )
-
         yield Route('/metric/{metric_id}', self.metric_view, name=self.get_route_name('metric'))
+        yield Route(
+            '/actions/{action_id}', self.action_view, methods=['GET', 'POST'], name=self.get_route_name('action')
+        )
+        yield Route(
+            '/batch/{action_id}', self.batch_action_view, methods=['GET', 'POST'], name=self.get_route_name('batch')
+        )
 
     async def _detect_post_save_action(self, request: Request, instance: typing.Any) -> Response:
         form_data = await request.form()
