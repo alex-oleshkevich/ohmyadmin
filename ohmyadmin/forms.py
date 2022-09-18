@@ -3,6 +3,7 @@ from __future__ import annotations
 import abc
 import datetime
 import decimal
+import enum
 import inspect
 import os
 import pathlib
@@ -398,8 +399,74 @@ class ListField(Field[typing.Any], wtforms.FieldList):
         super().__init__(unbound_field=unbound_field, min_entries=min_entries, max_entries=max_entries, **kwargs)
 
 
+class MarkdownButton(enum.Enum):
+    BOLD = ('bold', 'toggleBold', 'fa fa-bold', 'Bold')
+    ITALIC = ('italic', 'toggleItalic', 'fa fa-italic', 'Italic')
+    STRIKETHROUGH = ('strikethrough', 'toggleStrikethrough', 'fa fa-strikethrough', 'Strikethrough')
+
+    HEADING_BIGGER = ('heading-bigger', 'toggleHeadingBigger', 'fa fa-header', 'Bigger Heading')
+    HEADING_SMALLER = ('heading-smaller', 'toggleHeadingSmaller', 'fa fa-header', 'Smaller Heading')
+    HEADING_1 = ('heading-1', 'toggleHeading1', 'fa fa-header header-1', 'Big Heading')
+    HEADING_2 = ('heading-2', 'toggleHeading2', 'fa fa-header header-2', 'Medium Heading')
+    HEADING_3 = ('heading-3', 'toggleHeading3', 'fa fa-header header-3', 'Small Heading')
+
+    TABLE = ('table', 'drawTable', 'fa fa-table', 'Insert table')
+    CODE = ('code', 'toggleCodeBlock', 'fa fa-code', 'Code')
+    QUOTE = ('quote', 'toggleBlockquote', 'fa fa-quote-left', 'Quote')
+    UNORDERED_LIST = ('unordered-list', 'toggleUnorderedList', 'fa fa-list-ul', 'Generic List')
+    ORDERED_LIST = ('ordered-list', 'toggleOrderedList', 'fa fa-list-ol', 'Ordered List')
+    LINK = ('link', 'drawLink', 'fa fa-link', 'Insert Link')
+    IMAGE = ('image', 'drawImage', 'fa fa-picture-o', 'Insert image')
+    HORIZONTAL_RULE = ('horizontal-rule', 'drawHorizontalRule', 'fa fa-minus', 'Insert Horizontal Line')
+
+    PREVIEW = ('preview', 'togglePreview', 'fa fa-eye no-disable', 'Toggle preview')
+    SIDE_BY_SIDE = ('side-by-side', 'toggleSideBySide', 'fa fa-columns no-disable no-mobile', 'Toggle Side-by-Side')
+    FULLSCREEN = ('fullscreen', 'toggleFullScreen', 'fa fa-arrows-alt no-disable no-mobile', 'Toggle Fullscreen')
+
+    REDO = ('redo', 'redo', 'fa fa-redo', 'Redo')
+    UNDO = ('undo', 'undo', 'fa fa-undo', 'Undo')
+    CLEAN_BLOCK = ('clean-block', 'cleanBlock', 'fa fa-eraser', 'Clean block')
+    SEPARATOR = '|'
+
+
+DEFAULT_MARKDOWN_TOOLBAR = [
+    MarkdownButton.BOLD,
+    MarkdownButton.ITALIC,
+    MarkdownButton.SEPARATOR,
+    MarkdownButton.HEADING_1,
+    MarkdownButton.HEADING_2,
+    MarkdownButton.HEADING_3,
+    MarkdownButton.SEPARATOR,
+    MarkdownButton.TABLE,
+    MarkdownButton.CODE,
+    MarkdownButton.QUOTE,
+    MarkdownButton.UNORDERED_LIST,
+    MarkdownButton.ORDERED_LIST,
+    MarkdownButton.LINK,
+    MarkdownButton.IMAGE,
+    MarkdownButton.SEPARATOR,
+    MarkdownButton.SIDE_BY_SIDE,
+    MarkdownButton.FULLSCREEN,
+]
+
+
 class MarkdownField(Field, wtforms.TextAreaField):
     template = 'ohmyadmin/forms/markdown.html'
+
+    def __init__(self, *, toolbar: list[MarkdownButton] | None = None, **kwargs: typing.Any) -> None:
+        super().__init__(**kwargs)
+        toolbar = toolbar or DEFAULT_MARKDOWN_TOOLBAR
+        self.toolbar = [
+            {
+                'name': button.value[0],
+                'action': f'EasyMDE.{button.value[1]}',
+                'className': button.value[2],
+                'title': button.value[3],
+            }
+            if button.value != '|'
+            else '|'
+            for button in toolbar
+        ]
 
 
 _E = typing.TypeVar('_E')

@@ -108,7 +108,7 @@ class FormElement(Component):
 
     @property
     def render_label(self) -> bool:
-        return not isinstance(self.field, wtforms.HiddenField)
+        return not isinstance(self.field, (wtforms.HiddenField, wtforms.BooleanField))
 
 
 class FormPlaceholder(Component):
