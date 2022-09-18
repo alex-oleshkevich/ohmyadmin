@@ -9,13 +9,13 @@ import pathlib
 import sqlalchemy as sa
 import typing
 import wtforms
+from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.datastructures import ImmutableMultiDict, UploadFile
 from starlette.requests import Request
 from wtforms.fields.core import UnboundField
 from wtforms.form import FormMeta
 
 from ohmyadmin.helpers import render_to_string
-from ohmyadmin.query import query
 from ohmyadmin.storage import FileStorage
 
 Choices = typing.Iterable[tuple[str | None, str]]
@@ -216,9 +216,18 @@ def choices_from(
     async def loader(request: Request, form: Form) -> Choices:
         stmt = sa.select(entity_class)
         stmt = where(stmt) if where else stmt
-        return await query(request.state.dbsession).choices(stmt, label_column=label_column, value_column=value_column)
+        return await as_choices(request.state.dbsession, stmt, label_column=label_column, value_column=value_column)
 
     return loader
+
+
+async def as_choices(
+    session: AsyncSession, stmt: sa.sql.Select, label_column: str = 'id', value_column: str = 'name'
+) -> Choices:
+    """Execute statement and return rows as choices suitable for use in form
+    fields that require choices."""
+    result = await session.scalars(stmt)
+    return [(getattr(row, value_column), getattr(row, label_column)) for row in result.all()]
 
 
 class HasChoices:
