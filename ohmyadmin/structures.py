@@ -59,3 +59,6 @@ class URLSpec:
     @classmethod
     def to_dashboard(cls, dashboard: typing.Type[Dashboard] | Dashboard) -> URLSpec:
         return cls(dashboard=dashboard)
+
+
+url_to = URLSpec

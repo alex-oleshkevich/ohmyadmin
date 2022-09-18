@@ -28,7 +28,7 @@ class Page(Router, metaclass=PageMeta):
     @classmethod
     def get_route_name(cls, sub_page: str = '') -> str:
         sub_page = f'_{sub_page}' if sub_page else ''
-        return f'ohmyadmin_pages{sub_page}'
+        return f'ohmyadmin_pages_{cls.id}{sub_page}'
 
     def get_routes(self) -> typing.Iterable[BaseRoute]:
         yield Route('/', self.dispatch, name=self.get_route_name())

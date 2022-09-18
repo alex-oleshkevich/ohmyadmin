@@ -26,6 +26,7 @@ from ohmyadmin.components import MenuItem
 from ohmyadmin.dashboards import Dashboard
 from ohmyadmin.pages import Page
 from ohmyadmin.storage import LocalDirectoryStorage
+from ohmyadmin.structures import url_to
 
 metadata = sa.MetaData()
 Base = declarative_base()
@@ -55,8 +56,8 @@ class AuthPolicy(BaseAuthPolicy):
                 user_name=str(conn.user),
                 avatar=conn.user.avatar,
                 menu=[
-                    MenuItem(text='My profile', url='/profile', icon='user'),
-                    MenuItem(text='Settings', url='/settings', icon='settings'),
+                    MenuItem(text='My profile', url=url_to.to_page(ProfilePage), icon='user'),
+                    MenuItem(text='Settings', url=url_to.to_page(SettingsPage), icon='settings'),
                 ],
             )
         return super().get_user_menu(conn)
@@ -64,6 +65,10 @@ class AuthPolicy(BaseAuthPolicy):
 
 class SettingsPage(Page):
     icon = 'settings'
+
+
+class ProfilePage(Page):
+    icon = 'user'
 
 
 class OverviewDashboard(Dashboard):
@@ -82,7 +87,7 @@ admin = OhMyAdmin(
     auth_policy=AuthPolicy(),
     template_dir=this_dir / 'templates',
     file_storage=LocalDirectoryStorage(this_dir / 'uploads'),
-    pages=[SettingsPage()],
+    pages=[SettingsPage(), ProfilePage()],
     dashboards=[OverviewDashboard()],
     resources=[
         ProductResource(),
