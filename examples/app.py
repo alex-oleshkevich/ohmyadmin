@@ -22,7 +22,7 @@ from examples.admin.users import UserResource
 from examples.models import User
 from ohmyadmin.app import OhMyAdmin, UserMenu
 from ohmyadmin.auth import BaseAuthPolicy, UserLike
-from ohmyadmin.nav import MenuItem
+from ohmyadmin.components import MenuItem
 from ohmyadmin.storage import LocalDirectoryStorage
 
 metadata = sa.MetaData()
@@ -53,8 +53,8 @@ class AuthPolicy(BaseAuthPolicy):
                 user_name=str(conn.user),
                 avatar=conn.user.avatar,
                 menu=[
-                    MenuItem.to_url(text='My profile', url='/profile', icon='user'),
-                    MenuItem.to_url(text='Settings', url='/settings', icon='settings'),
+                    MenuItem(text='My profile', url='/profile', icon='user'),
+                    MenuItem(text='Settings', url='/settings', icon='settings'),
                 ],
             )
         return super().get_user_menu(conn)

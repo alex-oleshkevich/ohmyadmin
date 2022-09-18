@@ -6,9 +6,9 @@ from starlette.authentication import AuthCredentials, AuthenticationBackend, Bas
 from starlette.requests import HTTPConnection, Request
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+from ohmyadmin.components import Component
 from ohmyadmin.forms import EmailField, Form, HiddenField, PasswordField
 from ohmyadmin.i18n import _
-from ohmyadmin.nav import MenuGroup, MenuItem
 from ohmyadmin.responses import RedirectResponse
 
 SESSION_KEY = '_auth_user_id_'
@@ -18,7 +18,7 @@ SESSION_KEY = '_auth_user_id_'
 class UserMenu:
     user_name: str = 'Anonymous'
     avatar: str = ''
-    menu: list[MenuItem | MenuGroup] = dataclasses.field(default_factory=list)
+    menu: list[Component] = dataclasses.field(default_factory=list)
 
 
 class LoginForm(Form):

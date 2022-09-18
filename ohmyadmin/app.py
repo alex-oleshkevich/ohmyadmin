@@ -15,15 +15,15 @@ from starlette.types import Receive, Scope, Send
 
 from ohmyadmin.actions import get_action_by_id
 from ohmyadmin.auth import AnonymousAuthPolicy, BaseAuthPolicy, RequireLoginMiddleware, UserMenu
-from ohmyadmin.components import FormElement, Grid
+from ohmyadmin.components import Component, FormElement, Grid, MenuGroup, MenuItem
 from ohmyadmin.flash import FlashMiddleware, flash
 from ohmyadmin.globals import globalize_dbsession, globalize_request
 from ohmyadmin.i18n import _
 from ohmyadmin.media_server import MediaServer
-from ohmyadmin.nav import MenuGroup, MenuItem
 from ohmyadmin.resources import Resource
 from ohmyadmin.responses import RedirectResponse, Response
 from ohmyadmin.storage import FileStorage
+from ohmyadmin.structures import URLSpec
 from ohmyadmin.templating import DynamicChoiceLoader, jinja_env
 
 this_dir = pathlib.Path(__file__).parent
@@ -66,9 +66,13 @@ class OhMyAdmin(Router):
             ]
         )
 
-    def build_main_menu(self, request: Request) -> typing.Iterable[MenuItem]:
+    def build_main_menu(self, request: Request) -> typing.Iterable[Component]:
         yield MenuGroup(
-            text=_('Resources'), items=[MenuItem.to_resource(resource.__class__) for resource in self.resources]
+            text=_('Resources'),
+            items=[
+                MenuItem(text=resource.label, icon=resource.icon, url=URLSpec.to_resource(resource.__class__))
+                for resource in self.resources
+            ],
         )
 
     def build_user_menu(self, request: Request) -> UserMenu:

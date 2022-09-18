@@ -254,3 +254,28 @@ class RowAction(Component):
             return 'ohmyadmin/components/row_action_action.html'
 
         return 'ohmyadmin/components/row_action_link.html'
+
+
+class MenuItem(Component):
+    template = 'ohmyadmin/components/menu_item.html'
+
+    def __init__(self, text: str, url: str | URLSpec, icon: str = '') -> None:
+        self.text = text
+        self.icon = icon
+        self.url_spec = URLSpec(url=url) if isinstance(url, str) else url
+
+    @property
+    def url(self) -> str:
+        return self.url_spec.to_url()
+
+
+class MenuGroup(Component):
+    template = 'ohmyadmin/components/menu_group.html'
+
+    def __init__(self, text: str, items: list[MenuItem], icon: str = '') -> None:
+        self.text = text
+        self.items = items
+        self.icon = icon
+
+    def __iter__(self) -> typing.Iterator[MenuItem]:
+        yield from self.items
