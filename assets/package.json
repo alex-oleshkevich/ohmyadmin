@@ -3,7 +3,7 @@
         "tailwind:watch": "postcss --verbose -w css/main.css -o ../ohmyadmin/statics/build/main.css",
         "build": "npm run build:css",
         "build:css": "NODE_ENV=production postcss css/main.css -o ../ohmyadmin/statics/build/main.css",
-        "esbuild": "esbuild js/main.ts --bundle --outfile=../ohmyadmin/statics/build/main.js"
+        "build:js": "esbuild js/main.ts --bundle --outfile=../ohmyadmin/statics/build/main.js"
     },
     "devDependencies": {
         "@tailwindcss/typography": "^0.5.2",
