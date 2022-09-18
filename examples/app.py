@@ -16,13 +16,14 @@ from examples.admin.categories import CategoryResource
 from examples.admin.countries import CountryResource
 from examples.admin.currencies import CurrencyResource
 from examples.admin.customers import CustomerResource
-from examples.admin.orders import OrderResource
+from examples.admin.orders import OrderResource, TotalOrders
 from examples.admin.products import ProductResource
 from examples.admin.users import UserResource
 from examples.models import User
 from ohmyadmin.app import OhMyAdmin, UserMenu
 from ohmyadmin.auth import BaseAuthPolicy, UserLike
 from ohmyadmin.components import MenuItem
+from ohmyadmin.dashboards import Dashboard
 from ohmyadmin.pages import Page
 from ohmyadmin.storage import LocalDirectoryStorage
 
@@ -65,6 +66,13 @@ class SettingsPage(Page):
     icon = 'settings'
 
 
+class OverviewDashboard(Dashboard):
+    icon = 'dashboard'
+    metrics = [
+        TotalOrders(),
+    ]
+
+
 this_dir = pathlib.Path(__file__).parent
 uploads_dir = this_dir / 'uploads'
 engine = create_async_engine('postgresql+asyncpg://root:postgres@localhost/ohmyadmin', future=True)
@@ -75,6 +83,7 @@ admin = OhMyAdmin(
     template_dir=this_dir / 'templates',
     file_storage=LocalDirectoryStorage(this_dir / 'uploads'),
     pages=[SettingsPage()],
+    dashboards=[OverviewDashboard()],
     resources=[
         ProductResource(),
         CustomerResource(),

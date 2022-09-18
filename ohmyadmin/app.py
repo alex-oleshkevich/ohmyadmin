@@ -16,6 +16,7 @@ from starlette.types import Receive, Scope, Send
 from ohmyadmin.actions import get_action_by_id
 from ohmyadmin.auth import AnonymousAuthPolicy, BaseAuthPolicy, RequireLoginMiddleware, UserMenu
 from ohmyadmin.components import Component, FormElement, Grid, MenuGroup, MenuItem
+from ohmyadmin.dashboards import Dashboard
 from ohmyadmin.flash import FlashMiddleware, flash
 from ohmyadmin.globals import globalize_dbsession, globalize_request
 from ohmyadmin.i18n import _
@@ -36,6 +37,7 @@ class OhMyAdmin(Router):
         engine: AsyncEngine,
         resources: typing.Iterable[Resource] | None = None,
         pages: typing.Iterable[Page] | None = None,
+        dashboards: typing.Iterable[Dashboard] | None = None,
         routes: list[BaseRoute] | None = None,
         template_dir: str | os.PathLike | None = None,
         file_storage: FileStorage | None = None,
@@ -45,8 +47,9 @@ class OhMyAdmin(Router):
         self.engine = engine
         self._make_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
         self.file_storage = file_storage
-        self.resources = resources or []
         self.pages = pages or []
+        self.resources = resources or []
+        self.dashboards = dashboards or []
         self.auth_policy = auth_policy or AnonymousAuthPolicy()
         self.middleware = list(middleware or [])
         self.middleware.extend(
@@ -70,6 +73,9 @@ class OhMyAdmin(Router):
         )
 
     def build_main_menu(self, request: Request) -> typing.Iterable[Component]:
+        for dashboard in self.dashboards:
+            yield MenuItem(text=dashboard.label, icon=dashboard.icon, url=URLSpec.to_dashboard(dashboard))
+
         yield MenuGroup(
             text=_('Resources'),
             items=[
@@ -79,10 +85,7 @@ class OhMyAdmin(Router):
         )
         yield MenuGroup(
             text=_('Pages'),
-            items=[
-                MenuItem(text=page.label, icon=page.icon, url=URLSpec.to_path_name(path_name=page.route_name))
-                for page in self.pages
-            ],
+            items=[MenuItem(text=page.label, icon=page.icon, url=URLSpec.to_page(page)) for page in self.pages],
         )
 
     def build_user_menu(self, request: Request) -> UserMenu:
@@ -134,6 +137,9 @@ class OhMyAdmin(Router):
 
         for page in self.pages:
             yield Mount(f'/{page.id}', page)
+
+        for dashboard in self.dashboards:
+            yield Mount(f'/dashboard/{dashboard.id}', dashboard)
 
     async def index_view(self, request: Request) -> Response:
         return self.render_to_response(request, 'ohmyadmin/index.html')

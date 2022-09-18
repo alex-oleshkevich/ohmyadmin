@@ -12,32 +12,32 @@ class PageMeta(type):
         if name != 'Page':
             attrs['id'] = attrs.get('id', slugify(name.removesuffix('Page')))
             attrs['label'] = attrs.get('label', camel_to_sentence(name.removesuffix('Page')))
-            attrs['route_name'] = 'ohmyadmin_page_' + attrs['id']
 
         return super().__new__(cls, name, bases, attrs)
 
 
-class BasePage(Router, metaclass=PageMeta):
+class Page(Router, metaclass=PageMeta):
     id: typing.ClassVar[str] = ''
     label: typing.ClassVar[str] = ''
     icon: typing.ClassVar[str] = ''
-
-
-class Page(BasePage):
-    route_name: typing.ClassVar[str] = ''
-    template: typing.ClassVar[str] = 'ohmyadmin/pages/base.html'
+    template: typing.ClassVar[str] = 'ohmyadmin/page.html'
 
     def __init__(self) -> None:
         super().__init__(routes=list(self.get_routes()))
 
-    async def get_template_context(self) -> dict[str, typing.Any]:
+    @classmethod
+    def get_route_name(cls, sub_page: str = '') -> str:
+        sub_page = f'_{sub_page}' if sub_page else ''
+        return f'ohmyadmin_pages{sub_page}'
+
+    def get_routes(self) -> typing.Iterable[BaseRoute]:
+        yield Route('/', self.dispatch, name=self.get_route_name())
+
+    async def get_template_context(self, request: Request) -> dict[str, typing.Any]:
         return {}
 
     async def dispatch(self, request: Request) -> Response:
-        context = await self.get_template_context()
+        context = await self.get_template_context(request)
         return render_to_response(
             request, self.template, {'request': request, 'page': self, 'page_title': self.label, **context}
         )
-
-    def get_routes(self) -> typing.Iterable[BaseRoute]:
-        yield Route('/', self.dispatch, name=self.route_name)
