@@ -401,9 +401,6 @@ class Resource(Router, metaclass=ResourceMeta):
         sub_action = f'_{sub_action}' if sub_action else ''
         return f'ohmyadmin_resource_{cls.id}_{action}{sub_action}'
 
-    def get_metric_url(self, request: Request, metric: Metric) -> str:
-        return request.url_for(self.get_route_name('metric'))
-
     def get_routes(self) -> typing.Iterable[BaseRoute]:
         mapping = {int: 'int', str: 'str'}
         param_type = mapping[self.pk_type]
