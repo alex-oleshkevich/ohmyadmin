@@ -5,6 +5,7 @@ import typing
 import wtforms
 
 from ohmyadmin.forms import ListField
+from ohmyadmin.globals import get_current_request
 from ohmyadmin.helpers import render_to_string
 from ohmyadmin.i18n import _
 from ohmyadmin.structures import URLSpec
@@ -267,6 +268,11 @@ class MenuItem(Component):
     @property
     def url(self) -> str:
         return self.url_spec.to_url()
+
+    @property
+    def is_active(self) -> bool:
+        request = get_current_request()
+        return str(request.url).startswith(self.url)
 
 
 class MenuGroup(Component):

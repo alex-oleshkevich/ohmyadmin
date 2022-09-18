@@ -157,7 +157,7 @@
     }
 
     .main-menu-item.active {
-        @apply bg-blue-100 text-blue-700 hover:bg-blue-200;
+        @apply bg-blue-100 text-blue-800 hover:bg-blue-200;
     }
 
     /* pagination */

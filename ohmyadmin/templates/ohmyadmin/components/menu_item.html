@@ -1,3 +1,3 @@
-<a href="{{ element.url }}" class="main-menu-item">
+<a href="{{ element.url }}" class="main-menu-item {{ 'active' if element.is_active else '' }}">
     {{ tabler_icon(element.icon) if element.icon else '' }} {{ element.text }}
 </a>
