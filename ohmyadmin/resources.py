@@ -83,12 +83,12 @@ class Resource(Router, metaclass=ResourceMeta):
     pk_column: str
 
     # table settings
-    filters: typing.Iterable[typing.Type[BaseFilter]] | None = None
-    table_columns: typing.Iterable[Column] | None = None
-    batch_actions: typing.Iterable[BatchAction] | None = None
-    page_actions: typing.Iterable[Component] | None = None
-    row_actions: RowActionsCallback | None = None
-    metrics: typing.Iterable[Metric] | None = None
+    filters: typing.ClassVar[typing.Iterable[typing.Type[BaseFilter]] | None] = None
+    table_columns: typing.ClassVar[typing.Iterable[Column] | None] = None
+    batch_actions: typing.ClassVar[typing.Iterable[BatchAction] | None] = None
+    page_actions: typing.ClassVar[typing.Iterable[Component] | None] = None
+    row_actions: typing.ClassVar[RowActionsCallback | None] = None
+    metrics: typing.ClassVar[typing.Iterable[Metric] | None] = None
 
     # pagination and default filters
     page_param: str = 'page'

@@ -1,10 +1,12 @@
 import abc
+import typing
 from starlette.requests import Request
 
 from ohmyadmin.helpers import camel_to_sentence, render_to_string
 
 
 class Metric:
+    id: typing.ClassVar[str] = ''
     template: str = ''
 
     @property
