@@ -9,6 +9,7 @@ homepage = "https://github.com/alex-oleshkevich/ohmyadmin"
 repository = "https://github.com/alex-oleshkevich/ohmyadmin"
 documentation = "https://github.com/alex-oleshkevich/ohmyadmin"
 keywords = []
+include = ["ohmyadmin/statics/build/*"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Web Environment",
