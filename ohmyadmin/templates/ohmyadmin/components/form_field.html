@@ -2,7 +2,9 @@
 
 <div class="col-span-{{ element.colspan }}">
     <div class="form-group {{ 'form-group-horizontal' if element.horizontal else '' }}">
-        {{ forms.form_label(element.field) }}
+        {% if element.render_label %}
+            {{ forms.form_label(element.field) }}
+        {% endif %}
         <div>
             {{ element.field.render() }}
             {{ forms.form_help(element.field) if element.field.description else '' }}

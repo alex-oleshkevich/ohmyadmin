@@ -1,0 +1,12 @@
+<div x-data="{open: false}" class="row-action-dropdown cursor-pointer" @click="open = !open">
+    {{ icon('dots') }}
+    <div x-show="open" @click.outside="open = false" class="dropdown">
+        <ul>
+            {% for action in element.children %}
+                <li>
+                    {{ action }}
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>

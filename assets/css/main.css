@@ -125,25 +125,30 @@
         @apply space-y-1;
     }
 
-    .dropdown > ul li > a.dropdown-item, .dropdown > ul li > a {
-        @apply px-2 py-1.5 flex items-center gap-3 hover:bg-slate-100 active:bg-slate-200 text-black;
+    .dropdown > ul li > .dropdown-item, .dropdown > ul li > a {
+        @apply px-2 py-1.5 flex items-center gap-3 hover:bg-slate-100 active:bg-slate-200 text-black w-full;
     }
 
-    .dropdown > ul li > a.dropdown-item-danger {
+    .dropdown > ul li > .dropdown-item:hover, .dropdown > ul li > a:hover {
+        @apply no-underline;
+    }
+
+    .dropdown > ul li > .dropdown-item.danger {
         @apply text-red-700;
     }
 
     /* tables */
-    .row-action-dropdown {
+    .row-actions > .row-action-dropdown {
         @apply relative hover:bg-slate-200 rounded px-2 py-0.5;
     }
 
-    .row-action {
+    .row-actions > .row-action {
         @apply inline-flex items-center gap-1 hover:underline hover:text-slate-600 text-black p-1;
     }
 
-    .row-action.row-action-danger {
-        @apply text-red-700 hover:text-red-600;
+    .row-actions > .row-action.danger {
+        color: theme('colors.red.700') !important;
+        @apply hover:text-red-600;
     }
 
     /* main menu */

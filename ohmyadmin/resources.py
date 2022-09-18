@@ -8,7 +8,7 @@ from starlette.routing import BaseRoute, Route, Router
 from starlette.types import Receive, Scope, Send
 
 from ohmyadmin.actions import BatchAction, BulkDeleteAction
-from ohmyadmin.components import Button, ButtonLink, Component, EmptyState, FormElement, Grid, Row
+from ohmyadmin.components import Button, ButtonLink, Component, EmptyState, FormElement, Grid, Row, RowAction
 from ohmyadmin.filters import BaseFilter, FilterIndicator, OrderingFilter, SearchFilter
 from ohmyadmin.flash import flash
 from ohmyadmin.forms import Form, HandlesFiles
@@ -20,9 +20,9 @@ from ohmyadmin.responses import RedirectResponse, Response
 from ohmyadmin.storage import FileStorage
 from ohmyadmin.structures import URLSpec
 from ohmyadmin.tables import (
+    ActionColumn,
     Column,
-    LinkRowAction,
-    RowAction,
+    RowActionsCallback,
     SortingHelper,
     get_page_size_value,
     get_page_value,
@@ -31,6 +31,18 @@ from ohmyadmin.tables import (
 
 ResourceAction = typing.Literal['list', 'create', 'edit', 'delete', 'bulk', 'action']
 PkType = int | str
+
+_RowActionsArgs = typing.ParamSpec('_RowActionsArgs')
+_RowActionsReturn = typing.TypeVar('_RowActionsReturn')
+
+
+def wrap_row_actions(
+    fn: typing.Callable[_RowActionsArgs, _RowActionsReturn],
+) -> typing.Callable[typing.Concatenate['Resource', _RowActionsArgs], _RowActionsReturn]:
+    def wrapper(self: 'Resource', *args: _RowActionsArgs.args, **kwargs: _RowActionsArgs.kwargs) -> _RowActionsReturn:
+        return fn(*args, **kwargs)
+
+    return wrapper
 
 
 class ResourceMeta(type):
@@ -51,6 +63,11 @@ class ResourceMeta(type):
                         f'Please, specify it manually via Resource.pk_column attribute.'
                     )
 
+        if 'row_actions' in attrs:
+            # when lambda attached to a class it will receive self as the first argument
+            # this adds undesired behavior so lets it in a function that transparently handles self argument
+            attrs['row_actions'] = wrap_row_actions(attrs['row_actions']) if attrs['row_actions'] else None
+
         return super().__new__(cls, name, bases, attrs)
 
 
@@ -70,7 +87,7 @@ class Resource(Router, metaclass=ResourceMeta):
     table_columns: typing.Iterable[Column] | None = None
     batch_actions: typing.Iterable[BatchAction] | None = None
     table_actions: typing.Iterable[Component] | None = None
-    row_actions: typing.Iterable[RowAction] | None = None
+    row_actions: RowActionsCallback | None = None
     metrics: typing.Iterable[Metric] | None = None
 
     # pagination and default filters
@@ -103,17 +120,6 @@ class Resource(Router, metaclass=ResourceMeta):
     def searchable(self) -> bool:
         return any([column.searchable for column in self.get_table_columns()])
 
-    # @property
-    # def pk_column(self) -> str:
-    #     for column in vars(self.entity_class).values():
-    #         if hasattr(column, 'primary_key') and column.primary_key:
-    #             return column.name
-    #
-    #     raise ValueError(
-    #         f'Could not determine automatically primary key column for resource {self.__class__.__name__}. '
-    #         f'Please, specify it manually via Resource.pk_column attribute.'
-    #     )
-
     @property
     def pk_type(self) -> typing.Type[PkType]:
         column = getattr(self.entity_class, self.pk_column)
@@ -136,7 +142,8 @@ class Resource(Router, metaclass=ResourceMeta):
 
     def get_table_columns(self) -> typing.Iterable[Column]:
         assert self.table_columns is not None, 'Resource must define columns for table view.'
-        return self.table_columns
+        yield from self.table_columns
+        yield ActionColumn(self.get_row_actions)
 
     def get_queryset(self, request: Request) -> sa.sql.Select:
         assert self.entity_class is not None, 'entity_class must be defined on resource.'
@@ -168,20 +175,18 @@ class Resource(Router, metaclass=ResourceMeta):
         yield from self.table_actions or []
         yield from self.get_default_table_actions()
 
-    def get_default_row_actions(self, request: Request) -> typing.Iterable[RowAction]:
-        yield LinkRowAction(
-            lambda entity: request.url_for(self.get_route_name('edit'), pk=self.get_pk_value(entity)),
-            icon='pencil',
-        )
-        yield LinkRowAction(
-            lambda entity: request.url_for(self.get_route_name('delete'), pk=self.get_pk_value(entity)),
+    def get_default_row_actions(self, entity: typing.Any) -> typing.Iterable[Component]:
+        yield RowAction(entity, icon='pencil', url=URLSpec.to_resource(self, 'edit', {'pk': self.get_pk_value(entity)}))
+        yield RowAction(
+            entity,
             icon='trash',
-            color='danger',
+            url=URLSpec.to_resource(self, 'delete', {'pk': self.get_pk_value(entity)}),
+            danger=True,
         )
 
-    def get_row_actions(self, request: Request) -> typing.Iterable[RowAction]:
-        yield from self.row_actions or []
-        yield from self.get_default_row_actions(request)
+    def get_row_actions(self, entity: typing.Any) -> typing.Iterable[Component]:
+        yield from self.row_actions(entity) if callable(self.row_actions) else []
+        yield from self.get_default_row_actions(entity)
 
     def get_default_batch_actions(self) -> typing.Iterable[BatchAction]:
         yield BulkDeleteAction.clone_class(self.__class__)()
@@ -267,13 +272,12 @@ class Resource(Router, metaclass=ResourceMeta):
                 'indicators': indicators,
                 'page_has_results': has_results,
                 'page_title': self.label_plural,
-                'columns': self.get_table_columns(),
+                'columns': list(self.get_table_columns()),
                 'search_placeholder': self.search_placeholder,
                 'sorting_helper': SortingHelper(self.ordering_param),
                 'search_query': search_query,
                 'empty_state': self.get_empty_state(request),
                 'batch_actions': list(self.get_batch_actions()),
-                'row_actions': list(self.get_row_actions(request)),
                 'table_actions': list(self.get_table_actions()),
                 'metrics': [await metric.render(request) for metric in self.get_metrics()],
             },

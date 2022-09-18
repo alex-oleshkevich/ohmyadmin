@@ -1,0 +1,6 @@
+<button
+    @click="selectObjectAndCallBatchAction('{{ element.entity.id }}', '{{ element.action.url }}')"
+    class="row-action dropdown-item {{ element.color }}">
+    {{ tabler_icon(element.icon) if element.icon else '' }}
+    <span>{{ element.text }}</span>
+</button>

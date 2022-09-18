@@ -23,6 +23,10 @@ document.addEventListener('alpine:init', () => {
         openActionModal(actionUrl: string) {
             this.actionUrl = actionUrl;
         },
+        selectObjectAndCallBatchAction(objectId: string, actionUrl: string) {
+            this.selected = [objectId];
+            this.actionUrl = actionUrl;
+        },
         closeActionModal() {
             this.actionUrl = '';
         },
