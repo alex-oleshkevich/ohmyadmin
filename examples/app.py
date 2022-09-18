@@ -23,6 +23,7 @@ from examples.models import User
 from ohmyadmin.app import OhMyAdmin, UserMenu
 from ohmyadmin.auth import BaseAuthPolicy, UserLike
 from ohmyadmin.components import MenuItem
+from ohmyadmin.pages import Page
 from ohmyadmin.storage import LocalDirectoryStorage
 
 metadata = sa.MetaData()
@@ -60,6 +61,10 @@ class AuthPolicy(BaseAuthPolicy):
         return super().get_user_menu(conn)
 
 
+class SettingsPage(Page):
+    icon = 'settings'
+
+
 this_dir = pathlib.Path(__file__).parent
 uploads_dir = this_dir / 'uploads'
 engine = create_async_engine('postgresql+asyncpg://root:postgres@localhost/ohmyadmin', future=True)
@@ -69,6 +74,7 @@ admin = OhMyAdmin(
     auth_policy=AuthPolicy(),
     template_dir=this_dir / 'templates',
     file_storage=LocalDirectoryStorage(this_dir / 'uploads'),
+    pages=[SettingsPage()],
     resources=[
         ProductResource(),
         CustomerResource(),

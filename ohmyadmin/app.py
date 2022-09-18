@@ -20,6 +20,7 @@ from ohmyadmin.flash import FlashMiddleware, flash
 from ohmyadmin.globals import globalize_dbsession, globalize_request
 from ohmyadmin.i18n import _
 from ohmyadmin.media_server import MediaServer
+from ohmyadmin.pages import Page
 from ohmyadmin.resources import Resource
 from ohmyadmin.responses import RedirectResponse, Response
 from ohmyadmin.storage import FileStorage
@@ -33,7 +34,8 @@ class OhMyAdmin(Router):
     def __init__(
         self,
         engine: AsyncEngine,
-        resources: typing.Iterable[Resource],
+        resources: typing.Iterable[Resource] | None = None,
+        pages: typing.Iterable[Page] | None = None,
         routes: list[BaseRoute] | None = None,
         template_dir: str | os.PathLike | None = None,
         file_storage: FileStorage | None = None,
@@ -43,7 +45,8 @@ class OhMyAdmin(Router):
         self.engine = engine
         self._make_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
         self.file_storage = file_storage
-        self.resources = resources
+        self.resources = resources or []
+        self.pages = pages or []
         self.auth_policy = auth_policy or AnonymousAuthPolicy()
         self.middleware = list(middleware or [])
         self.middleware.extend(
@@ -72,6 +75,13 @@ class OhMyAdmin(Router):
             items=[
                 MenuItem(text=resource.label, icon=resource.icon, url=URLSpec.to_resource(resource.__class__))
                 for resource in self.resources
+            ],
+        )
+        yield MenuGroup(
+            text=_('Pages'),
+            items=[
+                MenuItem(text=page.label, icon=page.icon, url=URLSpec.to_path_name(path_name=page.route_name))
+                for page in self.pages
             ],
         )
 
@@ -121,6 +131,9 @@ class OhMyAdmin(Router):
 
         for resource in self.resources:
             yield Mount(f'/resources/{resource.id}', resource)
+
+        for page in self.pages:
+            yield Mount(f'/{page.id}', page)
 
     async def index_view(self, request: Request) -> Response:
         return self.render_to_response(request, 'ohmyadmin/index.html')

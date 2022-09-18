@@ -4,7 +4,7 @@ from slugify import slugify
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
-from starlette.routing import BaseRoute, Route, Router
+from starlette.routing import BaseRoute, Route
 from starlette.types import Receive, Scope, Send
 
 from ohmyadmin.actions import BatchAction, BulkDeleteAction
@@ -15,6 +15,7 @@ from ohmyadmin.forms import Form, HandlesFiles
 from ohmyadmin.helpers import camel_to_sentence, pluralize, render_to_response
 from ohmyadmin.i18n import _
 from ohmyadmin.metrics import Metric
+from ohmyadmin.pages import BasePage, PageMeta
 from ohmyadmin.pagination import Page
 from ohmyadmin.responses import RedirectResponse, Response
 from ohmyadmin.storage import FileStorage
@@ -45,7 +46,7 @@ def wrap_row_actions(
     return wrapper
 
 
-class ResourceMeta(type):
+class ResourceMeta(PageMeta):
     def __new__(cls, name: str, bases: tuple, attrs: dict[str, typing.Any], **kwargs: typing.Any) -> typing.Type:
         if name != 'Resource':
             attrs['id'] = attrs.get('id', pluralize(slugify(name.removesuffix('Resource'))))
@@ -71,7 +72,7 @@ class ResourceMeta(type):
         return super().__new__(cls, name, bases, attrs)
 
 
-class Resource(Router, metaclass=ResourceMeta):
+class Resource(BasePage, metaclass=ResourceMeta):
     id: typing.ClassVar[str] = ''
     label: typing.ClassVar[str] = ''
     label_plural: typing.ClassVar[str] = ''

@@ -1,0 +1,43 @@
+import typing
+from slugify import slugify
+from starlette.requests import Request
+from starlette.routing import BaseRoute, Route, Router
+
+from ohmyadmin.helpers import camel_to_sentence, render_to_response
+from ohmyadmin.responses import Response
+
+
+class PageMeta(type):
+    def __new__(cls, name: str, bases: tuple, attrs: dict[str, typing.Any], **kwargs: typing.Any) -> typing.Type:
+        if name != 'Page':
+            attrs['id'] = attrs.get('id', slugify(name.removesuffix('Page')))
+            attrs['label'] = attrs.get('label', camel_to_sentence(name.removesuffix('Page')))
+            attrs['route_name'] = 'ohmyadmin_page_' + attrs['id']
+
+        return super().__new__(cls, name, bases, attrs)
+
+
+class BasePage(Router, metaclass=PageMeta):
+    id: typing.ClassVar[str] = ''
+    label: typing.ClassVar[str] = ''
+    icon: typing.ClassVar[str] = ''
+
+
+class Page(BasePage):
+    route_name: typing.ClassVar[str] = ''
+    template: typing.ClassVar[str] = 'ohmyadmin/pages/base.html'
+
+    def __init__(self) -> None:
+        super().__init__(routes=list(self.get_routes()))
+
+    async def get_template_context(self) -> dict[str, typing.Any]:
+        return {}
+
+    async def dispatch(self, request: Request) -> Response:
+        context = await self.get_template_context()
+        return render_to_response(
+            request, self.template, {'request': request, 'page': self, 'page_title': self.label, **context}
+        )
+
+    def get_routes(self) -> typing.Iterable[BaseRoute]:
+        yield Route('/', self.dispatch, name=self.route_name)
