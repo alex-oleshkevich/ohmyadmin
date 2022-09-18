@@ -2,5 +2,5 @@
 
 {% set attrs = {'@click': 'openActionModal(`{url}`)'.format(url=element.url) } %}
 {{ lib.button(
-    text=element.label, type=element.type, icon=element.icon, color=element.color, name=element.name, attrs=attrs
+    text=element.label, type='button', icon=element.icon, color=element.color, name=element.name, attrs=attrs
 ) }}

@@ -123,6 +123,7 @@ class Resource(Router, metaclass=ResourceMeta):
 
     @property
     def pk_type(self) -> typing.Type[PkType]:
+        """Get primary key type."""
         column = getattr(self.entity_class, self.pk_column)
         match column.type:
             case sa.Integer():
@@ -131,7 +132,14 @@ class Resource(Router, metaclass=ResourceMeta):
                 return str
         return int
 
-    def get_empty_state(self, request: Request) -> Component:
+    def get_empty_state(self) -> Component:
+        """
+        Return empty state component.
+
+        Empty states used on pages that have no data (empty) and no filters
+        applied.
+        """
+
         return EmptyState(
             heading=_('Empty page'),
             message=_('This page currently has no data.'),
@@ -139,20 +147,37 @@ class Resource(Router, metaclass=ResourceMeta):
         )
 
     def get_pk_value(self, entity: typing.Any) -> int | str:
+        """Get primary key value from the entity."""
+
         return getattr(entity, self.pk_column)
 
     def get_table_columns(self) -> typing.Iterable[Column]:
+        """Collect and return configured table columns."""
+
         assert self.table_columns is not None, 'Resource must define columns for table view.'
         yield from self.table_columns
         yield ActionColumn(self.get_row_actions)
 
     def get_queryset(self, request: Request) -> sa.sql.Select:
+        """
+        Get queryset.
+
+        By default, it returns the Resource.queryset or raises.
+        """
+
         assert self.entity_class is not None, 'entity_class must be defined on resource.'
         if self.queryset is not None:
             return self.queryset
         return sa.select(self.entity_class)
 
     def get_filters(self) -> typing.Iterable[BaseFilter]:
+        """
+        Get filters.
+
+        If resource has searchable or orderable columns then SearchFilter and
+        OrderingFilter will be added.
+        """
+
         table_columns = self.get_table_columns()
         columns = list([column for column in table_columns if column.searchable])
         yield SearchFilter(query_param=self.search_param, entity_class=self.entity_class, columns=columns)
@@ -165,6 +190,8 @@ class Resource(Router, metaclass=ResourceMeta):
             yield filter_class()
 
     def get_default_page_actions(self) -> typing.Iterable[Component]:
+        """Return default index page actions."""
+
         yield ButtonLink(
             url=URLSpec(resource=self, resource_action='create'),
             text=_('Add {resource}'.format(resource=self.label)),
@@ -173,6 +200,7 @@ class Resource(Router, metaclass=ResourceMeta):
         )
 
     def get_page_actions(self) -> typing.Iterable[Component]:
+        """Return user defined index page actions."""
         yield from self.page_actions or []
         yield from self.get_default_page_actions()
 
@@ -205,8 +233,8 @@ class Resource(Router, metaclass=ResourceMeta):
         yield Button(_('Save and add new'), name='_add')
 
     def get_form_actions(self) -> typing.Iterable[Component]:
-        yield from self.form_actions or []
         yield from self.get_default_form_actions()
+        yield from self.form_actions or []
 
     def get_form_class(self) -> typing.Type[Form]:
         assert self.form_class, f'{self.__class__.__name__} must define form_class attribute.'
@@ -277,7 +305,7 @@ class Resource(Router, metaclass=ResourceMeta):
                 'search_placeholder': self.search_placeholder,
                 'sorting_helper': SortingHelper(self.ordering_param),
                 'search_query': search_query,
-                'empty_state': self.get_empty_state(request),
+                'empty_state': self.get_empty_state(),
                 'batch_actions': list(self.get_batch_actions()),
                 'page_actions': list(self.get_page_actions()),
                 'metrics': [
