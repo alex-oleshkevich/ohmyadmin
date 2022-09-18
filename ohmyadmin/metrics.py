@@ -20,7 +20,7 @@ class Metric(metaclass=MetricMeta):
     id: typing.ClassVar[str] = ''
     label: typing.ClassVar[str] = ''
     template: str = ''
-    refresh_every: int | None = 5
+    refresh_every: int | None = None
 
     async def get_value(self, request: Request) -> dict[str, typing.Any]:
         return {}
