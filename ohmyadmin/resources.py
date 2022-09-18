@@ -178,7 +178,7 @@ class Resource(Router, metaclass=ResourceMeta):
         OrderingFilter will be added.
         """
 
-        table_columns = self.get_table_columns()
+        table_columns = list(self.get_table_columns())
         columns = list([column for column in table_columns if column.searchable])
         yield SearchFilter(query_param=self.search_param, entity_class=self.entity_class, columns=columns)
 
