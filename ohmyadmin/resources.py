@@ -86,7 +86,7 @@ class Resource(Router, metaclass=ResourceMeta):
     filters: typing.Iterable[typing.Type[BaseFilter]] | None = None
     table_columns: typing.Iterable[Column] | None = None
     batch_actions: typing.Iterable[BatchAction] | None = None
-    table_actions: typing.Iterable[Component] | None = None
+    page_actions: typing.Iterable[Component] | None = None
     row_actions: RowActionsCallback | None = None
     metrics: typing.Iterable[Metric] | None = None
 
@@ -134,7 +134,7 @@ class Resource(Router, metaclass=ResourceMeta):
         return EmptyState(
             heading=_('Empty page'),
             message=_('This page currently has no data.'),
-            actions=list(self.get_default_table_actions()),
+            actions=list(self.get_default_page_actions()),
         )
 
     def get_pk_value(self, entity: typing.Any) -> int | str:
@@ -163,7 +163,7 @@ class Resource(Router, metaclass=ResourceMeta):
         for filter_class in filter_classes:
             yield filter_class()
 
-    def get_default_table_actions(self) -> typing.Iterable[Component]:
+    def get_default_page_actions(self) -> typing.Iterable[Component]:
         yield ButtonLink(
             url=URLSpec(resource=self, resource_action='create'),
             text=_('Add {resource}'.format(resource=self.label)),
@@ -171,9 +171,9 @@ class Resource(Router, metaclass=ResourceMeta):
             color='primary',
         )
 
-    def get_table_actions(self) -> typing.Iterable[Component]:
-        yield from self.table_actions or []
-        yield from self.get_default_table_actions()
+    def get_page_actions(self) -> typing.Iterable[Component]:
+        yield from self.page_actions or []
+        yield from self.get_default_page_actions()
 
     def get_default_row_actions(self, entity: typing.Any) -> typing.Iterable[Component]:
         yield RowAction(entity, icon='pencil', url=URLSpec.to_resource(self, 'edit', {'pk': self.get_pk_value(entity)}))
@@ -278,7 +278,7 @@ class Resource(Router, metaclass=ResourceMeta):
                 'search_query': search_query,
                 'empty_state': self.get_empty_state(request),
                 'batch_actions': list(self.get_batch_actions()),
-                'table_actions': list(self.get_table_actions()),
+                'page_actions': list(self.get_page_actions()),
                 'metrics': [await metric.render(request) for metric in self.get_metrics()],
             },
         )

@@ -69,7 +69,7 @@ class UserResource(Resource):
     form_class = EditForm
     queryset = sa.select(entity_class).order_by(User.id)
     batch_actions = (DuplicateAction(),)
-    table_actions = (ExportAction(),)
+    page_actions = (ExportAction(),)
     row_actions = row_actions
     table_columns = [
         Column('id', label='ID'),
