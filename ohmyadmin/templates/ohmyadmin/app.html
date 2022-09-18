@@ -9,9 +9,18 @@
         <!-- sidebar -->
         <aside class="w-80 border-r border-gray-300 bg-slate-50 px-3 text-sm">
             <!-- logo -->
-            <div class="w-full py-5">
-                <span class="text-lg font-semibold">Oh My Admin!</span>
-            </div>
+            {% if admin.logo_url %}
+                <div class="h-16 flex items-center">
+                    <a href="{{ url('ohmyadmin_welcome') }}">
+                        <img src="{{ admin.logo_url }}" class="max-h-full">
+                    </a>
+                </div>
+            {% else %}
+                <div class="w-full py-5">
+                    <span class="text-lg font-semibold">{{ admin.title }}</span>
+                </div>
+            {% endif %}
+
             <!-- end logo -->
 
             <!-- main menu -->

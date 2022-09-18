@@ -34,6 +34,8 @@ class OhMyAdmin(Router):
     def __init__(
         self,
         engine: AsyncEngine,
+        title: str = 'Oh My Admin!',
+        logo_url: str = '',
         resources: typing.Iterable[Resource] | None = None,
         pages: typing.Iterable[Page] | None = None,
         dashboards: typing.Iterable[Dashboard] | None = None,
@@ -44,6 +46,8 @@ class OhMyAdmin(Router):
         middleware: typing.Sequence[Middleware] | None = None,
     ) -> None:
         self.engine = engine
+        self.title = title
+        self.logo_url = logo_url
         self._make_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
         self.file_storage = file_storage
         self.pages = pages or []
