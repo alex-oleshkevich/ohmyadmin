@@ -19,12 +19,12 @@ from ohmyadmin.forms import (
     choices_from,
 )
 from ohmyadmin.helpers import resource_url
-from ohmyadmin.metrics import CountMetric
+from ohmyadmin.metrics import ValueMetric
 from ohmyadmin.resources import Resource
 from ohmyadmin.tables import BoolColumn, Column, HasManyColumn, ImageColumn, NumberColumn
 
 
-class TotalProducts(CountMetric):
+class TotalProducts(ValueMetric):
     label = 'Total products'
 
     async def calculate(self, request: Request) -> int:
@@ -33,7 +33,7 @@ class TotalProducts(CountMetric):
         return result.one()
 
 
-class ProductInventory(CountMetric):
+class ProductInventory(ValueMetric):
     label = 'Product Inventory'
 
     async def calculate(self, request: Request) -> int:
@@ -42,7 +42,7 @@ class ProductInventory(CountMetric):
         return result.one()
 
 
-class AveragePrice(CountMetric):
+class AveragePrice(ValueMetric):
     label = 'Average Price'
     value_prefix = 'USD'
     round = 2

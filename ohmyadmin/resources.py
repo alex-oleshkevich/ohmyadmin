@@ -29,7 +29,7 @@ from ohmyadmin.tables import (
     get_search_value,
 )
 
-ResourceAction = typing.Literal['list', 'create', 'edit', 'delete', 'bulk', 'action']
+ResourceAction = typing.Literal['list', 'create', 'edit', 'delete', 'bulk', 'action', 'metric']
 PkType = int | str
 
 _RowActionsArgs = typing.ParamSpec('_RowActionsArgs')
@@ -279,7 +279,9 @@ class Resource(Router, metaclass=ResourceMeta):
                 'empty_state': self.get_empty_state(request),
                 'batch_actions': list(self.get_batch_actions()),
                 'page_actions': list(self.get_page_actions()),
-                'metrics': [await metric.render(request) for metric in self.get_metrics()],
+                'metrics': [
+                    request.url_for(self.get_route_name('metric'), metric_id=metric.id) for metric in self.get_metrics()
+                ],
             },
         )
 
@@ -359,6 +361,13 @@ class Resource(Router, metaclass=ResourceMeta):
             },
         )
 
+    async def metric_view(self, request: Request) -> Response:
+        metric_id = request.path_params['metric_id']
+        metric = next((metric for metric in self.get_metrics() if metric.id == metric_id))
+        if not metric:
+            raise HTTPException(404, 'Metric does not exists.')
+        return await metric.dispatch(request)
+
     @classmethod
     def get_route_name(cls, action: ResourceAction, sub_action: str | None = None) -> str:
         sub_action = f'_{sub_action}' if sub_action else ''
@@ -367,6 +376,9 @@ class Resource(Router, metaclass=ResourceMeta):
     @classmethod
     def get_bulk_route_name(cls, bulk_action: BatchAction) -> str:
         return cls.get_route_name('bulk') + '_' + bulk_action.id
+
+    def get_metric_url(self, request: Request, metric: Metric) -> str:
+        return request.url_for(self.get_route_name('metric'))
 
     def get_routes(self) -> typing.Iterable[BaseRoute]:
         mapping = {int: 'int', str: 'str'}
@@ -394,6 +406,8 @@ class Resource(Router, metaclass=ResourceMeta):
                 methods=['GET', 'POST'],
                 name=self.get_bulk_route_name(bulk_action),
             )
+
+        yield Route('/metric/{metric_id}', self.metric_view, name=self.get_route_name('metric'))
 
     async def _detect_post_save_action(self, request: Request, instance: typing.Any) -> Response:
         form_data = await request.form()

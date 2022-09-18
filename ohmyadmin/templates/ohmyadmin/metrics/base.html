@@ -1,0 +1,11 @@
+<div class="border border-slate-300 rounded-lg p-3 col-span-{{ metric.colspan }}"
+     {% if metric.refresh_every %}hx-get="{{ request.url }}" hx-trigger="every {{ metric.refresh_every }}s"{% endif %}
+     hx-swap="outerHTML"
+>
+    {% if metric.label %}
+        <div class="font-semibold text-slate-600">{{ metric.label }}</div>
+    {% endif %}
+    <div>
+        {% block content %}{% endblock %}
+    </div>
+</div>

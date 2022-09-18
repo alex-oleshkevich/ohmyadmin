@@ -1,25 +1,46 @@
 import abc
 import typing
+from slugify import slugify
 from starlette.requests import Request
 
-from ohmyadmin.helpers import camel_to_sentence, render_to_string
+from ohmyadmin.helpers import camel_to_sentence, render_to_response
+from ohmyadmin.responses import Response
 
 
-class Metric:
+class MetricMeta(type):
+    def __new__(cls, name: str, bases: tuple, attrs: dict[str, typing.Any], **kwargs: typing.Any) -> typing.Type:
+        if name != 'Metric':
+            attrs['id'] = attrs.get('id', slugify(name.removesuffix('Metric')))
+            attrs['label'] = attrs.get('label', camel_to_sentence(name.removesuffix('Metric')))
+
+        return super().__new__(cls, name, bases, attrs)
+
+
+class Metric(metaclass=MetricMeta):
     id: typing.ClassVar[str] = ''
+    label: typing.ClassVar[str] = ''
     template: str = ''
+    refresh_every: int | None = 5
 
-    @property
-    def label(self) -> str:
-        return camel_to_sentence(self.__class__.__name__)
+    async def get_value(self, request: Request) -> dict[str, typing.Any]:
+        return {}
 
-    async def render(self, request: Request) -> str:
-        return render_to_string(self.template, {})
+    async def dispatch(self, request: Request) -> Response:
+        return render_to_response(
+            request,
+            self.template,
+            {
+                'request': request,
+                'metric': self,
+                'refresh_every': self.refresh_every,
+                **(await self.get_value(request)),
+            },
+        )
 
 
-class CountMetric(Metric):
-    template = 'ohmyadmin/metrics/counter.html'
-    cols: int = 4
+class ValueMetric(Metric):
+    template = 'ohmyadmin/metrics/value.html'
+    colspan: int = 4
     value_prefix: str = ''
     value_suffix: str = ''
     round: int | None = None
@@ -28,7 +49,7 @@ class CountMetric(Metric):
     async def calculate(self, request: Request) -> int:
         raise NotImplementedError()
 
-    async def render(self, request: Request) -> str:
+    async def get_value(self, request: Request) -> dict[str, typing.Any]:
         value = await self.calculate(request)
         value = value or 0
-        return render_to_string(self.template, {'metric': self, 'value': value})
+        return {'value': value}

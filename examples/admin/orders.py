@@ -15,12 +15,12 @@ from ohmyadmin.forms import (
     TextField,
     choices_from,
 )
-from ohmyadmin.metrics import CountMetric
+from ohmyadmin.metrics import ValueMetric
 from ohmyadmin.resources import Resource
 from ohmyadmin.tables import BadgeColumn, Column, DateColumn, NumberColumn
 
 
-class TotalOrders(CountMetric):
+class TotalOrders(ValueMetric):
     label = 'Orders'
 
     async def calculate(self, request: Request) -> int:
@@ -29,14 +29,14 @@ class TotalOrders(CountMetric):
         return result.one()
 
 
-class OpenOrders(CountMetric):
+class OpenOrders(ValueMetric):
     async def calculate(self, request: Request) -> int:
         stmt = sa.select(sa.func.count('*')).select_from(sa.select(Order).where(Order.status == 'New'))
         result = await request.state.dbsession.scalars(stmt)
         return result.one()
 
 
-class AveragePrice(CountMetric):
+class AveragePrice(ValueMetric):
     value_prefix = 'USD'
     round = 2
 
