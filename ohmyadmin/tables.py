@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import abc
 import typing
 from sqlalchemy.orm import InstrumentedAttribute
 from starlette.datastructures import URL, MultiDict
@@ -164,45 +163,6 @@ class ActionColumn(Column):
 
     def get_actions(self, entity: typing.Any) -> typing.Iterable[Component]:
         yield from self.actions(entity)
-
-
-class RowAction(abc.ABC):
-    template = ''
-
-    def render(self, entity: typing.Any) -> str:
-        assert self.template, 'RowAction does not define template.'
-        return render_to_string(self.template, {'action': self, 'object': entity})
-
-    __call__ = render
-
-
-class LinkRowAction(RowAction):
-    template = 'ohmyadmin/tables/row_action_link.html'
-
-    def __init__(
-        self,
-        action_url: typing.Callable[[typing.Any], str],
-        text: str = '',
-        icon: str = '',
-        color: typing.Literal['default', 'danger'] = 'default',
-    ) -> None:
-        self.text = text
-        self.icon = icon
-        self.color = color
-        self.action_url = action_url
-
-    def generate_url(self, entity: typing.Any) -> str:
-        return self.action_url(entity)
-
-
-class ActionGroup(RowAction):
-    template = 'ohmyadmin/tables/row_action_group.html'
-
-    def __init__(self, children: list[LinkRowAction]) -> None:
-        self.children = children
-
-    def __iter__(self) -> typing.Iterator[LinkRowAction]:
-        return iter(self.children)
 
 
 def get_ordering_value(request: Request, param_name: str) -> list[str]:
