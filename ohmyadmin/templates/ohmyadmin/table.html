@@ -17,24 +17,6 @@
             <div class="flex items-center justify-between">
                 <!-- search and actions -->
                 <div class="flex items-center gap-3 flex-1">
-                    <!-- search form -->
-                    <div class="w-96">
-                        {% if resource.searchable %}
-                            <form
-                                x-data="searchForm('{{ resource.search_param }}', '{{ search_query }}')"
-                                method="get"
-                                action="{{ request.url }}"
-                                @submit.prevent="onSubmit"
-                            >
-                                <input
-                                    x-model="searchQuery"
-                                    type="search" name="{{ resource.search_param }}" value="{{ search_query }}"
-                                    placeholder="{{ search_placeholder }}">
-                            </form>
-                        {% endif %}
-                    </div>
-                    <!-- end search form -->
-
                     <!-- filters form -->
                     {% if filters %}
                         <div x-data="{open: false}" class="relative">
@@ -43,7 +25,7 @@
                                 {{ _('Filters') }}
                             </button>
                             <form
-                                class="shadow-lg rounded-md bg-white absolute right-0 translate-y-3 w-96 border border-gray-200"
+                                class="shadow-lg rounded-md bg-white absolute left-0 translate-y-3 w-96 border border-gray-200"
                                 x-show="open" @click.outside="open = false"
                             >
                                 <div class="space-y-6">
@@ -68,6 +50,25 @@
                         </div>
                     {% endif %}
                     <!-- end filters form -->
+
+                    <!-- search form -->
+                    <div class="w-96">
+                        {% if resource.searchable %}
+                            <form
+                                x-data="searchForm('{{ resource.search_param }}', '{{ search_query }}')"
+                                method="get"
+                                action="{{ request.url }}"
+                                @submit.prevent="onSubmit"
+                            >
+                                <input
+                                    x-model="searchQuery"
+                                    type="search" name="{{ resource.search_param }}" value="{{ search_query }}"
+                                    placeholder="{{ search_placeholder }}">
+                            </form>
+                        {% endif %}
+                    </div>
+                    <!-- end search form -->
+
                 </div>
                 <!-- end search and actions -->
 
