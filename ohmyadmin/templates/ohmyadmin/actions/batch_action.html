@@ -3,10 +3,4 @@
 {% block content %}
     {{ super() }}
     <div class="mt-6">{{ layout }}</div>
-
-    <select multiple name="selected" hidden class="hidden">
-        {% for object_id in object_ids %}
-            <option selected value="{{ object_id }}">{{ object_id }}</option>
-        {% endfor %}
-    </select>
 {% endblock %}
