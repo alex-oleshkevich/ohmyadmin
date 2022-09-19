@@ -1,0 +1,20 @@
+{% extends 'ohmyadmin/app.html' %}
+{% import 'ohmyadmin/lib/buttons.html' as buttons %}
+
+{% block content %}
+    <div class="flex items-center gap-2 mb-10">
+        {% for action in row_actions %}
+            {{ action }}
+        {% endfor %}
+    </div>
+    <div>
+        <table>
+            {% for column in columns %}
+                <tr>
+                    <th class="w-80">{{ column.label }}</th>
+                    <td>{{ column(object) }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+{% endblock %}

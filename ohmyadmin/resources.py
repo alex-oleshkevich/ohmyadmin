@@ -30,7 +30,7 @@ from ohmyadmin.tables import (
     get_search_value,
 )
 
-ResourceAction = typing.Literal['list', 'create', 'edit', 'delete', 'batch', 'action', 'metric']
+ResourceAction = typing.Literal['list', 'create', 'edit', 'delete', 'show', 'batch', 'action', 'metric']
 PkType = int | str
 
 _RowActionsArgs = typing.ParamSpec('_RowActionsArgs')
@@ -107,8 +107,12 @@ class Resource(Router, metaclass=ResourceMeta):
     edit_page_label: str = _('Edit {resource}')
     delete_page_label: str = _('Delete {resource}')
 
+    # show page settings
+    show_columns: typing.ClassVar[typing.Iterable[Column] | None] = None
+
     # templates
     index_view_template: str = 'ohmyadmin/table.html'
+    show_view_template: str = 'ohmyadmin/show.html'
     edit_view_template: str = 'ohmyadmin/form.html'
     delete_view_template: str = 'ohmyadmin/delete.html'
 
@@ -205,6 +209,7 @@ class Resource(Router, metaclass=ResourceMeta):
         yield from self.get_default_page_actions()
 
     def get_default_row_actions(self, entity: typing.Any) -> typing.Iterable[Component]:
+        yield RowAction(entity, icon='eye', url=URLSpec.to_resource(self, 'show', {'pk': self.get_pk_value(entity)}))
         yield RowAction(entity, icon='pencil', url=URLSpec.to_resource(self, 'edit', {'pk': self.get_pk_value(entity)}))
         yield RowAction(
             entity,
@@ -246,6 +251,9 @@ class Resource(Router, metaclass=ResourceMeta):
     def get_empty_object(self) -> typing.Any:
         assert self.entity_class, 'entity_class is a mandatory attribute.'
         return self.entity_class()
+
+    def get_show_columns(self) -> typing.Iterable[Column]:
+        yield from self.show_columns or (column for column in self.get_table_columns() if column.name != '__actions__')
 
     async def get_object(self, request: Request, session: AsyncSession, pk: int | str) -> typing.Any:
         column = getattr(self.entity_class, self.pk_column)
@@ -312,6 +320,20 @@ class Resource(Router, metaclass=ResourceMeta):
                     request.url_for(self.get_route_name('metric'), metric_id=metric.id) for metric in self.get_metrics()
                 ],
             },
+        )
+
+    async def show_object_view(self, request: Request) -> Response:
+        pk = request.path_params['pk']
+        session = request.state.dbsession
+        instance = await self.get_object(request, session, pk=pk)
+        if not instance:
+            raise HTTPException(404, _('Object does not exists.'))
+
+        columns = list(self.get_show_columns())
+        return render_to_response(
+            request,
+            self.show_view_template,
+            {'request': request, 'object': instance, 'columns': columns, 'page_title': str(instance)},
         )
 
     async def edit_object_view(self, request: Request) -> Response:
@@ -441,6 +463,7 @@ class Resource(Router, metaclass=ResourceMeta):
             methods=['GET', 'POST'],
             name=self.get_route_name('edit'),
         )
+        yield Route('/{pk:%s}/show' % param_type, self.show_object_view, name=self.get_route_name('show'))
         yield Route(
             '/{pk:%s}/delete' % param_type,
             self.delete_object_view,
