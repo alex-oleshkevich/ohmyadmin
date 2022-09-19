@@ -63,6 +63,11 @@ def row_actions(entity: typing.Any) -> typing.Iterable[Component]:
 
 
 class ActiveUsers(Projection):
+    columns = [
+        Column('full_name', label='Name', link=True),
+        BoolColumn('is_active', label='Active'),
+    ]
+
     def apply_filter(self, stmt: sa.sql.Select) -> sa.sql.Select:
         return stmt.filter(User.is_active == True)
 

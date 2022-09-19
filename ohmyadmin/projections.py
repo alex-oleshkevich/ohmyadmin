@@ -3,7 +3,6 @@ import typing
 from slugify import slugify
 
 from ohmyadmin.helpers import camel_to_sentence
-from ohmyadmin.tables import Column
 
 
 class ProjectionMeta(type):
@@ -19,15 +18,9 @@ class Projection(metaclass=ProjectionMeta):
     id: str = ''
     label: str = ''
 
-    def __init__(
-        self, label: str = '', table_columns: typing.Iterable[Column] | None = None, id: str | None = None
-    ) -> None:
+    def __init__(self, label: str = '', id: str | None = None) -> None:
         self.id = id or self.id
         self.label = label or self.label
-        self.table_columns = list(table_columns or [])
-
-    def get_table_columns(self) -> list[Column]:
-        return self.table_columns
 
     def apply_filter(self, stmt: sa.sql.Select) -> sa.sql.Select:
         return stmt

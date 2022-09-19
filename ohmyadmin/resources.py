@@ -309,7 +309,6 @@ class Resource(Router, metaclass=ResourceMeta):
         projection_id = request.query_params.get('project', '__default__')
         if projection := {projection.id: projection for projection in projections}.get(projection_id):
             queryset = projection.apply_filter(queryset)
-            table_columns = projection.get_table_columns() or table_columns
 
         objects = await self.paginate_queryset(request, request.state.dbsession, queryset)
         search_query = get_search_value(request, self.search_param)
