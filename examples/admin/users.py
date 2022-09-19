@@ -16,6 +16,7 @@ from ohmyadmin.forms import (
     SelectField,
     TextField,
 )
+from ohmyadmin.projections import Projection
 from ohmyadmin.resources import PkType, Resource
 from ohmyadmin.responses import Response
 from ohmyadmin.tables import BoolColumn, Column, ImageColumn
@@ -61,6 +62,11 @@ def row_actions(entity: typing.Any) -> typing.Iterable[Component]:
     )
 
 
+class ActiveUsers(Projection):
+    def apply_filter(self, stmt: sa.sql.Select) -> sa.sql.Select:
+        return stmt.filter(User.is_active == True)
+
+
 class UserResource(Resource):
     icon = 'users'
     label = 'User'
@@ -71,6 +77,7 @@ class UserResource(Resource):
     batch_actions = (DuplicateAction(),)
     page_actions = (ExportAction(),)
     row_actions = row_actions
+    projections = (ActiveUsers,)
     table_columns = [
         Column('id', label='ID'),
         ImageColumn('photo'),

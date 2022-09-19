@@ -310,4 +310,18 @@
     .badge-gray {
         @apply bg-slate-50 text-slate-800;
     }
+
+    /* tabs */
+    .tabs {
+        @apply flex items-center border-b-2 border-gray-200 gap-2;
+    }
+
+    .tabs > .tab, .tabs > li {
+        @apply border-b-2 border-transparent hover:border-blue-500 hover:text-blue-600 px-3 py-2 font-medium inline-flex gap-2;
+    }
+
+    .tabs > .tab.active, .tabs > li.active {
+        @apply border-blue-600 text-blue-600;
+    }
+
 }

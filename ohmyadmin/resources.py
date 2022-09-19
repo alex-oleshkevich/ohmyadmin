@@ -17,6 +17,7 @@ from ohmyadmin.i18n import _
 from ohmyadmin.metrics import Metric
 from ohmyadmin.pages import PageMeta
 from ohmyadmin.pagination import Page
+from ohmyadmin.projections import Projection
 from ohmyadmin.responses import RedirectResponse, Response
 from ohmyadmin.storage import FileStorage
 from ohmyadmin.structures import URLSpec
@@ -91,6 +92,9 @@ class Resource(Router, metaclass=ResourceMeta):
     row_actions: typing.ClassVar[RowActionsCallback | None] = None
     metrics: typing.ClassVar[typing.Iterable[Metric] | None] = None
 
+    # projections
+    projections: typing.ClassVar[typing.Iterable[typing.Type[Projection]] | None] = None
+
     # pagination and default filters
     page_param: str = 'page'
     page_size: int = 25
@@ -162,7 +166,7 @@ class Resource(Router, metaclass=ResourceMeta):
         yield from self.table_columns
         yield ActionColumn(self.get_row_actions)
 
-    def get_queryset(self, request: Request) -> sa.sql.Select:
+    def get_queryset(self) -> sa.sql.Select:
         """
         Get queryset.
 
@@ -255,9 +259,15 @@ class Resource(Router, metaclass=ResourceMeta):
     def get_show_columns(self) -> typing.Iterable[Column]:
         yield from self.show_columns or (column for column in self.get_table_columns() if column.name != '__actions__')
 
+    def get_projections(self) -> typing.Iterable[Projection]:
+        if self.projections:
+            yield Projection(_('All'), id='__default__')
+
+        yield from [projection() for projection in self.projections or []]
+
     async def get_object(self, request: Request, session: AsyncSession, pk: int | str) -> typing.Any:
         column = getattr(self.entity_class, self.pk_column)
-        stmt = self.get_queryset(request).limit(2).where(column == pk)
+        stmt = self.get_queryset().limit(2).where(column == pk)
         result = await session.scalars(stmt)
         return result.unique().one()
 
@@ -281,7 +291,7 @@ class Resource(Router, metaclass=ResourceMeta):
         return Page(rows=list(rows), total_rows=row_count, page=page_number, page_size=page_size)
 
     async def list_objects_view(self, request: Request) -> Response:
-        queryset = self.get_queryset(request)
+        queryset = self.get_queryset()
 
         # apply filters
         filters = list(self.get_filters())
@@ -292,6 +302,14 @@ class Resource(Router, metaclass=ResourceMeta):
             indicators.extend(filter_.indicators)
             if filter_.has_ui:
                 visual_filters.append(filter_)
+
+        # apply projection
+        projections = list(self.get_projections())
+        table_columns = self.get_table_columns()
+        projection_id = request.query_params.get('project', '__default__')
+        if projection := {projection.id: projection for projection in projections}.get(projection_id):
+            queryset = projection.apply_filter(queryset)
+            table_columns = projection.get_table_columns() or table_columns
 
         objects = await self.paginate_queryset(request, request.state.dbsession, queryset)
         search_query = get_search_value(request, self.search_param)
@@ -309,13 +327,15 @@ class Resource(Router, metaclass=ResourceMeta):
                 'indicators': indicators,
                 'page_has_results': has_results,
                 'page_title': self.label_plural,
-                'columns': list(self.get_table_columns()),
+                'columns': list(table_columns),
                 'search_placeholder': self.search_placeholder,
                 'sorting_helper': SortingHelper(self.ordering_param),
                 'search_query': search_query,
                 'empty_state': self.get_empty_state(),
                 'batch_actions': list(self.get_batch_actions()),
                 'page_actions': list(self.get_page_actions()),
+                'current_projection': projection_id,
+                'projections': projections,
                 'metrics': [
                     request.url_for(self.get_route_name('metric'), metric_id=metric.id) for metric in self.get_metrics()
                 ],
