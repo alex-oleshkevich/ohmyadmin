@@ -84,7 +84,7 @@
                             type="button"
                             class="btn btn-primary"
                             :disabled="!selectedAction"
-                            @click="openActionModal(selectedAction)">
+                            @click="openActionModal(selectedAction, selected)">
                             {{ tabler_icon('player-play') }}
                             {{ _('Run') }}
                         </button>

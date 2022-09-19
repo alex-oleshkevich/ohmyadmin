@@ -118,9 +118,10 @@ class BatchAction(BaseAction, FormActionMixin):
 
     async def dispatch(self, request: Request) -> Response:
         form = await self.get_form_class().from_request(request)
+        object_ids = [
+            self.coerce(typing.cast(str, object_id)) for object_id in request.query_params.getlist('selected')
+        ]
         if await form.validate_on_submit(request):
-            form_data = await request.form()
-            object_ids = [self.coerce(typing.cast(str, object_id)) for object_id in form_data.getlist('selected')]
             return await self.apply(request, object_ids, form)
 
         layout = self.get_form_layout(form)
@@ -131,6 +132,7 @@ class BatchAction(BaseAction, FormActionMixin):
                 'request': request,
                 'action': self,
                 'layout': layout,
+                'object_ids': object_ids,
             },
         )
 

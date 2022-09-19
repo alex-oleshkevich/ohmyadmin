@@ -5,8 +5,8 @@
     <div class="mt-6">{{ layout }}</div>
 
     <select multiple name="selected" hidden class="hidden">
-        <template x-for="obj_id in selected">
-            <option selected :value="obj_id" x-text="obj_id"></option>
-        </template>
+        {% for object_id in object_ids %}
+            <option selected value="{{ object_id }}">{{ object_id }}</option>
+        {% endfor %}
     </select>
 {% endblock %}

@@ -20,7 +20,12 @@ document.addEventListener('alpine:init', () => {
         get isActionModalOpen() {
             return this.actionUrl != '';
         },
-        openActionModal(actionUrl: string) {
+        openActionModal(actionUrl: string, selected: string[] = null) {
+            if (selected) {
+                const url = new URL(actionUrl);
+                selected.forEach(value => url.searchParams.append('selected', value));
+                actionUrl = url.toString();
+            }
             this.actionUrl = actionUrl;
         },
         selectObjectAndCallBatchAction(objectId: string, actionUrl: string) {
