@@ -276,25 +276,25 @@ class Resource(Router, metaclass=ResourceMeta):
         result = await request.state.dbsession.scalars(queryset)
         return result.all()
 
-    async def paginate_queryset(self, request: Request, queryset: sa.sql.Select) -> Page:
+    async def paginate_queryset(self, request: Request, stmt: sa.sql.Select) -> Page:
         page_number = get_page_value(request, self.page_param)
         page_size = get_page_size_value(request, self.page_size_param, list(self.page_sizes or []), self.page_size)
         offset = (page_number - 1) * page_size
 
-        row_count = await self.get_object_count(request, queryset)
-        queryset = queryset.limit(page_size).offset(offset)
-        rows = await self.get_objects(request, queryset)
+        row_count = await self.get_object_count(request, stmt)
+        stmt = stmt.limit(page_size).offset(offset)
+        rows = await self.get_objects(request, stmt)
         return Page(rows=list(rows), total_rows=row_count, page=page_number, page_size=page_size)
 
     async def list_objects_view(self, request: Request) -> Response:
-        queryset = self.get_queryset()
+        stmt = self.get_queryset()
 
         # apply filters
         filters = list(self.get_filters())
         indicators: list[FilterIndicator] = []
         visual_filters: list[BaseFilter] = []
         for filter_ in filters:
-            queryset = await filter_.dispatch(request, queryset)
+            stmt = await filter_.dispatch(request, stmt)
             indicators.extend(filter_.indicators)
             if filter_.has_ui:
                 visual_filters.append(filter_)
@@ -304,9 +304,9 @@ class Resource(Router, metaclass=ResourceMeta):
         table_columns = self.get_table_columns()
         projection_id = request.query_params.get('project', '__default__')
         if projection := {projection.id: projection for projection in projections}.get(projection_id):
-            queryset = projection.apply_filter(queryset)
+            stmt = projection.apply_filter(stmt)
 
-        objects = await self.paginate_queryset(request, queryset)
+        objects = await self.paginate_queryset(request, stmt)
         search_query = get_search_value(request, self.search_param)
 
         # show empty table if no results and search or filters used, otherwise render empty state
