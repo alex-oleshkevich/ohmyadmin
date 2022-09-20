@@ -166,23 +166,3 @@ class ActionColumn(Column):
 
 def get_search_value(request: Request, param_name: str) -> str:
     return request.query_params.get(param_name, '').strip()
-
-
-def get_page_value(request: Request, param_name: str) -> int:
-    page = 1
-    try:
-        page = max(1, int(request.query_params.get(param_name, 1)))
-    except (TypeError, ValueError):
-        pass
-    return page
-
-
-def get_page_size_value(request: Request, param_name: str, allowed: list[int], default: int) -> int:
-    page_size = default
-    try:
-        page_size = int(request.query_params.get(param_name, default))
-    except (TypeError, ValueError):
-        pass
-    if page_size not in allowed:
-        page_size = default
-    return page_size

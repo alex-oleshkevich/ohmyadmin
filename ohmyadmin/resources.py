@@ -1,7 +1,6 @@
 import sqlalchemy as sa
 import typing
 from slugify import slugify
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import InstrumentedAttribute
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
@@ -18,19 +17,12 @@ from ohmyadmin.i18n import _
 from ohmyadmin.metrics import Metric
 from ohmyadmin.ordering import SortingHelper
 from ohmyadmin.pages import PageMeta
-from ohmyadmin.pagination import Page
+from ohmyadmin.pagination import Page, get_page_size_value, get_page_value
 from ohmyadmin.projections import Projection
 from ohmyadmin.responses import RedirectResponse, Response
 from ohmyadmin.storage import FileStorage
 from ohmyadmin.structures import URLSpec
-from ohmyadmin.tables import (
-    ActionColumn,
-    Column,
-    RowActionsCallback,
-    get_page_size_value,
-    get_page_value,
-    get_search_value,
-)
+from ohmyadmin.tables import ActionColumn, Column, RowActionsCallback, get_search_value
 
 ResourceAction = typing.Literal['list', 'create', 'edit', 'delete', 'show', 'batch', 'action', 'metric']
 PkType = int | str
@@ -269,29 +261,29 @@ class Resource(Router, metaclass=ResourceMeta):
 
         yield from [projection() for projection in self.projections or []]
 
-    async def get_object(self, request: Request, session: AsyncSession, pk: int | str) -> typing.Any:
+    async def get_object(self, request: Request, pk: int | str) -> typing.Any:
         column = getattr(self.entity_class, self.pk_column)
         stmt = self.get_queryset().limit(2).where(column == pk)
-        result = await session.scalars(stmt)
+        result = await request.state.dbsession.scalars(stmt)
         return result.unique().one()
 
-    async def get_object_count(self, session: AsyncSession, queryset: sa.sql.Select) -> int:
+    async def get_object_count(self, request: Request, queryset: sa.sql.Select) -> int:
         stmt = sa.select(sa.func.count('*')).select_from(queryset)
-        result = await session.scalars(stmt)
+        result = await request.state.dbsession.scalars(stmt)
         return result.one()
 
-    async def get_objects(self, session: AsyncSession, queryset: sa.sql.Select) -> typing.Iterable:
-        result = await session.scalars(queryset)
+    async def get_objects(self, request: Request, queryset: sa.sql.Select) -> typing.Iterable:
+        result = await request.state.dbsession.scalars(queryset)
         return result.all()
 
-    async def paginate_queryset(self, request: Request, session: AsyncSession, queryset: sa.sql.Select) -> Page:
+    async def paginate_queryset(self, request: Request, queryset: sa.sql.Select) -> Page:
         page_number = get_page_value(request, self.page_param)
         page_size = get_page_size_value(request, self.page_size_param, list(self.page_sizes or []), self.page_size)
         offset = (page_number - 1) * page_size
 
-        row_count = await self.get_object_count(session, queryset)
+        row_count = await self.get_object_count(request, queryset)
         queryset = queryset.limit(page_size).offset(offset)
-        rows = await self.get_objects(session, queryset)
+        rows = await self.get_objects(request, queryset)
         return Page(rows=list(rows), total_rows=row_count, page=page_number, page_size=page_size)
 
     async def list_objects_view(self, request: Request) -> Response:
@@ -314,7 +306,7 @@ class Resource(Router, metaclass=ResourceMeta):
         if projection := {projection.id: projection for projection in projections}.get(projection_id):
             queryset = projection.apply_filter(queryset)
 
-        objects = await self.paginate_queryset(request, request.state.dbsession, queryset)
+        objects = await self.paginate_queryset(request, queryset)
         search_query = get_search_value(request, self.search_param)
 
         # show empty table if no results and search or filters used, otherwise render empty state
@@ -347,8 +339,7 @@ class Resource(Router, metaclass=ResourceMeta):
 
     async def show_object_view(self, request: Request) -> Response:
         pk = request.path_params['pk']
-        session = request.state.dbsession
-        instance = await self.get_object(request, session, pk=pk)
+        instance = await self.get_object(request, pk=pk)
         if not instance:
             raise HTTPException(404, _('Object does not exists.'))
 
@@ -364,7 +355,7 @@ class Resource(Router, metaclass=ResourceMeta):
         pk = request.path_params.get('pk', None)
         session = request.state.dbsession
         if pk:
-            instance = await self.get_object(request, session, pk=request.path_params['pk'])
+            instance = await self.get_object(request, pk=request.path_params['pk'])
             if not instance:
                 raise HTTPException(404, _('Object does not exists.'))
         else:
@@ -413,7 +404,7 @@ class Resource(Router, metaclass=ResourceMeta):
 
     async def delete_object_view(self, request: Request) -> Response:
         session = request.state.dbsession
-        instance = await self.get_object(request, session, pk=request.path_params['pk'])
+        instance = await self.get_object(request, pk=request.path_params['pk'])
         if not instance:
             raise HTTPException(404, _('Object does not exists.'))
 
