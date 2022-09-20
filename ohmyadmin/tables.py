@@ -2,12 +2,11 @@ from __future__ import annotations
 
 import typing
 from sqlalchemy.orm import InstrumentedAttribute
-from starlette.datastructures import URL, MultiDict
 from starlette.requests import Request
-from urllib.parse import parse_qsl, urlencode
 
 from ohmyadmin.components import Component
 from ohmyadmin.helpers import media_url, render_to_string
+from ohmyadmin.ordering import SortingHelper
 
 Formatter = typing.Callable[[typing.Any], str]
 BadgeColors = typing.Literal['red', 'green', 'blue', 'pink', 'teal', 'sky', 'yellow', 'gray']
@@ -165,10 +164,6 @@ class ActionColumn(Column):
         yield from self.actions(entity)
 
 
-def get_ordering_value(request: Request, param_name: str) -> list[str]:
-    return request.query_params.getlist(param_name)
-
-
 def get_search_value(request: Request, param_name: str) -> str:
     return request.query_params.get(param_name, '').strip()
 
@@ -191,54 +186,3 @@ def get_page_size_value(request: Request, param_name: str, allowed: list[int], d
     if page_size not in allowed:
         page_size = default
     return page_size
-
-
-SortingType = typing.Literal['asc', 'desc']
-
-
-class SortingHelper:
-    def __init__(self, query_param_name: str) -> None:
-        self.query_param_name = query_param_name
-
-    def get_current_ordering(self, request: Request, sort_field: str) -> SortingType | None:
-        ordering = get_ordering_value(request, self.query_param_name)
-        for order in ordering:
-            if order == sort_field:
-                return 'asc'
-            if order == f'-{sort_field}':
-                return 'desc'
-
-        return None
-
-    def get_current_ordering_index(self, request: Request, sort_field: str) -> int | None:
-        for index, param_name in enumerate(get_ordering_value(request, self.query_param_name)):
-            if param_name.endswith(sort_field):
-                return index + 1
-        return None
-
-    def get_next_sorting(self, current_sorting: SortingType | None) -> SortingType | None:
-        match current_sorting:
-            case None:
-                return 'asc'
-            case 'asc':
-                return 'desc'
-            case 'desc':
-                return None
-
-    def get_url(self, request: Request, sort_field: str) -> URL:
-        ordering = get_ordering_value(request, self.query_param_name).copy()
-        if sort_field in ordering:
-            index = ordering.index(sort_field)
-            ordering[index] = f'-{sort_field}'
-        elif f'-{sort_field}' in ordering:
-            ordering.remove(f'-{sort_field}')
-        else:
-            ordering.append(sort_field)
-
-        params = MultiDict(parse_qsl(request.url.query, keep_blank_values=True))
-        params.setlist(self.query_param_name, ordering)
-        url = request.url.replace(query=urlencode(params.multi_items()))
-        return url
-
-    def should_show_index(self, request: Request) -> bool:
-        return len(get_ordering_value(request, self.query_param_name)) > 1

@@ -11,7 +11,8 @@ from starlette.requests import Request
 from ohmyadmin.components import Component, FormElement, Grid
 from ohmyadmin.forms import Form
 from ohmyadmin.helpers import render_to_string
-from ohmyadmin.tables import Column, get_ordering_value, get_search_value
+from ohmyadmin.ordering import apply_ordering
+from ohmyadmin.tables import Column, get_search_value
 
 
 class EmptyForm(Form):
@@ -74,24 +75,10 @@ class OrderingFilter(BaseFilter):
     def __init__(self, entity_class: typing.Any, columns: typing.Iterable[Column], query_param: str) -> None:
         self.entity_class = entity_class
         self.query_param = query_param
-        self.columns = {
-            column.get_sorting_key(): column.sort_by if column.sort_by else getattr(entity_class, column.name)
-            for column in columns
-        }
+        self.columns = [column.sort_by if column.sort_by else getattr(entity_class, column.name) for column in columns]
 
     def apply(self, request: Request, queryset: sa.sql.Select, form: Form) -> sa.sql.Select:
-        ordering = get_ordering_value(request, self.query_param)
-        if ordering:
-            queryset = queryset.order_by(None)
-
-        for order in ordering:
-            field_name = order.lstrip('-')
-            if field_name not in self.columns:
-                continue
-
-            column = self.columns[field_name]
-            queryset = queryset.order_by(sa.desc(column) if order.startswith('-') else column)
-        return queryset
+        return apply_ordering(request, self.columns, queryset, self.query_param)
 
 
 class SearchFilter(BaseFilter):

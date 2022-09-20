@@ -2,6 +2,7 @@ import sqlalchemy as sa
 import typing
 from slugify import slugify
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import InstrumentedAttribute
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
 from starlette.routing import BaseRoute, Route, Router
@@ -15,6 +16,7 @@ from ohmyadmin.forms import Form, HandlesFiles
 from ohmyadmin.helpers import camel_to_sentence, pluralize, render_to_response
 from ohmyadmin.i18n import _
 from ohmyadmin.metrics import Metric
+from ohmyadmin.ordering import SortingHelper
 from ohmyadmin.pages import PageMeta
 from ohmyadmin.pagination import Page
 from ohmyadmin.projections import Projection
@@ -25,7 +27,6 @@ from ohmyadmin.tables import (
     ActionColumn,
     Column,
     RowActionsCallback,
-    SortingHelper,
     get_page_size_value,
     get_page_value,
     get_search_value,
@@ -101,8 +102,11 @@ class Resource(Router, metaclass=ResourceMeta):
     page_sizes: list[int] | tuple[int, ...] | None = (25, 50, 75)
     page_size_param: str = 'page_size'
     search_param: str = 'search'
-    ordering_param: str = 'ordering'
     search_placeholder: str = _('Search...')
+
+    # ordering settings
+    ordering_param: str = 'ordering'
+    ordering_columns: typing.ClassVar[typing.Iterable[InstrumentedAttribute] | None] = None
 
     # form settings
     form_class: typing.ClassVar[typing.Type[Form] | None] = None
@@ -328,7 +332,7 @@ class Resource(Router, metaclass=ResourceMeta):
                 'page_title': self.label_plural,
                 'columns': list(table_columns),
                 'search_placeholder': self.search_placeholder,
-                'sorting_helper': SortingHelper(self.ordering_param),
+                'sorting_helper': SortingHelper(request, self.ordering_param),
                 'search_query': search_query,
                 'empty_state': self.get_empty_state(),
                 'batch_actions': list(self.get_batch_actions()),

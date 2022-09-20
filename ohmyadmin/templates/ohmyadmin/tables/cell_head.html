@@ -1,7 +1,7 @@
 {% macro sortable_header_cell(request, column, sorting_helper) %}
-    {% set current_ordering = sorting_helper.get_current_ordering(request, column.get_sorting_key()) %}
-    {% set ordering_index = sorting_helper.get_current_ordering_index(request, column.get_sorting_key()) %}
-    {% set next_ordering_url = sorting_helper.get_url(request, column.get_sorting_key()) %}
+    {% set current_ordering = sorting_helper.get_current_ordering(column.get_sorting_key()) %}
+    {% set ordering_index = sorting_helper.get_current_ordering_index(column.get_sorting_key()) %}
+    {% set next_ordering_url = sorting_helper.get_url(column.get_sorting_key()) %}
     {% set should_show_index = sorting_helper.should_show_index(request) %}
 
     <a href="{{ next_ordering_url }}" class="flex gap-2 items-center">
