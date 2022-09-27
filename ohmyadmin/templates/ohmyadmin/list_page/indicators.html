@@ -1,0 +1,8 @@
+<!-- filter indicators -->
+<div class="flex items-center gap-4">
+    <div class="font-medium">{{ _('Active filters:') }}</div>
+    {% for indicator in indicators %}
+        {{ indicator.render(request) }}
+    {% endfor %}
+</div>
+<!-- end filter indicators -->

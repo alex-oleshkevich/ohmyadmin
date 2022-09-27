@@ -1,0 +1,9 @@
+<div class="tabs">
+    {% for projection in projections %}
+        <a
+            href="{{ request.url.replace_query_params(project=projection.id) }}"
+            class="tab {{ 'active' if current_projection == projection.id else '' }}">
+            {{ projection.label }}
+        </a>
+    {% endfor %}
+</div>

@@ -1,0 +1,31 @@
+<!-- filters form -->
+<div x-data="{open: false}" class="relative">
+    <button class="btn" @click="open = !open">
+        {{ tabler_icon('filter') }}
+        {{ _('Filters') }}
+    </button>
+    <form
+        class="shadow-lg rounded-md bg-white absolute left-0 translate-y-3 w-96 border border-gray-200"
+        x-show="open" @click.outside="open = false"
+    >
+        <div class="space-y-6">
+            {% for filter in filters %}
+                <section>
+                    {% if filter.label %}
+                        <header class="text-lg font-medium p-3 bg-gray-50">
+                            {{ filter.label }}
+                        </header>
+                    {% endif %}
+                    <main class="p-3">
+                        {{ filter }}
+                    </main>
+                </section>
+            {% endfor %}
+        </div>
+        <div class="p-3 flex items-center gap-3">
+            <button class="btn btn-primary" type="submit">{{ _('Apply') }}</button>
+            <button class="btn" type="reset">{{ _('Clear') }}</button>
+        </div>
+    </form>
+</div>
+<!-- end filters form -->

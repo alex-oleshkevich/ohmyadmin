@@ -1,0 +1,20 @@
+<!-- batch actions -->
+<div x-data="{selectedAction: ''}">
+    <div x-show="selected.length" class="flex items-center gap-2">
+        <select class="w-64" x-model="selectedAction">
+            <option></option>
+            {% for action in batch_actions %}
+                <option value="{{ action.url }}">{{ action.label }}</option>
+            {% endfor %}
+        </select>
+        <button
+            type="button"
+            class="btn btn-primary"
+            :disabled="!selectedAction"
+            @click="openActionModal(selectedAction, selected)">
+            {{ tabler_icon('player-play') }}
+            {{ _('Run') }}
+        </button>
+    </div>
+</div>
+<!-- end batch actions -->

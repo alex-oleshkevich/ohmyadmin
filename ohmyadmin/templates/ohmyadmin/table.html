@@ -1,5 +1,4 @@
 {% extends 'ohmyadmin/app.html' %}
-{% import 'ohmyadmin/lib/pagination.html' as pagination %}
 {% import 'ohmyadmin/lib/buttons.html' as buttons %}
 
 {% block page_actions %}
@@ -9,7 +8,7 @@
 {% endblock %}
 
 {% block content %}
-    {% include 'ohmyadmin/tables/metrics.html' %}
+    {% include 'ohmyadmin/list_page/metrics.html' %}
 
     {% if page_has_results %}
         <div class="space-y-6">
@@ -17,149 +16,29 @@
             <div class="flex items-center justify-between">
                 <!-- search and actions -->
                 <div class="flex items-center gap-3 flex-1">
-                    <!-- filters form -->
                     {% if filters %}
-                        <div x-data="{open: false}" class="relative">
-                            <button class="btn" @click="open = !open">
-                                {{ tabler_icon('filter') }}
-                                {{ _('Filters') }}
-                            </button>
-                            <form
-                                class="shadow-lg rounded-md bg-white absolute left-0 translate-y-3 w-96 border border-gray-200"
-                                x-show="open" @click.outside="open = false"
-                            >
-                                <div class="space-y-6">
-                                    {% for filter in filters %}
-                                        <section>
-                                            {% if filter.label %}
-                                                <header class="text-lg font-medium p-3 bg-gray-50">
-                                                    {{ filter.label }}
-                                                </header>
-                                            {% endif %}
-                                            <main class="p-3">
-                                                {{ filter }}
-                                            </main>
-                                        </section>
-                                    {% endfor %}
-                                </div>
-                                <div class="p-3 flex items-center gap-3">
-                                    <button class="btn btn-primary" type="submit">{{ _('Apply') }}</button>
-                                    <button class="btn" type="reset">{{ _('Clear') }}</button>
-                                </div>
-                            </form>
-                        </div>
+                        {% include 'ohmyadmin/list_page/filters.html' %}
                     {% endif %}
-                    <!-- end filters form -->
-
-                    <!-- search form -->
-                    <div class="w-96">
-                        {% if resource.searchable %}
-                            <form
-                                x-data="searchForm('{{ resource.search_param }}', '{{ search_query }}')"
-                                method="get"
-                                action="{{ request.url }}"
-                                @submit.prevent="onSubmit"
-                            >
-                                <input
-                                    x-model="searchQuery"
-                                    type="search" name="{{ resource.search_param }}" value="{{ search_query }}"
-                                    placeholder="{{ search_placeholder }}">
-                            </form>
-                        {% endif %}
-                    </div>
-                    <!-- end search form -->
-
+                    {% include 'ohmyadmin/list_page/search_form.html' %}
                 </div>
                 <!-- end search and actions -->
-
-                <!-- batch actions -->
-                <div x-data="{selectedAction: ''}">
-                    <div x-show="selected.length" class="flex items-center gap-2">
-                        <select class="w-64" x-model="selectedAction">
-                            <option></option>
-                            {% for action in batch_actions %}
-                                <option value="{{ action.url }}">{{ action.label }}</option>
-                            {% endfor %}
-                        </select>
-                        <button
-                            type="button"
-                            class="btn btn-primary"
-                            :disabled="!selectedAction"
-                            @click="openActionModal(selectedAction, selected)">
-                            {{ tabler_icon('player-play') }}
-                            {{ _('Run') }}
-                        </button>
-                    </div>
-                </div>
-                <!-- end batch actions -->
-
+                {% include 'ohmyadmin/list_page/batch_actions.html' %}
             </div>
 
             {% if indicators %}
-                <div class="flex items-center gap-4">
-                    <div class="font-medium">{{ _('Active filters:') }}</div>
-                    {% for indicator in indicators %}
-                        {{ indicator.render(request) }}
-                    {% endfor %}
-                </div>
+                {% include 'ohmyadmin/list_page/indicators.html' %}
             {% endif %}
 
             {% if projections %}
-                <div class="tabs">
-                    {% for projection in projections %}
-                        <a
-                            href="{{ request.url.replace_query_params(project=projection.id) }}"
-                            class="tab {{ 'active' if current_projection == projection.id else '' }}">
-                            {{ projection.label }}
-                        </a>
-                    {% endfor %}
-                </div>
+                {% include 'ohmyadmin/list_page/projections.html' %}
             {% endif %}
 
-            <table>
-                <thead>
-                <tr>
-                    {% if batch_actions %}
-                        <th class="w-8">
-                            <input type="checkbox" name="selected" @click="toggleSelectAll">
-                        </th>
-                    {% endif %}
-                    {% for column in columns %}
-                        <th class="text-left p-2">{{ column.render_head_cell(request, sorting_helper) }}</th>
-                    {% endfor %}
-                </tr>
-                </thead>
-                <tbody>
-                {% for object in objects %}
-                    <tr x-bind:class="{'selected': selected.includes('{{ object.id }}')}">
-                        {% if batch_actions %}
-                            <td>
-                                <input type="checkbox" x-model="selected" value="{{ object.id }}">
-                            </td>
-                        {% endif %}
-                        {% for column in columns %}
-                            <td>
-                                {% set link = column.get_link(request, object) if column.has_link else '' %}
-                                {% if link %}
-                                    <a href="{{ link }}">
-                                        {{ column(object) }}
-                                    </a>
-                                {% else %}
-                                    {{ column(object) }}
-                                {% endif %}
-                            </td>
-                        {% endfor %}
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-
-            {{ pagination.pagination(request, objects) }}
-
+            {% include 'ohmyadmin/list_page/table.html' %}
+            {% include 'ohmyadmin/list_page/pagination.html' %}
         </div>
     {% else %}
         <div class="mt-20">
-            {{ empty_state }}
+            {% include 'ohmyadmin/list_page/empty_state.html' %}
         </div>
     {% endif %}
 {% endblock %}

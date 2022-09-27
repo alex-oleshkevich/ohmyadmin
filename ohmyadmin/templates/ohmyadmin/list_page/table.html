@@ -1,0 +1,37 @@
+<table>
+    <thead>
+    <tr>
+        {% if batch_actions %}
+            <th class="w-8">
+                <input type="checkbox" name="selected" @click="toggleSelectAll">
+            </th>
+        {% endif %}
+        {% for column in columns %}
+            <th class="text-left p-2">{{ column.render_head_cell(request, sorting_helper) }}</th>
+        {% endfor %}
+    </tr>
+    </thead>
+    <tbody>
+    {% for object in objects %}
+        <tr x-bind:class="{'selected': selected.includes('{{ object.id }}')}">
+            {% if batch_actions %}
+                <td>
+                    <input type="checkbox" x-model="selected" value="{{ object.id }}">
+                </td>
+            {% endif %}
+            {% for column in columns %}
+                <td>
+                    {% set link = column.get_link(request, object) if column.has_link else '' %}
+                    {% if link %}
+                        <a href="{{ link }}">
+                            {{ column(object) }}
+                        </a>
+                    {% else %}
+                        {{ column(object) }}
+                    {% endif %}
+                </td>
+            {% endfor %}
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
