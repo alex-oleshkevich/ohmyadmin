@@ -79,7 +79,7 @@ class Column:
 
     def get_sorting_key(self) -> str:
         if self.sort_by:
-            return str(self.sort_by.prop.expression)
+            return str(self.sort_by.key)
         return self.name
 
     def render_head_cell(self, request: Request, sorting_helper: SortingHelper) -> str:

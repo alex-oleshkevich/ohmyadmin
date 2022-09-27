@@ -22,7 +22,7 @@ def apply_ordering(
     if ordering:
         stmt = stmt.order_by(None)
 
-    columns_by_name = {str(column.expression): column for column in columns}
+    columns_by_name = {column.key: column for column in columns}
     for order in ordering:
         field_name = order.lstrip('-')
         if field_name not in columns_by_name:
