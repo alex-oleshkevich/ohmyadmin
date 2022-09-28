@@ -80,7 +80,7 @@ class OverviewDashboard(Dashboard):
 
 this_dir = pathlib.Path(__file__).parent
 uploads_dir = this_dir / 'uploads'
-engine = create_async_engine('postgresql+asyncpg://root:postgres@localhost/ohmyadmin', future=True)
+engine = create_async_engine('postgresql+asyncpg://postgres:postgres@localhost/ohmyadmin', future=True)
 
 admin = OhMyAdmin(
     engine=engine,

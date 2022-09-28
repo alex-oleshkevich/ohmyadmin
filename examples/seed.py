@@ -198,7 +198,7 @@ def seed_categories(session: AsyncSession) -> None:
                 name=fake.sentence(3),
                 slug=fake.slug(),
                 description=fake.text(),
-                parent_id=random.randint(1, 21) if index % 5 == 0 else None,
+                parent_id=None,
                 visible_to_customers=fake.boolean(),
                 created_at=fake.date_between(),
                 updated_at=fake.date_between(),

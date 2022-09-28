@@ -45,6 +45,9 @@ types-python-slugify = "^6.1"
 [tool.poetry.group.dev.dependencies]
 passlib = "^1.7.4"
 itsdangerous = "^2.1.2"
+Faker = "^15.0.0"
+uvicorn = "^0.18.3"
+starception = "^0.4.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
