@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import dataclasses
+
 import math
 import typing
+from starlette.datastructures import URL
 from starlette.requests import Request
 
 M = typing.TypeVar('M')
@@ -16,15 +19,13 @@ def get_page_value(request: Request, param_name: str) -> int:
     return page
 
 
-def get_page_size_value(request: Request, param_name: str, allowed: list[int], default: int) -> int:
+def get_page_size_value(request: Request, param_name: str, max_size: int, default: int) -> int:
     page_size = default
     try:
         page_size = int(request.query_params.get(param_name, default))
     except (TypeError, ValueError):
         pass
-    if page_size not in allowed:
-        page_size = default
-    return page_size
+    return min(page_size, max_size)
 
 
 class Page(typing.Generic[M]):
@@ -127,3 +128,34 @@ class Page(typing.Generic[M]):
 
     def __repr__(self) -> str:
         return f'<Page: page={self.page}, total_pages={self.total_pages}>'
+
+
+@dataclasses.dataclass
+class PageControl:
+    text: str
+    icon: str = ''
+    url: URL | None = None
+    disabled: bool = False
+
+
+def generate_page_controls(
+    current_url: URL,
+    page: Page,
+    page_param: str = 'page',
+    prev_label: str = 'Previous',
+    prev_icon: str = 'arrow-left',
+    next_label: str = 'Next',
+    next_icon: str = 'arrow-right',
+) -> typing.Iterable[PageControl]:
+    prev_url = (
+        current_url.replace_query_params(**{page_param: page.previous_page}) if page.has_previous else current_url
+    )
+    yield PageControl(text=prev_label, icon=prev_icon, url=prev_url, disabled=not page.has_previous)
+    for page_number in page.iter_pages():
+        if page_number is None:
+            yield PageControl(text='...', disabled=True)
+        else:
+            yield PageControl(text=str(page_number), url=current_url.replace_query_params(**{page_param: page_number}))
+
+    next_url = current_url.replace_query_params(**{page_param: page.next_page}) if page.has_next else current_url
+    yield PageControl(text=next_label, icon=next_icon, url=next_url, disabled=not page.has_next)

@@ -1,0 +1,39 @@
+{% extends 'ohmyadmin/app.html' %}
+{% import 'ohmyadmin/lib/buttons.html' as buttons %}
+
+{% block page_actions %}
+    {% for action in page_actions %}
+        {{ action }}
+    {% endfor %}
+{% endblock %}
+
+{% block content %}
+    {% include 'ohmyadmin/list_page/metrics.html' %}
+
+    <div class="space-y-6">
+
+        <div class="flex items-center justify-between">
+            <!-- search and actions -->
+            <div class="flex items-center gap-3 flex-1">
+                {% if filters %}
+                    {% include 'ohmyadmin/list_page/filters.html' %}
+                {% endif %}
+                {% include 'ohmyadmin/list_page/search_form.html' %}
+            </div>
+            <!-- end search and actions -->
+            {% include 'ohmyadmin/list_page/batch_actions.html' %}
+        </div>
+
+        {% if indicators %}
+            {% include 'ohmyadmin/list_page/indicators.html' %}
+        {% endif %}
+
+        {% if projections %}
+            {% include 'ohmyadmin/list_page/projections.html' %}
+        {% endif %}
+
+        {{ content }}
+
+        {% include 'ohmyadmin/list_page/pagination.html' %}
+    </div>
+{% endblock %}

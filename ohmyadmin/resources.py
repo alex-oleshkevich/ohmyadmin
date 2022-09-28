@@ -1,9 +1,17 @@
+from __future__ import annotations
+
+import dataclasses
+
+import abc
 import sqlalchemy as sa
 import typing
+import wtforms
 from slugify import slugify
 from sqlalchemy.orm import InstrumentedAttribute
+from starlette.datastructures import URL
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
+from starlette.responses import HTMLResponse
 from starlette.routing import BaseRoute, Route, Router
 from starlette.types import Receive, Scope, Send
 
@@ -12,17 +20,18 @@ from ohmyadmin.components import Button, ButtonLink, Component, EmptyState, Form
 from ohmyadmin.filters import BaseFilter, FilterIndicator, OrderingFilter, SearchFilter
 from ohmyadmin.flash import flash
 from ohmyadmin.forms import Form, HandlesFiles
-from ohmyadmin.helpers import camel_to_sentence, pluralize, render_to_response
+from ohmyadmin.helpers import camel_to_sentence, pluralize, render_to_response, render_to_string
 from ohmyadmin.i18n import _
 from ohmyadmin.metrics import Metric
-from ohmyadmin.ordering import SortingHelper
+from ohmyadmin.ordering import SortingHelper, SortingType, get_ordering_value
 from ohmyadmin.pages import PageMeta
-from ohmyadmin.pagination import Page, get_page_size_value, get_page_value
+from ohmyadmin.pagination import Page, generate_page_controls, get_page_size_value, get_page_value
 from ohmyadmin.projections import Projection
 from ohmyadmin.responses import RedirectResponse, Response
 from ohmyadmin.storage import FileStorage
 from ohmyadmin.structures import URLSpec
 from ohmyadmin.tables import ActionColumn, Column, RowActionsCallback, get_search_value
+from ohmyadmin.templating import TemplateResponse, admin_context
 
 ResourceAction = typing.Literal['list', 'create', 'edit', 'delete', 'show', 'batch', 'action', 'metric']
 PkType = int | str
@@ -66,7 +75,7 @@ class ResourceMeta(PageMeta):
         return super().__new__(cls, name, bases, attrs)
 
 
-class Resource(Router, metaclass=ResourceMeta):
+class Resource2(Router):
     id: typing.ClassVar[str] = ''
     label: typing.ClassVar[str] = ''
     label_plural: typing.ClassVar[str] = ''
@@ -111,7 +120,7 @@ class Resource(Router, metaclass=ResourceMeta):
     show_columns: typing.ClassVar[typing.Iterable[Column] | None] = None
 
     # templates
-    index_view_template: str = 'ohmyadmin/table.html'
+    index_view_template: str = 'ohmyadmin/list.html'
     show_view_template: str = 'ohmyadmin/show.html'
     edit_view_template: str = 'ohmyadmin/form.html'
     delete_view_template: str = 'ohmyadmin/delete.html'
@@ -278,7 +287,7 @@ class Resource(Router, metaclass=ResourceMeta):
 
     async def paginate_queryset(self, request: Request, stmt: sa.sql.Select) -> Page:
         page_number = get_page_value(request, self.page_param)
-        page_size = get_page_size_value(request, self.page_size_param, list(self.page_sizes or []), self.page_size)
+        page_size = get_page_size_value(request, self.page_size_param, 1, self.page_size)
         offset = (page_number - 1) * page_size
 
         row_count = await self.get_object_count(request, stmt)
@@ -509,3 +518,300 @@ class Resource(Router, metaclass=ResourceMeta):
         scope['state']['resource'] = self
         await super().__call__(scope, receive, send)
         await scope['state']['dbsession'].commit()
+
+
+@dataclasses.dataclass
+class ListState:
+    page: int
+    page_size: int
+    search_term: str
+    sortable_fields: list[str]
+    searchable_fields: list[str]
+    ordering: dict[str, SortingType]
+
+
+@dataclasses.dataclass
+class HeadCell:
+    text: str
+    sortable: bool
+    index: int | None
+    url: URL | None
+    sorted: SortingType | None
+
+
+class TableMixin:
+    table_template = 'ohmyadmin/list_page/table.html'
+
+    def render_list_view(self: Resource, request: Request, page: Page[typing.Any]) -> str:  # type:ignore[misc]
+        sort_helper = SortingHelper(request, self.ordering_param)
+        head_cells: list[HeadCell] = []
+        for field in self.fields:
+            head_cells.append(
+                HeadCell(
+                    text=field.label,
+                    sortable=field.sortable,
+                    url=sort_helper.get_url(field.sort_by),
+                    index=sort_helper.get_current_ordering_index(field.sort_by),
+                    sorted=sort_helper.get_current_ordering(field.sort_by),
+                )
+            )
+
+        def field_link(field: Column, entity: typing.Any) -> str:
+            if not field.link:
+                return ''
+            if field.link_factory:
+                return field.link_factory(request, entity)
+            return request.url_for(self.url_name('edit'), pk=self.get_pk_value(entity))
+
+        return render_to_string(
+            self.table_template,
+            {
+                'request': request,
+                'objects': page,
+                'header': head_cells,
+                'cells': self.fields,
+                'field_link': field_link,
+                'pk': self.get_pk_value,
+            },
+        )
+
+
+class Resource(TableMixin, Router):
+    icon: typing.ClassVar[str] = ''
+    label: typing.ClassVar[str] = ''
+    label_plural: typing.ClassVar[str] = ''
+    slug: typing.ClassVar[str] = ''
+    index_template: typing.ClassVar[str] = 'ohmyadmin/list.html'
+    form_template: typing.ClassVar[str] = 'ohmyadmin/form.html'
+    edit_template: typing.ClassVar[str] = form_template
+    create_template: typing.ClassVar[str] = form_template
+    delete_template: typing.ClassVar[str] = 'ohmyadmin/delete.html'
+    form_class: typing.ClassVar[typing.Type[wtforms.Form] | None] = None
+    page_param: typing.ClassVar[str] = 'page'
+    page_size_param: typing.ClassVar[str] = 'page_size'
+    search_param: typing.ClassVar[str] = 'search'
+    ordering_param: typing.ClassVar[str] = 'ordering'
+    page_size: typing.ClassVar[int] = 25
+    max_page_size: typing.ClassVar[int] = 100
+
+    def __init_subclass__(cls, **kwargs: typing.Any) -> None:
+        class_name = cls.__name__.removesuffix('Resource')
+        cls.label = cls.label or camel_to_sentence(class_name)
+        cls.label_plural = cls.label_plural or pluralize(cls.label)
+        cls.slug = pluralize(slugify(camel_to_sentence(class_name)))
+
+    def __init__(self) -> None:
+        super().__init__(routes=list(self.get_routes()))
+        self.fields = list(self.get_fields())
+
+    @property
+    def sortable_fields(self) -> list[str]:
+        return [field.sort_by for field in self.fields if field.sortable]
+
+    @property
+    def searchable_fields(self) -> list[str]:
+        return [field.search_in for field in self.fields if field.searchable]
+
+    @property
+    def searchable(self) -> bool:
+        return bool(self.searchable_fields)
+
+    @property
+    def search_placeholder(self) -> str:
+        template = _('Search in {fields}.')
+        fields = ', '.join([field.label for field in self.fields if field.searchable])
+        return template.format(fields=fields)
+
+    def can_list(self, request: Request) -> bool:
+        return True
+
+    def can_edit(self, request: Request) -> bool:
+        return True
+
+    def can_delete(self, request: Request) -> bool:
+        return True
+
+    def get_fields(self) -> typing.Iterable[Column]:
+        return []
+
+    def get_route_pk_type(self) -> str:
+        """
+        Get route variable type.
+
+        Used in URLs that point to a view that require object.  For example:
+        /admin/users/{pk:PK_TYPE}.
+        """
+        raise NotImplementedError(f'{self.__class__.__name__} must implement get_pk_type() method.')
+
+    @abc.abstractmethod
+    def get_pk_value(self, entity: typing.Any) -> str:
+        """Get primary key value from the entity as string."""
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def create_new_entity(self) -> typing.Any:
+        """Create new entity."""
+        raise NotImplementedError(f'{self.__class__.__name__} must implement create_empty_object() method.')
+
+    @abc.abstractmethod
+    async def save_entity(self, request: Request, form: wtforms.Form, instance: typing.Any) -> None:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    async def delete_entity(self, request: Request, instance: typing.Any) -> None:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    async def get_object(self, request: Request, pk: typing.Any) -> typing.Any | None:
+        raise NotImplementedError(f'{self.__class__.__name__} must implement get_object() method.')
+
+    @abc.abstractmethod
+    async def get_objects(self, request: Request, state: ListState) -> Page[typing.Any]:
+        raise NotImplementedError(f'{self.__class__.__name__} must implement get_objects() method.')
+
+    @abc.abstractmethod
+    def create_form_class(self) -> typing.Type[wtforms.Form]:
+        raise NotImplementedError()
+
+    def get_form_class(self) -> typing.Type[wtforms.Form]:
+        """
+        Get form class.
+
+        This form class will be used as a default form for create and edit
+        pages. However, if resource defines `form_class` attribute then it will
+        be used.
+        """
+        if self.form_class:
+            return self.form_class
+        return self.create_form_class()
+
+    def get_form_class_for_edit(self) -> typing.Type[wtforms.Form]:
+        return self.get_form_class()
+
+    def get_form_class_for_create(self) -> typing.Type[wtforms.Form]:
+        return self.get_form_class()
+
+    async def validate_form(self, request: Request, form: wtforms.Form, instance: typing.Any) -> bool:
+        """
+        Validate form.
+
+        Use this method to apply custom form validation.
+        """
+        return form.validate()
+
+    async def prefill_form_choices(self, request: Request, form: wtforms.Form, instance: typing.Any) -> None:
+        """Use this hook to load and prefill form field choices."""
+
+    async def index_view(self, request: Request) -> HTMLResponse:
+        """Display list of objects."""
+        page_number = get_page_value(request, self.page_param)
+        page_size = get_page_size_value(request, self.page_size_param, self.max_page_size, self.page_size)
+        search_term = get_search_value(request, self.search_param)
+        ordering = get_ordering_value(request, self.ordering_param)
+
+        state = ListState(
+            page=page_number,
+            page_size=page_size,
+            ordering=ordering,
+            search_term=search_term,
+            sortable_fields=self.sortable_fields,
+            searchable_fields=self.searchable_fields,
+        )
+        page = await self.get_objects(request, state)
+        pagination_controls = generate_page_controls(
+            request.url, page=page, page_param=self.page_param, prev_label=_('Previous'), next_label=_('Next')
+        )
+        view_content = self.render_list_view(request, page=page)
+        return TemplateResponse(
+            self.index_template,
+            {
+                'request': request,
+                'content': view_content,
+                'page_number': page_number,
+                'page_size': page_size,
+                'search_term': search_term,
+                'resource': self,
+                'objects': page,
+                'page_title': self.label_plural,
+                'pagination_controls': pagination_controls,
+                'search_placeholder': self.search_placeholder,
+                'pk': self.get_pk_value,
+                **admin_context(request),
+            },
+        )
+
+    async def edit_view(self, request: Request) -> Response:
+        """Handle object creation and editing."""
+        if not self.can_edit(request):
+            flash(request).error(_('You are not allowed to access this page.'))
+            return RedirectResponse(request, url=request.url_for(self.url_name('list')))
+
+        pk = request.path_params.get('pk', '')
+        instance = self.create_new_entity()
+        form_class = self.get_form_class_for_create()
+        if pk:
+            instance = await self.get_object(request, pk)
+            if not instance:
+                raise HTTPException(404, _('Object does not exists.'))
+            form_class = self.get_form_class_for_edit()
+
+        form_data = await request.form()
+        form = form_class(formdata=form_data, obj=instance)
+        await self.prefill_form_choices(request, form, instance)
+
+        if request.method == 'POST':
+            if await self.validate_form(request, form, instance):
+                await self.save_entity(request, form, instance)
+                flash(request).success(_('{resource} has been saved.').format(resource=self.label))
+
+                if '_new' in form_data:
+                    return RedirectResponse(request, url=self.url_path_for('create'))
+                if '_edit' in form_data:
+                    return RedirectResponse(request, url=self.url_path_for('edit', pk=pk))
+                if '_list' in form_data:
+                    return RedirectResponse(request, url=self.url_path_for('list'))
+
+        return TemplateResponse(self.edit_template, {'request': request, 'form': form, 'object': instance})
+
+    async def delete_view(self, request: Request) -> HTMLResponse:
+        """Handle object deletion."""
+        pk = request.path_params['pk']
+        instance = await self.get_object(request, pk)
+        if not instance:
+            raise HTTPException(404, _('Object does not exists.'))
+
+        if not self.can_delete(request):
+            flash(request).error(_('You are not allowed to access this page.'))
+            return RedirectResponse(request, url=request.url_for(self.url_name('list')))
+
+        if request.method == 'POST':
+            await self.delete_entity(request, instance)
+            flash(request).success(_('{instance} has been deleted.').format(instance=instance))
+            return RedirectResponse(request, url=request.url_for(self.url_name('list')))
+
+        return TemplateResponse(self.delete_template, {'request': request, 'object': instance})
+
+    async def action_view(self, request: Request) -> Response:
+        """Handle actions."""
+        return Response('action')
+
+    @classmethod
+    def url_name(cls, name: str) -> str:
+        """Generate route name for this resource actions."""
+        return f'ohmyadmin.{cls.slug}.{name}'.replace('-', '_')
+
+    def url_for(self, request: Request, name: str, **path_params: typing.Any) -> str:
+        return request.url_for(self.url_name(name), **path_params)
+
+    def get_routes(self) -> typing.Iterable[BaseRoute]:
+        pktype = self.get_route_pk_type()
+        yield Route('/', self.index_view, name=self.url_name('list'))
+        yield Route('/new', self.edit_view, name=self.url_name('create'), methods=['get', 'post'])
+        yield Route('/edit/{pk:%s}' % pktype, self.edit_view, name=self.url_name('edit'), methods=['get', 'post'])
+        yield Route('/delete/{pk:%s}' % pktype, self.delete_view, name=self.url_name('delete'), methods=['get', 'post'])
+        yield Route('/action', self.action_view, name=self.url_name('action'), methods=['get', 'post'])
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        scope.setdefault('state', {})
+        scope['state']['resource'] = self
+        await super().__call__(scope, receive, send)

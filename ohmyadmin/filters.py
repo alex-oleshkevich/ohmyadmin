@@ -88,8 +88,6 @@ class SearchFilter(BaseFilter):
         self.entity_class = entity_class
         self.query_param = query_param
         self.db_columns: list[InstrumentedAttribute] = []
-        for column in columns:
-            self.db_columns.extend(column.search_in or [getattr(entity_class, column.name)])
 
     def create_search_token(self, column: InstrumentedAttribute, search_query: str) -> sa.sql.ColumnElement:
         string_column = sa.cast(column, sa.Text)

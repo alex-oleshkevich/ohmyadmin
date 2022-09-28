@@ -1,6 +1,11 @@
+import functools
 import jinja2
 import typing
+from starlette.requests import Request
+from starlette.templating import Jinja2Templates
 from tabler_icons import tabler_icon
+
+from ohmyadmin.flash import flash
 
 
 def dict_to_attrs(attrs: dict[str, typing.Any]) -> str:
@@ -44,3 +49,18 @@ jinja_env.filters.update(
     }
 )
 jinja_env.install_null_translations()  # type: ignore
+
+_templates = Jinja2Templates('__irrelevant__')
+_templates.env = jinja_env
+TemplateResponse = _templates.TemplateResponse
+
+
+def admin_context(request: Request) -> dict[str, typing.Any]:
+    return {
+        'request': request,
+        'url': request.url_for,
+        'main_menu': list(request.state.admin.build_main_menu(request)),
+        'user_menu': request.state.admin.build_user_menu(request),
+        'static': functools.partial(request.state.admin.static_url, request),
+        'flash_messages': flash(request),
+    }

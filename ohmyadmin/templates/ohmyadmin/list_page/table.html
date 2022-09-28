@@ -6,22 +6,41 @@
                 <input type="checkbox" name="selected" @click="toggleSelectAll">
             </th>
         {% endif %}
-        {% for column in columns %}
-            <th class="text-left p-2">{{ column.render_head_cell(request, sorting_helper) }}</th>
+        {% for cell in header %}
+            <th class="text-left p-2">
+                {% if cell.sortable %}
+                    <a href="{{ cell.url }}" class="flex gap-2 items-center">
+                        <span>{{ cell.text }}</span>
+                        {% if cell.sorted == 'asc' %}
+                            {{ tabler_icon('arrow-narrow-down') }}
+                        {% elif cell.sorted == 'desc' %}
+                            {{ tabler_icon('arrow-narrow-up') }}
+                        {% else %}
+                            {{ tabler_icon('arrows-sort') }}
+                        {% endif %}
+
+                        {% if cell.index %}
+                            <span class="text-sm">{{ cell.index }}</span>
+                        {% endif %}
+                    </a>
+                {% else %}
+                    {{ cell.text }}
+                {% endif %}
+            </th>
         {% endfor %}
     </tr>
     </thead>
     <tbody>
     {% for object in objects %}
-        <tr x-bind:class="{'selected': selected.includes('{{ object.id }}')}">
+        <tr x-bind:class="{'selected': selected.includes('{{ pk(object) }}')}">
             {% if batch_actions %}
                 <td>
-                    <input type="checkbox" x-model="selected" value="{{ object.id }}">
+                    <input type="checkbox" x-model="selected" value="{{ pk(object) }}">
                 </td>
             {% endif %}
-            {% for column in columns %}
+            {% for column in cells %}
                 <td>
-                    {% set link = column.get_link(request, object) if column.has_link else '' %}
+                    {% set link = field_link(column, object) %}
                     {% if link %}
                         <a href="{{ link }}">
                             {{ column(object) }}

@@ -8,8 +8,10 @@ from urllib.parse import parse_qsl, urlencode
 SortingType = typing.Literal['asc', 'desc']
 
 
-def get_ordering_value(request: Request, param_name: str) -> list[str]:
-    return request.query_params.getlist(param_name)
+def get_ordering_value(request: Request, param_name: str) -> dict[str, SortingType]:
+    return {
+        value: 'desc' if value.startswith('-') else 'asc' for value in request.query_params.getlist(param_name) if value
+    }
 
 
 def apply_ordering(
@@ -34,13 +36,13 @@ def apply_ordering(
 
 
 class SortingHelper:
-    def __init__(self, request: Request, query_param_name: str) -> None:
+    def __init__(self, request: Request, query_param: str) -> None:
         self.request = request
-        self.query_param_name = query_param_name
+        self.query_param_name = query_param
+        self.ordering = request.query_params.getlist(query_param)
 
     def get_current_ordering(self, sort_field: str) -> SortingType | None:
-        ordering = get_ordering_value(self.request, self.query_param_name)
-        for order in ordering:
+        for order in self.ordering:
             if order == sort_field:
                 return 'asc'
             if order == f'-{sort_field}':
@@ -49,7 +51,7 @@ class SortingHelper:
         return None
 
     def get_current_ordering_index(self, sort_field: str) -> int | None:
-        for index, param_name in enumerate(get_ordering_value(self.request, self.query_param_name)):
+        for index, param_name in enumerate(self.ordering):
             if param_name.endswith(sort_field):
                 return index + 1
         return None
@@ -64,7 +66,7 @@ class SortingHelper:
                 return None
 
     def get_url(self, sort_field: str) -> URL:
-        ordering = get_ordering_value(self.request, self.query_param_name).copy()
+        ordering = self.ordering.copy()
         if sort_field in ordering:
             index = ordering.index(sort_field)
             ordering[index] = f'-{sort_field}'
@@ -79,4 +81,4 @@ class SortingHelper:
         return url
 
     def should_show_index(self, request: Request) -> bool:
-        return len(get_ordering_value(request, self.query_param_name)) > 1
+        return len(self.ordering) > 1

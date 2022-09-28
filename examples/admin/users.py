@@ -5,6 +5,7 @@ from starlette.requests import Request
 from examples.models import User
 from ohmyadmin.actions import Action, BatchAction, BulkDeleteAction
 from ohmyadmin.components import Component, RowAction
+from ohmyadmin.ext.sqla import SQLAlchemyResource
 from ohmyadmin.forms import (
     CheckboxField,
     EmailField,
@@ -17,7 +18,7 @@ from ohmyadmin.forms import (
     TextField,
 )
 from ohmyadmin.projections import Projection
-from ohmyadmin.resources import PkType, Resource
+from ohmyadmin.resources import PkType
 from ohmyadmin.responses import Response
 from ohmyadmin.tables import BoolColumn, Column, ImageColumn
 
@@ -72,7 +73,7 @@ class ActiveUsers(Projection):
         return stmt.filter(User.is_active == True)
 
 
-class UserResource(Resource):
+class UserResource(SQLAlchemyResource):
     icon = 'users'
     label = 'User'
     label_plural = 'Users'
@@ -98,3 +99,16 @@ class UserResource(Resource):
         Column('email', label='Email', searchable=True),
         BoolColumn('is_active', label='Active'),
     ]
+
+    def get_fields(self) -> typing.Iterable[Column]:
+        yield Column('id', label='ID')
+        yield ImageColumn('photo')
+        yield Column(
+            'full_name',
+            label='Name',
+            sortable='last_name',
+            searchable='last_name',
+            link=True,
+        )
+        yield Column('email', label='Email', searchable=True)
+        yield BoolColumn('is_active', label='Active')

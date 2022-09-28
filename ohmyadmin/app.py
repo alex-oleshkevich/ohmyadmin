@@ -82,7 +82,7 @@ class OhMyAdmin(Router):
         yield MenuGroup(
             text=_('Resources'),
             items=[
-                MenuItem(text=resource.label, icon=resource.icon, url=URLSpec.to_resource(resource.__class__))
+                MenuItem(text=resource.label, icon=resource.icon, url=request.url_for(resource.url_name('list')))
                 for resource in self.resources
             ],
         )
@@ -135,7 +135,7 @@ class OhMyAdmin(Router):
             yield Mount('/media', MediaServer(self.file_storage), name='ohmyadmin_media')
 
         for resource in self.resources:
-            yield Mount(f'/resources/{resource.id}', resource)
+            yield Mount(f'/resources/{resource.slug}', resource)
 
         for page in self.pages:
             yield Mount(f'/{page.id}', page)
