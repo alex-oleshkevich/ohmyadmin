@@ -622,9 +622,6 @@ class Resource(TableMixin, Router):
         fields = ', '.join([field.label for field in self.fields if field.searchable])
         return template.format(fields=fields)
 
-    def can_list(self, request: Request) -> bool:
-        return True
-
     def can_edit(self, request: Request) -> bool:
         return True
 
