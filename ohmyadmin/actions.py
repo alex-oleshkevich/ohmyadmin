@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import abc
-import sqlalchemy as sa
 import typing
+
+import sqlalchemy as sa
 from slugify import slugify
 from starlette.datastructures import URL
 from starlette.requests import Request
@@ -18,13 +19,10 @@ from ohmyadmin.responses import Response
 from ohmyadmin.structures import URLSpec
 from ohmyadmin.templating import macro
 
-if typing.TYPE_CHECKING:
-    from ohmyadmin.resources import PkType
-
 DISMISS_EVENT = 'modals.dismiss'
 
 
-class BaseAction:
+class Action:
     slug: typing.ClassVar[str] = ''
 
     def __init_subclass__(cls, **kwargs: typing.Any) -> None:
@@ -35,7 +33,7 @@ class BaseAction:
         self.label = label
 
 
-class LinkAction(BaseAction):
+class LinkAction(Action):
     def __init__(self, url: str | URL, label: str, icon: str = '', color: ButtonColor = 'default') -> None:
         super().__init__(label=label, icon=icon)
         self.url = str(url)
@@ -89,7 +87,7 @@ class FormActionMixin:
         return Grid(columns=1, children=[FormElement(field, horizontal=True) for field in form])
 
 
-class Action2(BaseAction, FormActionMixin):
+class Action2(Action, FormActionMixin):
     @abc.abstractmethod
     async def apply(self, request: Request, form: Form) -> Response:
         ...
@@ -111,7 +109,7 @@ class Action2(BaseAction, FormActionMixin):
         )
 
 
-class BatchAction2(BaseAction, FormActionMixin):
+class BatchAction2(Action, FormActionMixin):
     coerce: typing.Callable = int
     template: str = ''
 

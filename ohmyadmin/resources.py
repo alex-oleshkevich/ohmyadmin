@@ -13,7 +13,7 @@ from starlette.responses import HTMLResponse
 from starlette.routing import BaseRoute, Route, Router
 from starlette.types import Receive, Scope, Send
 
-from ohmyadmin.actions import BaseAction, LinkAction
+from ohmyadmin.actions import Action, LinkAction
 from ohmyadmin.flash import flash
 from ohmyadmin.helpers import camel_to_sentence, pluralize, render_to_string
 from ohmyadmin.i18n import _
@@ -684,7 +684,7 @@ class Resource(TableMixin, Router):
     async def prefill_form_choices(self, request: Request, form: wtforms.Form, instance: typing.Any) -> None:
         """Use this hook to load and prefill form field choices."""
 
-    def get_default_page_actions(self, request: Request) -> typing.Iterable[BaseAction]:
+    def get_default_page_actions(self, request: Request) -> typing.Iterable[Action]:
         if self.can_edit(request):
             yield LinkAction(
                 icon='plus',
@@ -693,10 +693,10 @@ class Resource(TableMixin, Router):
                 label=_('Create {resource}').format(resource=self.label),
             )
 
-    def get_page_actions(self, request: Request) -> typing.Iterable[BaseAction]:
+    def get_page_actions(self, request: Request) -> typing.Iterable[Action]:
         return []
 
-    def get_configured_page_actions(self, request: Request) -> typing.Iterable[BaseAction]:
+    def get_configured_page_actions(self, request: Request) -> typing.Iterable[Action]:
         yield from self.get_page_actions(request)
         yield from self.get_default_page_actions(request)
 

@@ -11,7 +11,7 @@ from ohmyadmin.i18n import _
 from ohmyadmin.structures import URLSpec
 
 if typing.TYPE_CHECKING:
-    from ohmyadmin.actions import BaseAction
+    from ohmyadmin.actions import Action
 
 Colspan = int | typing.Literal['full']
 ButtonColor = typing.Literal['default', 'primary', 'text', 'danger']
@@ -224,7 +224,7 @@ class RowAction(Component):
         text: str = '',
         icon: str = '',
         url: str | URLSpec | None = None,
-        action: BaseAction | None = None,
+        action: Action | None = None,
         danger: bool = False,
         children: list[Component] | None = None,
     ):
