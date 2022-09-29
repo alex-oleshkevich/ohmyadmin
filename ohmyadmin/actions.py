@@ -37,16 +37,26 @@ class Action:
         ...
 
 
+LinkFactory = typing.Callable[[Request], str]
+
+
 class LinkAction(Action):
-    def __init__(self, url: str | URL, label: str, icon: str = '', color: ButtonColor = 'default') -> None:
+    def __init__(
+        self,
+        url: str | URL | LinkFactory,
+        label: str,
+        icon: str = '',
+        color: ButtonColor = 'default',
+    ) -> None:
         self.label = label
         self.icon = icon
-        self.url = str(url)
+        self.url = url
         self.color = color
 
     def render(self, request: Request) -> str:
-        m = macro('ohmyadmin/actions.html', 'link_action')
-        return m(text=self.label, icon=self.icon, color=self.color, url=self.url)
+        href = self.url(request) if callable(self.url) else str(self.url)
+        macros = macro('ohmyadmin/actions.html', 'link_action')
+        return macros(text=self.label, icon=self.icon, color=self.color, url=href)
 
 
 class RowAction(abc.ABC):
