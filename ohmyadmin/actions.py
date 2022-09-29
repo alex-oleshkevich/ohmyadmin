@@ -73,7 +73,15 @@ class LinkRowAction(RowAction):
         return macros(text=self.text, icon=self.icon, url=href, color=self.color)
 
 
-#
+class BatchAction:
+    icon: str = ''
+    label: str = ''
+
+    def __init__(self, label: str = '', icon: str = '') -> None:
+        self.icon = icon or self.icon
+        self.label = label or self.label
+
+
 # class BaseAction2(Component, abc.ABC):
 #     id: typing.ClassVar[str] = ''
 #     label: typing.ClassVar[str] = ''

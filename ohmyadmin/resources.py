@@ -531,7 +531,7 @@ class HeadCell:
 class TableMixin:
     table_template = 'ohmyadmin/list_page/table.html'
 
-    def render_list_view(self: Resource, request: Request, page: Page[typing.Any]) -> str:  # type:ignore[misc]
+    def render_table(self: Resource, request: Request, page: Page[typing.Any]) -> str:  # type:ignore[misc]
         sort_helper = SortingHelper(request, self.ordering_param)
         head_cells: list[HeadCell] = []
         for field in self.fields:
@@ -723,6 +723,9 @@ class Resource(TableMixin, Router):
     def get_configured_row_actions(self, request: Request) -> typing.Iterable[RowAction]:
         yield from self.get_row_actions(request)
         yield from self.get_default_row_actions(request)
+
+    def render_list_view(self, request: Request, page: Page) -> str:
+        return self.render_table(request, page)
 
     async def index_view(self, request: Request) -> HTMLResponse:
         """Display list of objects."""
