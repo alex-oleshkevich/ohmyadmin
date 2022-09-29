@@ -106,9 +106,11 @@ class UserResource(SQLAlchemyResource):
         yield Column(
             'full_name',
             label='Name',
-            sortable='last_name',
-            searchable='last_name',
+            sortable=True,
+            searchable=True,
+            sort_by='last_name',
+            search_in='last_name',
             link=True,
         )
-        yield Column('email', label='Email', searchable=True)
+        yield Column('email', label='Email', searchable=True, sortable=True)
         yield BoolColumn('is_active', label='Active')

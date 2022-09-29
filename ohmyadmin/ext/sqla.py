@@ -65,19 +65,58 @@ class SQLAlchemyResource(Resource):
 
     async def get_objects(self, request: Request, state: ListState) -> Page[typing.Any]:
         stmt = self.get_queryset(request)
-        stmt = self.apply_search(stmt, state.search_term)
-        stmt = self.apply_ordering(stmt, state.ordering)
+        stmt = self.apply_search(stmt, state.search_term, state.searchable_fields)
+        stmt = self.apply_ordering(stmt, state.ordering, state.sortable_fields)
         paged_stmt = self.apply_pagination(stmt, page_number=state.page, page_size=state.page_size)
         row_count = await self.get_object_count(request, stmt)
         result = await request.state.dbsession.scalars(paged_stmt)
         rows = result.all()
         return Page(rows=list(rows), total_rows=row_count, page=state.page, page_size=state.page_size)
 
-    def apply_ordering(self, stmt: sa.sql.Select, ordering: dict[str, SortingType]) -> sa.sql.Select:
+    def apply_ordering(
+        self, stmt: sa.sql.Select, ordering: dict[str, SortingType], sortable_fields: list[str]
+    ) -> sa.sql.Select:
+        if ordering:
+            stmt = stmt.order_by(None)
+
+        mapper = sa.orm.class_mapper(self.get_entity_class())
+        props = [mapper.get_property_by_column(c) for c in mapper.columns if c.key in sortable_fields]
+        for prop in props:
+            if len(prop.columns) > 1:
+                continue
+            column = prop.columns[0]
+            direction = ordering.get(prop.key)
+            if direction:
+                stmt = stmt.order_by(column.desc() if direction == 'desc' else column.asc())
         return stmt
 
-    def apply_search(self, stmt: sa.sql.Select, search_term: str) -> sa.sql.Select:
-        return stmt
+    def apply_search(self, stmt: sa.sql.Select, search_term: str, searchable_fields: list[str]) -> sa.sql.Select:
+        mapper = sa.orm.class_mapper(self.get_entity_class())
+        props = [mapper.get_property_by_column(c) for c in mapper.columns if c.key in searchable_fields]
+        clauses = []
+        for prop in props:
+            if len(prop.columns) > 1:
+                continue
+            clauses.append(self.create_search_token(prop.columns[0], search_term))
+
+        return stmt.where(sa.or_(*clauses))
+
+    def create_search_token(self, column: InstrumentedAttribute, search_query: str) -> sa.sql.ColumnElement:
+        string_column = sa.cast(column, sa.Text)
+        if search_query.startswith('^'):
+            search_token = f'{search_query[1:].lower()}%'
+            return string_column.ilike(search_token)
+
+        if search_query.startswith('='):
+            search_token = f'{search_query[1:].lower()}'
+            return sa.func.lower(string_column) == search_token
+
+        if search_query.startswith('@'):
+            search_token = f'{search_query[1:].lower()}'
+            return string_column.regexp_match(search_token)
+
+        search_token = f'%{search_query.lower()}%'
+        return string_column.ilike(search_token)
 
     def apply_pagination(self, stmt: sa.sql.Select, page_number: int, page_size: int) -> sa.sql.Select:
         offset = (page_number - 1) * page_size

@@ -10,7 +10,9 @@ SortingType = typing.Literal['asc', 'desc']
 
 def get_ordering_value(request: Request, param_name: str) -> dict[str, SortingType]:
     return {
-        value: 'desc' if value.startswith('-') else 'asc' for value in request.query_params.getlist(param_name) if value
+        value[1:] if value.startswith('-') else value: 'desc' if value.startswith('-') else 'asc'
+        for value in request.query_params.getlist(param_name)
+        if value
     }
 
 
