@@ -11,7 +11,7 @@ from ohmyadmin.flash import FlashBag, FlashCategory
 from ohmyadmin.structures import URLSpec
 
 if typing.TYPE_CHECKING:
-    from ohmyadmin.resources import Resource, ResourceAction
+    pass
 
 
 class Response:
@@ -90,16 +90,6 @@ class RedirectResponse(Response):
         self.message_category: FlashCategory = 'success'
         self.request = request
         super().__init__(status_code=status_code, headers=headers)
-
-    def to_resource(
-        self,
-        resource: Resource | typing.Type[Resource],
-        action: ResourceAction = 'list',
-        pk: int | str | None = None,
-    ) -> RedirectResponse:
-        kwargs = {'pk': pk} if pk else {}
-        self.url = self.request.url_for(resource.get_route_name(action), **kwargs)
-        return self
 
     def to_path_name(
         self,

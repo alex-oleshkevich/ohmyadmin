@@ -13,7 +13,7 @@ from starlette.responses import HTMLResponse
 from starlette.routing import BaseRoute, Route, Router
 from starlette.types import Receive, Scope, Send
 
-from ohmyadmin.actions import Action, LinkAction
+from ohmyadmin.actions import Action, LinkAction, LinkRowAction, RowAction
 from ohmyadmin.flash import flash
 from ohmyadmin.helpers import camel_to_sentence, pluralize, render_to_string
 from ohmyadmin.i18n import _
@@ -204,7 +204,8 @@ from ohmyadmin.templating import TemplateResponse, admin_context
 #
 #     def get_default_row_actions(self, entity: typing.Any) -> typing.Iterable[Component]:
 #         yield RowAction(entity, icon='eye', url=URLSpec.to_resource(self, 'show', {'pk': self.get_pk_value(entity)}))
-#         yield RowAction(entity, icon='pencil', url=URLSpec.to_resource(self, 'edit', {'pk': self.get_pk_value(entity)}))
+#         yield RowAction(entity, icon='pencil',
+#         url=URLSpec.to_resource(self, 'edit', {'pk': self.get_pk_value(entity)}))
 #         yield RowAction(
 #             entity,
 #             icon='trash',
@@ -247,7 +248,8 @@ from ohmyadmin.templating import TemplateResponse, admin_context
 #         return self.entity_class()
 #
 #     def get_show_columns(self) -> typing.Iterable[Column]:
-#         yield from self.show_columns or (column for column in self.get_table_columns() if column.name != '__actions__')
+#         yield from self.show_columns or
+#         (column for column in self.get_table_columns() if column.name != '__actions__')
 #
 #     def get_projections(self) -> typing.Iterable[Projection]:
 #         if self.projections:
@@ -326,7 +328,8 @@ from ohmyadmin.templating import TemplateResponse, admin_context
 #                 'current_projection': projection_id,
 #                 'projections': projections,
 #                 'metrics': [
-#                     request.url_for(self.get_route_name('metric'), metric_id=metric.id) for metric in self.get_metrics()
+#                     request.url_for(self.get_route_name('metric'), metric_id=metric.id)
+#                     for metric in self.get_metrics()
 #                 ],
 #             },
 #         )
@@ -433,7 +436,8 @@ from ohmyadmin.templating import TemplateResponse, admin_context
 #         try:
 #             action_id = request.path_params['action_id']
 #             action = next(
-#                 (action for action in self.get_page_actions() if isinstance(action, Action) and action.id == action_id)
+#                 (action for action in self.get_page_actions()
+#                 if isinstance(action, Action) and action.id == action_id)
 #             )
 #             return await action.dispatch(request)
 #         except StopIteration:
@@ -548,15 +552,17 @@ class TableMixin:
                 return field.link_factory(request, entity)
             return request.url_for(self.url_name('edit'), pk=self.get_pk_value(entity))
 
+        row_actions = list(self.get_configured_row_actions(request))
         return render_to_string(
             self.table_template,
             {
-                'request': request,
                 'objects': page,
-                'header': head_cells,
+                'request': request,
                 'cells': self.fields,
-                'field_link': field_link,
+                'header': head_cells,
                 'pk': self.get_pk_value,
+                'field_link': field_link,
+                'row_actions': row_actions,
             },
         )
 
@@ -578,6 +584,7 @@ class Resource(TableMixin, Router):
     ordering_param: typing.ClassVar[str] = 'ordering'
     page_size: typing.ClassVar[int] = 25
     max_page_size: typing.ClassVar[int] = 100
+    page_title_for_delete: str = _('Delete {entity}?')
 
     def __init_subclass__(cls, **kwargs: typing.Any) -> None:
         class_name = cls.__name__.removesuffix('Resource')
@@ -700,6 +707,23 @@ class Resource(TableMixin, Router):
         yield from self.get_page_actions(request)
         yield from self.get_default_page_actions(request)
 
+    def get_default_row_actions(self, request: Request) -> typing.Iterable[RowAction]:
+        if self.can_edit(request):
+            yield LinkRowAction(
+                icon='pencil',
+                url=lambda request, row_id, _: self.url_for(request, 'edit', pk=row_id),
+            )
+            yield LinkRowAction(
+                icon='trash', color='danger', url=lambda request, row_id, _: self.url_for(request, 'delete', pk=row_id)
+            )
+
+    def get_row_actions(self, request: Request) -> typing.Iterable[RowAction]:
+        return []
+
+    def get_configured_row_actions(self, request: Request) -> typing.Iterable[RowAction]:
+        yield from self.get_row_actions(request)
+        yield from self.get_default_row_actions(request)
+
     async def index_view(self, request: Request) -> HTMLResponse:
         """Display list of objects."""
         page_number = get_page_value(request, self.page_param)
@@ -767,7 +791,15 @@ class Resource(TableMixin, Router):
                 if '_list' in form_data:
                     return RedirectResponse(request, url=self.url_path_for('list'))
 
-        return TemplateResponse(self.edit_template, {'request': request, 'form': form, 'object': instance})
+        return TemplateResponse(
+            self.edit_template,
+            {
+                'request': request,
+                'form': form,
+                'object': instance,
+                **admin_context(request),
+            },
+        )
 
     async def delete_view(self, request: Request) -> HTMLResponse:
         """Handle object deletion."""
@@ -785,7 +817,14 @@ class Resource(TableMixin, Router):
             flash(request).success(_('{instance} has been deleted.').format(instance=instance))
             return RedirectResponse(request, url=request.url_for(self.url_name('list')))
 
-        return TemplateResponse(self.delete_template, {'request': request, 'object': instance})
+        return TemplateResponse(
+            self.delete_template,
+            {
+                'request': request,
+                'object': instance,
+                **admin_context(request),
+            },
+        )
 
     async def action_view(self, request: Request) -> Response:
         """Handle actions."""

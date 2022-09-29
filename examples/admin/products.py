@@ -18,7 +18,6 @@ from ohmyadmin.forms import (
     TextField,
     choices_from,
 )
-from ohmyadmin.helpers import resource_url
 from ohmyadmin.metrics import ValueMetric
 from ohmyadmin.resources import Resource
 from ohmyadmin.tables import BoolColumn, Column, HasManyColumn, ImageColumn, NumberColumn
@@ -98,10 +97,10 @@ class ProductResource(Resource):
         Column(
             'brand',
             searchable=True,
-            search_in=[Brand.name],
+            search_in='brand.name',
             sortable=True,
             sort_by=Brand.name,
-            link_factory=lambda r, o: resource_url(BrandResource, 'edit', pk=o.brand.id),
+            link_factory=lambda r, o: r.url_for(BrandResource.url_name('edit'), pk=o.brand.id),
         ),
         NumberColumn('price', sortable=True),
         NumberColumn('sku', sortable=True),

@@ -28,6 +28,13 @@
                 {% endif %}
             </th>
         {% endfor %}
+        {% if row_actions %}
+            <th>
+                <div class="text-right">
+                    {{ _('Actions') }}
+                </div>
+            </th>
+        {% endif %}
     </tr>
     </thead>
     <tbody>
@@ -50,6 +57,15 @@
                     {% endif %}
                 </td>
             {% endfor %}
+            {% if row_actions %}
+                <td>
+                    <div class="flex items-center gap-2 justify-end row-actions">
+                        {% for row_action in row_actions %}
+                            {{ row_action.render(request, pk(object), object) }}
+                        {% endfor %}
+                    </div>
+                </td>
+            {% endif %}
         </tr>
     {% endfor %}
     </tbody>

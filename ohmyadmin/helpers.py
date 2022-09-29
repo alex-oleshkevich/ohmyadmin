@@ -8,9 +8,6 @@ from ohmyadmin.globals import get_current_admin, get_current_request
 from ohmyadmin.responses import Response
 from ohmyadmin.templating import jinja_env
 
-if typing.TYPE_CHECKING:
-    from ohmyadmin.resources import PkType, Resource, ResourceAction
-
 
 def render_to_string(template_name: str, context: dict[str, typing.Any] | None = None) -> str:
     template = jinja_env.get_template(template_name)
@@ -38,15 +35,6 @@ def url(path_name: str, **path_params: str | int) -> str:
 
 def media_url(path: str) -> str:
     return get_current_request().url_for('ohmyadmin_media', path=path)
-
-
-def resource_url(
-    resource: typing.Type[Resource] | Resource,
-    action: ResourceAction = 'list',
-    pk: PkType | None = None,
-) -> str:
-    kwargs = {'pk': pk} if pk else {}
-    return get_current_request().url_for(resource.get_route_name(action), **kwargs)
 
 
 def pluralize(text: str) -> str:

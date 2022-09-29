@@ -1,19 +1,11 @@
 import sqlalchemy as sa
 import typing
+from starlette.requests import Request
 
 from examples.models import User
+from ohmyadmin.actions import LinkRowAction, RowAction, RowActionGroup
 from ohmyadmin.ext.sqla import SQLAlchemyResource
-from ohmyadmin.forms import (
-    CheckboxField,
-    EmailField,
-    FileField,
-    Form,
-    HiddenField,
-    IntegerField,
-    RadioField,
-    SelectField,
-    TextField,
-)
+from ohmyadmin.forms import CheckboxField, EmailField, FileField, Form, HiddenField, TextField
 from ohmyadmin.projections import Projection
 from ohmyadmin.tables import BoolColumn, Column, ImageColumn
 
@@ -112,3 +104,11 @@ class UserResource(SQLAlchemyResource):
         )
         yield Column('email', label='Email', searchable=True, sortable=True)
         yield BoolColumn('is_active', label='Active')
+
+    def get_row_actions(self, request: Request) -> typing.Iterable[RowAction]:
+        yield RowActionGroup(
+            [
+                LinkRowAction(url='/', text='Home', icon='home'),
+                LinkRowAction(url='/', text='Delete', icon='minus', color='danger'),
+            ]
+        )

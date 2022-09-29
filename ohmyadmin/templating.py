@@ -67,6 +67,6 @@ def admin_context(request: Request) -> dict[str, typing.Any]:
     }
 
 
-def macro(template: str, macro_name: str) -> Macro:
-    template = jinja_env.get_template(template)
+def macro(template_name: str, macro_name: str) -> Macro:
+    template = jinja_env.get_template(template_name)
     return getattr(template.module, macro_name)
