@@ -30,16 +30,13 @@ class Action:
     slug: typing.ClassVar[str] = ''
 
     def __init_subclass__(cls, **kwargs: typing.Any) -> None:
-        cls.slug = slugify(camel_to_sentence(cls.__name__))
-
-    def __init__(self, label: str, icon: str = '') -> None:
-        self.icon = icon
-        self.label = label
+        cls.slug = slugify(camel_to_sentence(cls.__name__.removesuffix('Action')))
 
 
 class LinkAction(Action):
     def __init__(self, url: str | URL, label: str, icon: str = '', color: ButtonColor = 'default') -> None:
-        super().__init__(label=label, icon=icon)
+        self.label = label
+        self.icon = icon
         self.url = str(url)
         self.color = color
 
@@ -86,24 +83,23 @@ class LinkRowAction(RowAction):
         return macros(text=self.text, icon=self.icon, url=href, color=self.color)
 
 
-class BatchAction(Dispatch):
-    icon: str = ''
+class ModalAction(Action, Dispatch):
     label: str = ''
-    slug: typing.ClassVar[str] = ''
-    template: str = 'ohmyadmin/batch_action.html'
+    icon: str = ''
+    template: str = 'ohmyadmin/modal_action.html'
     form_class: typing.Type[wtforms.Form] = wtforms.Form
-
-    def __init_subclass__(cls, **kwargs: typing.Any) -> None:
-        cls.label = camel_to_sentence(cls.__name__.removesuffix('Action'))
-        cls.slug = slugify(camel_to_sentence(cls.__name__.removesuffix('Action')))
 
     def __init__(self, label: str = '', icon: str = '') -> None:
         self.icon = icon or self.icon
         self.label = label or self.label
 
+    def __init_subclass__(cls, **kwargs: typing.Any) -> None:
+        cls.label = camel_to_sentence(cls.__name__.removesuffix('Action'))
+        cls.slug = slugify(camel_to_sentence(cls.__name__.removesuffix('Action')))
+
     @abc.abstractmethod
-    async def apply(self, request: Request, object_ids: list[str], form: wtforms.Form) -> Response:
-        raise NotImplementedError()
+    async def form_valid(self, request: Request, form: wtforms.Form) -> Response:
+        raise NotImplementedError
 
     def get_form_class(self) -> typing.Type[wtforms.Form]:
         return self.form_class
@@ -135,8 +131,7 @@ class BatchAction(Dispatch):
 
         if request.method == 'POST':
             if await self.validate_form(request, form):
-                object_ids = form_data.getlist('object_id')
-                return await self.apply(request, object_ids, form)
+                return await self.form_valid(request, form)
 
         return TemplateResponse(
             self.template,
@@ -147,3 +142,16 @@ class BatchAction(Dispatch):
                 'object_ids': object_ids,
             },
         )
+
+
+class BatchAction(ModalAction):
+    label: str = ''
+    template: str = 'ohmyadmin/batch_action.html'
+
+    @abc.abstractmethod
+    async def apply(self, request: Request, object_ids: list[str], form: wtforms.Form) -> Response:
+        raise NotImplementedError()
+
+    async def form_valid(self, request: Request, form: wtforms.Form) -> Response:
+        object_ids = request.query_params.getlist('object_id')
+        return await self.apply(request, object_ids, form)

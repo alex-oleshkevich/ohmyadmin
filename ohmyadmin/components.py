@@ -11,7 +11,7 @@ from ohmyadmin.i18n import _
 from ohmyadmin.structures import URLSpec
 
 if typing.TYPE_CHECKING:
-    from ohmyadmin.actions import Action
+    pass
 
 Colspan = int | typing.Literal['full']
 ButtonColor = typing.Literal['default', 'primary', 'text', 'danger']
@@ -215,46 +215,6 @@ class Button(Component):
         self.type = type
         self.name = name
         self.color = color
-
-
-class RowAction(Component):
-    def __init__(
-        self,
-        entity: typing.Any,
-        text: str = '',
-        icon: str = '',
-        url: str | URLSpec | None = None,
-        action: Action | None = None,
-        danger: bool = False,
-        children: list[Component] | None = None,
-    ):
-        text = text or (action.label if action else '')
-        icon = icon or (action.icon if action else '')
-        if children:
-            icon = icon or 'dots'
-        assert text or icon, 'RowAction: Either text or icon argument must be passed.'
-        assert url or action or children, 'RowAction: Either action or url, or children argument must be passed.'
-
-        self.text = text
-        self.icon = icon
-        self.entity = entity
-        self.action = action
-        self.children = children
-        self.color = 'danger' if danger else 'default'
-        self.url_spec = typing.cast(URLSpec, URLSpec(url=url) if isinstance(url, str) else url)
-
-    @property
-    def url(self) -> str:
-        return self.url_spec.to_url()
-
-    def get_template(self) -> str:
-        if self.children:
-            return 'ohmyadmin/components/row_action_group.html'
-
-        if self.action:
-            return 'ohmyadmin/components/row_action_action.html'
-
-        return 'ohmyadmin/components/row_action_link.html'
 
 
 class MenuItem(Component):
