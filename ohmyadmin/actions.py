@@ -45,7 +45,7 @@ class LinkAction(Action):
         self.color = color
 
     def render(self, request: Request) -> str:
-        m = macro('ohmyadmin/lib/buttons.html', 'link_button')
+        m = macro('ohmyadmin/actions.html', 'link_action')
         return m(text=self.label, icon=self.icon, color=self.color, url=self.url)
 
 
@@ -85,6 +85,19 @@ class LinkRowAction(RowAction):
         href = self.url(request, pk, entity) if callable(self.url) else str(self.url)
         macros = macro('ohmyadmin/row_actions.html', 'link_row_action')
         return macros(text=self.text, icon=self.icon, url=href, color=self.color)
+
+
+class ModalRowAction(RowAction):
+    def __init__(self, action: BatchAction, text: str = '', icon: str = '', color: ButtonColor = 'default') -> None:
+        icon = icon or action.icon
+        label = text or action.label
+        super().__init__(text=label, icon=icon)
+        self.action = action
+        self.color = color
+
+    def render(self, request: Request, pk: str, entity: typing.Any) -> str:
+        macros = macro('ohmyadmin/row_actions.html', 'modal_row_action')
+        return macros(text=self.text, icon=self.icon, action=self.action, color=self.color, pk=pk)
 
 
 class ModalAction(Action, Dispatch):

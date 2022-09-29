@@ -5,7 +5,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from examples.models import User
-from ohmyadmin.actions import Action, BatchAction, LinkRowAction, ModalAction, RowAction, RowActionGroup
+from ohmyadmin.actions import Action, BatchAction, LinkRowAction, ModalAction, ModalRowAction, RowAction, RowActionGroup
 from ohmyadmin.ext.sqla import SQLAlchemyResource
 from ohmyadmin.forms import CheckboxField, EmailField, FileField, Form, HiddenField, TextField
 from ohmyadmin.projections import Projection
@@ -17,6 +17,7 @@ class DuplicateActionForm(wtforms.Form):
 
 
 class DuplicateAction(BatchAction):
+    icon = 'copy'
     form_class = DuplicateActionForm
 
     async def apply(self, request: Request, ids: list, form: Form) -> Response:
@@ -80,10 +81,12 @@ class UserResource(SQLAlchemyResource):
         yield BoolColumn('is_active', label='Active')
 
     def get_row_actions(self, request: Request) -> typing.Iterable[RowAction]:
+        yield ModalRowAction(action=DuplicateAction())
         yield RowActionGroup(
             [
                 LinkRowAction(url='/', text='Home', icon='home'),
                 LinkRowAction(url='/', text='Delete', icon='minus', color='danger'),
+                ModalRowAction(action=DuplicateAction()),
             ]
         )
 

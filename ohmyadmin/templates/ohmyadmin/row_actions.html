@@ -19,3 +19,10 @@
         </div>
     </button>
 {% endmacro %}
+
+{% macro modal_row_action(action, pk, text='', icon='', color='') %}
+    <span class="dropdown-item row-action" type="button" @click="callBatchAction('{{ action.slug }}', ['{{ pk }}'])">
+        {{ tabler_icon(icon) if icon else '' }}
+        <span>{{ text }}</span>
+    </span>
+{% endmacro %}
