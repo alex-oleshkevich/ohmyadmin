@@ -3,7 +3,7 @@
 
 {% block page_actions %}
     {% for action in page_actions %}
-        {{ action }}
+        {{ action.render(request) }}
     {% endfor %}
 {% endblock %}
 

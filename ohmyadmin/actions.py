@@ -4,6 +4,7 @@ import abc
 import sqlalchemy as sa
 import typing
 from slugify import slugify
+from starlette.datastructures import URL
 from starlette.requests import Request
 from starlette.types import Receive, Scope, Send
 
@@ -15,6 +16,7 @@ from ohmyadmin.helpers import camel_to_sentence, render_to_response
 from ohmyadmin.i18n import _
 from ohmyadmin.responses import Response
 from ohmyadmin.structures import URLSpec
+from ohmyadmin.templating import macro
 
 if typing.TYPE_CHECKING:
     from ohmyadmin.resources import PkType
@@ -22,20 +24,29 @@ if typing.TYPE_CHECKING:
 DISMISS_EVENT = 'modals.dismiss'
 
 
-class ActionMeta(abc.ABCMeta):
-    def __new__(cls, name: str, bases: tuple, attrs: dict[str, typing.Any], **kwargs: typing.Any) -> typing.Type:
-        name = name.removesuffix('Action')
-        qual_name = '{module}-{klass}'.format(
-            module=attrs['__module__'], klass=camel_to_sentence(attrs['__qualname__'])
-        )
+class BaseAction:
+    slug: typing.ClassVar[str] = ''
 
-        attrs['id'] = attrs.get('id', slugify(qual_name))
-        attrs['label'] = attrs.get('label', camel_to_sentence(name))
+    def __init_subclass__(cls, **kwargs: typing.Any) -> None:
+        cls.slug = slugify(camel_to_sentence(cls.__name__))
 
-        return super().__new__(cls, name, bases, attrs)
+    def __init__(self, label: str, icon: str = '') -> None:
+        self.icon = icon
+        self.label = label
 
 
-class BaseAction(Component, abc.ABC, metaclass=ActionMeta):
+class LinkAction(BaseAction):
+    def __init__(self, url: str | URL, label: str, icon: str = '', color: ButtonColor = 'default') -> None:
+        super().__init__(label=label, icon=icon)
+        self.url = str(url)
+        self.color = color
+
+    def render(self, request: Request) -> str:
+        m = macro('ohmyadmin/lib/buttons.html', 'link_button')
+        return m(text=self.label, icon=self.icon, color=self.color, url=self.url)
+
+
+class BaseAction2(Component, abc.ABC):
     id: typing.ClassVar[str] = ''
     label: typing.ClassVar[str] = ''
     title: typing.ClassVar[str] = _('Do you want to run this action?')
@@ -78,7 +89,7 @@ class FormActionMixin:
         return Grid(columns=1, children=[FormElement(field, horizontal=True) for field in form])
 
 
-class Action(BaseAction, FormActionMixin):
+class Action2(BaseAction, FormActionMixin):
     @abc.abstractmethod
     async def apply(self, request: Request, form: Form) -> Response:
         ...
@@ -100,7 +111,7 @@ class Action(BaseAction, FormActionMixin):
         )
 
 
-class BatchAction(BaseAction, FormActionMixin):
+class BatchAction2(BaseAction, FormActionMixin):
     coerce: typing.Callable = int
     template: str = ''
 
@@ -137,7 +148,7 @@ class BatchAction(BaseAction, FormActionMixin):
         )
 
 
-class BulkDeleteAction(BatchAction):
+class BulkDeleteAction2(BatchAction2):
     dangerous = True
     message = _('Do you want to delete all items?')
 

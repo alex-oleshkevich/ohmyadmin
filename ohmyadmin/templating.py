@@ -1,6 +1,7 @@
 import functools
 import jinja2
 import typing
+from jinja2.runtime import Macro
 from starlette.requests import Request
 from starlette.templating import Jinja2Templates
 from tabler_icons import tabler_icon
@@ -64,3 +65,8 @@ def admin_context(request: Request) -> dict[str, typing.Any]:
         'static': functools.partial(request.state.admin.static_url, request),
         'flash_messages': flash(request),
     }
+
+
+def macro(template: str, macro_name: str) -> Macro:
+    template = jinja_env.get_template(template)
+    return getattr(template.module, macro_name)
