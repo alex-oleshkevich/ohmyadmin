@@ -1,0 +1,24 @@
+{% macro link_row_action(url, text='', icon='', color='') %}
+    <a href="{{ url }}" class="row-action {{ color }}">
+        {{ tabler_icon(icon) if icon else '' }}
+        <span>{{ text }}</span>
+    </a>
+{% endmacro %}
+
+{% macro row_action_group(request, pk, entity, text, icon, actions) %}
+    <button x-data="{open: false}" class="row-action-dropdown" @click="open = !open">
+        {{ tabler_icon(icon) }}
+        <div x-show="open" @click.outside="open = false" class="dropdown">
+            <ul>
+                {% for action in actions %}
+                    <li>
+                        {{ action.render(request, pk, entity) }}
+                        {#                        <a href="{{ action.generate_url(object) }}" class="dropdown-item-{{ action.color }}">#}
+                        {#                            {{ icon(action.icon) if action.icon else '' }} {{ action.text }}#}
+                        {#                        </a>#}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </button>
+{% endmacro %}
