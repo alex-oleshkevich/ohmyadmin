@@ -1,24 +1,28 @@
 import sqlalchemy as sa
 import typing
+import wtforms
 from starlette.requests import Request
+from starlette.responses import Response
 
 from examples.models import User
-from ohmyadmin.actions import LinkRowAction, RowAction, RowActionGroup
+from ohmyadmin.actions import BatchAction, LinkRowAction, RowAction, RowActionGroup
 from ohmyadmin.ext.sqla import SQLAlchemyResource
 from ohmyadmin.forms import CheckboxField, EmailField, FileField, Form, HiddenField, TextField
 from ohmyadmin.projections import Projection
 from ohmyadmin.tables import BoolColumn, Column, ImageColumn
 
-#
-#
-# class DuplicateAction(BatchAction):
-#     class ActionForm(Form):
-#         count = IntegerField(min_value=1, default=1)
-#
-#     async def apply(self, request: Request, ids: list, form: Form) -> Response:
-#         return self.dismiss('Object has been duplicated.')
-#
-#
+
+class DuplicateActionForm(wtforms.Form):
+    count = wtforms.IntegerField()
+
+
+class DuplicateAction(BatchAction):
+    form_class = DuplicateActionForm
+
+    async def apply(self, request: Request, ids: list, form: Form) -> Response:
+        return self.dismiss('Object has been duplicated.')
+
+
 # class ExportAction(Action):
 #     title = 'Export users?'
 #     message = 'This will export all users matching current table filters.'
@@ -112,3 +116,6 @@ class UserResource(SQLAlchemyResource):
                 LinkRowAction(url='/', text='Delete', icon='minus', color='danger'),
             ]
         )
+
+    def get_batch_actions(self, request: Request) -> typing.Iterable[BatchAction]:
+        yield DuplicateAction()

@@ -1,16 +1,29 @@
 from __future__ import annotations
 
 import abc
+import json
 import typing
+import wtforms
 from slugify import slugify
 from starlette.datastructures import URL
 from starlette.requests import Request
+from starlette.responses import Response
 
 from ohmyadmin.components import ButtonColor
+from ohmyadmin.flash import FlashCategory
 from ohmyadmin.helpers import camel_to_sentence
-from ohmyadmin.templating import macro
+from ohmyadmin.templating import TemplateResponse, macro
 
 DISMISS_EVENT = 'modals.dismiss'
+TOAST_EVENT = 'toast'
+
+
+class Dispatch(abc.ABC):
+    slug: typing.ClassVar[str]
+
+    @abc.abstractmethod
+    async def dispatch(self, request: Request) -> Response:
+        raise NotImplementedError()
 
 
 class Action:
@@ -73,128 +86,64 @@ class LinkRowAction(RowAction):
         return macros(text=self.text, icon=self.icon, url=href, color=self.color)
 
 
-class BatchAction:
+class BatchAction(Dispatch):
     icon: str = ''
     label: str = ''
+    slug: typing.ClassVar[str] = ''
+    template: str = 'ohmyadmin/batch_action.html'
+    form_class: typing.Type[wtforms.Form] = wtforms.Form
+
+    def __init_subclass__(cls, **kwargs: typing.Any) -> None:
+        cls.label = camel_to_sentence(cls.__name__.removesuffix('Action'))
+        cls.slug = slugify(camel_to_sentence(cls.__name__.removesuffix('Action')))
 
     def __init__(self, label: str = '', icon: str = '') -> None:
         self.icon = icon or self.icon
         self.label = label or self.label
 
+    @abc.abstractmethod
+    async def apply(self, request: Request, object_ids: list[str], form: wtforms.Form) -> Response:
+        raise NotImplementedError()
 
-# class BaseAction2(Component, abc.ABC):
-#     id: typing.ClassVar[str] = ''
-#     label: typing.ClassVar[str] = ''
-#     title: typing.ClassVar[str] = _('Do you want to run this action?')
-#     message: typing.ClassVar[str] = ''
-#     icon: typing.ClassVar[str] = ''
-#     dangerous: typing.ClassVar[bool] = False
-#     color: typing.ClassVar[ButtonColor] = 'default'
-#     template: str = 'ohmyadmin/components/action.html'
-#
-#     @abc.abstractmethod
-#     async def dispatch(self, request: Request) -> Response:
-#         ...
-#
-#     @property
-#     def url(self) -> str:
-#         request = get_current_request()
-#         if request.state.resource:
-#             return request.url_for(request.state.resource.get_route_name('action'), action_id=self.id)
-#
-#         raise ValueError('Action called from unknown context.')
-#
-#     def dismiss(self, message: str = '', category: FlashCategory = 'success') -> Response:
-#         response = Response.empty().hx_event(DISMISS_EVENT)
-#         if message:
-#             response = response.hx_toast(message, category)
-#         return response
-#
-#     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-#         response = await self.dispatch(Request(scope, receive, send))
-#         await response(scope, receive, send)
-#
-#
-# class FormActionMixin:
-#     form_class: typing.ClassVar[typing.Type[Form]] = Form
-#
-#     def get_form_class(self) -> typing.Type[Form]:
-#         return getattr(self, 'ActionForm', self.form_class)
-#
-#     def get_form_layout(self, form: Form) -> Component:
-#         return Grid(columns=1, children=[FormElement(field, horizontal=True) for field in form])
-#
-#
-# class Action2(Action, FormActionMixin):
-#     @abc.abstractmethod
-#     async def apply(self, request: Request, form: Form) -> Response:
-#         ...
-#
-#     async def dispatch(self, request: Request) -> Response:
-#         form = await self.get_form_class().from_request(request)
-#         if await form.validate_on_submit(request):
-#             return await self.apply(request, form)
-#
-#         layout = self.get_form_layout(form)
-#         return render_to_response(
-#             request,
-#             'ohmyadmin/actions/action.html',
-#             {
-#                 'request': request,
-#                 'action': self,
-#                 'layout': layout,
-#             },
-#         )
-#
-#
-# class BatchAction2(Action, FormActionMixin):
-#     coerce: typing.Callable = int
-#     template: str = ''
-#
-#     @property
-#     def url(self) -> str:
-#         request = get_current_request()
-#         if request.state.resource:
-#             return request.url_for(request.state.resource.get_route_name('batch'), action_id=self.id)
-#
-#         raise ValueError('Action called from unknown context.')
-#
-#     @abc.abstractmethod
-#     async def apply(self, request: Request, ids: list[PkType], form: Form) -> Response:
-#         ...
-#
-#     async def dispatch(self, request: Request) -> Response:
-#         form = await self.get_form_class().from_request(request)
-#         object_ids = [
-#             self.coerce(typing.cast(str, object_id)) for object_id in request.query_params.getlist('selected')
-#         ]
-#         if await form.validate_on_submit(request):
-#             return await self.apply(request, object_ids, form)
-#
-#         layout = self.get_form_layout(form)
-#         return render_to_response(
-#             request,
-#             'ohmyadmin/actions/batch_action.html',
-#             {
-#                 'request': request,
-#                 'action': self,
-#                 'layout': layout,
-#                 'object_ids': object_ids,
-#             },
-#         )
-#
-#
-# class BulkDeleteAction2(BatchAction2):
-#     dangerous = True
-#     message = _('Do you want to delete all items?')
-#
-#     async def apply(self, request: Request, ids: list[PkType], form: Form) -> Response:
-#         stmt = sa.select(request.state.resource.entity_class).where(
-#             sa.column(request.state.resource.pk_column).in_(ids)
-#         )
-#         result = await request.state.dbsession.scalars(stmt)
-#         for row in result.all():
-#             await request.state.dbsession.delete(row)
-#         await request.state.dbsession.commit()
-#
-#         return Response.empty().hx_redirect(URLSpec.to_resource(request.state.resource))
+    def get_form_class(self) -> typing.Type[wtforms.Form]:
+        return self.form_class
+
+    async def prefill_form(self, request: Request, form: wtforms.Form) -> None:
+        pass
+
+    async def validate_form(self, request: Request, form: wtforms.Form) -> bool:
+        return form.validate()
+
+    def dismiss(self, message: str = '', category: FlashCategory = 'success') -> Response:
+        events: dict[str, typing.Any] = {DISMISS_EVENT: ''}
+        if message:
+            events[TOAST_EVENT] = {'message': message, 'category': category}
+        return Response(status_code=204, headers={'hx-trigger': json.dumps(events)})
+
+    def refresh(self) -> Response:
+        return Response(status_code=204, headers={'hx-refresh': 'true'})
+
+    def redirect(self, url: str | URL) -> Response:
+        return Response(status_code=204, headers={'hx-redirect': str(url)})
+
+    async def dispatch(self, request: Request) -> Response:
+        object_ids = request.query_params.getlist('object_id')
+        form_class = self.get_form_class()
+        form_data = await request.form()
+        form = form_class(formdata=form_data)
+        await self.prefill_form(request, form)
+
+        if request.method == 'POST':
+            if await self.validate_form(request, form):
+                object_ids = form_data.getlist('object_id')
+                return await self.apply(request, object_ids, form)
+
+        return TemplateResponse(
+            self.template,
+            {
+                'request': request,
+                'action': self,
+                'form': form,
+                'object_ids': object_ids,
+            },
+        )

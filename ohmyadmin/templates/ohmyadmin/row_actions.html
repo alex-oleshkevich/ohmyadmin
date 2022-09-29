@@ -13,9 +13,6 @@
                 {% for action in actions %}
                     <li>
                         {{ action.render(request, pk, entity) }}
-                        {#                        <a href="{{ action.generate_url(object) }}" class="dropdown-item-{{ action.color }}">#}
-                        {#                            {{ icon(action.icon) if action.icon else '' }} {{ action.text }}#}
-                        {#                        </a>#}
                     </li>
                 {% endfor %}
             </ul>

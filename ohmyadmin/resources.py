@@ -13,7 +13,7 @@ from starlette.responses import HTMLResponse
 from starlette.routing import BaseRoute, Route, Router
 from starlette.types import Receive, Scope, Send
 
-from ohmyadmin.actions import Action, LinkAction, LinkRowAction, RowAction
+from ohmyadmin.actions import Action, BatchAction, Dispatch, LinkAction, LinkRowAction, RowAction
 from ohmyadmin.flash import flash
 from ohmyadmin.helpers import camel_to_sentence, pluralize, render_to_string
 from ohmyadmin.i18n import _
@@ -553,6 +553,7 @@ class TableMixin:
             return request.url_for(self.url_name('edit'), pk=self.get_pk_value(entity))
 
         row_actions = list(self.get_configured_row_actions(request))
+        batch_actions = list(self.get_configured_batch_actions(request))
         return render_to_string(
             self.table_template,
             {
@@ -563,6 +564,7 @@ class TableMixin:
                 'pk': self.get_pk_value,
                 'field_link': field_link,
                 'row_actions': row_actions,
+                'batch_actions': batch_actions,
             },
         )
 
@@ -727,6 +729,22 @@ class Resource(TableMixin, Router):
     def render_list_view(self, request: Request, page: Page) -> str:
         return self.render_table(request, page)
 
+    def get_default_batch_actions(self, request: Request) -> typing.Iterable[BatchAction]:
+        return []
+
+    def get_batch_actions(self, request: Request) -> typing.Iterable[BatchAction]:
+        return []
+
+    def get_configured_batch_actions(self, request: Request) -> typing.Iterable[BatchAction]:
+        yield from self.get_batch_actions(request)
+        yield from self.get_default_batch_actions(request)
+
+    def get_modal_actions(self, request: Request) -> typing.Iterable[Dispatch]:
+        page_actions = list(self.get_configured_page_actions(request))
+        batch_actions = list(self.get_configured_batch_actions(request))
+        row_actions = list(self.get_configured_row_actions(request))
+        return [action for action in [*page_actions, *batch_actions, *row_actions] if isinstance(action, Dispatch)]
+
     async def index_view(self, request: Request) -> HTMLResponse:
         """Display list of objects."""
         page_number = get_page_value(request, self.page_param)
@@ -745,6 +763,8 @@ class Resource(TableMixin, Router):
         page = await self.get_objects(request, state)
         view_content = self.render_list_view(request, page=page)
         page_actions = list(self.get_configured_page_actions(request))
+        batch_actions = list(self.get_configured_batch_actions(request))
+        modal_actions = self.get_modal_actions(request)
         return TemplateResponse(
             self.index_template,
             {
@@ -758,7 +778,12 @@ class Resource(TableMixin, Router):
                 'search_term': search_term,
                 'page_actions': page_actions,
                 'page_title': self.label_plural,
+                'batch_actions': batch_actions,
                 'search_placeholder': self.search_placeholder,
+                'modal_actions': {
+                    action.slug: request.url_for(self.url_name('action'), action_id=action.slug)
+                    for action in modal_actions
+                },
                 **admin_context(request),
             },
         )
@@ -831,7 +856,12 @@ class Resource(TableMixin, Router):
 
     async def action_view(self, request: Request) -> Response:
         """Handle actions."""
-        return Response('action')
+        actions: dict[str, Dispatch] = {action.slug: action for action in self.get_modal_actions(request)}
+        action = actions.get(request.path_params['action_id'])
+        if not action:
+            raise HTTPException(404, 'Action does not exists.')
+
+        return await action.dispatch(request)
 
     @classmethod
     def url_name(cls, name: str) -> str:
@@ -847,7 +877,7 @@ class Resource(TableMixin, Router):
         yield Route('/new', self.edit_view, name=self.url_name('create'), methods=['get', 'post'])
         yield Route('/edit/{pk:%s}' % pktype, self.edit_view, name=self.url_name('edit'), methods=['get', 'post'])
         yield Route('/delete/{pk:%s}' % pktype, self.delete_view, name=self.url_name('delete'), methods=['get', 'post'])
-        yield Route('/action', self.action_view, name=self.url_name('action'), methods=['get', 'post'])
+        yield Route('/action/{action_id}', self.action_view, name=self.url_name('action'), methods=['get', 'post'])
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         scope.setdefault('state', {})

@@ -3,12 +3,13 @@ import './tables';
 import './actions';
 import './global_events';
 import './globals.d';
-import { Events } from './global_events';
+import {Events} from './global_events';
 
 window.Alpine = Alpine;
 
 document.addEventListener('alpine:init', () => {
     Alpine.data('app', () => ({
+        actionUrl: '',
         init() {
             document.body.addEventListener(Events.DismissModal, () => {
                 this.closeActionModal();
@@ -16,17 +17,14 @@ document.addEventListener('alpine:init', () => {
         },
 
         /* modal handler */
-        actionUrl: '',
-        get isActionModalOpen() {
-            return this.actionUrl != '';
-        },
-        openActionModal(actionUrl: string, selected: string[] = null) {
-            if (selected) {
-                const url = new URL(actionUrl);
-                selected.forEach(value => url.searchParams.append('selected', value));
-                actionUrl = url.toString();
+        callBatchAction(actionId, objectIDs) {
+            const action = window.__ACTIONS__[actionId];
+            if (!action) {
+                throw new Error(`Unregistered action ${actionId}.`);
             }
-            this.actionUrl = actionUrl;
+            const url = new URL(action);
+            objectIDs.forEach(objectId => url.searchParams.append('object_id', objectId));
+            this.actionUrl = url;
         },
         closeActionModal() {
             this.actionUrl = '';

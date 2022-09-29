@@ -44,16 +44,19 @@
 {% block page_scripts %}{% endblock %}
 <script>
     window.__TOASTS__ = {{ flash_messages|list|tojson }};
+    window.__ACTIONS__ = {{ modal_actions|default({}, true)|tojson }};
 </script>
 
 <!-- modal actions will be rendered to this container -->
-<template x-if="isActionModalOpen">
-    <div
-        hx-trigger="load"
-        :hx-get="actionUrl"
-        x-ref="action"
-        x-init="() => htmx.process($refs.action)"
-    ></div>
+<template x-if="actionUrl">
+    <div class="modal">
+        <div class="modal-spacer">
+            <div class="modal-content" hx-trigger="load" :hx-get="actionUrl" x-ref="action"
+                 x-init="() => htmx.process($refs.action)"
+            >
+            </div>
+        </div>
+    </div>
 </template>
 <!-- end modal actions -->
 
