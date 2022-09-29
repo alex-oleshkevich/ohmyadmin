@@ -5,7 +5,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from examples.models import User
-from ohmyadmin.actions import BatchAction, LinkRowAction, RowAction, RowActionGroup
+from ohmyadmin.actions import Action, BatchAction, LinkRowAction, ModalAction, RowAction, RowActionGroup
 from ohmyadmin.ext.sqla import SQLAlchemyResource
 from ohmyadmin.forms import CheckboxField, EmailField, FileField, Form, HiddenField, TextField
 from ohmyadmin.projections import Projection
@@ -23,16 +23,17 @@ class DuplicateAction(BatchAction):
         return self.dismiss('Object has been duplicated.')
 
 
-# class ExportAction(Action):
-#     title = 'Export users?'
-#     message = 'This will export all users matching current table filters.'
-#
-#     class ActionForm(Form):
-#         format = SelectField(choices=[('csv', 'CSV'), ('json', 'JSON'), ('xls', 'Excel')])
-#         range = RadioField(choices=[('all', 'All'), ('selected', 'Selected'), ('all_matched', 'All matched')])
-#
-#     async def apply(self, request: Request, form: Form) -> Response:
-#         return self.dismiss('Action completed.')
+class ExportActionForm(wtforms.Form):
+    format = wtforms.SelectField(choices=[('csv', 'CSV'), ('json', 'JSON'), ('xls', 'Excel')])
+    range = wtforms.RadioField(choices=[('all', 'All'), ('selected', 'Selected'), ('all_matched', 'All matched')])
+
+
+class ExportAction(ModalAction):
+    icon = 'download'
+    form_class = ExportActionForm
+
+    async def form_valid(self, request: Request, form: Form) -> Response:
+        return self.dismiss('Action completed.')
 
 
 class EditForm(Form):
@@ -42,19 +43,6 @@ class EditForm(Form):
     email = EmailField(required=True)
     is_active = CheckboxField(default=True)
     password = HiddenField(default='')
-
-
-#
-# def row_actions(entity: typing.Any) -> typing.Iterable[Component]:
-#     yield RowAction(
-#         entity,
-#         children=[
-#             RowAction(entity, action=ExportAction()),
-#             RowAction(entity, action=DuplicateAction()),
-#             RowAction(entity, action=BulkDeleteAction(), danger=True),
-#         ],
-#     )
-#
 
 
 class ActiveUsers(Projection):
@@ -74,25 +62,7 @@ class UserResource(SQLAlchemyResource):
     entity_class = User
     form_class = EditForm
     queryset = sa.select(entity_class).order_by(User.id)
-    # batch_actions = (DuplicateAction(),)
-    # page_actions = (ExportAction(),)
-    # row_actions = row_actions
     projections = (ActiveUsers,)
-    table_columns = [
-        Column('id', label='ID'),
-        ImageColumn('photo'),
-        Column(
-            'full_name',
-            label='Name',
-            sortable=True,
-            searchable=True,
-            search_in=[User.first_name, User.last_name],
-            sort_by=User.last_name,
-            link=True,
-        ),
-        Column('email', label='Email', searchable=True),
-        BoolColumn('is_active', label='Active'),
-    ]
 
     def get_fields(self) -> typing.Iterable[Column]:
         yield Column('id', label='ID')
@@ -119,3 +89,6 @@ class UserResource(SQLAlchemyResource):
 
     def get_batch_actions(self, request: Request) -> typing.Iterable[BatchAction]:
         yield DuplicateAction()
+
+    def get_page_actions(self, request: Request) -> typing.Iterable[Action]:
+        yield ExportAction()

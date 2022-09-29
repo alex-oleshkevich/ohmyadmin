@@ -1,0 +1,6 @@
+{% macro modal_action(action, text='', icon='', color='default') %}
+    <button type="button" class="btn btn-{{ color }}" @click="callAction('{{ action.slug }}')">
+        {{ tabler_icon(icon) if icon else '' }}
+        <span>{{ text }}</span>
+    </button>
+{% endmacro %}

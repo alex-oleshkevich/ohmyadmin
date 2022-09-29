@@ -32,6 +32,10 @@ class Action:
     def __init_subclass__(cls, **kwargs: typing.Any) -> None:
         cls.slug = slugify(camel_to_sentence(cls.__name__.removesuffix('Action')))
 
+    @abc.abstractmethod
+    def render(self, request: Request) -> str:
+        ...
+
 
 class LinkAction(Action):
     def __init__(self, url: str | URL, label: str, icon: str = '', color: ButtonColor = 'default') -> None:
@@ -89,9 +93,10 @@ class ModalAction(Action, Dispatch):
     template: str = 'ohmyadmin/modal_action.html'
     form_class: typing.Type[wtforms.Form] = wtforms.Form
 
-    def __init__(self, label: str = '', icon: str = '') -> None:
+    def __init__(self, label: str = '', icon: str = '', color: ButtonColor = 'default') -> None:
         self.icon = icon or self.icon
         self.label = label or self.label
+        self.color = color
 
     def __init_subclass__(cls, **kwargs: typing.Any) -> None:
         cls.label = camel_to_sentence(cls.__name__.removesuffix('Action'))
@@ -142,6 +147,10 @@ class ModalAction(Action, Dispatch):
                 'object_ids': object_ids,
             },
         )
+
+    def render(self, request: Request) -> str:
+        macros = macro('ohmyadmin/actions.html', 'modal_action')
+        return macros(text=self.label, icon=self.icon, action=self, color=self.color)
 
 
 class BatchAction(ModalAction):

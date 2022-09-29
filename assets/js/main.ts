@@ -26,6 +26,13 @@ document.addEventListener('alpine:init', () => {
             objectIDs.forEach(objectId => url.searchParams.append('object_id', objectId));
             this.actionUrl = url;
         },
+        callAction(actionId) {
+            const action = window.__ACTIONS__[actionId];
+            if (!action) {
+                throw new Error(`Unregistered action ${actionId}.`);
+            }
+            this.actionUrl = action;
+        },
         closeActionModal() {
             this.actionUrl = '';
         },

@@ -1,5 +1,5 @@
 {% extends 'ohmyadmin/modal_action.html' %}
-{% import 'ohmyadmin/lib/forms.html' as forms %}
+
 {% block content %}
     {{ super() }}
     <select multiple name="object_id" class="hidden" hidden>
@@ -7,9 +7,4 @@
             <option value="{{ object_id }}">{{ object_id }}</option>
         {% endfor %}
     </select>
-    <div>
-        {% for field in form %}
-            {{ forms.form_field(field) }}
-        {% endfor %}
-    </div>
 {% endblock %}
