@@ -24,6 +24,10 @@ class DuplicateAction(BatchAction):
         return self.dismiss('Object has been duplicated.')
 
 
+class DuplicateAction2(DuplicateAction):
+    ...
+
+
 class ExportActionForm(wtforms.Form):
     format = wtforms.SelectField(choices=[('csv', 'CSV'), ('json', 'JSON'), ('xls', 'Excel')])
     range = wtforms.RadioField(choices=[('all', 'All'), ('selected', 'Selected'), ('all_matched', 'All matched')])
@@ -87,6 +91,7 @@ class UserResource(SQLAlchemyResource):
                 LinkRowAction(url='/', text='Home', icon='home'),
                 LinkRowAction(url='/', text='Delete', icon='minus', color='danger'),
                 ModalRowAction(action=DuplicateAction()),
+                ModalRowAction(action=DuplicateAction2()),
             ]
         )
 

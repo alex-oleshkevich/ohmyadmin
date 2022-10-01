@@ -10,9 +10,6 @@ from starlette.types import Receive, Scope, Send
 from ohmyadmin.flash import FlashBag, FlashCategory
 from ohmyadmin.structures import URLSpec
 
-if typing.TYPE_CHECKING:
-    pass
-
 
 class Response:
     def __init__(

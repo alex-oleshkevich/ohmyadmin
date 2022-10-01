@@ -45,6 +45,7 @@
 <script>
     window.__TOASTS__ = {{ flash_messages|list|tojson }};
     window.__ACTIONS__ = {{ modal_actions|default({}, true)|tojson }};
+    window.__ACTION_ENDPOINT__ = '{{ action_endpoint }}';
 </script>
 
 <!-- modal actions will be rendered to this container -->
