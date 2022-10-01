@@ -20,7 +20,6 @@ from ohmyadmin.components import MenuItem
 from ohmyadmin.dashboards import Dashboard
 from ohmyadmin.pages import Page
 from ohmyadmin.storage import LocalDirectoryStorage
-from ohmyadmin.structures import url_to
 
 metadata = sa.MetaData()
 Base = declarative_base()
@@ -50,8 +49,8 @@ class AuthPolicy(BaseAuthPolicy):
                 user_name=str(conn.user),
                 avatar=conn.user.avatar,
                 menu=[
-                    MenuItem(text='My profile', url=url_to.to_page(ProfilePage), icon='user'),
-                    MenuItem(text='Settings', url=url_to.to_page(SettingsPage), icon='settings'),
+                    MenuItem(text='My profile', url=conn.url_for(ProfilePage.get_route_name()), icon='user'),
+                    MenuItem(text='Settings', url=conn.url_for(SettingsPage.get_route_name()), icon='settings'),
                 ],
             )
         return super().get_user_menu(conn)
