@@ -6,10 +6,12 @@ from starlette.responses import Response
 
 from examples.models import User
 from ohmyadmin.actions import Action, BatchAction, LinkRowAction, ModalAction, ModalRowAction, RowAction, RowActionGroup
+from ohmyadmin.components import display
+from ohmyadmin.components.display import DisplayField
 from ohmyadmin.ext.sqla import BatchDeleteAction, SQLAlchemyResource
 from ohmyadmin.forms import CheckboxField, EmailField, FileField, Form, HiddenField, TextField
 from ohmyadmin.projections import Projection
-from ohmyadmin.tables import BoolColumn, Column, ImageColumn
+from ohmyadmin.tables import BoolColumn, Column
 
 
 class DuplicateActionForm(wtforms.Form):
@@ -69,10 +71,10 @@ class UserResource(SQLAlchemyResource):
     queryset = sa.select(entity_class).order_by(User.id)
     projections = (ActiveUsers,)
 
-    def get_fields(self) -> typing.Iterable[Column]:
-        yield Column('id', label='ID')
-        yield ImageColumn('photo')
-        yield Column(
+    def get_list_fields(self) -> typing.Iterable[Column]:
+        yield DisplayField('id', label='ID')
+        yield DisplayField('photo', component=display.Image())
+        yield DisplayField(
             'full_name',
             label='Name',
             sortable=True,
@@ -81,8 +83,8 @@ class UserResource(SQLAlchemyResource):
             search_in='last_name',
             link=True,
         )
-        yield Column('email', label='Email', searchable=True, sortable=True)
-        yield BoolColumn('is_active', label='Active')
+        yield DisplayField('email', label='Email', searchable=True, sortable=True)
+        yield DisplayField('is_active', label='Active', component=display.Boolean())
 
     def get_row_actions(self, request: Request) -> typing.Iterable[RowAction]:
         yield ModalRowAction(action=DuplicateAction())

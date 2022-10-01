@@ -1,0 +1,22 @@
+{% macro link(href, text) %}
+    <a href="{{ href }}">{{ text }}</a>
+{% endmacro %}
+
+{% macro image(src, height, width=None, lazy=False) %}
+    <div
+        class="h-10 w-10 rounded overflow-hidden"
+        style="height: {{ height }}px; {% if width %}{{ width }}px{% endif %}"
+    >
+        <img src="{{ src }}" class="w-full h-full object-cover" {% if lazy %}loading="lazy"{% endif %} alt="">
+    </div>
+{% endmacro %}
+
+{% macro boolean(value) %}
+    <div class="flex justify-center">
+        {% if value %}
+            <span class="text-green-600">{{ tabler_icon('circle-check', 24) }}</span>
+        {% else %}
+            <span class="text-red-600">{{ tabler_icon('circle-x', 24) }}</span>
+        {% endif %}
+    </div>
+{% endmacro %}

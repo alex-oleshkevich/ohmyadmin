@@ -47,14 +47,7 @@
             {% endif %}
             {% for column in cells %}
                 <td>
-                    {% set link = field_link(column, object) %}
-                    {% if link %}
-                        <a href="{{ link }}">
-                            {{ column(object) }}
-                        </a>
-                    {% else %}
-                        {{ column(object) }}
-                    {% endif %}
+                    {{ column.render(request, object) }}
                 </td>
             {% endfor %}
             {% if row_actions %}

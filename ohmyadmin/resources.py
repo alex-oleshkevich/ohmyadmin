@@ -23,6 +23,7 @@ from ohmyadmin.actions import (
     RowAction,
     RowActionGroup,
 )
+from ohmyadmin.components.display import DisplayField
 from ohmyadmin.flash import flash
 from ohmyadmin.helpers import camel_to_sentence, pluralize, render_to_string
 from ohmyadmin.i18n import _
@@ -604,7 +605,7 @@ class Resource(TableMixin, Router):
 
     def __init__(self) -> None:
         super().__init__(routes=list(self.get_routes()))
-        self.fields = list(self.get_fields())
+        self.fields = list(self.get_list_fields())
 
     @property
     def sortable_fields(self) -> list[str]:
@@ -630,7 +631,7 @@ class Resource(TableMixin, Router):
     def can_delete(self, request: Request) -> bool:
         return True
 
-    def get_fields(self) -> typing.Iterable[Column]:
+    def get_list_fields(self) -> typing.Iterable[DisplayField]:
         return []
 
     def get_route_pk_type(self) -> str:
