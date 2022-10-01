@@ -1,6 +1,4 @@
-import sqlalchemy as sa
 import typing
-from sqlalchemy.orm import InstrumentedAttribute
 from starlette.datastructures import URL, MultiDict
 from starlette.requests import Request
 from urllib.parse import parse_qsl, urlencode
@@ -14,27 +12,6 @@ def get_ordering_value(request: Request, param_name: str) -> dict[str, SortingTy
         for value in request.query_params.getlist(param_name)
         if value
     }
-
-
-def apply_ordering(
-    request: Request,
-    columns: list[InstrumentedAttribute],
-    stmt: sa.sql.Select,
-    query_param: str = 'ordering',
-) -> sa.sql.Select:
-    ordering = get_ordering_value(request, query_param)
-    if ordering:
-        stmt = stmt.order_by(None)
-
-    columns_by_name = {column.key: column for column in columns}
-    for order in ordering:
-        field_name = order.lstrip('-')
-        if field_name not in columns_by_name:
-            continue
-
-        column = columns_by_name[field_name]
-        stmt = stmt.order_by(sa.desc(column) if order.startswith('-') else column)
-    return stmt
 
 
 class SortingHelper:

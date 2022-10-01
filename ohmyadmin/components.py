@@ -3,11 +3,11 @@ from __future__ import annotations
 import abc
 import typing
 import wtforms
+from starlette.datastructures import URL
 
 from ohmyadmin.forms import ListField
 from ohmyadmin.globals import get_current_request
 from ohmyadmin.helpers import render_to_string
-from ohmyadmin.structures import URLSpec
 
 Colspan = int | typing.Literal['full']
 ButtonColor = typing.Literal['default', 'primary', 'text', 'danger']
@@ -149,14 +149,10 @@ class FormRepeater(Component):
 class MenuItem(Component):
     template = 'ohmyadmin/components/menu_item.html'
 
-    def __init__(self, text: str, url: str | URLSpec, icon: str = '') -> None:
+    def __init__(self, text: str, url: str | URL, icon: str = '') -> None:
         self.text = text
         self.icon = icon
-        self.url_spec = URLSpec(url=url) if isinstance(url, str) else url
-
-    @property
-    def url(self) -> str:
-        return self.url_spec.to_url()
+        self.url = str(url)
 
     @property
     def is_active(self) -> bool:

@@ -5,14 +5,11 @@ import dataclasses
 import abc
 import sqlalchemy as sa
 import typing
-from sqlalchemy.orm import InstrumentedAttribute
 from starlette.requests import Request
 
 from ohmyadmin.components import Component, FormElement, Grid
 from ohmyadmin.forms import Form
 from ohmyadmin.helpers import render_to_string
-from ohmyadmin.ordering import apply_ordering
-from ohmyadmin.tables import Column, get_search_value
 
 
 class EmptyForm(Form):
@@ -67,56 +64,3 @@ class BaseFilter(abc.ABC):
 
     def __str__(self) -> str:
         return self.render()
-
-
-class OrderingFilter(BaseFilter):
-    has_ui = False
-
-    def __init__(self, entity_class: typing.Any, columns: typing.Iterable[Column], query_param: str) -> None:
-        self.entity_class = entity_class
-        self.query_param = query_param
-        self.columns = [column.sort_by if column.sort_by else getattr(entity_class, column.name) for column in columns]
-
-    def apply(self, request: Request, queryset: sa.sql.Select, form: Form) -> sa.sql.Select:
-        return apply_ordering(request, self.columns, queryset, self.query_param)
-
-
-class SearchFilter(BaseFilter):
-    has_ui = False
-
-    def __init__(self, entity_class: typing.Any, columns: typing.Iterable[Column], query_param: str) -> None:
-        self.entity_class = entity_class
-        self.query_param = query_param
-        self.db_columns: list[InstrumentedAttribute] = []
-
-    def create_search_token(self, column: InstrumentedAttribute, search_query: str) -> sa.sql.ColumnElement:
-        string_column = sa.cast(column, sa.Text)
-        if search_query.startswith('^'):
-            search_token = f'{search_query[1:].lower()}%'
-            return string_column.ilike(search_token)
-
-        if search_query.startswith('='):
-            search_token = f'{search_query[1:].lower()}'
-            return sa.func.lower(string_column) == search_token
-
-        if search_query.startswith('@'):
-            search_token = f'{search_query[1:].lower()}'
-            return string_column.regexp_match(search_token)
-
-        search_token = f'%{search_query.lower()}%'
-        return string_column.ilike(search_token)
-
-    def apply(self, request: Request, queryset: sa.sql.Select, form: Form) -> sa.sql.Select:
-        search_query = get_search_value(request, self.query_param)
-        if not search_query:
-            return queryset
-
-        clauses = []
-        for column in self.db_columns:
-            clause = self.create_search_token(column, search_query)
-            clauses.append(clause)
-
-        if clauses:
-            queryset = queryset.where(sa.or_(*clauses))
-
-        return queryset

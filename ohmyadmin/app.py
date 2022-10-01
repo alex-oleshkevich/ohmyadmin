@@ -24,7 +24,6 @@ from ohmyadmin.media_server import MediaServer
 from ohmyadmin.pages import Page
 from ohmyadmin.resources import Resource
 from ohmyadmin.storage import FileStorage
-from ohmyadmin.structures import URLSpec
 from ohmyadmin.templating import DynamicChoiceLoader, jinja_env
 
 this_dir = pathlib.Path(__file__).parent
@@ -77,7 +76,7 @@ class OhMyAdmin(Router):
 
     def build_main_menu(self, request: Request) -> typing.Iterable[Component]:
         for dashboard in self.dashboards:
-            yield MenuItem(text=dashboard.label, icon=dashboard.icon, url=URLSpec.to_dashboard(dashboard))
+            yield MenuItem(text=dashboard.label, icon=dashboard.icon, url=request.url_for(dashboard.get_route_name()))
 
         yield MenuGroup(
             text=_('Resources'),
@@ -88,7 +87,10 @@ class OhMyAdmin(Router):
         )
         yield MenuGroup(
             text=_('Pages'),
-            items=[MenuItem(text=page.label, icon=page.icon, url=URLSpec.to_page(page)) for page in self.pages],
+            items=[
+                MenuItem(text=page.label, icon=page.icon, url=request.url_for(page.get_route_name()))
+                for page in self.pages
+            ],
         )
 
     def build_user_menu(self, request: Request) -> UserMenu:
