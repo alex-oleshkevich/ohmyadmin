@@ -32,151 +32,7 @@ from ohmyadmin.pagination import Page, get_page_size_value, get_page_value
 from ohmyadmin.tables import Column, get_search_value
 from ohmyadmin.templating import TemplateResponse, admin_context
 
-# ResourceAction = typing.Literal['list', 'create', 'edit', 'delete', 'show', 'batch', 'action', 'metric']
-# PkType = int | str
-# _RowActionsArgs = typing.ParamSpec('_RowActionsArgs')
-# _RowActionsReturn = typing.TypeVar('_RowActionsReturn')
-# def wrap_row_actions(
-#     fn: typing.Callable[_RowActionsArgs, _RowActionsReturn],
-# ) -> typing.Callable[typing.Concatenate['Resource', _RowActionsArgs], _RowActionsReturn]:
-#     def wrapper(self: 'Resource', *args: _RowActionsArgs.args, **kwargs: _RowActionsArgs.kwargs) -> _RowActionsReturn:
-#         return fn(*args, **kwargs)
-#
-#     return wrapper
-# class ResourceMeta(PageMeta):
-#     def __new__(cls, name: str, bases: tuple, attrs: dict[str, typing.Any], **kwargs: typing.Any) -> typing.Type:
-#         if name != 'Resource':
-#             attrs['id'] = attrs.get('id', pluralize(slugify(name.removesuffix('Resource'))))
-#             attrs['label'] = attrs.get('label', camel_to_sentence(name.removesuffix('Resource')))
-#             attrs['label_plural'] = attrs.get('label_plural', pluralize(attrs['label']))
-#
-#             if 'pk_column' not in attrs:
-#                 for column in vars(attrs['entity_class']).values():
-#                     if hasattr(column, 'primary_key') and column.primary_key:
-#                         attrs['pk_column'] = column.name
-#                         break
-#                 else:
-#                     raise ValueError(
-#                         f'Could not determine automatically primary key column for resource {name}. '
-#                         f'Please, specify it manually via Resource.pk_column attribute.'
-#                     )
-#
-#         if 'row_actions' in attrs:
-#             # when lambda attached to a class it will receive self as the first argument
-#             # this adds undesired behavior so lets it in a function that transparently handles self argument
-#             attrs['row_actions'] = wrap_row_actions(attrs['row_actions']) if attrs['row_actions'] else None
-#
-#         return super().__new__(cls, name, bases, attrs)
-
-
 # class Resource2(Router):
-#     id: typing.ClassVar[str] = ''
-#     label: typing.ClassVar[str] = ''
-#     label_plural: typing.ClassVar[str] = ''
-#     icon: typing.ClassVar[str] = ''
-#
-#     # orm configuration
-#     entity_class: typing.ClassVar[typing.Any] = None
-#     queryset: typing.ClassVar[sa.sql.Select | None] = None
-#     pk_column: str
-#
-#     # table settings
-#     filters: typing.ClassVar[typing.Iterable[typing.Type[BaseFilter]] | None] = None
-#     table_columns: typing.ClassVar[typing.Iterable[Column] | None] = None
-#     batch_actions: typing.ClassVar[typing.Iterable[BatchAction] | None] = None
-#     page_actions: typing.ClassVar[typing.Iterable[Component] | None] = None
-#     row_actions: typing.ClassVar[RowActionsCallback | None] = None
-#     metrics: typing.ClassVar[typing.Iterable[Metric] | None] = None
-#
-#     # projections
-#     projections: typing.ClassVar[typing.Iterable[typing.Type[Projection]] | None] = None
-#
-#     # pagination and default filters
-#     page_param: str = 'page'
-#     page_size: int = 25
-#     page_sizes: list[int] | tuple[int, ...] | None = (25, 50, 75)
-#     page_size_param: str = 'page_size'
-#     search_param: str = 'search'
-#     search_placeholder: str = _('Search...')
-#
-#     # ordering settings
-#     ordering_param: str = 'ordering'
-#     ordering_columns: typing.ClassVar[typing.Iterable[InstrumentedAttribute] | None] = None
-#
-#     # form settings
-#     form_class: typing.ClassVar[typing.Type[Form] | None] = None
-#     form_actions: typing.ClassVar[typing.Iterable[Component] | None] = None
-#     create_page_label: str = _('Create {resource}')
-#     edit_page_label: str = _('Edit {resource}')
-#     delete_page_label: str = _('Delete {resource}')
-#
-#     # show page settings
-#     show_columns: typing.ClassVar[typing.Iterable[Column] | None] = None
-#
-#     # templates
-#     index_view_template: str = 'ohmyadmin/list.html'
-#     show_view_template: str = 'ohmyadmin/show.html'
-#     edit_view_template: str = 'ohmyadmin/form.html'
-#     delete_view_template: str = 'ohmyadmin/delete.html'
-#
-#     message_object_saved: str = _('{label} has been saved.')
-#
-#     def __init__(self) -> None:
-#         super().__init__(routes=list(self.get_routes()))
-#
-#     @property
-#     def searchable(self) -> bool:
-#         return any([column.searchable for column in self.get_table_columns()])
-#
-#     @property
-#     def pk_type(self) -> typing.Type[PkType]:
-#         """Get primary key type."""
-#         column = getattr(self.entity_class, self.pk_column)
-#         match column.type:
-#             case sa.Integer():
-#                 return int
-#             case sa.String():
-#                 return str
-#         return int
-#
-#     def get_empty_state(self) -> Component:
-#         """
-#         Return empty state component.
-#
-#         Empty states used on pages that have no data (empty) and no filters
-#         applied.
-#         """
-#
-#         return EmptyState(
-#             heading=_('Empty page'),
-#             message=_('This page currently has no data.'),
-#             actions=list(self.get_default_page_actions()),
-#         )
-#
-#     def get_pk_value(self, entity: typing.Any) -> int | str:
-#         """Get primary key value from the entity."""
-#
-#         return getattr(entity, self.pk_column)
-#
-#     def get_table_columns(self) -> typing.Iterable[Column]:
-#         """Collect and return configured table columns."""
-#
-#         assert self.table_columns is not None, 'Resource must define columns for table view.'
-#         yield from self.table_columns
-#         yield ActionColumn(self.get_row_actions)
-#
-#     def get_queryset(self) -> sa.sql.Select:
-#         """
-#         Get queryset.
-#
-#         By default, it returns the Resource.queryset or raises.
-#         """
-#
-#         assert self.entity_class is not None, 'entity_class must be defined on resource.'
-#         if self.queryset is not None:
-#             return self.queryset
-#         return sa.select(self.entity_class)
-#
 #     def get_filters(self) -> typing.Iterable[BaseFilter]:
 #         """
 #         Get filters.
@@ -195,166 +51,6 @@ from ohmyadmin.templating import TemplateResponse, admin_context
 #         filter_classes = self.filters or []
 #         for filter_class in filter_classes:
 #             yield filter_class()
-#
-#     def get_default_page_actions(self) -> typing.Iterable[Component]:
-#         """Return default index page actions."""
-#
-#         yield ButtonLink(
-#             url=URLSpec(resource=self, resource_action='create'),
-#             text=_('Add {resource}'.format(resource=self.label)),
-#             icon='plus',
-#             color='primary',
-#         )
-#
-#     def get_page_actions(self) -> typing.Iterable[Component]:
-#         """Return user defined index page actions."""
-#         yield from self.page_actions or []
-#         yield from self.get_default_page_actions()
-#
-#     def get_default_row_actions(self, entity: typing.Any) -> typing.Iterable[Component]:
-#         yield RowAction(entity, icon='eye', url=URLSpec.to_resource(self, 'show', {'pk': self.get_pk_value(entity)}))
-#         yield RowAction(entity, icon='pencil',
-#         url=URLSpec.to_resource(self, 'edit', {'pk': self.get_pk_value(entity)}))
-#         yield RowAction(
-#             entity,
-#             icon='trash',
-#             url=URLSpec.to_resource(self, 'delete', {'pk': self.get_pk_value(entity)}),
-#             danger=True,
-#         )
-#
-#     def get_row_actions(self, entity: typing.Any) -> typing.Iterable[Component]:
-#         yield from self.row_actions(entity) if callable(self.row_actions) else []
-#         yield from self.get_default_row_actions(entity)
-#
-#     def get_default_batch_actions(self) -> typing.Iterable[BatchAction]:
-#         yield BulkDeleteAction()
-#
-#     def get_batch_actions(self) -> typing.Iterable[BatchAction]:
-#         yield from self.get_default_batch_actions()
-#         yield from self.batch_actions or []
-#
-#     def get_metrics(self) -> typing.Iterable[Metric]:
-#         yield from self.metrics or []
-#
-#     def get_default_form_actions(self) -> typing.Iterable[Component]:
-#         yield Button(_('Save'), color='primary', name='_save')
-#         yield Button(_('Save and return to list'), name='_list')
-#         yield Button(_('Save and add new'), name='_add')
-#
-#     def get_form_actions(self) -> typing.Iterable[Component]:
-#         yield from self.get_default_form_actions()
-#         yield from self.form_actions or []
-#
-#     def get_form_class(self) -> typing.Type[Form]:
-#         assert self.form_class, f'{self.__class__.__name__} must define form_class attribute.'
-#         return self.form_class
-#
-#     def get_form_layout(self, request: Request, form: Form) -> Component:
-#         return Grid(columns=1, children=[Row(children=[FormElement(field, colspan=6)], columns=12) for field in form])
-#
-#     def get_empty_object(self) -> typing.Any:
-#         assert self.entity_class, 'entity_class is a mandatory attribute.'
-#         return self.entity_class()
-#
-#     def get_show_columns(self) -> typing.Iterable[Column]:
-#         yield from self.show_columns or
-#         (column for column in self.get_table_columns() if column.name != '__actions__')
-#
-#     def get_projections(self) -> typing.Iterable[Projection]:
-#         if self.projections:
-#             yield Projection(_('All'), id='__default__')
-#
-#         yield from [projection() for projection in self.projections or []]
-#
-#     async def get_object(self, request: Request, pk: int | str) -> typing.Any:
-#         column = getattr(self.entity_class, self.pk_column)
-#         stmt = self.get_queryset().limit(2).where(column == pk)
-#         result = await request.state.dbsession.scalars(stmt)
-#         return result.unique().one()
-#
-#     async def get_object_count(self, request: Request, queryset: sa.sql.Select) -> int:
-#         stmt = sa.select(sa.func.count('*')).select_from(queryset)
-#         result = await request.state.dbsession.scalars(stmt)
-#         return result.one()
-#
-#     async def get_objects(self, request: Request, queryset: sa.sql.Select) -> typing.Iterable:
-#         result = await request.state.dbsession.scalars(queryset)
-#         return result.all()
-#
-#     async def paginate_queryset(self, request: Request, stmt: sa.sql.Select) -> Page:
-#         page_number = get_page_value(request, self.page_param)
-#         page_size = get_page_size_value(request, self.page_size_param, 1, self.page_size)
-#         offset = (page_number - 1) * page_size
-#
-#         row_count = await self.get_object_count(request, stmt)
-#         stmt = stmt.limit(page_size).offset(offset)
-#         rows = await self.get_objects(request, stmt)
-#         return Page(rows=list(rows), total_rows=row_count, page=page_number, page_size=page_size)
-#
-#     async def list_objects_view(self, request: Request) -> Response:
-#         stmt = self.get_queryset()
-#
-#         # apply filters
-#         filters = list(self.get_filters())
-#         indicators: list[FilterIndicator] = []
-#         visual_filters: list[BaseFilter] = []
-#         for filter_ in filters:
-#             stmt = await filter_.dispatch(request, stmt)
-#             indicators.extend(filter_.indicators)
-#             if filter_.has_ui:
-#                 visual_filters.append(filter_)
-#
-#         # apply projection
-#         projections = list(self.get_projections())
-#         table_columns = self.get_table_columns()
-#         projection_id = request.query_params.get('project', '__default__')
-#         if projection := {projection.id: projection for projection in projections}.get(projection_id):
-#             stmt = projection.apply_filter(stmt)
-#
-#         objects = await self.paginate_queryset(request, stmt)
-#         search_query = get_search_value(request, self.search_param)
-#
-#         # show empty table if no results and search or filters used, otherwise render empty state
-#         has_results = objects or search_query or indicators
-#
-#         return render_to_response(
-#             request,
-#             self.index_view_template,
-#             {
-#                 'resource': self,
-#                 'objects': objects,
-#                 'filters': visual_filters,
-#                 'indicators': indicators,
-#                 'page_has_results': has_results,
-#                 'page_title': self.label_plural,
-#                 'columns': list(table_columns),
-#                 'search_placeholder': self.search_placeholder,
-#                 'sorting_helper': SortingHelper(request, self.ordering_param),
-#                 'search_query': search_query,
-#                 'empty_state': self.get_empty_state(),
-#                 'batch_actions': list(self.get_batch_actions()),
-#                 'page_actions': list(self.get_page_actions()),
-#                 'current_projection': projection_id,
-#                 'projections': projections,
-#                 'metrics': [
-#                     request.url_for(self.get_route_name('metric'), metric_id=metric.id)
-#                     for metric in self.get_metrics()
-#                 ],
-#             },
-#         )
-#
-#     async def show_object_view(self, request: Request) -> Response:
-#         pk = request.path_params['pk']
-#         instance = await self.get_object(request, pk=pk)
-#         if not instance:
-#             raise HTTPException(404, _('Object does not exists.'))
-#
-#         columns = list(self.get_show_columns())
-#         return render_to_response(
-#             request,
-#             self.show_view_template,
-#             {'request': request, 'object': instance, 'columns': columns, 'page_title': str(instance)},
-#         )
 #
 #     async def edit_object_view(self, request: Request) -> Response:
 #         file_store: FileStorage = request.state.file_storage
@@ -408,30 +104,6 @@ from ohmyadmin.templating import TemplateResponse, admin_context
 #             },
 #         )
 #
-#     async def delete_object_view(self, request: Request) -> Response:
-#         session = request.state.dbsession
-#         instance = await self.get_object(request, pk=request.path_params['pk'])
-#         if not instance:
-#             raise HTTPException(404, _('Object does not exists.'))
-#
-#         if request.method == 'POST':
-#             await session.delete(instance)
-#             return (
-#                 RedirectResponse(request)
-#                 .to_resource(self)
-#                 .with_success(_('{resource} has been deleted.'.format(resource=str(instance))))
-#             )
-#
-#         return render_to_response(
-#             request,
-#             self.delete_view_template,
-#             {
-#                 'request': request,
-#                 'object': instance,
-#                 'page_title': self.delete_page_label.format(resource=self.label),
-#             },
-#         )
-#
 #     async def metric_view(self, request: Request) -> Response:
 #         """A backend for resource metric cards."""
 #         metric_id = request.path_params['metric_id']
@@ -439,83 +111,6 @@ from ohmyadmin.templating import TemplateResponse, admin_context
 #         if not metric:
 #             raise HTTPException(404, 'Metric does not exists.')
 #         return await metric.dispatch(request)
-#
-#     async def action_view(self, request: Request) -> Response:
-#         """A backend for standalone resource actions."""
-#         try:
-#             action_id = request.path_params['action_id']
-#             action = next(
-#                 (action for action in self.get_page_actions()
-#                 if isinstance(action, Action) and action.id == action_id)
-#             )
-#             return await action.dispatch(request)
-#         except StopIteration:
-#             raise HTTPException(404, 'Action does not exists.')
-#
-#     async def batch_action_view(self, request: Request) -> Response:
-#         """A backend for batch resource actions."""
-#         try:
-#             action_id = request.path_params['action_id']
-#             action = next(
-#                 (
-#                     action
-#                     for action in self.get_batch_actions()
-#                     if isinstance(action, BatchAction) and action.id == action_id
-#                 )
-#             )
-#             return await action.dispatch(request)
-#         except StopIteration:
-#             raise HTTPException(404, 'Batch action does not exists.')
-#
-#     @classmethod
-#     def get_route_name(cls, action: ResourceAction, sub_action: str | None = None) -> str:
-#         sub_action = f'_{sub_action}' if sub_action else ''
-#         return f'ohmyadmin_resource_{cls.id}_{action}{sub_action}'
-#
-#     def get_routes(self) -> typing.Iterable[BaseRoute]:
-#         mapping = {int: 'int', str: 'str'}
-#         param_type = mapping[self.pk_type]
-#
-#         yield Route('/', self.list_objects_view, methods=['GET', 'POST'], name=self.get_route_name('list'))
-#         yield Route('/new', self.edit_object_view, methods=['GET', 'POST'], name=self.get_route_name('create'))
-#         yield Route(
-#             '/{pk:%s}/edit' % param_type,
-#             self.edit_object_view,
-#             methods=['GET', 'POST'],
-#             name=self.get_route_name('edit'),
-#         )
-#         yield Route('/{pk:%s}/show' % param_type, self.show_object_view, name=self.get_route_name('show'))
-#         yield Route(
-#             '/{pk:%s}/delete' % param_type,
-#             self.delete_object_view,
-#             methods=['GET', 'POST'],
-#             name=self.get_route_name('delete'),
-#         )
-#
-#         yield Route('/metric/{metric_id}', self.metric_view, name=self.get_route_name('metric'))
-#         yield Route(
-#             '/actions/{action_id}', self.action_view, methods=['GET', 'POST'], name=self.get_route_name('action')
-#         )
-#         yield Route(
-#             '/batch/{action_id}', self.batch_action_view, methods=['GET', 'POST'], name=self.get_route_name('batch')
-#         )
-#
-#     async def _detect_post_save_action(self, request: Request, instance: typing.Any) -> Response:
-#         form_data = await request.form()
-#         pk = self.get_pk_value(instance)
-#         if '_save' in form_data:
-#             return RedirectResponse(request).to_resource(self, 'edit', pk=pk)
-#         if '_add' in form_data:
-#             return RedirectResponse(request).to_resource(self, 'create')
-#         if '_list' in form_data:
-#             return RedirectResponse(request).to_resource(self)
-#         raise ValueError('Could not determine redirect route.')
-#
-#     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-#         scope.setdefault('state', {})
-#         scope['state']['resource'] = self
-#         await super().__call__(scope, receive, send)
-#         await scope['state']['dbsession'].commit()
 
 
 @dataclasses.dataclass
@@ -595,6 +190,8 @@ class Resource(TableMixin, Router):
     ordering_param: typing.ClassVar[str] = 'ordering'
     page_size: typing.ClassVar[int] = 25
     max_page_size: typing.ClassVar[int] = 100
+    page_title_for_create: str = _('Create {resource}')
+    page_title_for_edit: str = _('Edit {entity}')
     page_title_for_delete: str = _('Delete {entity}?')
 
     def __init_subclass__(cls, **kwargs: typing.Any) -> None:
@@ -670,8 +267,18 @@ class Resource(TableMixin, Router):
         raise NotImplementedError(f'{self.__class__.__name__} must implement get_objects() method.')
 
     @abc.abstractmethod
-    def create_form_class(self) -> typing.Type[wtforms.Form]:
+    def get_form_fields(self) -> typing.Iterable[wtforms.Field]:
         raise NotImplementedError()
+
+    def create_form_class(self) -> typing.Type[wtforms.Form]:
+        return typing.cast(
+            typing.Type[wtforms.Form],
+            type(
+                f'{self.__class__.__name__}Form',
+                (wtforms.Form,),
+                {field.name: field for field in self.get_form_fields()},
+            ),
+        )
 
     def get_form_class(self) -> typing.Type[wtforms.Form]:
         """
@@ -812,18 +419,25 @@ class Resource(TableMixin, Router):
                 flash(request).success(_('{resource} has been saved.').format(resource=self.label))
 
                 if '_new' in form_data:
-                    return RedirectResponse(url=self.url_path_for('create'), status_code=302)
+                    return RedirectResponse(url=request.url_for(self.url_name('create')), status_code=302)
                 if '_edit' in form_data:
-                    return RedirectResponse(url=self.url_path_for('edit', pk=pk), status_code=302)
+                    return RedirectResponse(url=request.url_for(self.url_name('edit'), pk=pk), status_code=302)
                 if '_list' in form_data:
-                    return RedirectResponse(url=self.url_path_for('list'), status_code=302)
+                    return RedirectResponse(url=request.url_for(self.url_name('list')), status_code=302)
+
+        if pk:
+            page_title = self.page_title_for_edit.format(entity=instance)
+        else:
+            page_title = self.page_title_for_create.format(resource=self.label)
 
         return TemplateResponse(
             self.edit_template,
             {
-                'request': request,
                 'form': form,
+                'request': request,
                 'object': instance,
+                'page_title': page_title,
+                'mode': 'edit' if pk else 'create',
                 **admin_context(request),
             },
         )

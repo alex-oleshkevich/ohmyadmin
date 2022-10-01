@@ -19,7 +19,6 @@
             <li>{{ error }}</li>
         {% endfor %}
     </ul>
-
 {% endmacro %}
 
 {% macro form_input(field) %}
@@ -27,12 +26,18 @@
 {% endmacro %}
 
 {% macro form_field(field) %}
-    <div class="form-group">
-        {{ form_label(field) }}
+    {% if field.type in ['CheckboxField', 'BooleanField'] %}
+        {{ checkbox_field(field) }}
+    {% elif field.type == 'HiddenField' %}
         {{ form_input(field) }}
-        {{ form_help(field) if field.description else '' }}
-        {{ form_errors(field) if field.errors else '' }}
-    </div>
+    {% else %}
+        <div class="form-group">
+            {{ form_label(field) }}
+            {{ form_input(field) }}
+            {{ form_help(field) if field.description else '' }}
+            {{ form_errors(field) if field.errors else '' }}
+        </div>
+    {% endif %}
 {% endmacro %}
 
 {% macro checkbox_input(field) %}

@@ -126,9 +126,6 @@ class SQLAlchemyResource(Resource):
         offset = (page_number - 1) * page_size
         return stmt.limit(page_size).offset(offset)
 
-    def create_form_class(self) -> typing.Type[wtforms.Form]:
-        pass
-
 
 class BatchDeleteAction(BatchAction):
     icon = 'trash'

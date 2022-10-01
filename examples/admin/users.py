@@ -8,8 +8,9 @@ from examples.models import User
 from ohmyadmin.actions import Action, BatchAction, LinkRowAction, ModalAction, ModalRowAction, RowAction, RowActionGroup
 from ohmyadmin.components import display
 from ohmyadmin.components.display import DisplayField
+from ohmyadmin.components.form import BooleanField, EmailField, FileField, HiddenField, StringField
 from ohmyadmin.ext.sqla import BatchDeleteAction, SQLAlchemyResource
-from ohmyadmin.forms import CheckboxField, EmailField, FileField, Form, HiddenField, TextField
+from ohmyadmin.forms import Form
 from ohmyadmin.projections import Projection
 from ohmyadmin.tables import BoolColumn, Column
 
@@ -43,15 +44,6 @@ class ExportAction(ModalAction):
         return self.dismiss('Action completed.')
 
 
-class EditForm(Form):
-    first_name = TextField()
-    last_name = TextField()
-    photo = FileField(upload_to='photos')
-    email = EmailField(required=True)
-    is_active = CheckboxField(default=True)
-    password = HiddenField(default='')
-
-
 class ActiveUsers(Projection):
     columns = [
         Column('full_name', label='Name', link=True),
@@ -67,7 +59,6 @@ class UserResource(SQLAlchemyResource):
     label = 'User'
     label_plural = 'Users'
     entity_class = User
-    form_class = EditForm
     queryset = sa.select(entity_class).order_by(User.id)
     projections = (ActiveUsers,)
 
@@ -85,6 +76,14 @@ class UserResource(SQLAlchemyResource):
         )
         yield DisplayField('email', label='Email', searchable=True, sortable=True)
         yield DisplayField('is_active', label='Active', component=display.Boolean())
+
+    def get_form_fields(self) -> typing.Iterable[wtforms.Field]:
+        yield StringField(name='first_name')
+        yield StringField(name='last_name')
+        yield EmailField(name='email', validators=[wtforms.validators.DataRequired()])
+        yield FileField(name='photo')
+        yield BooleanField(name='is_active')
+        yield HiddenField(name='password')
 
     def get_row_actions(self, request: Request) -> typing.Iterable[RowAction]:
         yield ModalRowAction(action=DuplicateAction())

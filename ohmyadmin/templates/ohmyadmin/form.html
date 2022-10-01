@@ -1,13 +1,23 @@
 {% extends 'ohmyadmin/app.html' %}
+{% import 'ohmyadmin/lib/forms.html' as forms %}
 {% import 'ohmyadmin/lib/buttons.html' as buttons %}
 
 {% block content %}
     <form method="post" enctype="multipart/form-data">
-        <div>{{ layout }}</div>
-        <div class="flex items-center gap-2 mt-10">
-            {% for action in form_actions %}
-                {{ action }}
+        <div>
+            {% for field in form %}
+                {{ forms.form_field(field) }}
             {% endfor %}
+        </div>
+        <div class="form-actions">
+            {% if mode == 'create' %}
+                <button type="submit" class="btn btn-primary" name="_edit">{{ _('Save') }}</button>
+                <button type="submit" class="btn" name="_list">{{ _('Save and return to list') }}</button>
+                <button type="submit" class="btn" name="_add">{{ _('Save and add new') }}</button>
+            {% else %}
+                <button type="submit" class="btn btn-primary" name="_edit">{{ _('Save') }}</button>
+                <button type="submit" class="btn" name="_list">{{ _('Save and return to list') }}</button>
+            {% endif %}
         </div>
     </form>
 {% endblock %}
