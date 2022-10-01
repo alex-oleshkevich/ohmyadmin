@@ -790,7 +790,7 @@ class Resource(TableMixin, Router):
         """Handle object creation and editing."""
         if not self.can_edit(request):
             flash(request).error(_('You are not allowed to access this page.'))
-            return RedirectResponse(url=request.url_for(self.url_name('list')))
+            return RedirectResponse(url=request.url_for(self.url_name('list')), status_code=302)
 
         pk = request.path_params.get('pk', '')
         instance = self.create_new_entity()
@@ -811,11 +811,11 @@ class Resource(TableMixin, Router):
                 flash(request).success(_('{resource} has been saved.').format(resource=self.label))
 
                 if '_new' in form_data:
-                    return RedirectResponse(url=self.url_path_for('create'))
+                    return RedirectResponse(url=self.url_path_for('create'), status_code=302)
                 if '_edit' in form_data:
-                    return RedirectResponse(url=self.url_path_for('edit', pk=pk))
+                    return RedirectResponse(url=self.url_path_for('edit', pk=pk), status_code=302)
                 if '_list' in form_data:
-                    return RedirectResponse(url=self.url_path_for('list'))
+                    return RedirectResponse(url=self.url_path_for('list'), status_code=302)
 
         return TemplateResponse(
             self.edit_template,
@@ -836,12 +836,12 @@ class Resource(TableMixin, Router):
 
         if not self.can_delete(request):
             flash(request).error(_('You are not allowed to access this page.'))
-            return RedirectResponse(url=request.url_for(self.url_name('list')))
+            return RedirectResponse(url=request.url_for(self.url_name('list')), status_code=302)
 
         if request.method == 'POST':
             await self.delete_entity(request, instance)
             flash(request).success(_('{instance} has been deleted.').format(instance=instance))
-            return RedirectResponse(url=request.url_for(self.url_name('list')))
+            return RedirectResponse(url=request.url_for(self.url_name('list')), status_code=302)
 
         return TemplateResponse(
             self.delete_template,

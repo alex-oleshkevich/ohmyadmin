@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import abc
-import json
 import logging
 import typing
 import wtforms
@@ -14,6 +13,7 @@ from ohmyadmin.components import ButtonColor
 from ohmyadmin.flash import FlashCategory
 from ohmyadmin.helpers import camel_to_sentence
 from ohmyadmin.i18n import _
+from ohmyadmin.responses import HXResponse
 from ohmyadmin.templating import TemplateResponse, macro
 
 DISMISS_EVENT = 'modals.dismiss'
@@ -150,23 +150,22 @@ class ModalAction(Action, Dispatch):
     async def validate_form(self, request: Request, form: wtforms.Form) -> bool:
         return form.validate()
 
-    def toast(self, message: str, category: FlashCategory) -> Response:
-        return Response(
-            status_code=204,
-            headers={'hx-trigger': json.dumps({TOAST_EVENT: {'message': message, 'category': category}})},
-        )
+    def toast(self, message: str, category: FlashCategory) -> HXResponse:
+        return HXResponse().show_toast(message, category)
 
-    def dismiss(self, message: str = '', category: FlashCategory = 'success') -> Response:
-        events: dict[str, typing.Any] = {DISMISS_EVENT: ''}
+    def dismiss(self, message: str = '', category: FlashCategory = 'success') -> HXResponse:
+        response = HXResponse()
+        response.trigger_event(DISMISS_EVENT)
         if message:
-            events[TOAST_EVENT] = {'message': message, 'category': category}
-        return Response(status_code=204, headers={'hx-trigger': json.dumps(events)})
+            response.show_toast(message, category)
 
-    def refresh(self) -> Response:
-        return Response(status_code=204, headers={'hx-refresh': 'true'})
+        return response
 
-    def redirect(self, url: str | URL) -> Response:
-        return Response(status_code=204, headers={'hx-redirect': str(url)})
+    def refresh(self) -> HXResponse:
+        return HXResponse().refresh()
+
+    def redirect(self, url: str | URL) -> HXResponse:
+        return HXResponse().redirect(url)
 
     async def dispatch(self, request: Request) -> Response:
         form_class = self.get_form_class()

@@ -4,12 +4,13 @@ import abc
 import typing
 from starlette.authentication import AuthCredentials, AuthenticationBackend, BaseUser, UnauthenticatedUser
 from starlette.requests import HTTPConnection, Request
+from starlette.responses import RedirectResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 from ohmyadmin.components import Component
+from ohmyadmin.flash import flash
 from ohmyadmin.forms import EmailField, Form, HiddenField, PasswordField
 from ohmyadmin.i18n import _
-from ohmyadmin.responses import RedirectResponse
 
 SESSION_KEY = '_auth_user_id_'
 
@@ -113,6 +114,7 @@ class RequireLoginMiddleware:
             await self.app(scope, receive, send)
             return
 
+        flash(Request(scope)).error(_('You need to be logged in to access this page.'))
         redirect_to = conn.url_for('ohmyadmin_login') + '?next=' + conn.url.path
-        response = RedirectResponse(Request(scope, receive, send), url=redirect_to)
+        response = RedirectResponse(url=redirect_to)
         await response(scope, receive, send)

@@ -2,9 +2,9 @@ import abc
 import typing
 from slugify import slugify
 from starlette.requests import Request
+from starlette.responses import Response
 
 from ohmyadmin.helpers import camel_to_sentence, render_to_response
-from ohmyadmin.responses import Response
 
 
 class MetricMeta(type):

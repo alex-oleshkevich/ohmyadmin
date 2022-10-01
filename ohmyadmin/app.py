@@ -9,6 +9,7 @@ from sqlalchemy.orm import sessionmaker
 from starlette.middleware import Middleware
 from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.requests import Request
+from starlette.responses import RedirectResponse, Response
 from starlette.routing import BaseRoute, Mount, Route, Router
 from starlette.staticfiles import StaticFiles
 from starlette.types import Receive, Scope, Send
@@ -22,7 +23,6 @@ from ohmyadmin.i18n import _
 from ohmyadmin.media_server import MediaServer
 from ohmyadmin.pages import Page
 from ohmyadmin.resources import Resource
-from ohmyadmin.responses import RedirectResponse, Response
 from ohmyadmin.storage import FileStorage
 from ohmyadmin.structures import URLSpec
 from ohmyadmin.templating import DynamicChoiceLoader, jinja_env
@@ -153,7 +153,8 @@ class OhMyAdmin(Router):
         if await form.validate_on_submit(request):
             if user := await self.auth_policy.authenticate(request, form.identity.data, form.password.data):
                 self.auth_policy.login(request, user)
-                return RedirectResponse(request, url=form.next_url.data).with_success(_('You have been logged in.'))
+                flash(request).success(_('You have been logged in.'))
+                return RedirectResponse(url=form.next_url.data, status_code=302)
             else:
                 flash(request).error(_('Invalid credentials.'))
 
@@ -171,7 +172,8 @@ class OhMyAdmin(Router):
 
     async def logout_view(self, request: Request) -> Response:
         self.auth_policy.logout(request)
-        return RedirectResponse(request).to_path_name('ohmyadmin_login').with_success(_('You have been logged out.'))
+        flash(request).success(_('You have been logged out.'))
+        return RedirectResponse(request.url_for('ohmyadmin_login'), status_code=302)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         from ohmyadmin.globals import globalize_admin

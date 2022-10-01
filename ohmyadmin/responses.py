@@ -3,116 +3,43 @@ from __future__ import annotations
 import json
 import typing
 from starlette import responses
-from starlette.datastructures import MutableHeaders
-from starlette.requests import Request
-from starlette.types import Receive, Scope, Send
+from starlette.datastructures import URL
 
-from ohmyadmin.flash import FlashBag, FlashCategory
-from ohmyadmin.structures import URLSpec
+from ohmyadmin.flash import FlashCategory
 
 
-class Response:
-    def __init__(
-        self,
-        content: str | None = None,
-        status_code: int = 200,
-        headers: typing.Mapping[str, str] | None = None,
-        media_type: str | None = None,
-    ) -> None:
-        self.headers = MutableHeaders(headers)
-        self.content = content
-        self.status_code = status_code
-        self.media_type = media_type
-        self.hx_events: dict[str, typing.Any] = {}
+class HXResponse(responses.Response):
+    def __init__(self, events: dict[str, typing.Any] | None = None) -> None:
+        self.events = events or {}
+        super().__init__()
 
-    def hx_event(self, name: str, value: typing.Any | None = None) -> Response:
-        """Trigger HTMX event."""
-        self.hx_events[name] = value or ''
+    def trigger_event(self, name: str, value: typing.Any = '') -> HXResponse:
+        self.events[name] = value
+        self.headers['hx-trigger'] = json.dumps(self.events)
         return self
 
-    def hx_toast(self, message: str, category: FlashCategory = 'success') -> Response:
+    def show_toast(self, message: str, category: FlashCategory = 'success') -> HXResponse:
         """
         Show toast (flash message).
 
         Only works in HTMX context.
         """
-        return self.hx_event('toast', {'message': message, 'category': category})
+        return self.trigger_event('toast', {'message': message, 'category': category})
 
-    def hx_redirect(self, url: str | URLSpec) -> Response:
+    def redirect(self, url: str | URL) -> HXResponse:
         """
-        Perform client size redirect.
+        Perform client page redirect.
 
         Only works in HTMX context.
         """
-        return self.add_header('HX-Redirect', url.to_url() if isinstance(url, URLSpec) else url)
+        self.headers['hx-redirect'] = str(url)
+        return self
 
-    def hx_refresh(self) -> Response:
+    def refresh(self) -> HXResponse:
         """
-        Perform client size page refresh.
+        Perform client page refresh.
 
         Only works in HTMX context.
         """
-        return self.add_header('HX-Refresh', '')
-
-    def add_header(self, name: str, value: str) -> Response:
-        self.headers.append(name, value)
+        self.headers['hx-refresh'] = 'true'
         return self
-
-    def add_headers(self, headers: typing.Mapping[str, str]) -> Response:
-        for name, value in headers.items():
-            self.add_header(name, value)
-        return self
-
-    @classmethod
-    def empty(cls) -> Response:
-        return Response(status_code=204)
-
-    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        response = responses.Response(self.content, self.status_code, self.headers, media_type=self.media_type)
-        if self.hx_events:
-            response.headers.append('HX-Trigger', json.dumps(self.hx_events))
-        await response(scope, receive, send)
-
-
-class RedirectResponse(Response):
-    def __init__(
-        self,
-        request: Request,
-        url: str | None = None,
-        status_code: int = 302,
-        headers: dict[str, str] | None = None,
-    ) -> None:
-        self.url = url
-        self.message = ''
-        self.message_category: FlashCategory = 'success'
-        self.request = request
-        super().__init__(status_code=status_code, headers=headers)
-
-    def to_path_name(
-        self,
-        path_name: str,
-        path_params: typing.Mapping[str, str | int] | None = None,
-    ) -> RedirectResponse:
-        path_params = path_params or {}
-        self.url = self.request.url_for(path_name, **path_params)
-        return self
-
-    def with_message(self, message: str, category: FlashCategory = 'success') -> RedirectResponse:
-        self.message = message
-        self.message_category = category
-        return self
-
-    def with_success(self, message: str) -> RedirectResponse:
-        return self.with_message(message, 'success')
-
-    def with_error(self, message: str) -> RedirectResponse:
-        return self.with_message(message, 'error')
-
-    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        if self.message:
-            flashes: FlashBag = scope['state']['flash_messages']
-            flashes.add(self.message, self.message_category)
-
-        assert self.url
-        response = responses.RedirectResponse(self.url, self.status_code, self.headers)
-        await response(scope, receive, send)
