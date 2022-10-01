@@ -9,7 +9,7 @@ from slugify import slugify
 from starlette.datastructures import URL
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
-from starlette.responses import HTMLResponse
+from starlette.responses import RedirectResponse, Response
 from starlette.routing import BaseRoute, Route, Router
 from starlette.types import Receive, Scope, Send
 
@@ -28,7 +28,6 @@ from ohmyadmin.helpers import camel_to_sentence, pluralize, render_to_string
 from ohmyadmin.i18n import _
 from ohmyadmin.ordering import SortingHelper, SortingType, get_ordering_value
 from ohmyadmin.pagination import Page, get_page_size_value, get_page_value
-from ohmyadmin.responses import RedirectResponse, Response
 from ohmyadmin.tables import Column, get_search_value
 from ohmyadmin.templating import TemplateResponse, admin_context
 
@@ -748,7 +747,7 @@ class Resource(TableMixin, Router):
         yield from self.get_batch_actions(request)
         yield from self.get_default_batch_actions(request)
 
-    async def index_view(self, request: Request) -> HTMLResponse:
+    async def index_view(self, request: Request) -> Response:
         """Display list of objects."""
         page_number = get_page_value(request, self.page_param)
         page_size = get_page_size_value(request, self.page_size_param, self.max_page_size, self.page_size)
@@ -791,7 +790,7 @@ class Resource(TableMixin, Router):
         """Handle object creation and editing."""
         if not self.can_edit(request):
             flash(request).error(_('You are not allowed to access this page.'))
-            return RedirectResponse(request, url=request.url_for(self.url_name('list')))
+            return RedirectResponse(url=request.url_for(self.url_name('list')))
 
         pk = request.path_params.get('pk', '')
         instance = self.create_new_entity()
@@ -812,11 +811,11 @@ class Resource(TableMixin, Router):
                 flash(request).success(_('{resource} has been saved.').format(resource=self.label))
 
                 if '_new' in form_data:
-                    return RedirectResponse(request, url=self.url_path_for('create'))
+                    return RedirectResponse(url=self.url_path_for('create'))
                 if '_edit' in form_data:
-                    return RedirectResponse(request, url=self.url_path_for('edit', pk=pk))
+                    return RedirectResponse(url=self.url_path_for('edit', pk=pk))
                 if '_list' in form_data:
-                    return RedirectResponse(request, url=self.url_path_for('list'))
+                    return RedirectResponse(url=self.url_path_for('list'))
 
         return TemplateResponse(
             self.edit_template,
@@ -828,7 +827,7 @@ class Resource(TableMixin, Router):
             },
         )
 
-    async def delete_view(self, request: Request) -> HTMLResponse:
+    async def delete_view(self, request: Request) -> Response:
         """Handle object deletion."""
         pk = request.path_params['pk']
         instance = await self.get_object(request, pk)
@@ -837,12 +836,12 @@ class Resource(TableMixin, Router):
 
         if not self.can_delete(request):
             flash(request).error(_('You are not allowed to access this page.'))
-            return RedirectResponse(request, url=request.url_for(self.url_name('list')))
+            return RedirectResponse(url=request.url_for(self.url_name('list')))
 
         if request.method == 'POST':
             await self.delete_entity(request, instance)
             flash(request).success(_('{instance} has been deleted.').format(instance=instance))
-            return RedirectResponse(request, url=request.url_for(self.url_name('list')))
+            return RedirectResponse(url=request.url_for(self.url_name('list')))
 
         return TemplateResponse(
             self.delete_template,

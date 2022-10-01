@@ -15,7 +15,7 @@ from ohmyadmin.resources import ListState, Resource
 
 class SQLAlchemyResource(Resource):
     queryset: sa.sql.Select
-    entity_class: typing.ClassVar[typing.Type[DeclarativeMeta]]
+    entity_class: typing.ClassVar[typing.Any]
 
     def get_pk_column(self) -> InstrumentedAttribute:
         mapper = sa.orm.class_mapper(self.get_entity_class())
