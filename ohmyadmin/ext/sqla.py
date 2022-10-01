@@ -3,7 +3,11 @@ import typing
 import wtforms
 from sqlalchemy.orm import DeclarativeMeta, InstrumentedAttribute
 from starlette.requests import Request
+from starlette.responses import Response
 
+from ohmyadmin.actions import BatchAction
+from ohmyadmin.components import ButtonColor
+from ohmyadmin.i18n import _
 from ohmyadmin.ordering import SortingType
 from ohmyadmin.pagination import Page
 from ohmyadmin.resources import ListState, Resource
@@ -124,3 +128,32 @@ class SQLAlchemyResource(Resource):
 
     def create_form_class(self) -> typing.Type[wtforms.Form]:
         pass
+
+
+class BatchDeleteAction(BatchAction):
+    icon = 'trash'
+    color: ButtonColor = 'danger'
+    dangerous = True
+    confirmation = _('Do you wish to delete all selected records?')
+    label = _('Batch delete')
+
+    def __init__(self, entity_class: typing.Any, pk_column: InstrumentedAttribute) -> None:
+        self.pk_column = pk_column
+        self.entity_class = entity_class
+        super().__init__(label=_('Batch delete'), icon='trash', color='danger')
+
+    async def apply(self, request: Request, object_ids: list[str], form: wtforms.Form) -> Response:
+        coalesce: typing.Callable = str
+        match self.pk_column.expression.type:
+            case sa.Integer():
+                coalesce = int
+
+        typed_ids = [coalesce(object_id) for object_id in object_ids]
+        stmt = sa.select(self.entity_class).where(self.pk_column.in_(typed_ids))
+        result = await request.state.dbsession.scalars(stmt)
+        objects = result.all()
+
+        for object in objects:
+            await request.state.dbsession.delete(object)
+        await request.state.dbsession.commit()
+        return self.refresh()

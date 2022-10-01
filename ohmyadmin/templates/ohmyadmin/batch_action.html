@@ -1,10 +1,1 @@
 {% extends 'ohmyadmin/modal_action.html' %}
-
-{% block content %}
-    {{ super() }}
-    <select multiple name="object_id" class="hidden" hidden>
-        {% for object_id in object_ids %}
-            <option value="{{ object_id }}">{{ object_id }}</option>
-        {% endfor %}
-    </select>
-{% endblock %}

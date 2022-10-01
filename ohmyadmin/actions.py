@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import abc
 import json
+import logging
 import typing
 import wtforms
 from slugify import slugify
@@ -12,6 +13,7 @@ from starlette.responses import Response
 from ohmyadmin.components import ButtonColor
 from ohmyadmin.flash import FlashCategory
 from ohmyadmin.helpers import camel_to_sentence
+from ohmyadmin.i18n import _
 from ohmyadmin.templating import TemplateResponse, macro
 
 DISMISS_EVENT = 'modals.dismiss'
@@ -113,13 +115,23 @@ class ModalRowAction(RowAction):
 class ModalAction(Action, Dispatch):
     label: str = ''
     icon: str = ''
+    dangerous: bool = False
+    color: ButtonColor = 'default'
     template: str = 'ohmyadmin/modal_action.html'
     form_class: typing.Type[wtforms.Form] = wtforms.Form
+    confirmation: str = _('Do you want to run this action?')
 
-    def __init__(self, label: str = '', icon: str = '', color: ButtonColor = 'default') -> None:
+    def __init__(
+        self,
+        label: str = '',
+        icon: str = '',
+        color: ButtonColor | None = None,
+        confirmation: str | None = None,
+    ) -> None:
         self.icon = icon or self.icon
         self.label = label or self.label
-        self.color = color
+        self.color = color or self.color
+        self.confirmation = confirmation or self.confirmation
 
     def __init_subclass__(cls, **kwargs: typing.Any) -> None:
         cls.label = camel_to_sentence(cls.__name__.removesuffix('Action'))
@@ -138,6 +150,12 @@ class ModalAction(Action, Dispatch):
     async def validate_form(self, request: Request, form: wtforms.Form) -> bool:
         return form.validate()
 
+    def toast(self, message: str, category: FlashCategory) -> Response:
+        return Response(
+            status_code=204,
+            headers={'hx-trigger': json.dumps({TOAST_EVENT: {'message': message, 'category': category}})},
+        )
+
     def dismiss(self, message: str = '', category: FlashCategory = 'success') -> Response:
         events: dict[str, typing.Any] = {DISMISS_EVENT: ''}
         if message:
@@ -151,15 +169,19 @@ class ModalAction(Action, Dispatch):
         return Response(status_code=204, headers={'hx-redirect': str(url)})
 
     async def dispatch(self, request: Request) -> Response:
-        object_ids = request.query_params.getlist('object_id')
         form_class = self.get_form_class()
         form_data = await request.form()
         form = form_class(formdata=form_data)
         await self.prefill_form(request, form)
 
-        if request.method == 'POST':
-            if await self.validate_form(request, form):
+        if request.method == 'POST' and await self.validate_form(request, form):
+            try:
                 return await self.form_valid(request, form)
+            except Exception as ex:
+                logging.exception(ex)
+                if request.app.debug:
+                    return self.toast(str(ex), 'error')
+                return self.toast(_('Error calling action'), 'error')
 
         return TemplateResponse(
             self.template,
@@ -167,7 +189,6 @@ class ModalAction(Action, Dispatch):
                 'request': request,
                 'action': self,
                 'form': form,
-                'object_ids': object_ids,
             },
         )
 
@@ -177,7 +198,6 @@ class ModalAction(Action, Dispatch):
 
 
 class BatchAction(ModalAction):
-    label: str = ''
     template: str = 'ohmyadmin/batch_action.html'
 
     @abc.abstractmethod

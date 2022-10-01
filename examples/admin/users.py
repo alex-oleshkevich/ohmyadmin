@@ -6,7 +6,7 @@ from starlette.responses import Response
 
 from examples.models import User
 from ohmyadmin.actions import Action, BatchAction, LinkRowAction, ModalAction, ModalRowAction, RowAction, RowActionGroup
-from ohmyadmin.ext.sqla import SQLAlchemyResource
+from ohmyadmin.ext.sqla import BatchDeleteAction, SQLAlchemyResource
 from ohmyadmin.forms import CheckboxField, EmailField, FileField, Form, HiddenField, TextField
 from ohmyadmin.projections import Projection
 from ohmyadmin.tables import BoolColumn, Column, ImageColumn
@@ -96,6 +96,7 @@ class UserResource(SQLAlchemyResource):
         )
 
     def get_batch_actions(self, request: Request) -> typing.Iterable[BatchAction]:
+        yield BatchDeleteAction(self.entity_class, pk_column=User.id)
         yield DuplicateAction()
 
     def get_page_actions(self, request: Request) -> typing.Iterable[Action]:
