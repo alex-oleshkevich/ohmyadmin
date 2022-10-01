@@ -7,11 +7,7 @@ import wtforms
 from ohmyadmin.forms import ListField
 from ohmyadmin.globals import get_current_request
 from ohmyadmin.helpers import render_to_string
-from ohmyadmin.i18n import _
 from ohmyadmin.structures import URLSpec
-
-if typing.TYPE_CHECKING:
-    pass
 
 Colspan = int | typing.Literal['full']
 ButtonColor = typing.Literal['default', 'primary', 'text', 'danger']
@@ -148,73 +144,6 @@ class FormRepeater(Component):
 
     def __len__(self) -> int:
         return len(self.form)
-
-
-class EmptyState(Component):
-    template = 'ohmyadmin/components/empty_state.html'
-
-    def __init__(
-        self,
-        message: str,
-        actions: list[Component],
-        heading: str = _('Empty page'),
-        image_template: str = 'ohmyadmin/images/empty.svg',
-    ) -> None:
-        self.heading = heading
-        self.message = message
-        self.actions = actions
-        self.image_template = image_template
-
-
-class ButtonLink(Component):
-    """
-    A link that looks like a button.
-
-    Commonly used as action button that performs a redirect to another page. A
-    good example is: 'Add new object' primary action on index pages.
-    """
-
-    template = 'ohmyadmin/components/button_link.html'
-
-    def __init__(
-        self,
-        url: str | URLSpec,
-        text: str = '',
-        icon: str = '',
-        color: ButtonColor = 'default',
-    ) -> None:
-        assert text or icon, 'ButtonLink component requires either text or icon argument set.'
-
-        self.text = text
-        self.icon = icon
-        self.color = color
-        self.url_spec = URLSpec(url=url) if isinstance(url, str) else url
-
-    @property
-    def url(self) -> str:
-        return self.url_spec.to_url()
-
-
-class Button(Component):
-    """Renders a button."""
-
-    template = 'ohmyadmin/components/button.html'
-
-    def __init__(
-        self,
-        text: str = '',
-        icon: str = '',
-        color: ButtonColor = 'default',
-        type: ButtonType = 'submit',
-        name: str | None = None,
-    ) -> None:
-        assert text or icon, 'Button component requires either text or icon argument set.'
-
-        self.text = text
-        self.icon = icon
-        self.type = type
-        self.name = name
-        self.color = color
 
 
 class MenuItem(Component):
