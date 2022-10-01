@@ -6,10 +6,10 @@
         <h3 class="text-lg font-medium leading-6 text-gray-900">
             {% block title %}{{ action.label }}{% endblock %}
         </h3>
+        {% if action.confirmation %}
+            <div class="mt-4">{{ action.confirmation }}</div>
+        {% endif %}
         <div class="mt-6">
-            {% if action.confirmation %}
-                <div>{{ action.confirmation }}</div>
-            {% endif %}
             {% block content %}
                 <div>
                     {% for field in form %}
