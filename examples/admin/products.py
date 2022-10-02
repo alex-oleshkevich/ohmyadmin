@@ -1,4 +1,3 @@
-import pathlib
 import sqlalchemy as sa
 import typing
 import wtforms
@@ -22,7 +21,6 @@ from ohmyadmin.forms import (
     TextAreaField,
 )
 from ohmyadmin.metrics import ValueMetric
-from ohmyadmin.old_forms import choices_from
 
 
 class TotalProducts(ValueMetric):
@@ -95,31 +93,38 @@ class ProductResource(SQLAlchemyResource):
         yield DisplayField('visible', label='Visibility', component=display.Boolean())
 
     def get_form_fields(self, request: Request) -> typing.Iterable[wtforms.Field]:
-        yield StringField(name='name', required=True)
-        yield StringField(name='slug', required=True)
+        yield StringField(name='name', validators=[wtforms.validators.data_required()])
+        yield StringField(name='slug', validators=[wtforms.validators.data_required()])
         yield TextAreaField(name='description')
-        yield DecimalField(name='price', required=True)
-        yield DecimalField(name='compare_at_price', required=True)
-        yield DecimalField(name='cost_per_item', required=True, description="Customers won't see this price.")
-        yield MultipleFileField(
-            name='images', upload_to=lambda file, entity: pathlib.Path('products') / str(entity.id) / file.filename
+        yield DecimalField(name='price', validators=[wtforms.validators.data_required()])
+        yield DecimalField(name='compare_at_price', validators=[wtforms.validators.data_required()])
+        yield DecimalField(
+            name='cost_per_item',
+            description="Customers won't see this price.",
+            validators=[wtforms.validators.data_required()],
         )
-        yield IntegerField(name='sku', required=True)
-        yield IntegerField(name='quantity', required=True)
+        yield MultipleFileField(
+            name='images',
+            # upload_to=lambda file, entity: pathlib.Path('products') / str(entity.id) / file.filename
+        )
+        yield IntegerField(name='sku', validators=[wtforms.validators.data_required()])
+        yield IntegerField(name='quantity', validators=[wtforms.validators.data_required()])
         yield IntegerField(
             name='security_stock',
-            required=True,
+            validators=[wtforms.validators.data_required()],
             description=(
                 'The safety stock is the limit stock for your products which alerts you '
                 'if the product stock will soon be out of stock.'
             ),
         )
-        yield StringField(name='barcode', label='Barcode (ISBN, UPC, GTIN, etc.)', required=True)
+        yield StringField(
+            name='barcode', label='Barcode (ISBN, UPC, GTIN, etc.)', validators=[wtforms.validators.data_required()]
+        )
         yield BooleanField(name='can_be_returned', label='This product can be returned')
         yield BooleanField(name='can_be_shipped', label='This product can be shipped')
         yield BooleanField(name='visible', description='This product will be hidden from all sales channels.')
-        yield DateField(name='availability', required=True)
-        yield SelectField(name='brand_id', coerce=int, choices=choices_from(Brand))
+        yield DateField(name='availability', validators=[wtforms.validators.data_required()])
+        yield SelectField(name='brand_id', coerce=int)
         # categories = SelectMultipleField(required=True)
 
     def get_form_layout(self, request: Request, form: Form) -> Component:

@@ -193,7 +193,7 @@
         @apply col-span-2;
     }
 
-    .form-group label, .form-group .form-label {
+    .form-group > label, .form-group > .form-label {
         @apply font-medium mb-2 flex items-center gap-1;
     }
 
@@ -205,13 +205,7 @@
         @apply text-slate-600 mt-1 text-sm;
     }
 
-    .form-group input:not([type="checkbox"]),
-    .form-group input:not([type="radio"]),
-    .form-group input:not([type="radio"]), select {
-
-    }
-
-    .form-group-checkbox {
+    .form-check {
         @apply flex items-center gap-2;
     }
 

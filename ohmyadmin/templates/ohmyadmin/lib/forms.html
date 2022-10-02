@@ -43,14 +43,14 @@
 {% endmacro %}
 
 {% macro checkbox_input(field) %}
-    <div class="form-group form-group-checkbox">
+    <div class="form-check">
         {{ form_input(field) }}
         {{ form_label(field) }}
     </div>
 {% endmacro %}
 
 {% macro checkbox_field(field) %}
-    <div class="form-group form-group-checkbox">
+    <div class="form-group">
         {{ checkbox_input(field) }}
         {{ form_help(field) if field.description else '' }}
         {{ form_errors(field) if field.errors else '' }}
