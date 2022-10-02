@@ -2,7 +2,7 @@ from starlette.requests import Request
 
 from examples.models import Category
 from ohmyadmin.components import Card, Component, FormElement, FormPlaceholder, Grid, Group
-from ohmyadmin.forms import CheckboxField, Form, MarkdownField, SelectField, SlugField, TextField, choices_from
+from ohmyadmin.old_forms import CheckboxField, Form, MarkdownField, SelectField, SlugField, TextField, choices_from
 from ohmyadmin.resources import Resource
 from ohmyadmin.tables import BoolColumn, Column, DateColumn
 

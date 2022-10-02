@@ -2,8 +2,8 @@ import sqlalchemy as sa
 import wtforms
 
 from examples.models import Currency
-from ohmyadmin.forms import Field, Form, TextField
 from ohmyadmin.globals import get_dbsession
+from ohmyadmin.old_forms import Field, Form, TextField
 from ohmyadmin.resources import Resource
 from ohmyadmin.tables import Column
 

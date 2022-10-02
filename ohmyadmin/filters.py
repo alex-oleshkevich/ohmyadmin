@@ -8,8 +8,8 @@ import typing
 from starlette.requests import Request
 
 from ohmyadmin.components import Component, FormElement, Grid
-from ohmyadmin.forms import Form
 from ohmyadmin.helpers import render_to_string
+from ohmyadmin.old_forms import Form
 
 
 class EmptyForm(Form):

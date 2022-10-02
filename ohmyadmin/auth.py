@@ -9,8 +9,8 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from ohmyadmin.components import Component
 from ohmyadmin.flash import flash
-from ohmyadmin.forms import EmailField, Form, HiddenField, PasswordField
 from ohmyadmin.i18n import _
+from ohmyadmin.old_forms import EmailField, Form, HiddenField, PasswordField
 
 SESSION_KEY = '_auth_user_id_'
 

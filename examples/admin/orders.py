@@ -4,7 +4,8 @@ from starlette.requests import Request
 
 from examples.models import Country, Currency, Customer, Order, OrderItem, Product
 from ohmyadmin.components import Card, Component, FormElement, FormPlaceholder, FormRepeater, Grid, Group
-from ohmyadmin.forms import (
+from ohmyadmin.metrics import ValueMetric
+from ohmyadmin.old_forms import (
     DecimalField,
     Form,
     FormField,
@@ -15,7 +16,6 @@ from ohmyadmin.forms import (
     TextField,
     choices_from,
 )
-from ohmyadmin.metrics import ValueMetric
 from ohmyadmin.resources import Resource
 from ohmyadmin.tables import BadgeColumn, Column, DateColumn, NumberColumn
 

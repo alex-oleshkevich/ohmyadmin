@@ -6,7 +6,8 @@ from starlette.requests import Request
 from examples.admin.brands import BrandResource
 from examples.models import Brand, Product
 from ohmyadmin.components import Card, Component, FormElement, Grid, Group
-from ohmyadmin.forms import (
+from ohmyadmin.metrics import ValueMetric
+from ohmyadmin.old_forms import (
     CheckboxField,
     DateField,
     DecimalField,
@@ -18,7 +19,6 @@ from ohmyadmin.forms import (
     TextField,
     choices_from,
 )
-from ohmyadmin.metrics import ValueMetric
 from ohmyadmin.resources import Resource
 from ohmyadmin.tables import BoolColumn, Column, HasManyColumn, ImageColumn, NumberColumn
 

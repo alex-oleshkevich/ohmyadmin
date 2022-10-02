@@ -24,8 +24,8 @@ from ohmyadmin.actions import (
     RowActionGroup,
 )
 from ohmyadmin.components.display import DisplayField
-from ohmyadmin.components.form import Form
 from ohmyadmin.flash import flash
+from ohmyadmin.forms import Form
 from ohmyadmin.helpers import camel_to_sentence, pluralize, render_to_string
 from ohmyadmin.i18n import _
 from ohmyadmin.ordering import SortingHelper, SortingType, get_ordering_value

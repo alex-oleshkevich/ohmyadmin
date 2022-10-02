@@ -6,7 +6,7 @@ from starlette.requests import Request
 from examples.models import Customer
 from ohmyadmin.components import Card, Component, FormElement, FormPlaceholder, Grid, Group
 from ohmyadmin.filters import BaseFilter
-from ohmyadmin.forms import DateField, EmailField, Form, TextField
+from ohmyadmin.old_forms import DateField, EmailField, Form, TextField
 from ohmyadmin.resources import Resource
 from ohmyadmin.tables import Column
 

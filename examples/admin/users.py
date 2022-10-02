@@ -10,8 +10,8 @@ from ohmyadmin.components import display
 from ohmyadmin.components.display import DisplayField
 from ohmyadmin.components.form import BooleanField, EmailField, FileField, HiddenField, StringField, Uploader
 from ohmyadmin.ext.sqla import BatchDeleteAction, SQLAlchemyResource
-from ohmyadmin.forms import Form
 from ohmyadmin.helpers import media_url_or_redirect
+from ohmyadmin.old_forms import Form
 from ohmyadmin.projections import Projection
 from ohmyadmin.tables import BoolColumn, Column
 
