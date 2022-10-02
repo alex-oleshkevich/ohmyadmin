@@ -6,10 +6,9 @@
         <h3 class="mb-2 text-xl leading-6">
             {% trans object=object %}Do you wish to delete "{{ object }}"?{% endtrans %}
         </h3>
-        <p>This action will delete current object and all related objects.</p>
+        <p>{{ _('This action will delete current object and all related objects.') }}</p>
         <div class="mt-6">
             {{ buttons.danger_button(_('Yes, delete'), type='submit') }}
         </div>
     </form>
-
 {% endblock %}
