@@ -5,24 +5,24 @@ from sqlalchemy.orm import joinedload, selectinload
 from starlette.requests import Request
 
 from examples.admin.brands import BrandResource
-from examples.models import Brand, Product
+from examples.models import Brand, Image, Product
 from ohmyadmin.components import Card, Component, FormElement, Grid, Group, display
 from ohmyadmin.components.display import DisplayField
-from ohmyadmin.ext.sqla import SQLAlchemyResource
+from ohmyadmin.ext.sqla import SQLAlchemyResource, choices_from
 from ohmyadmin.forms import (
     BooleanField,
     DateField,
     DecimalField,
+    FieldList,
+    FileField,
     Form,
     IntegerField,
-    MultipleFileField,
     SelectField,
     StringField,
     TextAreaField,
     Uploader,
 )
 from ohmyadmin.metrics import ValueMetric
-from ohmyadmin.old_forms import choices_from
 
 
 class TotalProducts(ValueMetric):
@@ -54,10 +54,21 @@ class AveragePrice(ValueMetric):
         return result.one()
 
 
+class ImageUploader(Uploader):
+    def parse_entity_value(self, value: Image) -> typing.Any:
+        if value:
+            return value.image_path
+
+    def set_file(self, entity: typing.Any, attr: str, filename: str) -> None:
+        setattr(entity, attr, Image(image_path=filename))
+
+    async def delete_file(self, entity: typing.Any, attr: str, filename: Image) -> None:
+        await self.storage.delete(filename.image_path)
+
+
 class ProductResource(SQLAlchemyResource):
     icon = 'assembly'
     entity_class = Product
-    label_plural = 'Produkty'
     queryset = (
         sa.select(entity_class)
         .join(Brand)
@@ -105,10 +116,13 @@ class ProductResource(SQLAlchemyResource):
             description="Customers won't see this price.",
             validators=[wtforms.validators.data_required()],
         )
-        yield MultipleFileField(
+        yield FieldList(
             name='images',
-            uploader=Uploader(
-                storage=request.state.admin.file_storage, upload_to='products/{pk}_{prefix}_{original_name}'
+            unbound_field=FileField(
+                uploader=ImageUploader(
+                    storage=request.state.admin.file_storage,
+                    upload_to='products/{prefix}_{file_name}',
+                )
             ),
         )
         yield IntegerField(name='sku', validators=[wtforms.validators.data_required()])

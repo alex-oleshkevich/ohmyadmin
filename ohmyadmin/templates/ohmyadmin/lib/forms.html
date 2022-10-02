@@ -32,6 +32,8 @@
         {{ form_input(field) }}
     {% elif field.type == 'FileField' %}
         {{ file_field(field) }}
+    {% elif field.type == 'MultipleFileField' %}
+        {{ multiple_file_field(field) }}
     {% else %}
         <div class="form-group">
             {{ form_label(field) }}
@@ -74,100 +76,6 @@
     </div>
 {% endmacro %}
 
-{% macro list_field_item(form) %}
-    <div class="flex items-center justify-between gap-5 mb-2">
-        <div class="flex-1">{{ form }}</div>
-        <div>
-            <button type="button" class="delete-icon" @click="deleted.push(index)">
-                {{ tabler_icon('trash') }}
-            </button>
-        </div>
-    </div>
-{% endmacro %}
-
-{% macro list_field(field) %}
-    <div
-        class="form-group form-group-list max-w-lg"
-        x-data="{deleted: [], newCounter: 0, startIndex: {{ field|length }} }"
-    >
-        {{ form_label(field) }}
-        <div>
-            {% for form in field %}
-                <template x-if="!deleted.includes({{ loop.index0 }})" x-data="{ index: {{ loop.index0 }} }">
-                    {{ list_field_item(form) }}
-                </template>
-            {% endfor %}
-            <template x-for="_index in newCounter">
-                <template x-if="!deleted.includes(_index + startIndex)" x-data="{index: _index + startIndex}">
-                    {{ list_field_item(field.create_empty_entry()) }}
-                </template>
-            </template>
-        </div>
-        <div>
-            <button type="button" class="btn btn-link" @click="newCounter += 1">
-                {{ tabler_icon('plus') }}
-                {{ _('Add a new item') }}
-            </button>
-        </div>
-    </div>
-{% endmacro %}
-
-{% macro embed_field(field) %}
-    <div class="form-group form-group-embed">
-        {{ form_label(field) }}
-        <div class="border rounded-md border-gray-300 p-2 gap-5 grid grid-cols-{{ field.cols }}">
-            {% for form in field %}
-                {{ form.render() }}
-            {% endfor %}
-        </div>
-    </div>
-{% endmacro %}
-
-{% macro embed_many_field_item(form) %}
-    <section class="border border-gray-300 rounded-md mb-2" :index="index">
-        <header class="flex items-center justify-between bg-slate-100">
-            <div></div>
-            <div>
-                <button type="button" class="delete-icon" @click="deleted.push(index)">
-                    {{ tabler_icon('trash') }}
-                </button>
-            </div>
-        </header>
-        <main class="p-2">
-            <div class="flex items-center gap-5 mb-2">
-                <div class="grid grid-cols-3 gap-5 flex-1">
-                    {% for form_field in form %}
-                        {{ form_field.render() }}
-                    {% endfor %}
-                </div>
-            </div>
-        </main>
-    </section>
-{% endmacro %}
-
-{% macro embed_many_field(field) %}
-    <div class="form-group" x-data="{deleted: [], newCounter: 0, startIndex: {{ field|length }}}">
-        {{ form_label(field) }}
-        <div>
-            {% for form in field %}
-                <template x-if="!deleted.includes({{ loop.index0 }})" x-data="{ index: {{ loop.index0 }} }">
-                    {{ embed_many_field_item(form) }}
-                </template>
-            {% endfor %}
-            <template x-for="_index in newCounter">
-                <template x-if="!deleted.includes(_index + startIndex)" x-data="{index: _index + startIndex}">
-                    {{ embed_many_field_item(field.create_empty_entry()) }}
-                </template>
-            </template>
-        </div>
-        <div>
-            <button type="button" class="btn btn-link" @click="newCounter += 1">
-                {{ tabler_icon('plus') }} {{ _('Add a new item') }}
-            </button>
-        </div>
-    </div>
-{% endmacro %}
-
 {% macro file_input(field) %}
     <div>
         {{ form_input(field) }}
@@ -180,7 +88,7 @@
                     <input type="checkbox" name="{{ field.name }}-delete" x-ref="delete{{ field.id }}">
                     <span
                         class="mb-0 cursor-pointer select-none"
-                        @click="$refs.delete{{ field.id }}.checked = !$refs.delete{{ field.id }}.checked">
+                        @click="$refs['delete{{ field.id }}'].checked = !$refs['delete{{ field.id }}'].checked">
                         {{ _('Delete') }}
                     </span>
                 </div>
@@ -195,5 +103,45 @@
         {{ file_input(field) }}
         {{ form_help(field) if field.description else '' }}
         {{ form_errors(field) if field.errors else '' }}
+    </div>
+{% endmacro %}
+
+{% macro render_row(layout) %}
+    <div class="border border-gray-300 rounded-md mb-3">
+        <header class="flex items-center justify-between border-b border-gray-200 bg-slate-50 px-2 py-1">
+            <div></div>
+            <div>
+                <button type="button" class="delete-icon" @click="deleted.push(index)">
+                    {{ tabler_icon('trash') }}
+                </button>
+            </div>
+        </header>
+        <main class="p-2">
+            {{ layout }}
+        </main>
+    </div>
+{% endmacro %}
+
+
+{% macro list_field(field) %}
+    <div x-data="{deleted: [], newCounter: 0, startIndex: {{ field|length }} }">
+        <div>
+            {% for subfield in field %}
+                <template x-if="!deleted.includes({{ loop.index0 }})" x-data="{ index: {{ loop.index0 }} }">
+                    {{ form_field(subfield) }}
+                </template>
+            {% endfor %}
+
+            <template x-for="_index in newCounter">
+                <template x-if="!deleted.includes(_index + startIndex)" x-data="{index: _index + startIndex}">
+                    {{ form_field(field.empty) }}
+                </template>
+            </template>
+        </div>
+        <div>
+            <button type="button" class="btn btn-link" @click="newCounter += 1">
+                {{ tabler_icon('plus') }} {{ _('Add a new item') }}
+            </button>
+        </div>
     </div>
 {% endmacro %}

@@ -2,12 +2,14 @@ import sqlalchemy as sa
 import typing
 import wtforms
 from slugify import slugify
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import DeclarativeMeta, InstrumentedAttribute
 from starlette.requests import Request
 from starlette.responses import Response
 
 from ohmyadmin.actions import BatchAction
 from ohmyadmin.components import ButtonColor
+from ohmyadmin.forms import Choices, ChoicesFactory, Form
 from ohmyadmin.helpers import camel_to_sentence, pluralize
 from ohmyadmin.i18n import _
 from ohmyadmin.ordering import SortingType
@@ -31,6 +33,29 @@ def get_column_properties(entity_class: typing.Any, prop_names: list[str]) -> di
             if related_property := mapper.all_orm_descriptors.get(related_attr):
                 props[name] = related_property.entity.all_orm_descriptors[related_column].property
     return props
+
+
+def choices_from(
+    entity_class: typing.Any,
+    where: typing.Callable[[sa.sql.Select], sa.sql.Select] | None = None,
+    value_column: str = 'id',
+    label_column: str = 'name',
+) -> ChoicesFactory:
+    async def loader(request: Request, form: Form) -> Choices:
+        stmt = sa.select(entity_class)
+        stmt = where(stmt) if where else stmt
+        return await as_choices(request.state.dbsession, stmt, label_column=label_column, value_column=value_column)
+
+    return loader
+
+
+async def as_choices(
+    session: AsyncSession, stmt: sa.sql.Select, label_column: str = 'id', value_column: str = 'name'
+) -> Choices:
+    """Execute statement and return rows as choices suitable for use in form
+    fields that require choices."""
+    result = await session.scalars(stmt)
+    return [(getattr(row, value_column), getattr(row, label_column)) for row in result.all()]
 
 
 class SQLAlchemyResource(Resource):

@@ -84,7 +84,7 @@ class UserResource(SQLAlchemyResource):
         yield EmailField(name='email', validators=[wtforms.validators.DataRequired()])
         yield FileField(
             name='photo',
-            uploader=Uploader(request.state.admin.file_storage, 'photos/{pk}_{prefix}_{original_name}'),
+            uploader=Uploader(request.state.admin.file_storage, 'photos/{pk}_{prefix}_{file_name}'),
         )
         yield BooleanField(name='is_active')
         yield HiddenField(name='password')
