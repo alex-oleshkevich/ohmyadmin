@@ -94,7 +94,23 @@ class TableMixin:
         )
 
 
-class Resource(TableMixin, Router):
+class ResourceMeta(type):
+    def __new__(mcs, name: str, bases: tuple[typing.Type, ...], attrs: dict[str, typing.Any]) -> typing.Type:
+        if '__abstract__' not in attrs:
+            human_name = name.removesuffix('Resource')
+            if 'slug' not in attrs:
+                attrs['slug'] = slugify(pluralize(camel_to_sentence(human_name)))
+            if 'label' not in attrs:
+                attrs['label'] = camel_to_sentence(human_name)
+            if 'label_plural' not in attrs:
+                attrs['label_plural'] = pluralize(camel_to_sentence(human_name))
+
+        return super().__new__(mcs, name, bases, attrs)
+
+
+class Resource(TableMixin, Router, metaclass=ResourceMeta):
+    __abstract__ = True
+
     icon: typing.ClassVar[str] = ''
     label: typing.ClassVar[str] = ''
     label_plural: typing.ClassVar[str] = ''
@@ -114,12 +130,6 @@ class Resource(TableMixin, Router):
     page_title_for_create: str = _('Create {resource}')
     page_title_for_edit: str = _('Edit {entity}')
     page_title_for_delete: str = _('Delete {entity}?')
-
-    def __init_subclass__(cls, **kwargs: typing.Any) -> None:
-        class_name = cls.__name__.removesuffix('Resource')
-        cls.label = cls.label or camel_to_sentence(class_name)
-        cls.label_plural = cls.label_plural or pluralize(cls.label)
-        cls.slug = pluralize(slugify(camel_to_sentence(class_name)))
 
     def __init__(self) -> None:
         super().__init__(routes=list(self.get_routes()))

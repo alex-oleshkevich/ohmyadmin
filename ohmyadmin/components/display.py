@@ -1,4 +1,5 @@
 import abc
+import datetime
 import typing
 from starlette.requests import Request
 
@@ -48,6 +49,31 @@ class Boolean(DisplayComponent):
         return macros(value)
 
 
+class DateTime(DisplayComponent):
+    def __init__(self, format: str = '%d %B, %Y') -> None:
+        self.format = format
+
+    def render(self, value: str) -> str:
+        date_value = datetime.datetime.fromisoformat(value)
+        return date_value.strftime(self.format)
+
+
+class Number(DisplayComponent):
+    def render(self, value: str) -> str:
+        return '<div class="text-right">{value}</div>'.format(value=value)
+
+
+class Money(DisplayComponent):
+    def __init__(self, currency: str, placement: typing.Literal['left', 'right'] = 'left') -> None:
+        self.currency = currency
+        self.placement = placement
+
+    def render(self, value: str) -> str:
+        prefix = f'{self.currency} ' if self.placement == 'left' else ''
+        suffix = f' {self.currency}' if self.placement == 'right' else ''
+        return '<div class="text-right">{prefix}{value}{suffix}</div>'.format(value=value, prefix=prefix, suffix=suffix)
+
+
 def string_formatter(value: typing.Any) -> str:
     return str(value)
 
@@ -69,9 +95,9 @@ class DisplayField:
         self.name = name
         self.link = link
         self.sortable = sortable
-        self.sort_by = sort_by
+        self.sort_by = sort_by or name
         self.searchable = searchable
-        self.search_in = search_in
+        self.search_in = search_in or name
         self.component = component or Text()
         self.label = label or name.replace('_', ' ').capitalize()
         self.value_getter = value_getter or (lambda obj: getattr(obj, name))

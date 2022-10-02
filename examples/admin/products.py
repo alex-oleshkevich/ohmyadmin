@@ -1,26 +1,28 @@
 import pathlib
 import sqlalchemy as sa
+import typing
+import wtforms
 from sqlalchemy.orm import joinedload, selectinload
 from starlette.requests import Request
 
 from examples.admin.brands import BrandResource
 from examples.models import Brand, Product
-from ohmyadmin.components import Card, Component, FormElement, Grid, Group
-from ohmyadmin.metrics import ValueMetric
-from ohmyadmin.old_forms import (
-    CheckboxField,
+from ohmyadmin.components import Card, Component, FormElement, Grid, Group, display
+from ohmyadmin.components.display import DisplayField
+from ohmyadmin.ext.sqla import SQLAlchemyResource
+from ohmyadmin.forms import (
+    BooleanField,
     DateField,
     DecimalField,
     Form,
     IntegerField,
     MultipleFileField,
     SelectField,
-    TextareaField,
-    TextField,
-    choices_from,
+    StringField,
+    TextAreaField,
 )
-from ohmyadmin.resources import Resource
-from ohmyadmin.tables import BoolColumn, Column, HasManyColumn, ImageColumn, NumberColumn
+from ohmyadmin.metrics import ValueMetric
+from ohmyadmin.old_forms import choices_from
 
 
 class TotalProducts(ValueMetric):
@@ -52,36 +54,10 @@ class AveragePrice(ValueMetric):
         return result.one()
 
 
-class EditForm(Form):
-    name = TextField(required=True)
-    slug = TextField(required=True)
-    description = TextareaField()
-    price = DecimalField(required=True)
-    compare_at_price = DecimalField(required=True)
-    cost_per_item = DecimalField(required=True, description="Customers won't see this price.")
-    images = MultipleFileField(upload_to=lambda file, entity: pathlib.Path('products') / str(entity.id) / file.filename)
-    sku = IntegerField(required=True)
-    quantity = IntegerField(required=True)
-    security_stock = IntegerField(
-        required=True,
-        description=(
-            'The safety stock is the limit stock for your products which alerts you '
-            'if the product stock will soon be out of stock.'
-        ),
-    )
-    barcode = TextField(label='Barcode (ISBN, UPC, GTIN, etc.)', required=True)
-    can_be_returned = CheckboxField(label='This product can be returned')
-    can_be_shipped = CheckboxField(label='This product can be shipped')
-    visible = CheckboxField(description='This product will be hidden from all sales channels.')
-    availability = DateField(required=True)
-    brand_id = SelectField(coerce=int, choices=choices_from(Brand))
-    # categories = SelectMultipleField(required=True)
-
-
-class ProductResource(Resource):
+class ProductResource(SQLAlchemyResource):
     icon = 'assembly'
     entity_class = Product
-    form_class = EditForm
+    label_plural = 'Produkty'
     queryset = (
         sa.select(entity_class)
         .join(Brand)
@@ -91,27 +67,60 @@ class ProductResource(Resource):
             selectinload(entity_class.categories),
         )
     )
-    table_columns = [
-        HasManyColumn('images', child=ImageColumn('image_path')),
-        Column('name', sortable=True, searchable=True, link=True),
-        Column(
-            'brand',
-            searchable=True,
-            search_in='brand.name',
-            sortable=True,
-            sort_by=Brand.name,
-            link_factory=lambda r, o: r.url_for(BrandResource.url_name('edit'), pk=o.brand.id),
-        ),
-        NumberColumn('price', sortable=True),
-        NumberColumn('sku', sortable=True),
-        NumberColumn('quantity', label='Qty', sortable=True),
-        BoolColumn('visible', label='Visibility'),
-    ]
     metrics = [
         TotalProducts(),
         ProductInventory(),
         AveragePrice(),
     ]
+
+    def _get_first_image(self, obj):
+        if obj.images:
+            return obj.images[0].image_path
+        return None
+
+    def get_list_fields(self) -> typing.Iterable[DisplayField]:
+        yield DisplayField('images', value_getter=self._get_first_image, component=display.Image())
+        yield DisplayField('name', sortable=True, searchable=True, link=True)
+        yield DisplayField(
+            'brand',
+            searchable=True,
+            search_in='brand.name',
+            sortable=True,
+            sort_by='brand.name',
+            link=lambda req, obj: req.url_for(BrandResource.url_name('edit'), pk=obj.brand.id),
+        )
+        yield DisplayField('price', sortable=True, component=display.Money(currency='USD'))
+        yield DisplayField('sku', sortable=True, component=display.Number())
+        yield DisplayField('quantity', label='Qty', sortable=True, component=display.Number())
+        yield DisplayField('visible', label='Visibility', component=display.Boolean())
+
+    def get_form_fields(self, request: Request) -> typing.Iterable[wtforms.Field]:
+        yield StringField(name='name', required=True)
+        yield StringField(name='slug', required=True)
+        yield TextAreaField(name='description')
+        yield DecimalField(name='price', required=True)
+        yield DecimalField(name='compare_at_price', required=True)
+        yield DecimalField(name='cost_per_item', required=True, description="Customers won't see this price.")
+        yield MultipleFileField(
+            name='images', upload_to=lambda file, entity: pathlib.Path('products') / str(entity.id) / file.filename
+        )
+        yield IntegerField(name='sku', required=True)
+        yield IntegerField(name='quantity', required=True)
+        yield IntegerField(
+            name='security_stock',
+            required=True,
+            description=(
+                'The safety stock is the limit stock for your products which alerts you '
+                'if the product stock will soon be out of stock.'
+            ),
+        )
+        yield StringField(name='barcode', label='Barcode (ISBN, UPC, GTIN, etc.)', required=True)
+        yield BooleanField(name='can_be_returned', label='This product can be returned')
+        yield BooleanField(name='can_be_shipped', label='This product can be shipped')
+        yield BooleanField(name='visible', description='This product will be hidden from all sales channels.')
+        yield DateField(name='availability', required=True)
+        yield SelectField(name='brand_id', coerce=int, choices=choices_from(Brand))
+        # categories = SelectMultipleField(required=True)
 
     def get_form_layout(self, request: Request, form: Form) -> Component:
         return Grid(

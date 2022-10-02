@@ -11,7 +11,9 @@ from starlette.requests import HTTPConnection, Request
 from starlette.responses import Response
 from starlette.routing import Mount, Route
 
+from examples.admin.brands import BrandResource
 from examples.admin.orders import TotalOrders
+from examples.admin.products import ProductResource
 from examples.admin.users import UserResource
 from examples.models import User
 from ohmyadmin.app import OhMyAdmin, UserMenu
@@ -86,11 +88,11 @@ admin = OhMyAdmin(
     pages=[SettingsPage(), ProfilePage()],
     dashboards=[OverviewDashboard()],
     resources=[
-        # ProductResource(),
+        BrandResource(),
+        ProductResource(),
         # CustomerResource(),
         # OrderResource(),
         # CategoryResource(),
-        # BrandResource(),
         # CurrencyResource(),
         # CountryResource(),
         UserResource(),

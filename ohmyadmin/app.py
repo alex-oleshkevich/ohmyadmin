@@ -81,7 +81,7 @@ class OhMyAdmin(Router):
         yield MenuGroup(
             text=_('Resources'),
             items=[
-                MenuItem(text=resource.label, icon=resource.icon, url=request.url_for(resource.url_name('list')))
+                MenuItem(text=resource.label_plural, icon=resource.icon, url=request.url_for(resource.url_name('list')))
                 for resource in self.resources
             ],
         )

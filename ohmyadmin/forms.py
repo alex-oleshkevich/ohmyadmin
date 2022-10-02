@@ -162,6 +162,10 @@ class FileField(wtforms.FileField):
         await self.uploader.delete(path)
 
 
+class MultipleFileField(wtforms.MultipleFileField):
+    ...
+
+
 class ImageField(wtforms.FileField):
     ...
 

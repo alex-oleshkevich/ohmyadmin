@@ -1,32 +1,32 @@
+import typing
+import wtforms
 from starlette.requests import Request
 
 from examples.models import Brand
-from ohmyadmin.components import Card, Component, FormElement, FormPlaceholder, Grid, Group
-from ohmyadmin.old_forms import CheckboxField, Form, MarkdownField, SlugField, TextField
-from ohmyadmin.resources import Resource
-from ohmyadmin.tables import BoolColumn, Column, DateColumn
+from ohmyadmin.components import Card, Component, FormElement, FormPlaceholder, Grid, Group, display
+from ohmyadmin.components.display import DisplayField
+from ohmyadmin.ext.sqla import SQLAlchemyResource
+from ohmyadmin.forms import BooleanField, Form, MarkdownField, SlugField, StringField, URLField
 
 
-class EditForm(Form):
-    name = TextField(required=True)
-    slug = SlugField(required=True)
-    website = TextField()
-    visible_to_customers = CheckboxField()
-    description = MarkdownField()
-
-
-class BrandResource(Resource):
+class BrandResource(SQLAlchemyResource):
     icon = 'basket'
     entity_class = Brand
-    form_class = EditForm
-    table_columns = [
-        Column('name', searchable=True, sortable=True, link=True),
-        Column('website'),
-        BoolColumn('visible_to_customers', label='Visibility'),
-        DateColumn('updated_at'),
-    ]
 
-    def get_form_layout(self, request: Request, form: Form[Brand]) -> Component:
+    def get_list_fields(self) -> typing.Iterable[DisplayField]:
+        yield DisplayField('name', searchable=True, sortable=True, link=True)
+        yield DisplayField('website')
+        yield DisplayField('visible_to_customers', label='Visibility', component=display.Boolean())
+        yield DisplayField('updated_at', component=display.DateTime())
+
+    def get_form_fields(self, request: Request) -> typing.Iterable[wtforms.Field]:
+        yield StringField(name='name', validators=[wtforms.validators.DataRequired()])
+        yield SlugField(name='slug', validators=[wtforms.validators.DataRequired()])
+        yield URLField(name='website')
+        yield BooleanField(name='visible_to_customers')
+        yield MarkdownField(name='description')
+
+    def get_form_layout(self, request: Request, form: Form) -> Component:
         return Grid(
             columns=3,
             children=[

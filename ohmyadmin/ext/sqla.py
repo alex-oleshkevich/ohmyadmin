@@ -1,21 +1,47 @@
 import sqlalchemy as sa
 import typing
 import wtforms
+from slugify import slugify
 from sqlalchemy.orm import DeclarativeMeta, InstrumentedAttribute
 from starlette.requests import Request
 from starlette.responses import Response
 
 from ohmyadmin.actions import BatchAction
 from ohmyadmin.components import ButtonColor
+from ohmyadmin.helpers import camel_to_sentence, pluralize
 from ohmyadmin.i18n import _
 from ohmyadmin.ordering import SortingType
 from ohmyadmin.pagination import Page
 from ohmyadmin.resources import ListState, Resource
 
 
+def get_column_properties(entity_class: typing.Any, prop_names: list[str]) -> dict[str, sa.orm.ColumnProperty]:
+    """
+    Return SQLAlchemy columns defined on entity class by their string names.
+
+    Looks up in the relations too.
+    """
+    mapper: sa.orm.Mapper = sa.orm.class_mapper(entity_class)
+    props: dict[str, sa.orm.ColumnProperty] = {}
+    for name in prop_names:
+        if name in mapper.all_orm_descriptors:
+            props[name] = mapper.all_orm_descriptors[name].property
+        elif '.' in name:
+            related_attr, related_column = name.split('.')
+            if related_property := mapper.all_orm_descriptors.get(related_attr):
+                props[name] = related_property.entity.all_orm_descriptors[related_column].property
+    return props
+
+
 class SQLAlchemyResource(Resource):
+    __abstract__ = True
     queryset: sa.sql.Select
     entity_class: typing.ClassVar[typing.Any]
+
+    def __init_subclass__(cls, **kwargs: typing.Any) -> None:
+        cls.label = cls.label or camel_to_sentence(cls.entity_class.__name__)
+        cls.label_plural = cls.label_plural or pluralize(camel_to_sentence(cls.entity_class.__name__))
+        cls.slug = cls.slug or slugify(camel_to_sentence(cls.label_plural))
 
     def get_pk_column(self) -> InstrumentedAttribute:
         mapper = sa.orm.class_mapper(self.get_entity_class())
@@ -76,32 +102,30 @@ class SQLAlchemyResource(Resource):
         rows = result.all()
         return Page(rows=list(rows), total_rows=row_count, page=state.page, page_size=state.page_size)
 
-    def apply_ordering(
-        self, stmt: sa.sql.Select, ordering: dict[str, SortingType], sortable_fields: list[str]
-    ) -> sa.sql.Select:
+    def apply_ordering(self, stmt: sa.sql.Select, ordering: dict[str, SortingType], fields: list[str]) -> sa.sql.Select:
         if ordering:
             stmt = stmt.order_by(None)
 
-        mapper = sa.orm.class_mapper(self.get_entity_class())
-        props = [mapper.get_property_by_column(c) for c in mapper.columns if c.key in sortable_fields]
-        for prop in props:
-            if len(prop.columns) > 1:
+        props = get_column_properties(self.get_entity_class(), fields)
+        for ordering_field, ordering_dir in ordering.items():
+            try:
+                prop = props[ordering_field]
+                if len(prop.columns) > 1:
+                    continue
+                column = prop.columns[0]
+                stmt = stmt.order_by(column.desc() if ordering_dir == 'desc' else column.asc())
+            except KeyError:
+                # ordering_field does not exist in properties, ignore
                 continue
-            column = prop.columns[0]
-            direction = ordering.get(prop.key)
-            if direction:
-                stmt = stmt.order_by(column.desc() if direction == 'desc' else column.asc())
         return stmt
 
     def apply_search(self, stmt: sa.sql.Select, search_term: str, searchable_fields: list[str]) -> sa.sql.Select:
-        mapper = sa.orm.class_mapper(self.get_entity_class())
-        props = [mapper.get_property_by_column(c) for c in mapper.columns if c.key in searchable_fields]
         clauses = []
-        for prop in props:
+        props = get_column_properties(self.get_entity_class(), searchable_fields)
+        for prop in props.values():
             if len(prop.columns) > 1:
                 continue
             clauses.append(self.create_search_token(prop.columns[0], search_term))
-
         return stmt.where(sa.or_(*clauses))
 
     def create_search_token(self, column: InstrumentedAttribute, search_query: str) -> sa.sql.ColumnElement:
