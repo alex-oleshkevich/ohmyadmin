@@ -1,11 +1,14 @@
 import sqlalchemy as sa
+import typing
 import wtforms
+from starlette.requests import Request
 
 from examples.models import Country
+from ohmyadmin.components.display import DisplayField
+from ohmyadmin.ext.sqla import SQLAlchemyResource
+from ohmyadmin.forms import StringField
 from ohmyadmin.globals import get_dbsession
-from ohmyadmin.old_forms import Field, Form, TextField
-from ohmyadmin.resources import Resource
-from ohmyadmin.tables import Column
+from ohmyadmin.old_forms import Field, Form
 
 
 async def code_is_unique(form: Form, field: Field) -> None:
@@ -16,16 +19,14 @@ async def code_is_unique(form: Form, field: Field) -> None:
         raise wtforms.ValidationError('Country with this core already exists.')
 
 
-class EditForm(Form):
-    name = TextField(required=True)
-    code = TextField(required=True, validators=[code_is_unique])
-
-
-class CountryResource(Resource):
+class CountryResource(SQLAlchemyResource):
     icon = 'map'
     entity_class = Country
-    form_class = EditForm
-    table_columns = [
-        Column('name', searchable=True, sortable=True, link=True),
-        Column('code', searchable=True),
-    ]
+
+    def get_list_fields(self) -> typing.Iterable[DisplayField]:
+        yield DisplayField('name', searchable=True, sortable=True, link=True)
+        yield DisplayField('code', searchable=True)
+
+    def get_form_fields(self, request: Request) -> typing.Iterable[wtforms.Field]:
+        yield StringField(name='name', validators=[wtforms.validators.data_required()])
+        yield StringField(name='code', validators=[code_is_unique, wtforms.validators.data_required()])

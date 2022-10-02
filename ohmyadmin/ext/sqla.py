@@ -3,7 +3,7 @@ import typing
 import wtforms
 from slugify import slugify
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import DeclarativeMeta, InstrumentedAttribute
+from sqlalchemy.orm import InstrumentedAttribute
 from starlette.requests import Request
 from starlette.responses import Response
 
@@ -86,14 +86,15 @@ class SQLAlchemyResource(Resource):
                 return 'str'
         raise ValueError(f'Cannot get route parameter type from primary key column {pk_column}.')
 
-    def get_entity_class(self) -> typing.Type[DeclarativeMeta]:
+    def get_entity_class(self) -> typing.Any:
         entity_class = getattr(self, 'entity_class', None)
         if not entity_class:
             raise AttributeError(f'{self.__class__.__name__} must define entity_class attribute.')
         return entity_class
 
     def create_new_entity(self) -> typing.Any:
-        return self.get_entity_class()
+        entity_class = self.get_entity_class()
+        return entity_class()
 
     async def save_entity(self, request: Request, form: wtforms.Form, instance: typing.Any) -> None:
         request.state.dbsession.add(instance)
