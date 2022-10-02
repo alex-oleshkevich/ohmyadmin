@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 import sqlalchemy as sa
+import typing
+import wtforms
 from starlette.requests import Request
 
 from examples.models import Customer
 from ohmyadmin.components import Card, Component, FormElement, FormPlaceholder, Grid, Group
+from ohmyadmin.components.display import DisplayField
+from ohmyadmin.ext.sqla import SQLAlchemyResource
 from ohmyadmin.filters import BaseFilter
-from ohmyadmin.old_forms import DateField, EmailField, Form, TextField
-from ohmyadmin.resources import Resource
-from ohmyadmin.tables import Column
+from ohmyadmin.forms import DateField, EmailField, Form, StringField
 
 
 class ByDateFilter(BaseFilter):
@@ -26,25 +28,23 @@ class ByDateFilter(BaseFilter):
         return stmt
 
 
-class EditForm(Form):
-    name = TextField(required=True)
-    email = EmailField(required=True)
-    phone = TextField()
-    birthday = DateField()
-
-
-class CustomerResource(Resource):
+class CustomerResource(SQLAlchemyResource):
     icon = 'friends'
     entity_class = Customer
-    form_class = EditForm
     filters = (ByDateFilter,)
-    table_columns = [
-        Column('name', sortable=True, link=True, searchable=True),
-        Column('email', sortable=True, searchable=True),
-        Column('phone', searchable=True),
-    ]
 
-    def get_form_layout(self, request: Request, form: Form[Customer]) -> Component:
+    def get_list_fields(self) -> typing.Iterable[DisplayField]:
+        yield DisplayField('name', sortable=True, link=True, searchable=True)
+        yield DisplayField('email', sortable=True, searchable=True)
+        yield DisplayField('phone', searchable=True)
+
+    def get_form_fields(self, request: Request) -> typing.Iterable[wtforms.Field]:
+        yield StringField(name='name', validators=[wtforms.validators.data_required()])
+        yield EmailField(name='email', validators=[wtforms.validators.data_required()])
+        yield StringField(name='phone')
+        yield DateField(name='birthday')
+
+    def get_form_layout(self, request: Request, form: Form) -> Component:
         return Grid(
             columns=3,
             children=[
