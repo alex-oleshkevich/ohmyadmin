@@ -65,7 +65,7 @@ class Uploader:
         if hasattr(entity, 'get_pk'):
             pk = entity.get_pk()
         elif hasattr(entity, 'id'):
-            pk = str(entity.id)
+            pk = str(entity.slug)
 
         return {
             'prefix': prefix,

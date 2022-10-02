@@ -22,7 +22,7 @@ from ohmyadmin.forms import (
     TextAreaField,
     Uploader,
 )
-from ohmyadmin.metrics import ValueMetric
+from ohmyadmin.metrics import Metric, ValueMetric
 
 
 class TotalProducts(ValueMetric):
@@ -78,11 +78,11 @@ class ProductResource(SQLAlchemyResource):
             selectinload(entity_class.categories),
         )
     )
-    metrics = [
-        TotalProducts(),
-        ProductInventory(),
-        AveragePrice(),
-    ]
+
+    def get_metrics(self) -> typing.Iterable[Metric]:
+        yield TotalProducts()
+        yield ProductInventory()
+        yield AveragePrice()
 
     def _get_first_image(self, obj):
         if obj.images:

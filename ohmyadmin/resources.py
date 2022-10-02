@@ -28,6 +28,7 @@ from ohmyadmin.flash import flash
 from ohmyadmin.forms import Form
 from ohmyadmin.helpers import camel_to_sentence, pluralize, render_to_string
 from ohmyadmin.i18n import _
+from ohmyadmin.metrics import Metric
 from ohmyadmin.ordering import SortingHelper, SortingType, get_ordering_value
 from ohmyadmin.pagination import Page, get_page_size_value, get_page_value
 from ohmyadmin.tables import Column, get_search_value
@@ -287,6 +288,9 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
         yield from self.get_batch_actions(request)
         yield from self.get_default_batch_actions(request)
 
+    def get_metrics(self) -> typing.Iterable[Metric]:
+        return []
+
     async def index_view(self, request: Request) -> Response:
         """Display list of objects."""
         page_number = get_page_value(request, self.page_param)
@@ -306,12 +310,14 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
         view_content = self.render_list_view(request, page=page)
         page_actions = list(self.get_configured_page_actions(request))
         batch_actions = list(self.get_configured_batch_actions(request))
+        metrics = list(self.get_metrics())
         return TemplateResponse(
             self.index_template,
             {
                 'objects': page,
                 'resource': self,
                 'request': request,
+                'metrics': metrics,
                 'page_size': page_size,
                 'pk': self.get_pk_value,
                 'content': view_content,
@@ -426,6 +432,15 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
 
         return await action.dispatch(request)
 
+    async def metric_view(self, request: Request) -> Response:
+        """Handle actions."""
+        metrics = {metric.slug: metric for metric in list(self.get_metrics())}
+        metric = metrics.get(request.query_params.get('_metric', ''))
+        if not metric:
+            raise HTTPException(404, 'Metric does not exists.')
+
+        return await metric.dispatch(request)
+
     @classmethod
     def url_name(cls, name: str) -> str:
         """Generate route name for this resource actions."""
@@ -441,6 +456,7 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
         yield Route('/edit/{pk:%s}' % pktype, self.edit_view, name=self.url_name('edit'), methods=['get', 'post'])
         yield Route('/delete/{pk:%s}' % pktype, self.delete_view, name=self.url_name('delete'), methods=['get', 'post'])
         yield Route('/action', self.action_view, name=self.url_name('action'), methods=['get', 'post'])
+        yield Route('/metrics', self.metric_view, name=self.url_name('metrics'), methods=['get', 'post'])
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         scope.setdefault('state', {})

@@ -132,7 +132,7 @@ class FormRepeater(Component):
             field.render_kw = field.render_kw or {}
             field.render_kw.update(
                 {
-                    'x-bind:id': '`%s`' % field.id.replace('0', '${index}'),
+                    'x-bind:id': '`%s`' % field.slug.replace('0', '${index}'),
                     'x-bind:name': '`%s`' % field.name.replace('0', '${index}'),
                 }
             )

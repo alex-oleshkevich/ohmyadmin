@@ -10,14 +10,14 @@ from ohmyadmin.helpers import camel_to_sentence, render_to_response
 class MetricMeta(type):
     def __new__(cls, name: str, bases: tuple, attrs: dict[str, typing.Any], **kwargs: typing.Any) -> typing.Type:
         if name != 'Metric':
-            attrs['id'] = attrs.get('id', slugify(name.removesuffix('Metric')))
+            attrs['slug'] = attrs.get('slug', slugify(name.removesuffix('Metric')))
             attrs['label'] = attrs.get('label', camel_to_sentence(name.removesuffix('Metric')))
 
         return super().__new__(cls, name, bases, attrs)
 
 
 class Metric(metaclass=MetricMeta):
-    id: typing.ClassVar[str] = ''
+    slug: typing.ClassVar[str] = ''
     label: typing.ClassVar[str] = ''
     template: str = ''
     refresh_every: int | None = None

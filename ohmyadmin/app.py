@@ -76,7 +76,7 @@ class OhMyAdmin(Router):
 
     def build_main_menu(self, request: Request) -> typing.Iterable[Component]:
         for dashboard in self.dashboards:
-            yield MenuItem(text=dashboard.label, icon=dashboard.icon, url=request.url_for(dashboard.get_route_name()))
+            yield MenuItem(text=dashboard.label, icon=dashboard.icon, url=request.url_for(dashboard.url_name()))
 
         yield MenuGroup(
             text=_('Resources'),
@@ -143,7 +143,7 @@ class OhMyAdmin(Router):
             yield Mount(f'/{page.id}', page)
 
         for dashboard in self.dashboards:
-            yield Mount(f'/dashboard/{dashboard.id}', dashboard)
+            yield Mount(f'/dashboard/{dashboard.slug}', dashboard)
 
     async def index_view(self, request: Request) -> Response:
         return self.render_to_response(request, 'ohmyadmin/index.html')
