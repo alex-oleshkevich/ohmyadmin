@@ -142,6 +142,8 @@ class Category(Base):
     created_at = sa.Column(sa.DateTime, default=datetime.datetime.now)
     updated_at = sa.Column(sa.DateTime, default=datetime.datetime.now)
 
+    parent = relationship('Category')
+
     def __str__(self) -> str:
         return self.name or 'n/a'
 

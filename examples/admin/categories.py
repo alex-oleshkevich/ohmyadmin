@@ -1,10 +1,12 @@
+import typing
+import wtforms
 from starlette.requests import Request
 
 from examples.models import Category
-from ohmyadmin.components import Card, Component, FormElement, FormPlaceholder, Grid, Group
-from ohmyadmin.old_forms import CheckboxField, Form, MarkdownField, SelectField, SlugField, TextField, choices_from
-from ohmyadmin.resources import Resource
-from ohmyadmin.tables import BoolColumn, Column, DateColumn
+from ohmyadmin.components import Card, Component, FormElement, FormPlaceholder, Grid, Group, display
+from ohmyadmin.components.display import DisplayField
+from ohmyadmin.ext.sqla import SQLAlchemyResource, choices_from
+from ohmyadmin.forms import BooleanField, Form, MarkdownField, SelectField, SlugField, StringField
 
 
 def safe_int(value: int | str) -> int | None:
@@ -14,26 +16,23 @@ def safe_int(value: int | str) -> int | None:
         return None
 
 
-class EditForm(Form):
-    name = TextField(required=True)
-    slug = SlugField(required=True)
-    parent = SelectField(choices=choices_from(Category), empty_choice='', coerce=safe_int)
-    visible_to_customers = CheckboxField()
-    description = MarkdownField()
-
-
-class CategoryResource(Resource):
+class CategoryResource(SQLAlchemyResource):
     icon = 'category'
     entity_class = Category
-    form_class = EditForm
-    table_columns = [
-        Column('name', searchable=True, sortable=True, link=True),
-        Column('parent'),
-        BoolColumn('visible_to_customers', label='Visibility'),
-        DateColumn('updated_at'),
-    ]
 
-    def get_form_layout(self, request: Request, form: Form[Category]) -> Component:
+    def get_list_fields(self) -> typing.Iterable[DisplayField]:
+        yield DisplayField('name', searchable=True, sortable=True, link=True)
+        yield DisplayField('visible_to_customers', label='Visilibity', component=display.Boolean())
+        yield DisplayField('updated_at', component=display.DateTime())
+
+    def get_form_fields(self, request: Request) -> typing.Iterable[wtforms.Field]:
+        yield StringField(name='name', validators=[wtforms.validators.data_required()])
+        yield SlugField(name='slug', validators=[wtforms.validators.data_required()])
+        yield SelectField(name='parent_id', choices=choices_from(Category), coerce=safe_int)
+        yield BooleanField(name='visible_to_customers')
+        yield MarkdownField(name='description')
+
+    def get_form_layout(self, request: Request, form: Form) -> Component:
         return Grid(
             columns=3,
             children=[
