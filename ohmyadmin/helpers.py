@@ -37,6 +37,12 @@ def media_url(path: str) -> str:
     return get_current_request().url_for('ohmyadmin_media', path=path)
 
 
+def media_url_or_redirect(path: str) -> str:
+    if path.startswith('http://') or path.startswith('https://'):
+        return path
+    return media_url(path)
+
+
 def pluralize(text: str) -> str:
     """
     A simple pluralization utility.

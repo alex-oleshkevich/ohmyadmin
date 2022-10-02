@@ -55,9 +55,12 @@
     input[type="week"],
     input[type="email"],
     input[type="tel"],
-    input[type="file"],
-    select, textarea, [multiple] {
+    select, textarea, select[multiple] {
         @apply rounded-md border border-slate-300 shadow-sm bg-white px-3 py-1.5 w-full leading-5 block text-sm;
+    }
+
+    input[type="file"] {
+        @apply px-3 py-1.5 w-full leading-5 block text-sm;
     }
 
     input[type="checkbox"], input[type="radio"] {

@@ -16,7 +16,11 @@ class InvalidFile(Exception):
 
 class FileStorage:
     @abc.abstractmethod
-    async def write(self, path: str | os.PathLike, stream: UploadFile) -> pathlib.Path:
+    async def write(self, path: str | os.PathLike, stream: UploadFile) -> str:
+        ...
+
+    @abc.abstractmethod
+    async def delete(self, path: str | os.PathLike) -> None:
         ...
 
     async def get_url(self, path: str) -> str:
@@ -34,13 +38,19 @@ class LocalDirectoryStorage(FileStorage):
         self.directory = pathlib.Path(directory)
         os.makedirs(directory, exist_ok=True)
 
-    async def write(self, path: str | os.PathLike, file: UploadFile) -> pathlib.Path:
+    async def write(self, path: str | os.PathLike, file: UploadFile) -> str:
         abs_path = self.directory / path
         os.makedirs(os.path.dirname(abs_path), exist_ok=True)
         async with await anyio.open_file(abs_path, 'wb') as f:
-            while chunk := await file.read(8096):
+            while chunk := await file.read(1024 * 8):
                 await f.write(chunk)
-        return abs_path
+        return str(path)
+
+    async def delete(self, path: str | os.PathLike) -> None:
+        abs_path = self.directory / path
+        file_exists = await anyio.to_thread.run_sync(os.path.exists, abs_path)
+        if file_exists:
+            await anyio.to_thread.run_sync(os.remove, abs_path)
 
     async def get_local_file_path(self, path: str) -> str:
         """

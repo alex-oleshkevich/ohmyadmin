@@ -24,6 +24,7 @@ from ohmyadmin.actions import (
     RowActionGroup,
 )
 from ohmyadmin.components.display import DisplayField
+from ohmyadmin.components.form import Form
 from ohmyadmin.flash import flash
 from ohmyadmin.helpers import camel_to_sentence, pluralize, render_to_string
 from ohmyadmin.i18n import _
@@ -267,20 +268,20 @@ class Resource(TableMixin, Router):
         raise NotImplementedError(f'{self.__class__.__name__} must implement get_objects() method.')
 
     @abc.abstractmethod
-    def get_form_fields(self) -> typing.Iterable[wtforms.Field]:
+    def get_form_fields(self, request: Request) -> typing.Iterable[wtforms.Field]:
         raise NotImplementedError()
 
-    def create_form_class(self) -> typing.Type[wtforms.Form]:
+    def create_form_class(self, request: Request) -> typing.Type[Form]:
         return typing.cast(
-            typing.Type[wtforms.Form],
+            typing.Type[Form],
             type(
                 f'{self.__class__.__name__}Form',
-                (wtforms.Form,),
-                {field.name: field for field in self.get_form_fields()},
+                (Form,),
+                {field.name: field for field in self.get_form_fields(request)},
             ),
         )
 
-    def get_form_class(self) -> typing.Type[wtforms.Form]:
+    def get_form_class(self, request: Request) -> typing.Type[Form]:
         """
         Get form class.
 
@@ -290,21 +291,21 @@ class Resource(TableMixin, Router):
         """
         if self.form_class:
             return self.form_class
-        return self.create_form_class()
+        return self.create_form_class(request)
 
-    def get_form_class_for_edit(self) -> typing.Type[wtforms.Form]:
-        return self.get_form_class()
+    def get_form_class_for_edit(self, request: Request) -> typing.Type[Form]:
+        return self.get_form_class(request)
 
-    def get_form_class_for_create(self) -> typing.Type[wtforms.Form]:
-        return self.get_form_class()
+    def get_form_class_for_create(self, request: Request) -> typing.Type[Form]:
+        return self.get_form_class(request)
 
-    async def validate_form(self, request: Request, form: wtforms.Form, instance: typing.Any) -> bool:
+    async def validate_form(self, request: Request, form: Form, instance: typing.Any) -> bool:
         """
         Validate form.
 
         Use this method to apply custom form validation.
         """
-        return form.validate()
+        return await form.validate_async()
 
     async def prefill_form_choices(self, request: Request, form: wtforms.Form, instance: typing.Any) -> None:
         """Use this hook to load and prefill form field choices."""
@@ -402,19 +403,20 @@ class Resource(TableMixin, Router):
 
         pk = request.path_params.get('pk', '')
         instance = self.create_new_entity()
-        form_class = self.get_form_class_for_create()
+        form_class = self.get_form_class_for_create(request)
         if pk:
             instance = await self.get_object(request, pk)
             if not instance:
                 raise HTTPException(404, _('Object does not exists.'))
-            form_class = self.get_form_class_for_edit()
+            form_class = self.get_form_class_for_edit(request)
 
         form_data = await request.form()
         form = form_class(formdata=form_data, obj=instance)
         await self.prefill_form_choices(request, form, instance)
 
-        if request.method == 'POST':
+        if request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
             if await self.validate_form(request, form, instance):
+                await form.populate_obj_async(instance)
                 await self.save_entity(request, form, instance)
                 flash(request).success(_('{resource} has been saved.').format(resource=self.label))
 
@@ -436,6 +438,8 @@ class Resource(TableMixin, Router):
                 'form': form,
                 'request': request,
                 'object': instance,
+                'resource': self,
+                'pk': self.get_pk_value,
                 'page_title': page_title,
                 'mode': 'edit' if pk else 'create',
                 **admin_context(request),

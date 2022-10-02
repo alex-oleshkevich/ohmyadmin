@@ -22,6 +22,9 @@ class User(Base, UserLike):
     is_active = sa.Column(sa.Boolean, default=True)
     created_at = sa.Column(sa.DateTime, default=datetime.datetime.now)
 
+    def get_pk(self) -> str:
+        return str(self.id)
+
     def get_id(self) -> str:
         return str(self.id)
 

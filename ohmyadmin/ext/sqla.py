@@ -45,7 +45,6 @@ class SQLAlchemyResource(Resource):
         return self.get_entity_class()
 
     async def save_entity(self, request: Request, form: wtforms.Form, instance: typing.Any) -> None:
-        form.populate_obj(instance)
         request.state.dbsession.add(instance)
         await request.state.dbsession.commit()
 

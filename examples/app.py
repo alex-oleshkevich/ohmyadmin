@@ -74,6 +74,7 @@ class OverviewDashboard(Dashboard):
 this_dir = pathlib.Path(__file__).parent
 uploads_dir = this_dir / 'uploads'
 engine = create_async_engine('postgresql+asyncpg://postgres:postgres@localhost/ohmyadmin', future=True)
+file_storage = LocalDirectoryStorage(this_dir / 'uploads')
 
 admin = OhMyAdmin(
     engine=engine,
@@ -81,7 +82,7 @@ admin = OhMyAdmin(
     logo_url='https://haj.aliashkevich.com/static/logo.svg',
     auth_policy=AuthPolicy(),
     template_dir=this_dir / 'templates',
-    file_storage=LocalDirectoryStorage(this_dir / 'uploads'),
+    file_storage=file_storage,
     pages=[SettingsPage(), ProfilePage()],
     dashboards=[OverviewDashboard()],
     resources=[

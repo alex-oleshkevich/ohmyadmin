@@ -8,9 +8,10 @@ from examples.models import User
 from ohmyadmin.actions import Action, BatchAction, LinkRowAction, ModalAction, ModalRowAction, RowAction, RowActionGroup
 from ohmyadmin.components import display
 from ohmyadmin.components.display import DisplayField
-from ohmyadmin.components.form import BooleanField, EmailField, FileField, HiddenField, StringField
+from ohmyadmin.components.form import BooleanField, EmailField, FileField, HiddenField, StringField, Uploader
 from ohmyadmin.ext.sqla import BatchDeleteAction, SQLAlchemyResource
 from ohmyadmin.forms import Form
+from ohmyadmin.helpers import media_url_or_redirect
 from ohmyadmin.projections import Projection
 from ohmyadmin.tables import BoolColumn, Column
 
@@ -62,9 +63,9 @@ class UserResource(SQLAlchemyResource):
     queryset = sa.select(entity_class).order_by(User.id)
     projections = (ActiveUsers,)
 
-    def get_list_fields(self) -> typing.Iterable[Column]:
+    def get_list_fields(self) -> typing.Iterable[DisplayField]:
         yield DisplayField('id', label='ID')
-        yield DisplayField('photo', component=display.Image())
+        yield DisplayField('photo', component=display.Image(), value_formatter=media_url_or_redirect)
         yield DisplayField(
             'full_name',
             label='Name',
@@ -77,11 +78,14 @@ class UserResource(SQLAlchemyResource):
         yield DisplayField('email', label='Email', searchable=True, sortable=True)
         yield DisplayField('is_active', label='Active', component=display.Boolean())
 
-    def get_form_fields(self) -> typing.Iterable[wtforms.Field]:
+    def get_form_fields(self, request: Request) -> typing.Iterable[wtforms.Field]:
         yield StringField(name='first_name')
         yield StringField(name='last_name')
         yield EmailField(name='email', validators=[wtforms.validators.DataRequired()])
-        yield FileField(name='photo')
+        yield FileField(
+            name='photo',
+            uploader=Uploader(request.state.admin.file_storage, 'photos/{pk}_{prefix}_{original_name}'),
+        )
         yield BooleanField(name='is_active')
         yield HiddenField(name='password')
 

@@ -30,6 +30,8 @@
         {{ checkbox_field(field) }}
     {% elif field.type == 'HiddenField' %}
         {{ form_input(field) }}
+    {% elif field.type == 'FileField' %}
+        {{ file_field(field) }}
     {% else %}
         <div class="form-group">
             {{ form_label(field) }}
@@ -163,5 +165,35 @@
                 {{ tabler_icon('plus') }} {{ _('Add a new item') }}
             </button>
         </div>
+    </div>
+{% endmacro %}
+
+{% macro file_input(field) %}
+    <div>
+        {{ form_input(field) }}
+        {% if field.data %}
+            <div class="mt-1 flex items-center gap-5" x-data="{delete: false}">
+                <div class="rounded-md p-1.5 bg-gray-100 max-auto inline-flex gap-4">
+                    <span>{{ field.data }}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" name="{{ field.name }}-delete" x-ref="delete{{ field.id }}">
+                    <span
+                        class="mb-0 cursor-pointer select-none"
+                        @click="$refs.delete{{ field.id }}.checked = !$refs.delete{{ field.id }}.checked">
+                        {{ _('Delete') }}
+                    </span>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endmacro %}
+
+{% macro file_field(field) %}
+    <div class="form-group">
+        {{ form_label(field) }}
+        {{ file_input(field) }}
+        {{ form_help(field) if field.description else '' }}
+        {{ form_errors(field) if field.errors else '' }}
     </div>
 {% endmacro %}

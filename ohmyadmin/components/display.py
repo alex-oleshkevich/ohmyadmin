@@ -63,7 +63,7 @@ class DisplayField:
         search_in: str = '',
         link: bool | LinkFactory = False,
         value_getter: ValueGetter | None = None,
-        value_formatter: str = '{value}',
+        value_formatter: str | typing.Callable[[typing.Any], str] = '{value}',
         component: ListComponent | None = None,
     ) -> None:
         self.name = name
@@ -82,7 +82,10 @@ class DisplayField:
 
     def render(self, request: Request, entity: typing.Any) -> str:
         value = self.get_value(entity)
-        value = self.value_formatter.format(value=value)
+        if callable(self.value_formatter):
+            value = self.value_formatter(value)
+        else:
+            value = self.value_formatter.format(value=value)
 
         if self.link:
             if callable(self.link):
