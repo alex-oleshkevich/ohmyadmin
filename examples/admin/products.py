@@ -19,8 +19,10 @@ from ohmyadmin.forms import (
     SelectField,
     StringField,
     TextAreaField,
+    Uploader,
 )
 from ohmyadmin.metrics import ValueMetric
+from ohmyadmin.old_forms import choices_from
 
 
 class TotalProducts(ValueMetric):
@@ -105,7 +107,9 @@ class ProductResource(SQLAlchemyResource):
         )
         yield MultipleFileField(
             name='images',
-            # upload_to=lambda file, entity: pathlib.Path('products') / str(entity.id) / file.filename
+            uploader=Uploader(
+                storage=request.state.admin.file_storage, upload_to='products/{pk}_{prefix}_{original_name}'
+            ),
         )
         yield IntegerField(name='sku', validators=[wtforms.validators.data_required()])
         yield IntegerField(name='quantity', validators=[wtforms.validators.data_required()])
@@ -124,7 +128,7 @@ class ProductResource(SQLAlchemyResource):
         yield BooleanField(name='can_be_shipped', label='This product can be shipped')
         yield BooleanField(name='visible', description='This product will be hidden from all sales channels.')
         yield DateField(name='availability', validators=[wtforms.validators.data_required()])
-        yield SelectField(name='brand_id', coerce=int)
+        yield SelectField(name='brand_id', coerce=int, choices=choices_from(Brand))
         # categories = SelectMultipleField(required=True)
 
     def get_form_layout(self, request: Request, form: Form) -> Component:

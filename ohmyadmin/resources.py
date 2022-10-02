@@ -237,8 +237,9 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
         """
         return await form.validate_async()
 
-    async def prefill_form_choices(self, request: Request, form: wtforms.Form, instance: typing.Any) -> None:
+    async def prefill_form_choices(self, request: Request, form: Form, instance: typing.Any) -> None:
         """Use this hook to load and prefill form field choices."""
+        await form.prefill(request)
 
     def get_default_page_actions(self, request: Request) -> typing.Iterable[Action]:
         if self.can_edit(request):
@@ -340,22 +341,22 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
                 raise HTTPException(404, _('Object does not exists.'))
             form_class = self.get_form_class_for_edit(request)
 
-        form_data = await request.form()
+        form_submitted = request.method in ['POST', 'PUT', 'PATCH', 'DELETE']
+        form_data = await request.form() if form_submitted else None
         form = form_class(formdata=form_data, obj=instance)
         await self.prefill_form_choices(request, form, instance)
 
-        if request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
-            if await self.validate_form(request, form, instance):
-                await form.populate_obj_async(instance)
-                await self.save_entity(request, form, instance)
-                flash(request).success(_('{resource} has been saved.').format(resource=self.label))
+        if form_submitted and await self.validate_form(request, form, instance):
+            await form.populate_obj_async(instance)
+            await self.save_entity(request, form, instance)
+            flash(request).success(_('{resource} has been saved.').format(resource=self.label))
 
-                if '_new' in form_data:
-                    return RedirectResponse(url=request.url_for(self.url_name('create')), status_code=302)
-                if '_edit' in form_data:
-                    return RedirectResponse(url=request.url_for(self.url_name('edit'), pk=pk), status_code=302)
-                if '_list' in form_data:
-                    return RedirectResponse(url=request.url_for(self.url_name('list')), status_code=302)
+            if '_new' in form_data:
+                return RedirectResponse(url=request.url_for(self.url_name('create')), status_code=302)
+            if '_edit' in form_data:
+                return RedirectResponse(url=request.url_for(self.url_name('edit'), pk=pk), status_code=302)
+            if '_list' in form_data:
+                return RedirectResponse(url=request.url_for(self.url_name('list')), status_code=302)
 
         if pk:
             page_title = self.page_title_for_edit.format(entity=instance)

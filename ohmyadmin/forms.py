@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import abc
 import datetime
 import inspect
 import os.path
@@ -7,11 +10,21 @@ import time
 import typing
 import wtforms
 from starlette.datastructures import FormData, UploadFile
+from starlette.requests import Request
 from wtforms.utils import unset_value
 
 from ohmyadmin.storage import FileStorage
 
 UploadFilename = typing.Callable[[UploadFile, typing.Any], str]
+Validator = typing.Callable[[wtforms.Form, wtforms.Field], None]
+Choices = typing.Iterable[tuple[str | None, str]]
+ChoicesFactory = typing.Callable[[Request, 'Form'], typing.Awaitable[Choices]]
+
+
+class Prefill(abc.ABC):
+    @abc.abstractmethod
+    async def prefill(self, request: Request, form: Form) -> None:
+        ...
 
 
 class Uploader:
@@ -49,7 +62,7 @@ class Uploader:
             time=current_time,
         )
 
-    async def delete(self, path: str) -> None:
+    async def delete(self, entity: typing.Any, path: str) -> None:
         await self.storage.delete(path)
 
     async def upload(self, upload_file: UploadFile, path: str) -> str:
@@ -57,6 +70,7 @@ class Uploader:
 
 
 StringField = wtforms.StringField
+BooleanField = wtforms.BooleanField
 TextAreaField = wtforms.TextAreaField
 MonthField = wtforms.MonthField
 DateField = wtforms.DateField
@@ -136,34 +150,36 @@ class FileField(wtforms.FileField):
             'Use populate_obj_async instead.'
         )
 
-    async def populate_obj_async(self, obj: typing.Any, name: str) -> None:
-        field = getattr(obj, name, None)
-        if field:
-            if self._should_delete:
-                await self._delete_file(field)
-                setattr(obj, name, None)
-                return
+    async def populate_obj_async(self, entity: typing.Any, name: str) -> None:
+        current_value = getattr(entity, name, None)
+        if current_value and self._should_delete:
+            await self._delete_file(entity, current_value)
+            setattr(entity, name, None)
+            return
 
         if self._is_uploaded_file(self.data):
-            if field:
-                await self._delete_file(field)
+            if current_value:
+                await self._delete_file(entity, current_value)
 
             assert self.data
-            filename = self.uploader.generate_filename(obj, self.data)
+            filename = self.uploader.generate_filename(entity, self.data)
             filename = await self.uploader.upload(self.data, filename)
             self.data.filename = filename
 
-            setattr(obj, name, filename)
+            setattr(entity, name, filename)
 
     def _is_uploaded_file(self, value: UploadFile | None) -> bool:
         return bool(value and isinstance(value, UploadFile) and value.filename)
 
-    async def _delete_file(self, path: str) -> None:
-        await self.uploader.delete(path)
+    async def _delete_file(self, entity: typing.Any, path: str) -> None:
+        await self.uploader.delete(entity, path)
 
 
-class MultipleFileField(wtforms.MultipleFileField):
-    ...
+class MultipleFileField(FileField):
+    widget = wtforms.widgets.FileInput(multiple=True)
+
+    def process_formdata(self, valuelist: list) -> None:
+        self.data = valuelist
 
 
 class ImageField(wtforms.FileField):
@@ -174,12 +190,25 @@ class DropZoneField(wtforms.FileField):
     ...
 
 
-class SelectField(wtforms.SelectField):
-    ...
+class SelectField(wtforms.SelectField, Prefill):
+    def __init__(
+        self,
+        label: str | None = None,
+        validators: list[Validator] | None = None,
+        coerce: typing.Callable = str,
+        choices: Choices | ChoicesFactory | None = None,
+        validate_choice: bool = True,
+        **kwargs: typing.Any,
+    ):
+        self._async_choices: ChoicesFactory | None = None
+        if callable(choices) and inspect.iscoroutinefunction(choices):
+            self._async_choices = choices
+            choices = None
+        super().__init__(label, validators, coerce, choices=choices, validate_choice=validate_choice, **kwargs)
 
-
-class BooleanField(wtforms.BooleanField):
-    ...
+    async def prefill(self, request: Request, form: Form) -> None:
+        if self._async_choices:
+            self.choices = await self._async_choices(request, form)
 
 
 class RadioField(wtforms.RadioField):
@@ -235,3 +264,8 @@ class Form(wtforms.Form):
                     field.errors.append(ex.args[0])
 
         return success
+
+    async def prefill(self, request: Request) -> None:
+        for field in self:
+            if isinstance(field, Prefill):
+                await field.prefill(request, self)
