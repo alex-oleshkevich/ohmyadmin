@@ -8,7 +8,7 @@ LinkFactory = typing.Callable[[Request, typing.Any], str]
 ValueGetter = typing.Callable[[typing.Any], typing.Any]
 
 
-class ListComponent:
+class DisplayComponent:
     @abc.abstractmethod
     def render(self, value: typing.Any) -> str:
         ...
@@ -17,12 +17,12 @@ class ListComponent:
         return self.render(value)
 
 
-class Text(ListComponent):
+class Text(DisplayComponent):
     def render(self, value: typing.Any) -> str:
         return str(value)
 
 
-class Link(ListComponent):
+class Link(DisplayComponent):
     def __init__(self, href: str) -> None:
         self.href = href
 
@@ -31,7 +31,7 @@ class Link(ListComponent):
         return macros(self.href, text=value)
 
 
-class Image(ListComponent):
+class Image(DisplayComponent):
     def __init__(self, height: int = 40, width: int | None = None, lazy: bool = False) -> None:
         self.lazy = lazy
         self.width = width
@@ -42,7 +42,7 @@ class Image(ListComponent):
         return macros(value, height=self.height, width=self.width, lazy=self.lazy)
 
 
-class Boolean(ListComponent):
+class Boolean(DisplayComponent):
     def render(self, value: typing.Any) -> str:
         macros = macro('ohmyadmin/components/display.html', 'boolean')
         return macros(value)
@@ -64,7 +64,7 @@ class DisplayField:
         link: bool | LinkFactory = False,
         value_getter: ValueGetter | None = None,
         value_formatter: str | typing.Callable[[typing.Any], str] = '{value}',
-        component: ListComponent | None = None,
+        component: DisplayComponent | None = None,
     ) -> None:
         self.name = name
         self.link = link
