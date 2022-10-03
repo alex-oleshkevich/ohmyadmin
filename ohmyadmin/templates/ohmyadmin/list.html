@@ -1,4 +1,5 @@
 {% extends 'ohmyadmin/app.html' %}
+{% import 'ohmyadmin/pagination.html' as pagination %}
 
 {% block page_actions %}
     {% for action in page_actions %}
@@ -27,6 +28,6 @@
 
         {{ content }}
 
-        {% include 'ohmyadmin/list_page/pagination.html' %}
+        {{ pagination.pagination(request, objects) }}
     </div>
 {% endblock %}
