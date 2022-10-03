@@ -1,4 +1,3 @@
-{% import 'ohmyadmin/lib/buttons.html' as buttons %}
 {% import 'ohmyadmin/lib/forms.html' as forms %}
 
 <form hx-swap="outerHTML" hx-post="{{ request.url }}">
@@ -22,12 +21,10 @@
 
     <div class="modal-actions">
         {% block actions %}
-            {% if action.dangerous %}
-                {{ buttons.danger_button(_('Run Action'), type='submit') }}
-            {% else %}
-                {{ buttons.primary_button(_('Run Action'), type='submit') }}
-            {% endif %}
-            {{ buttons.button(_('Cancel'), attrs={'@click': 'closeActionModal'}, type='button') }}
+            <button class="btn {{ 'btn-danger' if action.dangerous else 'btn-primary' }}" type="submit">
+                {{ _('Run Action') }}
+            </button>
+            <button class="btn" type="button" @click="closeActionModal">{{ _('Cancel') }}</button>
         {% endblock %}
     </div>
 </form>

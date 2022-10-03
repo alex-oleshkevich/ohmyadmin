@@ -1,5 +1,4 @@
 {% extends 'ohmyadmin/app.html' %}
-{% import 'ohmyadmin/lib/buttons.html' as buttons %}
 
 {% block content %}
     <form method="post">
@@ -8,7 +7,9 @@
         </h3>
         <p>{{ _('This action will delete current object and all related objects.') }}</p>
         <div class="mt-6">
-            {{ buttons.danger_button(_('Yes, delete'), type='submit') }}
+            <button type="submit" class="btn btn-danger">
+                {{ _('Yes, delete') }}
+            </button>
         </div>
     </form>
 {% endblock %}
