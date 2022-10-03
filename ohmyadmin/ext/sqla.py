@@ -8,8 +8,7 @@ from sqlalchemy.orm import InstrumentedAttribute
 from starlette.requests import Request
 from starlette.responses import Response
 
-from ohmyadmin.actions import BatchAction
-from ohmyadmin.components import ButtonColor
+from ohmyadmin.actions import BatchAction, ButtonColor
 from ohmyadmin.filters import (
     BaseChoiceFilter,
     BaseDateFilter,

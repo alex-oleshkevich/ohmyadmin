@@ -15,12 +15,14 @@ from starlette.staticfiles import StaticFiles
 from starlette.types import Receive, Scope, Send
 
 from ohmyadmin.auth import AnonymousAuthPolicy, BaseAuthPolicy, RequireLoginMiddleware, UserMenu
-from ohmyadmin.components import Component, FormElement, Grid, MenuGroup, MenuItem
+from ohmyadmin.components import MenuGroup, MenuItem
+from ohmyadmin.components.layout import FormElement, Grid
 from ohmyadmin.dashboards import Dashboard
 from ohmyadmin.flash import FlashMiddleware, flash
 from ohmyadmin.globals import globalize_dbsession, globalize_request
 from ohmyadmin.i18n import _
 from ohmyadmin.media_server import MediaServer
+from ohmyadmin.menu import MenuLink
 from ohmyadmin.pages import Page
 from ohmyadmin.resources import Resource
 from ohmyadmin.storage import FileStorage
@@ -74,21 +76,21 @@ class OhMyAdmin(Router):
             ]
         )
 
-    def build_main_menu(self, request: Request) -> typing.Iterable[Component]:
+    def build_main_menu(self, request: Request) -> typing.Iterable[MenuItem]:
         for dashboard in self.dashboards:
-            yield MenuItem(text=dashboard.label, icon=dashboard.icon, url=request.url_for(dashboard.url_name()))
+            yield MenuLink(text=dashboard.label, icon=dashboard.icon, url=request.url_for(dashboard.url_name()))
 
         yield MenuGroup(
             text=_('Resources'),
             items=[
-                MenuItem(text=resource.label_plural, icon=resource.icon, url=request.url_for(resource.url_name('list')))
+                MenuLink(text=resource.label_plural, icon=resource.icon, url=request.url_for(resource.url_name('list')))
                 for resource in self.resources
             ],
         )
         yield MenuGroup(
             text=_('Pages'),
             items=[
-                MenuItem(text=page.label, icon=page.icon, url=request.url_for(page.get_route_name()))
+                MenuLink(text=page.label, icon=page.icon, url=request.url_for(page.get_route_name()))
                 for page in self.pages
             ],
         )
@@ -151,8 +153,8 @@ class OhMyAdmin(Router):
     async def login_view(self, request: Request) -> Response:
         next_url = request.query_params.get('next', request.url_for('ohmyadmin_welcome'))
         form_class = self.auth_policy.get_login_form_class()
-        form = await form_class.from_request(request, data={'next_url': next_url})
-        if await form.validate_on_submit(request):
+        form = form_class(formdata=await request.form(), data={'next_url': next_url})
+        if form.validate(request):
             if user := await self.auth_policy.authenticate(request, form.identity.data, form.password.data):
                 self.auth_policy.login(request, user)
                 flash(request).success(_('You have been logged in.'))

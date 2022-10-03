@@ -34,8 +34,11 @@ from ohmyadmin.i18n import _
 from ohmyadmin.metrics import Metric
 from ohmyadmin.ordering import SortingHelper, SortingType, get_ordering_value
 from ohmyadmin.pagination import Page, get_page_size_value, get_page_value
-from ohmyadmin.tables import Column, get_search_value
 from ohmyadmin.templating import TemplateResponse, admin_context
+
+
+def get_search_value(request: Request, param_name: str) -> str:
+    return request.query_params.get(param_name, '').strip()
 
 
 @dataclasses.dataclass
@@ -74,13 +77,6 @@ class TableMixin:
                 )
             )
 
-        def field_link(field: Column, entity: typing.Any) -> str:
-            if not field.link:
-                return ''
-            if field.link_factory:
-                return field.link_factory(request, entity)
-            return request.url_for(self.url_name('edit'), pk=self.get_pk_value(entity))
-
         row_actions = list(self.get_configured_row_actions(request))
         batch_actions = list(self.get_configured_batch_actions(request))
         return render_to_string(
@@ -91,7 +87,6 @@ class TableMixin:
                 'cells': self.fields,
                 'header': head_cells,
                 'pk': self.get_pk_value,
-                'field_link': field_link,
                 'row_actions': row_actions,
                 'batch_actions': batch_actions,
             },
@@ -284,6 +279,9 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
     def render_list_view(self, request: Request, page: Page) -> str:
         return self.render_table(request, page)
 
+    def render_empty_state(self, request: Request, page_actions: list[Action]) -> str:
+        return render_to_string('ohmyadmin/empty_state.html', {'request': request, 'actions': page_actions})
+
     def get_default_batch_actions(self, request: Request) -> typing.Iterable[BatchAction]:
         return []
 
@@ -315,18 +313,28 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
             sortable_fields=self.sortable_fields,
             searchable_fields=self.searchable_fields,
         )
-
+        page_actions = list(self.get_configured_page_actions(request))
+        batch_actions = list(self.get_configured_batch_actions(request))
+        metrics = list(self.get_metrics(request))
         filters = list(self.get_filters(request))
         for filter_ in filters:
             if isinstance(filter_, Prefill):
                 await filter_.prefill(request, wtforms.Form())
 
+        has_active_filters = any([filter_.is_active(request) for filter_ in filters])
         page = await self.get_objects(request, state, filters)
+        if not page and not has_active_filters and not search_term:
+            return TemplateResponse(
+                'ohmyadmin/empty_state.html',
+                {
+                    'page_title': self.label_plural,
+                    'actions': page_actions,
+                    **admin_context(request),
+                },
+            )
+
         view_content = self.render_list_view(request, page=page)
         page_actions = list(self.get_configured_page_actions(request))
-        batch_actions = list(self.get_configured_batch_actions(request))
-        metrics = list(self.get_metrics(request))
-
         return TemplateResponse(
             self.index_template,
             {

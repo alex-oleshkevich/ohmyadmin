@@ -22,8 +22,8 @@ from examples.admin.users import UserResource
 from examples.models import User
 from ohmyadmin.app import OhMyAdmin, UserMenu
 from ohmyadmin.auth import BaseAuthPolicy, UserLike
-from ohmyadmin.components import MenuItem
 from ohmyadmin.dashboards import Dashboard
+from ohmyadmin.menu import MenuLink
 from ohmyadmin.pages import Page
 from ohmyadmin.storage import LocalDirectoryStorage
 
@@ -55,8 +55,8 @@ class AuthPolicy(BaseAuthPolicy):
                 user_name=str(conn.user),
                 avatar=conn.user.avatar,
                 menu=[
-                    MenuItem(text='My profile', url=conn.url_for(ProfilePage.get_route_name()), icon='user'),
-                    MenuItem(text='Settings', url=conn.url_for(SettingsPage.get_route_name()), icon='settings'),
+                    MenuLink(text='My profile', url=conn.url_for(ProfilePage.get_route_name()), icon='user'),
+                    MenuLink(text='Settings', url=conn.url_for(SettingsPage.get_route_name()), icon='settings'),
                 ],
             )
         return super().get_user_menu(conn)

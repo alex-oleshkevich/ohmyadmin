@@ -9,13 +9,13 @@ from starlette.datastructures import URL
 from starlette.requests import Request
 from starlette.responses import Response
 
-from ohmyadmin.components import ButtonColor
 from ohmyadmin.flash import FlashCategory
 from ohmyadmin.helpers import camel_to_sentence
 from ohmyadmin.i18n import _
 from ohmyadmin.responses import HXResponse
 from ohmyadmin.templating import TemplateResponse, macro
 
+ButtonColor = typing.Literal['default', 'primary', 'text', 'danger']
 DISMISS_EVENT = 'modals.dismiss'
 TOAST_EVENT = 'toast'
 

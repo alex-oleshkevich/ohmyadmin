@@ -12,7 +12,6 @@ from ohmyadmin.ext.sqla import BatchDeleteAction, SQLAlchemyResource
 from ohmyadmin.forms import BooleanField, EmailField, FileField, Form, HiddenField, StringField, Uploader
 from ohmyadmin.helpers import media_url_or_redirect
 from ohmyadmin.projections import Projection
-from ohmyadmin.tables import BoolColumn, Column
 
 
 class DuplicateActionForm(wtforms.Form):
@@ -45,11 +44,6 @@ class ExportAction(ModalAction):
 
 
 class ActiveUsers(Projection):
-    columns = [
-        Column('full_name', label='Name', link=True),
-        BoolColumn('is_active', label='Active'),
-    ]
-
     def apply_filter(self, stmt: sa.sql.Select) -> sa.sql.Select:
         return stmt.filter(User.is_active == True)
 

@@ -28,7 +28,7 @@ class Link(DisplayComponent):
         self.href = href
 
     def render(self, value: typing.Any) -> str:
-        macros = macro('ohmyadmin/components/display.html', 'link')
+        macros = macro('ohmyadmin/display.html', 'link')
         return macros(self.href, text=value)
 
 
@@ -39,13 +39,13 @@ class Image(DisplayComponent):
         self.height = height
 
     def render(self, value: typing.Any) -> str:
-        macros = macro('ohmyadmin/components/display.html', 'image')
+        macros = macro('ohmyadmin/display.html', 'image')
         return macros(value, height=self.height, width=self.width, lazy=self.lazy)
 
 
 class Boolean(DisplayComponent):
     def render(self, value: typing.Any) -> str:
-        macros = macro('ohmyadmin/components/display.html', 'boolean')
+        macros = macro('ohmyadmin/display.html', 'boolean')
         return macros(value)
 
 
@@ -83,12 +83,8 @@ class Badge(DisplayComponent):
 
     def render(self, value: typing.Any) -> str:
         color = self.colors.get(value, 'gray')
-        macros = macro('ohmyadmin/components/display.html', 'badge')
+        macros = macro('ohmyadmin/display.html', 'badge')
         return macros(value, color)
-
-
-def string_formatter(value: typing.Any) -> str:
-    return str(value)
 
 
 class DisplayField:

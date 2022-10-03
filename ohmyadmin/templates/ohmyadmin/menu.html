@@ -1,0 +1,14 @@
+{% macro menu_link(url, text, icon, is_active) %}
+    <a href="{{ url }}" class="main-menu-item {{ 'active' if is_active else '' }}">
+        {{ tabler_icon(icon) if icon else '' }} {{ text }}
+    </a>
+{% endmacro %}
+
+{% macro menu_group(request, items, text, icon) %}
+    <div class="mt-5">
+        <div class="text-slate-600 uppercase mb-2 text-sm">{{ text }}</div>
+        {% for subitem in items %}
+            {{ subitem.render(request) }}
+        {% endfor %}
+    </div>
+{% endmacro %}

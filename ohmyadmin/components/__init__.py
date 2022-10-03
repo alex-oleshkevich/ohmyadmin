@@ -1,1 +1,1 @@
-from .components import *  # noqa
+from ohmyadmin.menu import *  # noqa

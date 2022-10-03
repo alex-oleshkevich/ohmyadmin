@@ -1,0 +1,18 @@
+{% extends 'ohmyadmin/app.html' %}
+
+{% block content %}
+    <div class="empty-state">
+        <figure>
+            {% include 'ohmyadmin/images/empty.svg' %}
+        </figure>
+        <section>
+            <header>{{ _('No data') }}</header>
+            <main>{{ _('This page has not data yet.') }}</main>
+            <footer>
+                {% for action in actions %}
+                    {{ action.render(request) }}
+                {% endfor %}
+            </footer>
+        </section>
+    </div>
+{% endblock %}

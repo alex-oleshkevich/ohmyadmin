@@ -5,7 +5,7 @@ from starlette.responses import Response
 from starlette.routing import BaseRoute, Route, Router
 
 from ohmyadmin.helpers import camel_to_sentence
-from ohmyadmin.templating import TemplateResponse
+from ohmyadmin.templating import TemplateResponse, admin_context
 
 
 class PageMeta(type):
@@ -35,7 +35,7 @@ class Page(Router, metaclass=PageMeta):
         yield Route('/', self.dispatch, name=self.get_route_name())
 
     async def get_template_context(self, request: Request) -> dict[str, typing.Any]:
-        return {}
+        return {**admin_context(request)}
 
     async def dispatch(self, request: Request) -> Response:
         context = await self.get_template_context(request)
