@@ -100,7 +100,7 @@ class Uploader:
     def set_file(self, entity: typing.Any, attr: str, filename: str) -> None:
         setattr(entity, attr, filename)
 
-    async def delete_file(self, entity: typing.Any, attr: str, filename: str) -> None:
+    async def delete_file(self, entity: typing.Any, attr: str, filename: typing.Any) -> None:
         await self.storage.delete(filename)
         setattr(entity, attr, None)
 
@@ -317,6 +317,8 @@ class CheckboxListWidget:
 
 
 class Form(wtforms.Form):
+    __getattr__: typing.Callable[[wtforms.Form, str], wtforms.Field]
+
     async def populate_obj_async(self, obj: typing.Any) -> None:
         """
         Async version of wtforms.Form.populate_obj.

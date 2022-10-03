@@ -3,8 +3,9 @@ import wtforms
 from starlette.requests import Request
 
 from examples.models import Brand
-from ohmyadmin.components import Card, Component, FormElement, FormPlaceholder, Grid, Group, display
+from ohmyadmin.components import display, layout
 from ohmyadmin.components.display import DisplayField
+from ohmyadmin.components.layout import Card, FormElement, FormText, Grid, Group, LayoutComponent
 from ohmyadmin.ext.sqla import ChoiceFilter, SQLAlchemyResource
 from ohmyadmin.filters import BaseFilter
 from ohmyadmin.forms import BooleanField, Form, MarkdownField, SlugField, StringField, URLField
@@ -36,7 +37,7 @@ class BrandResource(SQLAlchemyResource):
         yield BooleanField(name='visible_to_customers')
         yield MarkdownField(name='description')
 
-    def get_form_layout(self, request: Request, form: Form) -> Component:
+    def get_form_layout(self, request: Request, form: Form, instance: typing.Any) -> LayoutComponent:
         return Grid(
             columns=3,
             children=[
@@ -46,13 +47,13 @@ class BrandResource(SQLAlchemyResource):
                         Card(
                             columns=2,
                             children=[
-                                FormElement(form.name),
-                                FormElement(form.slug),
-                                FormElement(form.website),
-                                FormElement(form.visible_to_customers),
-                                FormElement(form.description, colspan=2),
+                                'name',
+                                'slug',
+                                'website',
+                                'visible_to_customers',
+                                FormElement('description', colspan=2),
                             ],
-                        )
+                        ),
                     ],
                 ),
                 Group(
@@ -60,22 +61,8 @@ class BrandResource(SQLAlchemyResource):
                     children=[
                         Card(
                             children=[
-                                FormPlaceholder(
-                                    'Created at',
-                                    (
-                                        form.instance.created_at.date().isoformat()
-                                        if form.instance and form.instance.created_at
-                                        else '-'
-                                    ),
-                                ),
-                                FormPlaceholder(
-                                    'Updated at',
-                                    (
-                                        form.instance.updated_at.date().isoformat()
-                                        if form.instance and form.instance.updated_at
-                                        else '-'
-                                    ),
-                                ),
+                                FormText('Created at', layout.Date(instance.created_at)),
+                                FormText('Updated at', layout.Date(instance.updated_at)),
                             ]
                         )
                     ],

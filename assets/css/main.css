@@ -321,4 +321,16 @@
         @apply border-blue-600 text-blue-600;
     }
 
+    /* cards */
+    .card {
+        @apply border border-gray-300 rounded-lg p-3;
+    }
+
+    .card header {
+        @apply text-lg font-medium mb-5;
+    }
+
+    .card main {
+
+    }
 }

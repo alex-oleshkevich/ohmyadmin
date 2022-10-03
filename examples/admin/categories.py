@@ -3,8 +3,9 @@ import wtforms
 from starlette.requests import Request
 
 from examples.models import Category
-from ohmyadmin.components import Card, Component, FormElement, FormPlaceholder, Grid, Group, display
+from ohmyadmin.components import display
 from ohmyadmin.components.display import DisplayField
+from ohmyadmin.components.layout import Card, Date, FormElement, FormText, Grid, Group, LayoutComponent
 from ohmyadmin.ext.sqla import SQLAlchemyResource, choices_from
 from ohmyadmin.forms import BooleanField, Form, MarkdownField, SelectField, SlugField, StringField
 
@@ -32,7 +33,7 @@ class CategoryResource(SQLAlchemyResource):
         yield BooleanField(name='visible_to_customers')
         yield MarkdownField(name='description')
 
-    def get_form_layout(self, request: Request, form: Form) -> Component:
+    def get_form_layout(self, request: Request, form: Form, instance: Category) -> LayoutComponent:
         return Grid(
             columns=3,
             children=[
@@ -44,7 +45,7 @@ class CategoryResource(SQLAlchemyResource):
                             children=[
                                 FormElement(form.name),
                                 FormElement(form.slug),
-                                FormElement(form.parent, colspan=2),
+                                FormElement(form.parent_id, colspan=2),
                                 FormElement(form.visible_to_customers),
                                 FormElement(form.description, colspan=2),
                             ],
@@ -56,22 +57,8 @@ class CategoryResource(SQLAlchemyResource):
                     children=[
                         Card(
                             children=[
-                                FormPlaceholder(
-                                    'Created at',
-                                    (
-                                        form.instance.created_at.date().isoformat()
-                                        if form.instance and form.instance.created_at
-                                        else '-'
-                                    ),
-                                ),
-                                FormPlaceholder(
-                                    'Updated at',
-                                    (
-                                        form.instance.updated_at.date().isoformat()
-                                        if form.instance and form.instance.updated_at
-                                        else '-'
-                                    ),
-                                ),
+                                FormText('Created at', Date(instance.created_at)),
+                                FormText('Updated at', Date(instance.updated_at)),
                             ]
                         )
                     ],

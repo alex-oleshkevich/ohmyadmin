@@ -6,8 +6,9 @@ from starlette.requests import Request
 
 from examples.admin.brands import BrandResource
 from examples.models import Brand, Image, Product
-from ohmyadmin.components import Card, Component, FormElement, Grid, Group, display
+from ohmyadmin.components import display
 from ohmyadmin.components.display import DisplayField
+from ohmyadmin.components.layout import Card, FormElement, Grid, Group, LayoutComponent
 from ohmyadmin.ext.sqla import (
     ChoiceFilter,
     DecimalFilter,
@@ -73,7 +74,8 @@ class ImageUploader(Uploader):
         setattr(entity, attr, Image(image_path=filename))
 
     async def delete_file(self, entity: typing.Any, attr: str, filename: Image) -> None:
-        await self.storage.delete(filename.image_path)
+        if filename.image_path:
+            await self.storage.delete(filename.image_path)
 
 
 class ProductResource(SQLAlchemyResource):
@@ -165,7 +167,7 @@ class ProductResource(SQLAlchemyResource):
         yield SelectField(name='brand_id', coerce=int, choices=choices_from(Brand))
         # categories = SelectMultipleField(required=True)
 
-    def get_form_layout(self, request: Request, form: Form) -> Component:
+    def get_form_layout(self, request: Request, form: Form, instance: typing.Any) -> LayoutComponent:
         return Grid(
             columns=3,
             children=[
@@ -181,13 +183,13 @@ class ProductResource(SQLAlchemyResource):
                             ],
                         ),
                         Card(
-                            title='Images',
+                            label='Images',
                             children=[
                                 FormElement(form.images),
                             ],
                         ),
                         Card(
-                            title='Pricing',
+                            label='Pricing',
                             columns=2,
                             children=[
                                 FormElement(form.price),
@@ -196,7 +198,7 @@ class ProductResource(SQLAlchemyResource):
                             ],
                         ),
                         Card(
-                            title='Inventory',
+                            label='Inventory',
                             columns=2,
                             children=[
                                 FormElement(form.sku),
@@ -206,7 +208,7 @@ class ProductResource(SQLAlchemyResource):
                             ],
                         ),
                         Card(
-                            title='Shipping',
+                            label='Shipping',
                             columns=2,
                             children=[
                                 FormElement(form.can_be_returned),
@@ -219,14 +221,14 @@ class ProductResource(SQLAlchemyResource):
                     colspan=1,
                     children=[
                         Card(
-                            title='Status',
+                            label='Status',
                             children=[
                                 FormElement(form.visible),
                                 FormElement(form.availability),
                             ],
                         ),
                         Card(
-                            title='Associations',
+                            label='Associations',
                             children=[
                                 FormElement(form.brand_id),
                                 # FormField(form.categories),

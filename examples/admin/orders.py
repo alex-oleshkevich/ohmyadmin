@@ -5,8 +5,9 @@ from sqlalchemy.orm import joinedload, selectinload, with_expression
 from starlette.requests import Request
 
 from examples.models import Country, Currency, Customer, Order, OrderItem, Product
-from ohmyadmin.components import Card, Component, FormElement, FormPlaceholder, FormRepeater, Grid, Group, display
+from ohmyadmin.components import display
 from ohmyadmin.components.display import DisplayField
+from ohmyadmin.components.layout import Card, Date, FormElement, FormText, Grid, Group, LayoutComponent
 from ohmyadmin.ext.sqla import ChoiceFilter, DateRangeFilter, DecimalFilter, SQLAlchemyResource, choices_from
 from ohmyadmin.filters import BaseFilter
 from ohmyadmin.forms import (
@@ -111,7 +112,7 @@ class OrderResource(SQLAlchemyResource):
         yield MarkdownField(name='notes')
         yield FieldList(name='items', unbound_field=FormField(default=OrderItem, form_class=EditOrderItem), default=[])
 
-    def get_form_layout(self, request: Request, form: Form) -> Component:
+    def get_form_layout(self, request: Request, form: Form, instance: Order) -> LayoutComponent:
         return Grid(
             columns=3,
             children=[
@@ -133,49 +134,25 @@ class OrderResource(SQLAlchemyResource):
                             ],
                         ),
                         Card(
-                            title='Order items',
-                            children=[
-                                FormRepeater(
-                                    form.items,
-                                    layout_builder=lambda f: Grid(
-                                        columns=3,
-                                        children=[
-                                            FormElement(f.product_id),
-                                            FormElement(f.quantity),
-                                            FormElement(f.unit_price),
-                                        ],
-                                    ),
-                                )
-                            ],
+                            label='Order items',
+                            children=[FormElement(form.items)],
                         ),
                     ],
                 ),
                 Group(
                     colspan=1,
-                    children=Card(
-                        children=[
-                            Card(
-                                children=[
-                                    FormPlaceholder(
-                                        'Created at',
-                                        (
-                                            form.instance.created_at.date().isoformat()
-                                            if form.instance and form.instance.created_at
-                                            else '-'
-                                        ),
-                                    ),
-                                    FormPlaceholder(
-                                        'Updated at',
-                                        (
-                                            form.instance.updated_at.date().isoformat()
-                                            if form.instance and form.instance.updated_at
-                                            else '-'
-                                        ),
-                                    ),
-                                ]
-                            ),
-                        ]
-                    ),
+                    children=[
+                        Card(
+                            children=[
+                                Card(
+                                    children=[
+                                        FormText('Created at', Date(instance.created_at)),
+                                        FormText('Updated at', Date(instance.updated_at)),
+                                    ]
+                                ),
+                            ]
+                        )
+                    ],
                 ),
             ],
         )

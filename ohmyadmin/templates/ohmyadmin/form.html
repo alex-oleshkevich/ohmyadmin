@@ -4,11 +4,7 @@
 
 {% block content %}
     <form method="post" enctype="multipart/form-data">
-        <div class="grid grid-cols-1 gap-5">
-            {% for field in form %}
-                {{ forms.form_field(field) }}
-            {% endfor %}
-        </div>
+        {{ form_layout(request, form) }}
         <div class="form-actions items-center justify-between">
             {% if mode == 'create' %}
                 <div class="flex items-center gap-2">

@@ -23,7 +23,9 @@ from ohmyadmin.actions import (
     RowAction,
     RowActionGroup,
 )
+from ohmyadmin.components import layout
 from ohmyadmin.components.display import DisplayField
+from ohmyadmin.components.layout import LayoutComponent
 from ohmyadmin.filters import BaseFilter
 from ohmyadmin.flash import flash
 from ohmyadmin.forms import Form, Prefill
@@ -231,6 +233,9 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
     def get_form_class_for_create(self, request: Request) -> typing.Type[Form]:
         return self.get_form_class(request)
 
+    def get_form_layout(self, request: Request, form: wtforms.Form, instance: typing.Any) -> LayoutComponent:
+        return layout.Grid([layout.FormElement(field, max_width='lg') for field in form])
+
     async def validate_form(self, request: Request, form: Form, instance: typing.Any) -> bool:
         """
         Validate form.
@@ -383,15 +388,17 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
         else:
             page_title = self.page_title_for_create.format(resource=self.label)
 
+        form_layout = self.get_form_layout(request, form, instance)
         return TemplateResponse(
             self.edit_template,
             {
                 'form': form,
+                'resource': self,
                 'request': request,
                 'object': instance,
-                'resource': self,
                 'pk': self.get_pk_value,
                 'page_title': page_title,
+                'form_layout': form_layout,
                 'mode': 'edit' if pk else 'create',
                 **admin_context(request),
             },
