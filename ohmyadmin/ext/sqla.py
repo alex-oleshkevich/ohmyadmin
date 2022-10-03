@@ -245,7 +245,7 @@ class SQLAlchemyResource(Resource):
         return entity_class()
 
     async def save_entity(self, request: Request, form: wtforms.Form, instance: typing.Any) -> None:
-        request.state.dbsession.add(instance)
+        # request.state.dbsession.add(instance)
         await request.state.dbsession.commit()
 
     async def delete_entity(self, request: Request, instance: typing.Any) -> None:

@@ -122,19 +122,31 @@
     </div>
 {% endmacro %}
 
+{% macro list_field_item(field) %}
+    <div class="mb-3 border border-gray-300 rounded-md">
+        <div class="flex items-center bg-gray-100 px-2 py-0.5">
+            <div class="ml-auto">
+                <button class="delete-icon" type="button" @click="deleted.push(index)">
+                    {{ tabler_icon('trash') }}
+                </button>
+            </div>
+        </div>
+        <div class="p-2">{{ form_field(field) }}</div>
+    </div>
+{% endmacro %}
 
 {% macro list_field(field) %}
     <div x-data="{deleted: [], newCounter: 0, startIndex: {{ field|length }} }">
-        <div>
+        <div class="mb-5">
             {% for subfield in field %}
                 <template x-if="!deleted.includes({{ loop.index0 }})" x-data="{ index: {{ loop.index0 }} }">
-                    {{ form_field(subfield) }}
+                    {{ list_field_item(subfield) }}
                 </template>
             {% endfor %}
 
             <template x-for="_index in newCounter">
                 <template x-if="!deleted.includes(_index + startIndex)" x-data="{index: _index + startIndex}">
-                    {{ form_field(field.empty) }}
+                    {{ list_field_item(field.empty) }}
                 </template>
             </template>
         </div>

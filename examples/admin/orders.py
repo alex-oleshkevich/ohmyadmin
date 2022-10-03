@@ -1,7 +1,7 @@
 import sqlalchemy as sa
 import typing
 import wtforms
-from sqlalchemy.orm import joinedload, selectinload, with_expression
+from sqlalchemy.orm import joinedload, selectinload
 from starlette.requests import Request
 
 from examples.models import Country, Currency, Customer, Order, OrderItem, Product
@@ -15,6 +15,7 @@ from ohmyadmin.forms import (
     FieldList,
     Form,
     FormField,
+    GridWidget,
     IntegerField,
     MarkdownField,
     SelectField,
@@ -50,9 +51,9 @@ class AveragePrice(ValueMetric):
 
 
 class EditOrderItem(Form):
-    product_id = SelectField(required=True, choices=choices_from(Product), coerce=int)
-    quantity = IntegerField(required=True)
-    unit_price = DecimalField(required=True)
+    product_id = SelectField(validators=[wtforms.validators.data_required()], choices=choices_from(Product), coerce=int)
+    quantity = IntegerField(validators=[wtforms.validators.data_required()])
+    unit_price = DecimalField(validators=[wtforms.validators.data_required()])
 
 
 class OrderResource(SQLAlchemyResource):
@@ -60,9 +61,9 @@ class OrderResource(SQLAlchemyResource):
     entity_class = Order
     queryset = (
         sa.select(Order)
-        .join(Order.items)
+        # .join(Order.items)
         .options(
-            with_expression(Order.total_price, OrderItem.unit_price * OrderItem.quantity),
+            # with_expression(Order.total_price, OrderItem.unit_price * OrderItem.quantity),
             joinedload(Order.customer),
             joinedload(Order.currency),
             selectinload(Order.items),
@@ -101,16 +102,29 @@ class OrderResource(SQLAlchemyResource):
         yield DisplayField('created_at', label='Order date', component=display.DateTime())
 
     def get_form_fields(self, request: Request) -> typing.Iterable[wtforms.Field]:
-        yield StringField(name='number', required=True)
-        yield SelectField(name='customer_id', required=True, coerce=int, choices=choices_from(Customer))
-        yield StringField(name='status', required=True)
-        yield SelectField(name='currency', required=True, choices=choices_from(Currency, value_column='code'))
-        yield SelectField(name='country', choices=choices_from(Country, value_column='code'))
+        yield StringField(name='number', validators=[wtforms.validators.data_required()])
+        yield SelectField(
+            name='customer_id',
+            coerce=int,
+            choices=choices_from(Customer),
+            validators=[wtforms.validators.data_required()],
+        )
+        yield SelectField(name='status', choices=Order.Status.choices, validators=[wtforms.validators.data_required()])
+        yield SelectField(
+            name='currency_code',
+            validators=[wtforms.validators.data_required()],
+            choices=choices_from(Currency, value_column='code'),
+        )
+        yield SelectField(name='country_code', choices=choices_from(Country, value_column='code'))
         yield StringField(name='address')
         yield StringField(name='city')
         yield StringField(name='zip')
         yield MarkdownField(name='notes')
-        yield FieldList(name='items', unbound_field=FormField(default=OrderItem, form_class=EditOrderItem), default=[])
+        yield FieldList(
+            name='items',
+            unbound_field=FormField(default=OrderItem, form_class=EditOrderItem, widget=GridWidget(columns=3)),
+            default=[],
+        )
 
     def get_form_layout(self, request: Request, form: Form, instance: Order) -> LayoutComponent:
         return Grid(
@@ -125,11 +139,11 @@ class OrderResource(SQLAlchemyResource):
                                 FormElement(form.number, colspan=3),
                                 FormElement(form.customer_id, colspan=3),
                                 FormElement(form.status, colspan=3),
-                                FormElement(form.currency, colspan=3),
-                                FormElement(form.country, colspan=3),
-                                FormElement(form.address, colspan='full'),
+                                FormElement(form.currency_code, colspan=3),
+                                FormElement(form.country_code, colspan=2),
                                 FormElement(form.city, colspan=2),
                                 FormElement(form.zip, colspan=2),
+                                FormElement(form.address, colspan='full'),
                                 FormElement(form.notes, colspan='full'),
                             ],
                         ),
@@ -144,14 +158,10 @@ class OrderResource(SQLAlchemyResource):
                     children=[
                         Card(
                             children=[
-                                Card(
-                                    children=[
-                                        FormText('Created at', Date(instance.created_at)),
-                                        FormText('Updated at', Date(instance.updated_at)),
-                                    ]
-                                ),
+                                FormText('Created at', Date(instance.created_at)),
+                                FormText('Updated at', Date(instance.updated_at)),
                             ]
-                        )
+                        ),
                     ],
                 ),
             ],

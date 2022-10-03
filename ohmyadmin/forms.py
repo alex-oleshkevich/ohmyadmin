@@ -246,30 +246,47 @@ class RadioField(wtforms.RadioField):
 
 class ListWidget:
     def __call__(self, field: wtforms.Field, **kwargs: typing.Any) -> str:
-        macros = macro('ohmyadmin/lib/forms.html', 'list_field')
+        macros = macro('ohmyadmin/forms.html', 'list_field')
         return macros(field)
 
 
-class FieldList(wtforms.FieldList):
+class GridWidget:
+    def __init__(self, columns: int = 1, gap: int = 5) -> None:
+        self.columns = columns
+        self.gap = gap
+
+    def __call__(self, field: wtforms.Field, **kwargs: typing.Any) -> str:
+        html: list[str] = []
+        html.append(f'<div class="grid grid-cols-{self.columns} gap-{self.gap}">')
+        for subfield in field:
+            html.append(str(subfield))
+        html.append('</div>')
+        return ''.join(html)
+
+
+class FieldList(wtforms.FieldList, Prefill):
     widget = ListWidget()
 
     @property
     def empty(self) -> wtforms.Field:
-        index = 0
-        id_ = f"{self.id}{self._separator}{index}"
-        name = f"{self.short_name}{self._separator}{index}"
-        return self.unbound_field.bind(
-            form=None,
-            name=name,
-            prefix=self._prefix,
-            id=id_,
-            _meta=self.meta,
-            translations=self._translations,
-            render_kw={
-                'x-bind:id': '`%s`' % id_.replace('0', '${index}'),
-                'x-bind:name': '`%s`' % name.replace('0', '${index}'),
-            },
-        )
+        field = self.append_entry()
+        self.pop_entry()
+        index = str(self.last_index + 1)
+
+        if isinstance(field, wtforms.FormField):
+            for subfield in field:
+                subfield.render_kw = {
+                    **(field.render_kw or {}),
+                    'x-bind:id': '`%s`' % subfield.id.replace(index, '${index}'),
+                    'x-bind:name': '`%s`' % subfield.name.replace(index, '${index}'),
+                }
+        else:
+            field.render_kw = {
+                **(field.render_kw or {}),
+                'x-bind:id': '`%s`' % field.id.replace(index, '${index}'),
+                'x-bind:name': '`%s`' % field.name.replace(index, '${index}'),
+            }
+        return field
 
     async def populate_obj_async(self, obj: typing.Any, name: str) -> None:
         values = getattr(obj, name, None)
@@ -292,9 +309,32 @@ class FieldList(wtforms.FieldList):
 
         setattr(obj, name, output)
 
+    async def prefill(self, request: Request, form: Form) -> None:
+        for field in self.entries:
+            if isinstance(field, Prefill):
+                await field.prefill(request, form)
 
-class FormField(wtforms.FormField):
-    ...
+
+class FormField(wtforms.FormField, Prefill):
+    async def prefill(self, request: Request, form: Form) -> None:
+        for field in self.form:
+            if isinstance(field, Prefill):
+                await field.prefill(request, self.form)
+
+    async def populate_obj_async(self, obj: typing.Any, name: str) -> None:
+        candidate = getattr(obj, name, None)
+        if candidate is None:
+            if self._obj is None:
+                raise TypeError(
+                    "populate_obj: cannot find a value to populate from" " the provided obj or input data/defaults"
+                )
+            candidate = self._obj
+
+        if hasattr(self.form, 'populate_obj_async'):
+            await self.form.populate_obj_async(candidate)
+        else:
+            self.form.populate_obj(candidate)
+        setattr(obj, name, candidate)
 
 
 class JSONField(wtforms.TextAreaField):

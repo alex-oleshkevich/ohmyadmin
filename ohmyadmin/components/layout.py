@@ -39,6 +39,9 @@ class FormElement(LayoutComponent):
         macros = macro('ohmyadmin/form_layout.html', 'field')
         return macros(request=request, form=form, component=self)
 
+    def __repr__(self) -> str:
+        return f'FormElement(field={repr(self.field)})'
+
 
 class Grid(LayoutComponent):
     def __init__(self, children: list[LayoutComponent | str], columns: int = 1, gap: int = 5) -> None:
