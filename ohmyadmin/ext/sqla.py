@@ -10,7 +10,7 @@ from starlette.responses import Response
 
 from ohmyadmin.actions import BatchAction
 from ohmyadmin.components import ButtonColor
-from ohmyadmin.filters import BaseDateFilter, BaseFilter
+from ohmyadmin.filters import BaseDateFilter, BaseFilter, BaseSelectFilter
 from ohmyadmin.forms import Choices, ChoicesFactory, Form
 from ohmyadmin.helpers import camel_to_sentence, pluralize, snake_to_sentence
 from ohmyadmin.i18n import _
@@ -68,6 +68,24 @@ class DateFilter(BaseDateFilter):
         super().__init__(query_param=self.query_param, label=self.label)
 
     def apply(self, request: Request, stmt: sa.sql.Select, value: datetime.date) -> sa.sql.Select:
+        return stmt.where(self.column == value)
+
+
+class SelectFilter(BaseSelectFilter):
+    def __init__(
+        self,
+        column: InstrumentedAttribute,
+        choices: Choices | ChoicesFactory,
+        query_param: str | None = None,
+        label: str = '',
+        coerce: typing.Callable = str,
+    ) -> None:
+        self.column = column
+        self.query_param = query_param or self.column.key
+        self.label = label or snake_to_sentence(self.column.key).capitalize()
+        super().__init__(query_param=self.query_param, label=self.label, choices=choices, coerce=coerce)
+
+    def apply(self, request: Request, stmt: sa.sql.Select, value: typing.Any) -> sa.sql.Select:
         return stmt.where(self.column == value)
 
 

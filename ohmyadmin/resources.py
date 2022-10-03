@@ -26,7 +26,7 @@ from ohmyadmin.actions import (
 from ohmyadmin.components.display import DisplayField
 from ohmyadmin.filters import BaseFilter
 from ohmyadmin.flash import flash
-from ohmyadmin.forms import Form
+from ohmyadmin.forms import Form, Prefill
 from ohmyadmin.helpers import camel_to_sentence, pluralize, render_to_string
 from ohmyadmin.i18n import _
 from ohmyadmin.metrics import Metric
@@ -317,6 +317,10 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
         page_actions = list(self.get_configured_page_actions(request))
         batch_actions = list(self.get_configured_batch_actions(request))
         metrics = list(self.get_metrics(request))
+
+        for filter_ in filters:
+            if isinstance(filter_, Prefill):
+                await filter_.prefill(request, wtforms.Form())
 
         return TemplateResponse(
             self.index_template,

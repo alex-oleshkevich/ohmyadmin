@@ -12,7 +12,9 @@
                 action="{{ request.url }}"
                 class="shadow-lg border border-gray-200 rounded-md bg-white p-3 absolute top-0 left-0 w-64 translate-y-10"
                 x-show="open" @click.outside="open = false">
+
                 {{ filter.render_form_field(request) }}
+
                 <div class="mt-5">
                     <button class="btn btn-primary" type="submit">{{ _('Apply') }}</button>
                 </div>

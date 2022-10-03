@@ -5,13 +5,23 @@ from starlette.requests import Request
 from examples.models import Brand
 from ohmyadmin.components import Card, Component, FormElement, FormPlaceholder, Grid, Group, display
 from ohmyadmin.components.display import DisplayField
-from ohmyadmin.ext.sqla import SQLAlchemyResource
+from ohmyadmin.ext.sqla import SelectFilter, SQLAlchemyResource
+from ohmyadmin.filters import BaseFilter
 from ohmyadmin.forms import BooleanField, Form, MarkdownField, SlugField, StringField, URLField
 
 
 class BrandResource(SQLAlchemyResource):
     icon = 'basket'
     entity_class = Brand
+
+    def get_filters(self, request: Request) -> typing.Iterable[BaseFilter]:
+        yield SelectFilter(
+            Brand.website,
+            choices=[
+                ('http://simpson.com/', 'Simpson'),
+                ('http://ross.com/', 'Ross'),
+            ],
+        )
 
     def get_list_fields(self) -> typing.Iterable[DisplayField]:
         yield DisplayField('name', searchable=True, sortable=True, link=True)

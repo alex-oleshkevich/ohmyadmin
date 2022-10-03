@@ -97,7 +97,7 @@
     }
 
     .btn-text {
-        @apply bg-transparent hover:bg-slate-100 active:bg-slate-200 text-slate-900 shadow-none;
+        @apply bg-transparent hover:bg-slate-100 active:bg-slate-200 text-slate-900 shadow-none border-transparent;
     }
 
     .btn-link {
