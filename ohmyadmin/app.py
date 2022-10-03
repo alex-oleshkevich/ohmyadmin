@@ -154,7 +154,7 @@ class OhMyAdmin(Router):
         next_url = request.query_params.get('next', request.url_for('ohmyadmin_welcome'))
         form_class = self.auth_policy.get_login_form_class()
         form = form_class(formdata=await request.form(), data={'next_url': next_url})
-        if form.validate(request):
+        if request.method in ['POST'] and form.validate():
             if user := await self.auth_policy.authenticate(request, form.identity.data, form.password.data):
                 self.auth_policy.login(request, user)
                 flash(request).success(_('You have been logged in.'))
@@ -162,14 +162,15 @@ class OhMyAdmin(Router):
             else:
                 flash(request).error(_('Invalid credentials.'))
 
-        layout = Grid(children=[FormElement(field) for field in form])
+        form_layout = Grid(children=[FormElement(field) for field in form])
         return self.render_to_response(
             request,
             'ohmyadmin/auth/login.html',
             {
                 'request': request,
-                'form': layout,
+                'form': form,
                 'next_url': next_url,
+                'form_layout': form_layout,
                 'page_title': _('Login'),
             },
         )

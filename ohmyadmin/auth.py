@@ -2,6 +2,7 @@ import dataclasses
 
 import abc
 import typing
+import wtforms.validators
 from starlette.authentication import AuthCredentials, AuthenticationBackend, BaseUser, UnauthenticatedUser
 from starlette.requests import HTTPConnection, Request
 from starlette.responses import RedirectResponse
@@ -23,8 +24,19 @@ class UserMenu:
 
 
 class LoginForm(Form):
-    identity = EmailField(label=_('Email'), widget_attrs={'autocomplete': 'email', 'inputmode': 'email'}, required=True)
-    password = PasswordField(widget_attrs={'autocomplete': 'password'}, required=True)
+    identity = EmailField(
+        label=_('Email'),
+        render_kw={'autocomplete': 'email', 'inputmode': 'email'},
+        validators=[
+            wtforms.validators.data_required(),
+        ],
+    )
+    password = PasswordField(
+        render_kw={'autocomplete': 'password'},
+        validators=[
+            wtforms.validators.data_required(),
+        ],
+    )
     next_url = HiddenField()
 
 
