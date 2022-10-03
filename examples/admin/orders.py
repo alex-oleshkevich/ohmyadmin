@@ -5,17 +5,17 @@ from starlette.requests import Request
 from examples.models import Country, Currency, Customer, Order, OrderItem, Product
 from ohmyadmin.components import Card, Component, FormElement, FormPlaceholder, FormRepeater, Grid, Group
 from ohmyadmin.ext.sqla import choices_from
-from ohmyadmin.metrics import ValueMetric
-from ohmyadmin.old_forms import (
+from ohmyadmin.forms import (
     DecimalField,
+    FieldList,
     Form,
     FormField,
     IntegerField,
-    ListField,
     MarkdownField,
     SelectField,
-    TextField,
+    StringField,
 )
+from ohmyadmin.metrics import ValueMetric
 from ohmyadmin.resources import Resource
 from ohmyadmin.tables import BadgeColumn, Column, DateColumn, NumberColumn
 
@@ -53,16 +53,16 @@ class EditOrderItem(Form):
 
 
 class EditForm(Form):
-    number = TextField(required=True)
+    number = StringField(required=True)
     customer_id = SelectField(required=True, coerce=int, choices=choices_from(Customer))
-    status = TextField(required=True)
+    status = StringField(required=True)
     currency = SelectField(required=True, choices=choices_from(Currency, value_column='code'))
     country = SelectField(choices=choices_from(Country, value_column='code'))
-    address = TextField()
-    city = TextField()
-    zip = TextField()
+    address = StringField()
+    city = StringField()
+    zip = StringField()
     notes = MarkdownField()
-    items = ListField(FormField(default=OrderItem, form_class=EditOrderItem), default=[])
+    items = FieldList(FormField(default=OrderItem, form_class=EditOrderItem), default=[])
 
 
 class OrderResource(Resource):
@@ -103,7 +103,7 @@ class OrderResource(Resource):
         DateColumn('created_at', label='Order date'),
     ]
 
-    def get_form_layout(self, request: Request, form: Form[Order]) -> Component:
+    def get_form_layout(self, request: Request, form: Form) -> Component:
         return Grid(
             columns=3,
             children=[

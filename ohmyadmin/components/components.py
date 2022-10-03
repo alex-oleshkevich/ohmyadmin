@@ -5,9 +5,9 @@ import typing
 import wtforms
 from starlette.datastructures import URL
 
+from ohmyadmin.forms import FieldList
 from ohmyadmin.globals import get_current_request
 from ohmyadmin.helpers import render_to_string
-from ohmyadmin.old_forms import ListField
 
 Colspan = int | typing.Literal['full']
 ButtonColor = typing.Literal['default', 'primary', 'text', 'danger']
@@ -119,7 +119,7 @@ class FormPlaceholder(Component):
 class FormRepeater(Component):
     template = 'ohmyadmin/components/form_repeater.html'
 
-    def __init__(self, form: wtforms.FieldList, layout_builder: typing.Callable[[ListField], Component]) -> None:
+    def __init__(self, form: wtforms.FieldList, layout_builder: typing.Callable[[FieldList], Component]) -> None:
         self.form = form
         self.layout_builder = layout_builder
 

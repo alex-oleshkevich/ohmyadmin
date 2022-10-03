@@ -2,13 +2,13 @@ import sqlalchemy as sa
 import typing
 import wtforms
 from starlette.requests import Request
+from wtforms import Field
 
 from examples.models import Country
 from ohmyadmin.components.display import DisplayField
 from ohmyadmin.ext.sqla import SQLAlchemyResource
-from ohmyadmin.forms import StringField
+from ohmyadmin.forms import Form, StringField
 from ohmyadmin.globals import get_dbsession
-from ohmyadmin.old_forms import Field, Form
 
 
 async def code_is_unique(form: Form, field: Field) -> None:

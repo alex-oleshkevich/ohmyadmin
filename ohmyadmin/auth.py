@@ -6,11 +6,12 @@ from starlette.authentication import AuthCredentials, AuthenticationBackend, Bas
 from starlette.requests import HTTPConnection, Request
 from starlette.responses import RedirectResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
+from wtforms import Form
 
 from ohmyadmin.components import Component
 from ohmyadmin.flash import flash
+from ohmyadmin.forms import EmailField, HiddenField, PasswordField
 from ohmyadmin.i18n import _
-from ohmyadmin.old_forms import EmailField, Form, HiddenField, PasswordField
 
 SESSION_KEY = '_auth_user_id_'
 

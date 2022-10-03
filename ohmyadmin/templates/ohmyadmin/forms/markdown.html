@@ -1,9 +1,0 @@
-{% import 'ohmyadmin/lib/forms.html' as lib %}
-{{ lib.form_input(field) }}
-
-<script>
-    new EasyMDE({
-        element: document.getElementById('{{ field.id }}'),
-        toolbar: {{ field.toolbar|tojson }},
-    });
-</script>
