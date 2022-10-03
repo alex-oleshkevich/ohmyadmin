@@ -91,8 +91,8 @@ class Group(LayoutComponent):
 
 
 class Text(LayoutComponent):
-    def __init__(self, text: str) -> None:
-        self.text = text
+    def __init__(self, text: str | None) -> None:
+        self.text = text or ''
 
     def render(self, request: Request, form: wtforms.Form) -> str:
         return self.text
