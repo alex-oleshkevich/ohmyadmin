@@ -82,7 +82,7 @@ class BaseDateFilter(BaseFilter):
         return macros(field)
 
 
-class BaseSelectFilter(BaseFilter, Prefill):
+class BaseChoiceFilter(BaseFilter, Prefill):
     def __init__(
         self, choices: Choices | ChoicesFactory, query_param: str, coerce: typing.Callable = str, label: str = ''
     ) -> None:
@@ -291,7 +291,7 @@ class BaseStringFilter(BaseFilter):
         return macros(field)
 
 
-class BaseMultiChoiceFilter(BaseSelectFilter):
+class BaseMultiChoiceFilter(BaseChoiceFilter):
     def __init__(
         self, choices: Choices | ChoicesFactory, query_param: str, coerce: typing.Callable = str, label: str = ''
     ) -> None:

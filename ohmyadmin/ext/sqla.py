@@ -11,13 +11,13 @@ from starlette.responses import Response
 from ohmyadmin.actions import BatchAction
 from ohmyadmin.components import ButtonColor
 from ohmyadmin.filters import (
+    BaseChoiceFilter,
     BaseDateFilter,
     BaseDecimalFilter,
     BaseFilter,
     BaseFloatFilter,
     BaseIntegerFilter,
     BaseMultiChoiceFilter,
-    BaseSelectFilter,
     BaseStringFilter,
 )
 from ohmyadmin.forms import Choices, ChoicesFactory, Form
@@ -80,7 +80,7 @@ class DateFilter(BaseDateFilter):
         return stmt.where(self.column == value)
 
 
-class SelectFilter(BaseSelectFilter):
+class ChoiceFilter(BaseChoiceFilter):
     def __init__(
         self,
         column: InstrumentedAttribute,

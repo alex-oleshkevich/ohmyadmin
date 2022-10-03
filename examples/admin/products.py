@@ -9,11 +9,11 @@ from examples.models import Brand, Image, Product
 from ohmyadmin.components import Card, Component, FormElement, Grid, Group, display
 from ohmyadmin.components.display import DisplayField
 from ohmyadmin.ext.sqla import (
+    ChoiceFilter,
     DecimalFilter,
     FloatFilter,
     IntegerFilter,
     MultiChoiceFilter,
-    SelectFilter,
     SQLAlchemyResource,
     StringFilter,
     choices_from,
@@ -91,7 +91,7 @@ class ProductResource(SQLAlchemyResource):
 
     def get_filters(self, request: Request) -> typing.Iterable[BaseFilter]:
         yield StringFilter(Product.name)
-        yield SelectFilter(Product.brand_id, choices=choices_from(Brand), label='Brand', coerce=int)
+        yield ChoiceFilter(Product.brand_id, choices=choices_from(Brand), label='Brand', coerce=int)
         yield IntegerFilter(Product.sku)
         yield FloatFilter(Product.price)
         yield DecimalFilter(Product.cost_per_item)
