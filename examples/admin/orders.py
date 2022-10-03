@@ -7,7 +7,7 @@ from starlette.requests import Request
 from examples.models import Country, Currency, Customer, Order, OrderItem, Product
 from ohmyadmin.components import Card, Component, FormElement, FormPlaceholder, FormRepeater, Grid, Group, display
 from ohmyadmin.components.display import DisplayField
-from ohmyadmin.ext.sqla import ChoiceFilter, DateFilter, DecimalFilter, SQLAlchemyResource, choices_from
+from ohmyadmin.ext.sqla import ChoiceFilter, DateRangeFilter, DecimalFilter, SQLAlchemyResource, choices_from
 from ohmyadmin.filters import BaseFilter
 from ohmyadmin.forms import (
     DecimalField,
@@ -72,7 +72,7 @@ class OrderResource(SQLAlchemyResource):
         yield ChoiceFilter(Order.status, choices=Order.Status.choices)
         yield ChoiceFilter(Order.currency_code, choices=choices_from(Currency, value_column='code'))
         yield DecimalFilter(Order.total_price)
-        yield DateFilter(Order.created_at)
+        yield DateRangeFilter(Order.created_at)
 
     def get_metrics(self, request: Request) -> typing.Iterable[Metric]:
         yield TotalOrders()

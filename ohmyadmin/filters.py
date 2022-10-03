@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import abc
+import datetime
 import decimal
 import inspect
 import typing
@@ -89,6 +90,78 @@ class BaseDateFilter(BaseFilter):
     def render_form_field(self, request: Request) -> str:
         field = self.create_form_field(request)
         macros = macro('ohmyadmin/filters.html', 'filter_field')
+        return macros(field)
+
+
+class DateRangeFilterForm(wtforms.Form):
+    before = wtforms.DateField(validators=[wtforms.validators.optional()])
+    after = wtforms.DateField(validators=[wtforms.validators.optional()])
+
+
+class BaseDateRangeFilter(BaseFilter):
+    def __init__(self, query_param: str, label: str = '') -> None:
+        super().__init__(query_param, label)
+        self.unbound_field = wtforms.FormField(DateRangeFilterForm, label=label)
+
+    def apply(self, request: Request, stmt: typing.Any, value: typing.Any) -> typing.Any:
+        try:
+            value = self.get_value(request)
+            value_before = value['before']
+            value_after = value['after']
+            return self.apply_filter(request, stmt, value_before, value_after)
+        except wtforms.ValidationError:
+            pass
+        return stmt
+
+    @abc.abstractmethod
+    def apply_filter(
+        self,
+        request: Request,
+        stmt: typing.Any,
+        before: datetime.date | None,
+        after: datetime.date | None,
+    ) -> typing.Any:
+        ...
+
+    def is_active(self, request: Request) -> bool:
+        field = self.create_form_field(request)
+        return bool(field.data['before'] or field.data['after'])
+
+    def render_indicator(self, request: Request) -> str:
+        try:
+            value: dict | None = self.get_value(request)
+            if not value:
+                return ''
+        except wtforms.ValidationError:
+            return ''
+
+        value_before = value.get('before')
+        value_after = value.get('after')
+        value_html = ''
+        if value_before and value_after:
+            formatted_before = display.DateTime().render(value_before.isoformat())
+            formatted_after = display.DateTime().render(value_after.isoformat())
+            value_html = _(
+                'between <span class="text-amber-700 font-medium">{before}</span> '
+                'and <span class="text-amber-700 font-medium">{after}</span>'
+            ).format(before=formatted_before, after=formatted_after)
+        elif value_before:
+            value_html = _('before <span class="text-amber-700 font-medium">{{date}</span>').format(
+                date=display.DateTime().render(value_before.isoformat()),
+            )
+        elif value_after:
+            value_html = _('after <span class="text-amber-700 font-medium">{{date}</span>').format(
+                date=display.DateTime().render(value_after.isoformat()),
+            )
+
+        field = self.create_form_field(request)
+        macros = macro('ohmyadmin/filters.html', 'filter_indicator')
+        url = request.url.remove_query_params([field.before.name, field.after.name])
+        return macros(url, self.label, value_html)
+
+    def render_form_field(self, request: Request) -> str:
+        field = self.create_form_field(request)
+        macros = macro('ohmyadmin/filters.html', 'list_filter_field')
         return macros(field)
 
 

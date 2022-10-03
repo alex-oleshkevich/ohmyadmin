@@ -13,6 +13,7 @@ from ohmyadmin.components import ButtonColor
 from ohmyadmin.filters import (
     BaseChoiceFilter,
     BaseDateFilter,
+    BaseDateRangeFilter,
     BaseDecimalFilter,
     BaseFilter,
     BaseFloatFilter,
@@ -78,6 +79,27 @@ class DateFilter(BaseDateFilter):
 
     def apply(self, request: Request, stmt: sa.sql.Select, value: datetime.date) -> sa.sql.Select:
         return stmt.where(self.column == value)
+
+
+class DateRangeFilter(BaseDateRangeFilter):
+    def __init__(self, column: InstrumentedAttribute, query_param: str | None = None, label: str = '') -> None:
+        self.column = column
+        self.query_param = query_param or self.column.key
+        self.label = label or snake_to_sentence(self.column.key).capitalize()
+        super().__init__(query_param=self.query_param, label=self.label)
+
+    def apply_filter(
+        self,
+        request: Request,
+        stmt: typing.Any,
+        before: datetime.date | None,
+        after: datetime.date | None,
+    ) -> typing.Any:
+        if before:
+            stmt = stmt.where(self.column <= before)
+        if after:
+            stmt = stmt.where(self.column >= after)
+        return stmt
 
 
 class ChoiceFilter(BaseChoiceFilter):
