@@ -4,7 +4,8 @@ from slugify import slugify
 from starlette.requests import Request
 from starlette.responses import Response
 
-from ohmyadmin.helpers import camel_to_sentence, render_to_response
+from ohmyadmin.helpers import camel_to_sentence
+from ohmyadmin.templating import TemplateResponse
 
 
 class MetricMeta(type):
@@ -26,8 +27,7 @@ class Metric(metaclass=MetricMeta):
         return {}
 
     async def dispatch(self, request: Request) -> Response:
-        return render_to_response(
-            request,
+        return TemplateResponse(
             self.template,
             {
                 'request': request,

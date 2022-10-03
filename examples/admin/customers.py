@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import sqlalchemy as sa
 import typing
 import wtforms
 from starlette.requests import Request
@@ -8,30 +7,18 @@ from starlette.requests import Request
 from examples.models import Customer
 from ohmyadmin.components import Card, Component, FormElement, FormPlaceholder, Grid, Group
 from ohmyadmin.components.display import DisplayField
-from ohmyadmin.ext.sqla import SQLAlchemyResource
+from ohmyadmin.ext.sqla import DateFilter, SQLAlchemyResource
 from ohmyadmin.filters import BaseFilter
 from ohmyadmin.forms import DateField, EmailField, Form, StringField
-
-
-class ByDateFilter(BaseFilter):
-    class FilterForm(Form):
-        before_date = DateField(label='Created from')
-        after_date = DateField(label='Created until')
-
-    def apply(self, request: Request, stmt: sa.sql.Select, form: FilterForm) -> sa.sql.Select:
-        if form.before_date.data:
-            stmt = stmt.where(Customer.created_at >= form.before_date.data)
-
-        if form.after_date.data:
-            stmt = stmt.where(Customer.created_at <= form.after_date.data)
-
-        return stmt
 
 
 class CustomerResource(SQLAlchemyResource):
     icon = 'friends'
     entity_class = Customer
-    filters = (ByDateFilter,)
+
+    def get_filters(self, request: Request) -> typing.Iterable[BaseFilter]:
+        yield DateFilter(Customer.created_at)
+        yield DateFilter(Customer.birthday)
 
     def get_list_fields(self) -> typing.Iterable[DisplayField]:
         yield DisplayField('name', sortable=True, link=True, searchable=True)

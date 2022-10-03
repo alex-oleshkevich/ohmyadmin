@@ -79,12 +79,12 @@ class ProductResource(SQLAlchemyResource):
         )
     )
 
-    def get_metrics(self) -> typing.Iterable[Metric]:
+    def get_metrics(self, request: Request) -> typing.Iterable[Metric]:
         yield TotalProducts()
         yield ProductInventory()
         yield AveragePrice()
 
-    def _get_first_image(self, obj):
+    def _get_first_image(self, obj: Product) -> str | None:
         if obj.images:
             return obj.images[0].image_path
         return None

@@ -4,7 +4,8 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import BaseRoute, Route, Router
 
-from ohmyadmin.helpers import camel_to_sentence, render_to_response
+from ohmyadmin.helpers import camel_to_sentence
+from ohmyadmin.templating import TemplateResponse
 
 
 class PageMeta(type):
@@ -38,6 +39,4 @@ class Page(Router, metaclass=PageMeta):
 
     async def dispatch(self, request: Request) -> Response:
         context = await self.get_template_context(request)
-        return render_to_response(
-            request, self.template, {'request': request, 'page': self, 'page_title': self.label, **context}
-        )
+        return TemplateResponse(self.template, {'request': request, 'page': self, 'page_title': self.label, **context})

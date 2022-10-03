@@ -24,6 +24,7 @@ from ohmyadmin.actions import (
     RowActionGroup,
 )
 from ohmyadmin.components.display import DisplayField
+from ohmyadmin.filters import BaseFilter
 from ohmyadmin.flash import flash
 from ohmyadmin.forms import Form
 from ohmyadmin.helpers import camel_to_sentence, pluralize, render_to_string
@@ -195,7 +196,7 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
         raise NotImplementedError(f'{self.__class__.__name__} must implement get_object() method.')
 
     @abc.abstractmethod
-    async def get_objects(self, request: Request, state: ListState) -> Page[typing.Any]:
+    async def get_objects(self, request: Request, state: ListState, filters: list[BaseFilter]) -> Page[typing.Any]:
         raise NotImplementedError(f'{self.__class__.__name__} must implement get_objects() method.')
 
     @abc.abstractmethod
@@ -288,7 +289,10 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
         yield from self.get_batch_actions(request)
         yield from self.get_default_batch_actions(request)
 
-    def get_metrics(self) -> typing.Iterable[Metric]:
+    def get_filters(self, request: Request) -> typing.Iterable[BaseFilter]:
+        return []
+
+    def get_metrics(self, request: Request) -> typing.Iterable[Metric]:
         return []
 
     async def index_view(self, request: Request) -> Response:
@@ -300,17 +304,20 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
 
         state = ListState(
             page=page_number,
-            page_size=page_size,
             ordering=ordering,
+            page_size=page_size,
             search_term=search_term,
             sortable_fields=self.sortable_fields,
             searchable_fields=self.searchable_fields,
         )
-        page = await self.get_objects(request, state)
+
+        filters = list(self.get_filters(request))
+        page = await self.get_objects(request, state, filters)
         view_content = self.render_list_view(request, page=page)
         page_actions = list(self.get_configured_page_actions(request))
         batch_actions = list(self.get_configured_batch_actions(request))
-        metrics = list(self.get_metrics())
+        metrics = list(self.get_metrics(request))
+
         return TemplateResponse(
             self.index_template,
             {
@@ -318,6 +325,7 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
                 'resource': self,
                 'request': request,
                 'metrics': metrics,
+                'filters': filters,
                 'page_size': page_size,
                 'pk': self.get_pk_value,
                 'content': view_content,
@@ -353,6 +361,8 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
         await self.prefill_form_choices(request, form, instance)
 
         if form_submitted and await self.validate_form(request, form, instance):
+            assert form_data
+
             await form.populate_obj_async(instance)
             await self.save_entity(request, form, instance)
             flash(request).success(_('{resource} has been saved.').format(resource=self.label))
@@ -434,7 +444,7 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
 
     async def metric_view(self, request: Request) -> Response:
         """Handle actions."""
-        metrics = {metric.slug: metric for metric in list(self.get_metrics())}
+        metrics = {metric.slug: metric for metric in list(self.get_metrics(request))}
         metric = metrics.get(request.query_params.get('_metric', ''))
         if not metric:
             raise HTTPException(404, 'Metric does not exists.')

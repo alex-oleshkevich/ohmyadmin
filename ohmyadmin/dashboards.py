@@ -56,7 +56,7 @@ class Dashboard(Router, metaclass=DashboardMeta):
         )
 
     async def metric_view(self, request: Request) -> Response:
-        metric_id = request.query_params.get('_metric')
+        metric_id = request.query_params.get('_metric', '')
         metrics = {metric.slug: metric for metric in self.get_metrics()}
         metric = metrics.get(metric_id)
         if not metric:

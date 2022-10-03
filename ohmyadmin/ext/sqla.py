@@ -1,3 +1,4 @@
+import datetime
 import sqlalchemy as sa
 import typing
 import wtforms
@@ -9,8 +10,9 @@ from starlette.responses import Response
 
 from ohmyadmin.actions import BatchAction
 from ohmyadmin.components import ButtonColor
+from ohmyadmin.filters import BaseDateFilter, BaseFilter
 from ohmyadmin.forms import Choices, ChoicesFactory, Form
-from ohmyadmin.helpers import camel_to_sentence, pluralize
+from ohmyadmin.helpers import camel_to_sentence, pluralize, snake_to_sentence
 from ohmyadmin.i18n import _
 from ohmyadmin.ordering import SortingType
 from ohmyadmin.pagination import Page
@@ -56,6 +58,17 @@ async def as_choices(
     fields that require choices."""
     result = await session.scalars(stmt)
     return [(getattr(row, value_column), getattr(row, label_column)) for row in result.all()]
+
+
+class DateFilter(BaseDateFilter):
+    def __init__(self, column: InstrumentedAttribute, query_param: str | None = None, label: str = '') -> None:
+        self.column = column
+        self.query_param = query_param or self.column.key
+        self.label = label or snake_to_sentence(self.column.key).capitalize()
+        super().__init__(query_param=self.query_param, label=self.label)
+
+    def apply(self, request: Request, stmt: sa.sql.Select, value: datetime.date) -> sa.sql.Select:
+        return stmt.where(self.column == value)
 
 
 class SQLAlchemyResource(Resource):
@@ -107,6 +120,16 @@ class SQLAlchemyResource(Resource):
     def get_queryset(self, request: Request) -> sa.sql.Select:
         return getattr(self, 'queryset', sa.select(self.get_entity_class()))
 
+    async def apply_filters(
+        self,
+        request: Request,
+        filters: list[BaseFilter],
+        stmt: sa.sql.Select,
+    ) -> sa.sql.Select:
+        for filter_ in filters:
+            stmt = filter_.filter(request, stmt)
+        return stmt
+
     async def get_object(self, request: Request, pk: typing.Any) -> typing.Any | None:
         pk_column = self.get_pk_column()
         stmt = self.get_queryset(request).where(pk_column == pk)
@@ -118,10 +141,11 @@ class SQLAlchemyResource(Resource):
         result = await request.state.dbsession.scalars(stmt)
         return result.one()
 
-    async def get_objects(self, request: Request, state: ListState) -> Page[typing.Any]:
+    async def get_objects(self, request: Request, state: ListState, filters: list[BaseFilter]) -> Page[typing.Any]:
         stmt = self.get_queryset(request)
         stmt = self.apply_search(stmt, state.search_term, state.searchable_fields)
         stmt = self.apply_ordering(stmt, state.ordering, state.sortable_fields)
+        stmt = await self.apply_filters(request, filters, stmt)
         paged_stmt = self.apply_pagination(stmt, page_number=state.page, page_size=state.page_size)
         row_count = await self.get_object_count(request, stmt)
         result = await request.state.dbsession.scalars(paged_stmt)
