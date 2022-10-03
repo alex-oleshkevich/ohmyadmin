@@ -11,7 +11,17 @@ from wtforms.fields.core import UnboundField
 from wtforms.meta import DefaultMeta
 
 from ohmyadmin.components import display
-from ohmyadmin.forms import Choices, ChoicesFactory, DecimalField, FloatField, Form, IntegerField, Prefill, SelectField
+from ohmyadmin.forms import (
+    CheckboxListWidget,
+    Choices,
+    ChoicesFactory,
+    DecimalField,
+    FloatField,
+    Form,
+    IntegerField,
+    Prefill,
+    SelectField,
+)
 from ohmyadmin.helpers import snake_to_sentence
 from ohmyadmin.i18n import _
 from ohmyadmin.templating import macro
@@ -298,7 +308,7 @@ class BaseMultiChoiceFilter(BaseChoiceFilter):
         super().__init__(choices, query_param, coerce, label)
         self.unbound_field = wtforms.SelectMultipleField(
             option_widget=wtforms.widgets.CheckboxInput(),
-            widget=wtforms.widgets.ListWidget(),
+            widget=CheckboxListWidget(),
             coerce=coerce,
         )
 

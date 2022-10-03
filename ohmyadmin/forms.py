@@ -301,6 +301,17 @@ class CodeField(wtforms.TextAreaField):
     ...
 
 
+class CheckboxListWidget:
+    def __call__(self, field: wtforms.Field, **kwargs: typing.Any) -> str:
+        kwargs.setdefault("id", field.id)
+        html: list[str] = []
+        for subfield in field:
+            html.append('<div class="form-check mb-1">')
+            html.append(f'{subfield} <label for="{subfield.id}">{subfield.label.text}</label>')
+            html.append('</div>')
+        return ''.join(html)
+
+
 class Form(wtforms.Form):
     async def populate_obj_async(self, obj: typing.Any) -> None:
         """
