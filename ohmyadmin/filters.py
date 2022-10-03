@@ -289,3 +289,32 @@ class BaseStringFilter(BaseFilter):
         field = self.create_form_field(request)
         macros = macro('ohmyadmin/filters.html', 'list_filter_field')
         return macros(field)
+
+
+class BaseMultiChoiceFilter(BaseSelectFilter):
+    def __init__(
+        self, choices: Choices | ChoicesFactory, query_param: str, coerce: typing.Callable = str, label: str = ''
+    ) -> None:
+        super().__init__(choices, query_param, coerce, label)
+        self.unbound_field = wtforms.SelectMultipleField(
+            option_widget=wtforms.widgets.CheckboxInput(),
+            widget=wtforms.widgets.ListWidget(),
+            coerce=coerce,
+        )
+
+    def render_indicator(self, request: Request) -> str:
+        try:
+            value: list | None = self.get_value(request)
+            if not value:
+                return ''
+        except wtforms.ValidationError:
+            return ''
+
+        field = self.create_form_field(request)
+        choices_by_key = {x[0]: x[1] for x in field.choices}
+        labels = [choices_by_key[label] for label in value]
+        component = display.Text()
+        display_value = component.render(', '.join(labels)) if value else 'n/a'
+        macros = macro('ohmyadmin/filters.html', 'filter_indicator')
+        url = request.url.remove_query_params(self.query_param)
+        return macros(url, self.label, display_value)

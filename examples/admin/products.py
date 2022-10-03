@@ -12,6 +12,7 @@ from ohmyadmin.ext.sqla import (
     DecimalFilter,
     FloatFilter,
     IntegerFilter,
+    MultiChoiceFilter,
     SelectFilter,
     SQLAlchemyResource,
     StringFilter,
@@ -94,6 +95,9 @@ class ProductResource(SQLAlchemyResource):
         yield IntegerFilter(Product.sku)
         yield FloatFilter(Product.price)
         yield DecimalFilter(Product.cost_per_item)
+        yield MultiChoiceFilter(
+            Product.barcode, choices=[('5255323299388', '5255323299388'), ('5851908203322', '5851908203322')]
+        )
 
     def get_metrics(self, request: Request) -> typing.Iterable[Metric]:
         yield TotalProducts()
