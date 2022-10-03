@@ -10,7 +10,7 @@ from starlette.responses import Response
 
 from ohmyadmin.actions import BatchAction
 from ohmyadmin.components import ButtonColor
-from ohmyadmin.filters import BaseDateFilter, BaseFilter, BaseSelectFilter
+from ohmyadmin.filters import BaseDateFilter, BaseFilter, BaseNumberFilter, BaseSelectFilter
 from ohmyadmin.forms import Choices, ChoicesFactory, Form
 from ohmyadmin.helpers import camel_to_sentence, pluralize, snake_to_sentence
 from ohmyadmin.i18n import _
@@ -87,6 +87,28 @@ class SelectFilter(BaseSelectFilter):
 
     def apply(self, request: Request, stmt: sa.sql.Select, value: typing.Any) -> sa.sql.Select:
         return stmt.where(self.column == value)
+
+
+class NumberFilter(BaseNumberFilter):
+    def __init__(self, column: InstrumentedAttribute, query_param: str | None = None, label: str = '') -> None:
+        self.column = column
+        super().__init__(
+            query_param=query_param or self.column.key,
+            label=label or snake_to_sentence(self.column.key).capitalize(),
+        )
+
+    def apply_operation(
+        self, request: Request, stmt: typing.Any, operation: typing.Literal['eq', 'gt', 'gte', 'lt', 'lte'], query: int
+    ) -> typing.Any:
+        mapping = {
+            'eq': lambda stmt: stmt.where(self.column == query),
+            'gt': lambda stmt: stmt.where(self.column > query),
+            'gte': lambda stmt: stmt.where(self.column >= query),
+            'lt': lambda stmt: stmt.where(self.column < query),
+            'lte': lambda stmt: stmt.where(self.column <= query),
+        }
+        filter_ = mapping[operation]
+        return filter_(stmt)
 
 
 class SQLAlchemyResource(Resource):
