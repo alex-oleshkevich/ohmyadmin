@@ -10,7 +10,14 @@ from starlette.responses import Response
 
 from ohmyadmin.actions import BatchAction
 from ohmyadmin.components import ButtonColor
-from ohmyadmin.filters import BaseDateFilter, BaseFilter, BaseNumberFilter, BaseSelectFilter
+from ohmyadmin.filters import (
+    BaseDateFilter,
+    BaseDecimalFilter,
+    BaseFilter,
+    BaseFloatFilter,
+    BaseIntegerFilter,
+    BaseSelectFilter,
+)
 from ohmyadmin.forms import Choices, ChoicesFactory, Form
 from ohmyadmin.helpers import camel_to_sentence, pluralize, snake_to_sentence
 from ohmyadmin.i18n import _
@@ -89,7 +96,9 @@ class SelectFilter(BaseSelectFilter):
         return stmt.where(self.column == value)
 
 
-class NumberFilter(BaseNumberFilter):
+class IntegerFilter(BaseIntegerFilter):
+    cast_to: sa.types.TypeEngine | typing.Type[sa.types.TypeEngine] = sa.Integer
+
     def __init__(self, column: InstrumentedAttribute, query_param: str | None = None, label: str = '') -> None:
         self.column = column
         super().__init__(
@@ -100,15 +109,27 @@ class NumberFilter(BaseNumberFilter):
     def apply_operation(
         self, request: Request, stmt: typing.Any, operation: typing.Literal['eq', 'gt', 'gte', 'lt', 'lte'], query: int
     ) -> typing.Any:
+        number_column = sa.sql.cast(self.column, self.cast_to)
         mapping = {
-            'eq': lambda stmt: stmt.where(self.column == query),
-            'gt': lambda stmt: stmt.where(self.column > query),
-            'gte': lambda stmt: stmt.where(self.column >= query),
-            'lt': lambda stmt: stmt.where(self.column < query),
-            'lte': lambda stmt: stmt.where(self.column <= query),
+            'eq': lambda stmt: stmt.where(number_column == query),
+            'gt': lambda stmt: stmt.where(number_column > query),
+            'gte': lambda stmt: stmt.where(number_column >= query),
+            'lt': lambda stmt: stmt.where(number_column < query),
+            'lte': lambda stmt: stmt.where(number_column <= query),
         }
+        if operation not in mapping:
+            return stmt
+
         filter_ = mapping[operation]
         return filter_(stmt)
+
+
+class FloatFilter(BaseFloatFilter, IntegerFilter):
+    cast_to = sa.Float
+
+
+class DecimalFilter(BaseDecimalFilter, IntegerFilter):
+    cast_to = sa.Numeric
 
 
 class SQLAlchemyResource(Resource):
@@ -210,6 +231,9 @@ class SQLAlchemyResource(Resource):
         return stmt
 
     def apply_search(self, stmt: sa.sql.Select, search_term: str, searchable_fields: list[str]) -> sa.sql.Select:
+        if not search_term:
+            return stmt
+
         clauses = []
         props = get_column_properties(self.get_entity_class(), searchable_fields)
         for prop in props.values():

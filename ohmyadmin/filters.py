@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import abc
 import datetime
+import decimal
 import inspect
 import typing
 import wtforms
@@ -11,7 +12,7 @@ from wtforms.fields.core import UnboundField
 from wtforms.meta import DefaultMeta
 
 from ohmyadmin.components import display
-from ohmyadmin.forms import Choices, ChoicesFactory, Form, Prefill
+from ohmyadmin.forms import Choices, ChoicesFactory, DecimalField, FloatField, Form, IntegerField, Prefill, SelectField
 from ohmyadmin.helpers import snake_to_sentence
 from ohmyadmin.i18n import _
 from ohmyadmin.templating import macro
@@ -30,13 +31,18 @@ class BaseFilter(abc.ABC):
         ...
 
     def filter(self, request: Request, stmt: typing.Any) -> typing.Any:
-        value = self.get_value(request)
-        if value is not None:
-            return self.apply(request, stmt, value)
+        try:
+            if value := self.get_value(request):
+                return self.apply(request, stmt, value)
+        except wtforms.ValidationError:
+            pass
         return stmt
 
     def is_active(self, request: Request) -> bool:
-        return self.get_value(request) is not None
+        try:
+            return self.get_value(request) is not None
+        except wtforms.ValidationError:
+            return False
 
     def get_value(self, request: Request) -> typing.Any | None:
         raw_value = request.query_params.get(self.query_param)
@@ -118,7 +124,10 @@ class BaseSelectFilter(BaseFilter, Prefill):
         return macros(field)
 
 
-class BaseNumberFilter(BaseFilter):
+_VT = typing.TypeVar('_VT')
+
+
+class BaseNumericFilter(BaseFilter, typing.Generic[_VT]):
     operations = (
         ('eq', _('equals')),
         ('gt', _('is greater than')),
@@ -130,12 +139,7 @@ class BaseNumberFilter(BaseFilter):
     def __init__(self, query_param: str, label: str = '') -> None:
         super().__init__(query_param, label)
         self.operations_by_key: dict[str, str] = {x[0]: x[1] for x in self.operations}
-
-        class SubForm(wtforms.Form):
-            operation = wtforms.SelectField(choices=self.operations)
-            query = wtforms.IntegerField()
-
-        self.unbound_field = wtforms.FormField(SubForm, label=label)
+        self.unbound_field = wtforms.FormField(self.get_subform_class(), label=label)
 
     def apply(self, request: Request, stmt: typing.Any, value: typing.Any) -> typing.Any:
         operation = value['operation']
@@ -150,8 +154,12 @@ class BaseNumberFilter(BaseFilter):
         request: Request,
         stmt: typing.Any,
         operation: typing.Literal['eq', 'gt', 'gte', 'lt', 'lte'],
-        query: int,
+        query: _VT,
     ) -> typing.Any:
+        ...
+
+    @abc.abstractmethod
+    def get_subform_class(self) -> typing.Type[wtforms.Form]:
         ...
 
     def create_form_field(self, request: Request) -> wtforms.Field:
@@ -164,11 +172,18 @@ class BaseNumberFilter(BaseFilter):
         return bool(field.data['query'])
 
     def get_value(self, request: Request) -> typing.Any | None:
-        return self.create_form_field(request).data
+        field = self.create_form_field(request)
+        if not field.validate(wtforms.Form()):
+            raise wtforms.ValidationError('Value is invalid.')
+        return field.data
 
     def render_indicator(self, request: Request) -> str:
-        value = self.get_value(request)
-        assert value
+        try:
+            value: dict | None = self.get_value(request)
+            if not value:
+                return ''
+        except wtforms.ValidationError:
+            return ''
 
         value_html = Markup(
             '<span class="font-medium text-amber-700">{operation}</span> {value}'.format(
@@ -184,15 +199,36 @@ class BaseNumberFilter(BaseFilter):
         return macros(url, self.label, display_value)
 
     def render_form_field(self, request: Request) -> str:
-        class SubForm(wtforms.Form):
-            operation = wtforms.SelectField(choices=self.operations)
-            query = wtforms.IntegerField()
-
-        unbound_field: UnboundField = wtforms.FormField(SubForm, label=self.label)
-        field = unbound_field.bind(form=None, name=self.query_param, _meta=DefaultMeta())
-        field.process(formdata=None, data=self.get_value(request))
+        field = self.create_form_field(request)
         macros = macro('ohmyadmin/filters.html', 'number_filter_field')
         return macros(field)
 
     def convert_value(self, value: str) -> typing.Any:
         return int(value)
+
+
+class BaseIntegerFilter(BaseNumericFilter[int]):
+    def get_subform_class(self) -> typing.Type[wtforms.Form]:
+        class SubForm(wtforms.Form):
+            operation = SelectField(choices=self.operations)
+            query = IntegerField()
+
+        return SubForm
+
+
+class BaseFloatFilter(BaseNumericFilter[float]):
+    def get_subform_class(self) -> typing.Type[wtforms.Form]:
+        class SubForm(wtforms.Form):
+            operation = SelectField(choices=self.operations)
+            query = FloatField()
+
+        return SubForm
+
+
+class BaseDecimalFilter(BaseNumericFilter[decimal.Decimal]):
+    def get_subform_class(self) -> typing.Type[wtforms.Form]:
+        class SubForm(wtforms.Form):
+            operation = SelectField(choices=self.operations)
+            query = DecimalField()
+
+        return SubForm
