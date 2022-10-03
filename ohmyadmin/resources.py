@@ -312,15 +312,15 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
         )
 
         filters = list(self.get_filters(request))
+        for filter_ in filters:
+            if isinstance(filter_, Prefill):
+                await filter_.prefill(request, wtforms.Form())
+
         page = await self.get_objects(request, state, filters)
         view_content = self.render_list_view(request, page=page)
         page_actions = list(self.get_configured_page_actions(request))
         batch_actions = list(self.get_configured_batch_actions(request))
         metrics = list(self.get_metrics(request))
-
-        for filter_ in filters:
-            if isinstance(filter_, Prefill):
-                await filter_.prefill(request, wtforms.Form())
 
         return TemplateResponse(
             self.index_template,

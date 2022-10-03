@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import abc
-import datetime
 import decimal
 import inspect
 import typing
@@ -20,11 +19,30 @@ from ohmyadmin.templating import macro
 
 class BaseFilter(abc.ABC):
     label: str = ''
+    form_field_class: typing.Type[wtforms.Field] = wtforms.StringField
 
     def __init__(self, query_param: str, label: str = '') -> None:
         self.coerce: typing.Callable = str
         self.query_param = query_param
         self.label = label or snake_to_sentence(self.query_param)
+        self.unbound_field: UnboundField = self.form_field_class()
+
+    def create_form_field(self, request: Request) -> wtforms.Field:
+        field = self.unbound_field.bind(form=None, name=self.query_param, _meta=DefaultMeta())
+        field.process(request.query_params)
+        return field
+
+    def is_active(self, request: Request) -> bool:
+        field = self.create_form_field(request)
+        if not field.validate(wtforms.Form()):
+            return False
+        return bool(field.data)
+
+    def get_value(self, request: Request) -> typing.Any | None:
+        field = self.create_form_field(request)
+        if not field.validate(wtforms.Form()):
+            raise wtforms.ValidationError(''.join(field.errors))
+        return field.data
 
     @abc.abstractmethod
     def apply(self, request: Request, stmt: typing.Any, value: typing.Any) -> typing.Any:
@@ -38,24 +56,6 @@ class BaseFilter(abc.ABC):
             pass
         return stmt
 
-    def is_active(self, request: Request) -> bool:
-        try:
-            return self.get_value(request) is not None
-        except wtforms.ValidationError:
-            return False
-
-    def get_value(self, request: Request) -> typing.Any | None:
-        raw_value = request.query_params.get(self.query_param)
-        if raw_value:
-            try:
-                return self.convert_value(raw_value)
-            except ValueError:
-                pass
-        return None
-
-    def convert_value(self, value: str) -> typing.Any:
-        return self.coerce(value)
-
     @abc.abstractmethod
     def render_indicator(self, request: Request) -> str:
         ...
@@ -66,7 +66,7 @@ class BaseFilter(abc.ABC):
 
 
 class BaseDateFilter(BaseFilter):
-    value_converter = datetime.date.fromisoformat
+    form_field_class = wtforms.DateField
 
     def render_indicator(self, request: Request) -> str:
         value = self.get_value(request)
@@ -77,9 +77,7 @@ class BaseDateFilter(BaseFilter):
         return macros(url, self.label, display_value)
 
     def render_form_field(self, request: Request) -> str:
-        unbound_field: UnboundField = wtforms.DateField(label=self.label)
-        field = unbound_field.bind(form=None, name=self.query_param, _meta=DefaultMeta())
-        field.process(formdata=None, data=self.get_value(request))
+        field = self.create_form_field(request)
         macros = macro('ohmyadmin/filters.html', 'filter_field')
         return macros(field)
 
@@ -89,8 +87,7 @@ class BaseSelectFilter(BaseFilter, Prefill):
         self, choices: Choices | ChoicesFactory, query_param: str, coerce: typing.Callable = str, label: str = ''
     ) -> None:
         super().__init__(query_param, label)
-
-        self.coerce = coerce
+        self.unbound_field = wtforms.SelectField(coerce=coerce)
         self.choices: Choices = []
         self.choices_factory: ChoicesFactory | None = None
         if choices:
@@ -103,8 +100,15 @@ class BaseSelectFilter(BaseFilter, Prefill):
         if self.choices_factory:
             self.choices = await self.choices_factory(request, wtforms.Form())
 
+    def create_form_field(self, request: Request) -> wtforms.Field:
+        field = self.unbound_field.bind(form=None, name=self.query_param, _meta=DefaultMeta())
+        field.process(request.query_params)
+        field.choices = self.choices
+        return field
+
     def render_indicator(self, request: Request) -> str:
         value = self.get_value(request)
+
         for (choice_value, choice_label) in self.choices:
             if choice_value == value:
                 value = choice_label
@@ -117,9 +121,7 @@ class BaseSelectFilter(BaseFilter, Prefill):
         return macros(url, self.label, display_value)
 
     def render_form_field(self, request: Request) -> str:
-        unbound_field: UnboundField = wtforms.SelectField(label=self.label, choices=self.choices, coerce=self.coerce)
-        field = unbound_field.bind(form=None, name=self.query_param, _meta=DefaultMeta())
-        field.process(formdata=None, data=self.get_value(request))
+        field = self.create_form_field(request)
         macros = macro('ohmyadmin/filters.html', 'filter_field')
         return macros(field)
 
@@ -162,20 +164,9 @@ class BaseNumericFilter(BaseFilter, typing.Generic[_VT]):
     def get_subform_class(self) -> typing.Type[wtforms.Form]:
         ...
 
-    def create_form_field(self, request: Request) -> wtforms.Field:
-        field = self.unbound_field.bind(form=None, name=self.query_param, _meta=DefaultMeta())
-        field.process(request.query_params)
-        return field
-
     def is_active(self, request: Request) -> bool:
         field = self.create_form_field(request)
         return bool(field.data['query'])
-
-    def get_value(self, request: Request) -> typing.Any | None:
-        field = self.create_form_field(request)
-        if not field.validate(wtforms.Form()):
-            raise wtforms.ValidationError('Value is invalid.')
-        return field.data
 
     def render_indicator(self, request: Request) -> str:
         try:
