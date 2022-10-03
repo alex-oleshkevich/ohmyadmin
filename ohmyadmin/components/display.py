@@ -74,6 +74,19 @@ class Money(DisplayComponent):
         return '<div class="text-right">{prefix}{value}{suffix}</div>'.format(value=value, prefix=prefix, suffix=suffix)
 
 
+BadgeColor = typing.Literal['blue', 'green', 'yellow', 'green', 'red', 'pink', 'teal', 'sky', 'gray']
+
+
+class Badge(DisplayComponent):
+    def __init__(self, colors: dict[str, str]) -> None:
+        self.colors = colors
+
+    def render(self, value: typing.Any) -> str:
+        color = self.colors.get(value, 'gray')
+        macros = macro('ohmyadmin/components/display.html', 'badge')
+        return macros(value, color)
+
+
 def string_formatter(value: typing.Any) -> str:
     return str(value)
 

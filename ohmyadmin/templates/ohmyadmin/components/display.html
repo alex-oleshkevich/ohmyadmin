@@ -20,3 +20,9 @@
         {% endif %}
     </div>
 {% endmacro %}
+
+{% macro badge(value, color) %}
+    <div class="badge badge-{{ color }}">
+        {{ value }}
+    </div>
+{% endmacro %}

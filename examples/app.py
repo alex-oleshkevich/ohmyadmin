@@ -16,7 +16,7 @@ from examples.admin.categories import CategoryResource
 from examples.admin.countries import CountryResource
 from examples.admin.currencies import CurrencyResource
 from examples.admin.customers import CustomerResource
-from examples.admin.orders import TotalOrders
+from examples.admin.orders import OrderResource, TotalOrders
 from examples.admin.products import ProductResource
 from examples.admin.users import UserResource
 from examples.models import User
@@ -95,7 +95,7 @@ admin = OhMyAdmin(
         BrandResource(),
         ProductResource(),
         CustomerResource(),
-        # OrderResource(),
+        OrderResource(),
         CategoryResource(),
         CurrencyResource(),
         CountryResource(),

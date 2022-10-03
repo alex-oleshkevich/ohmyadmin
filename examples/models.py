@@ -213,6 +213,14 @@ class Order(Base):
         DELIVERED = 'Delivered'
         CANCELLED = 'Cancelled'
 
+        choices = (
+            (NEW, NEW),
+            (PROCESSING, PROCESSING),
+            (SHIPPED, SHIPPED),
+            (DELIVERED, DELIVERED),
+            (CANCELLED, CANCELLED),
+        )
+
     __tablename__ = 'orders'
     id = sa.Column(sa.BigInteger, primary_key=True)
     number = sa.Column(sa.Text, nullable=False)

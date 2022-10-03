@@ -1,10 +1,14 @@
 import sqlalchemy as sa
+import typing
+import wtforms
 from sqlalchemy.orm import joinedload, selectinload, with_expression
 from starlette.requests import Request
 
 from examples.models import Country, Currency, Customer, Order, OrderItem, Product
-from ohmyadmin.components import Card, Component, FormElement, FormPlaceholder, FormRepeater, Grid, Group
-from ohmyadmin.ext.sqla import choices_from
+from ohmyadmin.components import Card, Component, FormElement, FormPlaceholder, FormRepeater, Grid, Group, display
+from ohmyadmin.components.display import DisplayField
+from ohmyadmin.ext.sqla import ChoiceFilter, DateFilter, DecimalFilter, SQLAlchemyResource, choices_from
+from ohmyadmin.filters import BaseFilter
 from ohmyadmin.forms import (
     DecimalField,
     FieldList,
@@ -15,9 +19,7 @@ from ohmyadmin.forms import (
     SelectField,
     StringField,
 )
-from ohmyadmin.metrics import ValueMetric
-from ohmyadmin.resources import Resource
-from ohmyadmin.tables import BadgeColumn, Column, DateColumn, NumberColumn
+from ohmyadmin.metrics import Metric, ValueMetric
 
 
 class TotalOrders(ValueMetric):
@@ -52,23 +54,9 @@ class EditOrderItem(Form):
     unit_price = DecimalField(required=True)
 
 
-class EditForm(Form):
-    number = StringField(required=True)
-    customer_id = SelectField(required=True, coerce=int, choices=choices_from(Customer))
-    status = StringField(required=True)
-    currency = SelectField(required=True, choices=choices_from(Currency, value_column='code'))
-    country = SelectField(choices=choices_from(Country, value_column='code'))
-    address = StringField()
-    city = StringField()
-    zip = StringField()
-    notes = MarkdownField()
-    items = FieldList(FormField(default=OrderItem, form_class=EditOrderItem), default=[])
-
-
-class OrderResource(Resource):
+class OrderResource(SQLAlchemyResource):
     icon = 'shopping-cart'
     entity_class = Order
-    form_class = EditForm
     queryset = (
         sa.select(Order)
         .join(Order.items)
@@ -79,29 +67,49 @@ class OrderResource(Resource):
             selectinload(Order.items),
         )
     )
-    metrics = [
-        TotalOrders(),
-        OpenOrders(),
-        AveragePrice(),
-    ]
-    table_columns = [
-        Column('number', searchable=True, link=True),
-        Column('customer'),
-        BadgeColumn(
+
+    def get_filters(self, request: Request) -> typing.Iterable[BaseFilter]:
+        yield ChoiceFilter(Order.status, choices=Order.Status.choices)
+        yield ChoiceFilter(Order.currency_code, choices=choices_from(Currency, value_column='code'))
+        yield DecimalFilter(Order.total_price)
+        yield DateFilter(Order.created_at)
+
+    def get_metrics(self, request: Request) -> typing.Iterable[Metric]:
+        yield TotalOrders()
+        yield OpenOrders()
+        yield AveragePrice()
+
+    def get_list_fields(self) -> typing.Iterable[DisplayField]:
+        yield DisplayField('number', searchable=True, link=True)
+        yield DisplayField('customer')
+        yield DisplayField(
             'status',
             sortable=True,
-            colors={
-                Order.Status.NEW: 'blue',
-                Order.Status.SHIPPED: 'green',
-                Order.Status.PROCESSING: 'yellow',
-                Order.Status.DELIVERED: 'green',
-                Order.Status.CANCELLED: 'red',
-            },
-        ),
-        Column('currency'),
-        NumberColumn('total_price'),
-        DateColumn('created_at', label='Order date'),
-    ]
+            component=display.Badge(
+                {
+                    Order.Status.NEW: 'blue',
+                    Order.Status.SHIPPED: 'green',
+                    Order.Status.PROCESSING: 'yellow',
+                    Order.Status.DELIVERED: 'green',
+                    Order.Status.CANCELLED: 'red',
+                }
+            ),
+        )
+        yield DisplayField('currency')
+        yield DisplayField('total_price', component=display.Money('USD'))
+        yield DisplayField('created_at', label='Order date', component=display.DateTime())
+
+    def get_form_fields(self, request: Request) -> typing.Iterable[wtforms.Field]:
+        yield StringField(name='number', required=True)
+        yield SelectField(name='customer_id', required=True, coerce=int, choices=choices_from(Customer))
+        yield StringField(name='status', required=True)
+        yield SelectField(name='currency', required=True, choices=choices_from(Currency, value_column='code'))
+        yield SelectField(name='country', choices=choices_from(Country, value_column='code'))
+        yield StringField(name='address')
+        yield StringField(name='city')
+        yield StringField(name='zip')
+        yield MarkdownField(name='notes')
+        yield FieldList(name='items', unbound_field=FormField(default=OrderItem, form_class=EditOrderItem), default=[])
 
     def get_form_layout(self, request: Request, form: Form) -> Component:
         return Grid(
