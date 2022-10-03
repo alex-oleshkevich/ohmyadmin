@@ -191,11 +191,8 @@ class BaseNumericFilter(BaseFilter, typing.Generic[_VT]):
 
     def render_form_field(self, request: Request) -> str:
         field = self.create_form_field(request)
-        macros = macro('ohmyadmin/filters.html', 'number_filter_field')
+        macros = macro('ohmyadmin/filters.html', 'list_filter_field')
         return macros(field)
-
-    def convert_value(self, value: str) -> typing.Any:
-        return int(value)
 
 
 class BaseIntegerFilter(BaseNumericFilter[int]):
@@ -223,3 +220,72 @@ class BaseDecimalFilter(BaseNumericFilter[decimal.Decimal]):
             query = DecimalField()
 
         return SubForm
+
+
+class BaseStringFilter(BaseFilter):
+    operations = (
+        ('exact', _('same as')),
+        ('startswith', _('starts with')),
+        ('endswith', _('ends with')),
+        ('contains', _('contains')),
+        ('pattern', _('matches')),
+    )
+
+    def __init__(self, query_param: str, label: str = '') -> None:
+        super().__init__(query_param, label)
+        self.operations_by_key: dict[str, str] = {x[0]: x[1] for x in self.operations}
+        self.unbound_field = wtforms.FormField(self.get_subform_class(), label=label)
+
+    def apply(self, request: Request, stmt: typing.Any, value: typing.Any) -> typing.Any:
+        operation = value['operation']
+        query = value['query']
+        if not query:
+            return stmt
+        return self.apply_operation(request, stmt, operation, query)
+
+    @abc.abstractmethod
+    def apply_operation(
+        self,
+        request: Request,
+        stmt: typing.Any,
+        operation: typing.Literal['exact', 'startswith', 'endswith', 'contains', 'pattern'],
+        query: str,
+    ) -> typing.Any:
+        ...
+
+    def get_subform_class(self) -> typing.Type[wtforms.Form]:
+        class SubForm(wtforms.Form):
+            operation = wtforms.SelectField(choices=self.operations)
+            query = wtforms.StringField(validators=[wtforms.validators.data_required()])
+
+        return SubForm
+
+    def is_active(self, request: Request) -> bool:
+        field = self.create_form_field(request)
+        return bool(field.data['query'])
+
+    def render_indicator(self, request: Request) -> str:
+        try:
+            value: dict | None = self.get_value(request)
+            if not value:
+                return ''
+        except wtforms.ValidationError:
+            return ''
+
+        value_html = Markup(
+            '<span class="font-medium text-amber-700">{operation}</span> {value}'.format(
+                operation=self.operations_by_key[value['operation']].lower(),
+                value=value['query'],
+            )
+        )
+        field = self.create_form_field(request)
+        component = display.Text()
+        display_value = component.render(value_html) if value else 'n/a'
+        macros = macro('ohmyadmin/filters.html', 'filter_indicator')
+        url = request.url.remove_query_params([field.operation.name, field.query.name])
+        return macros(url, self.label, display_value)
+
+    def render_form_field(self, request: Request) -> str:
+        field = self.create_form_field(request)
+        macros = macro('ohmyadmin/filters.html', 'list_filter_field')
+        return macros(field)

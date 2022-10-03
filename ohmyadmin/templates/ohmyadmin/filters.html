@@ -14,7 +14,7 @@
 {% endmacro %}
 
 
-{% macro number_filter_field(field) %}
+{% macro list_filter_field(field) %}
     <div class="grid gap-3">
         {% for subfield in field %}
             {{ forms.form_field(subfield) }}

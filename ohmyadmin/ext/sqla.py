@@ -17,6 +17,7 @@ from ohmyadmin.filters import (
     BaseFloatFilter,
     BaseIntegerFilter,
     BaseSelectFilter,
+    BaseStringFilter,
 )
 from ohmyadmin.forms import Choices, ChoicesFactory, Form
 from ohmyadmin.helpers import camel_to_sentence, pluralize, snake_to_sentence
@@ -130,6 +131,39 @@ class FloatFilter(BaseFloatFilter, IntegerFilter):
 
 class DecimalFilter(BaseDecimalFilter, IntegerFilter):
     cast_to = sa.Numeric
+
+
+class StringFilter(BaseStringFilter):
+    def __init__(self, column: InstrumentedAttribute, query_param: str | None = None, label: str = '') -> None:
+        self.column = column
+        super().__init__(
+            query_param=query_param or self.column.key,
+            label=label or snake_to_sentence(self.column.key).capitalize(),
+        )
+
+    def apply_operation(
+        self,
+        request: Request,
+        stmt: typing.Any,
+        operation: typing.Literal['exact', 'startswith', 'endswith', 'contains', 'pattern'],
+        query: str,
+    ) -> typing.Any:
+        column = sa.sql.cast(self.column, sa.String)
+        expr: sa.sql.ColumnElement = sa.func.lower(column)
+        query = query.lower()
+
+        mapping = {
+            'exact': lambda stmt: stmt.where(expr == query),
+            'startswith': lambda stmt: stmt.where(expr.startswith(query)),
+            'endswith': lambda stmt: stmt.where(expr.endswith(query)),
+            'contains': lambda stmt: stmt.where(expr.ilike(f'%{query}%')),
+            'pattern': lambda stmt: stmt.where(expr.regexp_match(query)),
+        }
+        if operation not in mapping:
+            return stmt
+
+        filter_ = mapping[operation]
+        return filter_(stmt)
 
 
 class SQLAlchemyResource(Resource):

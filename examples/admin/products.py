@@ -8,7 +8,15 @@ from examples.admin.brands import BrandResource
 from examples.models import Brand, Image, Product
 from ohmyadmin.components import Card, Component, FormElement, Grid, Group, display
 from ohmyadmin.components.display import DisplayField
-from ohmyadmin.ext.sqla import DecimalFilter, FloatFilter, IntegerFilter, SelectFilter, SQLAlchemyResource, choices_from
+from ohmyadmin.ext.sqla import (
+    DecimalFilter,
+    FloatFilter,
+    IntegerFilter,
+    SelectFilter,
+    SQLAlchemyResource,
+    StringFilter,
+    choices_from,
+)
 from ohmyadmin.filters import BaseFilter
 from ohmyadmin.forms import (
     BooleanField,
@@ -81,6 +89,7 @@ class ProductResource(SQLAlchemyResource):
     )
 
     def get_filters(self, request: Request) -> typing.Iterable[BaseFilter]:
+        yield StringFilter(Product.name)
         yield SelectFilter(Product.brand_id, choices=choices_from(Brand), label='Brand', coerce=int)
         yield IntegerFilter(Product.sku)
         yield FloatFilter(Product.price)
