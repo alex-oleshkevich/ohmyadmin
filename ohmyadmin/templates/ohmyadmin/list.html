@@ -15,18 +15,12 @@
         <div class="flex items-center justify-between">
             <!-- search and actions -->
             <div class="flex items-center gap-3 flex-1">
-                {% if filters %}
-                    {% include 'ohmyadmin/list_page/filters.html' %}
-                {% endif %}
                 {% include 'ohmyadmin/list_page/search_form.html' %}
+                {% include 'ohmyadmin/list_page/filters.html' %}
             </div>
             <!-- end search and actions -->
             {% include 'ohmyadmin/list_page/batch_actions.html' %}
         </div>
-
-        {% if filters %}
-            {% include 'ohmyadmin/list_page/indicators.html' %}
-        {% endif %}
 
         {% if projections %}
             {% include 'ohmyadmin/list_page/projections.html' %}

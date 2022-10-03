@@ -60,6 +60,12 @@
                 </td>
             {% endif %}
         </tr>
+    {% else %}
+        <tr>
+            <td colspan="9999" class="text-center">
+                {{ _('No results.') }}
+            </td>
+        </tr>
     {% endfor %}
     </tbody>
 </table>
