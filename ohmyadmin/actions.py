@@ -9,6 +9,7 @@ from starlette.datastructures import URL
 from starlette.requests import Request
 from starlette.responses import Response
 
+from ohmyadmin.components.layout import FormElement, Grid, LayoutComponent
 from ohmyadmin.flash import FlashCategory
 from ohmyadmin.helpers import camel_to_sentence
 from ohmyadmin.i18n import _
@@ -144,6 +145,9 @@ class ModalAction(Action, Dispatch):
     def get_form_class(self) -> typing.Type[wtforms.Form]:
         return self.form_class
 
+    def get_form_layout(self, request: Request, form: wtforms.Form) -> LayoutComponent:
+        return Grid([FormElement(field) for field in form])
+
     async def prefill_form(self, request: Request, form: wtforms.Form) -> None:
         pass
 
@@ -182,12 +186,14 @@ class ModalAction(Action, Dispatch):
                     return self.toast(str(ex), 'error')
                 return self.toast(_('Error calling action'), 'error')
 
+        form_layout = self.get_form_layout(request, form)
         return TemplateResponse(
             self.template,
             {
-                'request': request,
-                'action': self,
                 'form': form,
+                'action': self,
+                'request': request,
+                'form_layout': form_layout,
             },
         )
 

@@ -1,4 +1,4 @@
-{% import 'ohmyadmin/lib/forms.html' as forms %}
+{% import 'ohmyadmin/forms.html' as forms %}
 
 <form hx-swap="outerHTML" hx-post="{{ request.url }}">
     <div class="mt-3 text-center sm:mt-0 sm:text-left">
@@ -10,11 +10,7 @@
         {% endif %}
         <div class="mt-6">
             {% block content %}
-                <div>
-                    {% for field in form %}
-                        {{ forms.form_field(field) }}
-                    {% endfor %}
-                </div>
+                {{ form_layout(request, form) }}
             {% endblock %}
         </div>
     </div>
