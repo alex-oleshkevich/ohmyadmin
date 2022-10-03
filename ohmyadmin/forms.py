@@ -122,6 +122,10 @@ def safe_coerce(callback: typing.Callable[[typing.Any], _SCRT]) -> typing.Callab
     return coerce
 
 
+def coerce_bool(value: str) -> bool:
+    return value in ['1', 1, True, 'true', 'True', 'on']
+
+
 class RichTextField(wtforms.TextAreaField):
     ...
 

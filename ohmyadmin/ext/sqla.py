@@ -167,10 +167,6 @@ class StringFilter(BaseStringFilter):
         return filter_(stmt)
 
 
-def coerce_bool(value: str) -> bool:
-    return value in ['1', 1, True, 'true', 'True', 'on']
-
-
 class MultiChoiceFilter(BaseMultiChoiceFilter):
     def __init__(
         self,
@@ -183,8 +179,6 @@ class MultiChoiceFilter(BaseMultiChoiceFilter):
         self.column = column
         self.query_param = query_param or self.column.key
         self.label = label or snake_to_sentence(self.column.key).capitalize()
-        if coerce == bool:
-            coerce = coerce_bool
         super().__init__(query_param=self.query_param, label=self.label, choices=choices, coerce=coerce)
 
     def apply(self, request: Request, stmt: typing.Any, value: typing.Any) -> typing.Any:
