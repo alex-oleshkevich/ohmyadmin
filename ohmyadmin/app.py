@@ -165,7 +165,7 @@ class OhMyAdmin(Router):
         form_layout = Grid(children=[FormElement(field) for field in form])
         return self.render_to_response(
             request,
-            'ohmyadmin/auth/login.html',
+            'ohmyadmin/login.html',
             {
                 'request': request,
                 'form': form,
