@@ -209,6 +209,7 @@ class MultiChoiceFilter(BaseMultiChoiceFilter):
 class SQLAlchemyResource(Resource):
     __abstract__ = True
     queryset: sa.sql.Select
+    queryset_for_form: sa.sql.Select
     entity_class: typing.ClassVar[typing.Any]
 
     def __init_subclass__(cls, **kwargs: typing.Any) -> None:
@@ -245,7 +246,7 @@ class SQLAlchemyResource(Resource):
         return entity_class()
 
     async def save_entity(self, request: Request, form: wtforms.Form, instance: typing.Any) -> None:
-        # request.state.dbsession.add(instance)
+        request.state.dbsession.add(instance)
         await request.state.dbsession.commit()
 
     async def delete_entity(self, request: Request, instance: typing.Any) -> None:
@@ -254,6 +255,9 @@ class SQLAlchemyResource(Resource):
 
     def get_queryset(self, request: Request) -> sa.sql.Select:
         return getattr(self, 'queryset', sa.select(self.get_entity_class()))
+
+    def get_queryset_for_form(self, request: Request) -> sa.sql.Select:
+        return getattr(self, 'queryset_for_form', self.get_queryset(request))
 
     async def apply_filters(
         self,
@@ -267,7 +271,7 @@ class SQLAlchemyResource(Resource):
 
     async def get_object(self, request: Request, pk: typing.Any) -> typing.Any | None:
         pk_column = self.get_pk_column()
-        stmt = self.get_queryset(request).where(pk_column == pk)
+        stmt = self.get_queryset_for_form(request).where(pk_column == pk)
         result = await request.state.dbsession.scalars(stmt)
         return result.one_or_none()
 

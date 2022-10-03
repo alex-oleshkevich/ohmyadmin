@@ -1,7 +1,7 @@
 import sqlalchemy as sa
 import typing
 import wtforms
-from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm import joinedload, selectinload, with_expression
 from starlette.requests import Request
 
 from examples.models import Country, Currency, Customer, Order, OrderItem, Product
@@ -61,13 +61,17 @@ class OrderResource(SQLAlchemyResource):
     entity_class = Order
     queryset = (
         sa.select(Order)
-        # .join(Order.items)
+        .join(Order.items)
         .options(
-            # with_expression(Order.total_price, OrderItem.unit_price * OrderItem.quantity),
+            with_expression(Order.total_price, OrderItem.unit_price * OrderItem.quantity),
             joinedload(Order.customer),
             joinedload(Order.currency),
-            selectinload(Order.items),
         )
+    )
+    queryset_for_form = sa.select(Order).options(
+        joinedload(Order.customer),
+        joinedload(Order.currency),
+        selectinload(Order.items),
     )
 
     def get_filters(self, request: Request) -> typing.Iterable[BaseFilter]:

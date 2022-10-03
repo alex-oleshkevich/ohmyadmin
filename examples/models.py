@@ -237,7 +237,7 @@ class Order(Base):
 
     total_price: ColumnProperty = query_expression()
     customer: Customer = relationship('Customer', cascade='all', back_populates='orders')
-    items: OrderItem = relationship('OrderItem', cascade='all')
+    items: OrderItem = relationship('OrderItem')
     currency: Currency = relationship('Currency')
 
     def __str__(self) -> str:
