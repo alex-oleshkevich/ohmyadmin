@@ -1,8 +1,8 @@
 import pathlib
 import sqlalchemy as sa
 from passlib.handlers.pbkdf2 import pbkdf2_sha256
-from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
 from starception import StarceptionMiddleware
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
@@ -23,6 +23,7 @@ from examples.models import User
 from ohmyadmin.app import OhMyAdmin, UserMenu
 from ohmyadmin.auth import BaseAuthPolicy, UserLike
 from ohmyadmin.dashboards import Dashboard
+from ohmyadmin.ext.sqla import DbSessionMiddleware
 from ohmyadmin.menu import MenuLink
 from ohmyadmin.pages import Page
 from ohmyadmin.storage import LocalDirectoryStorage
@@ -80,10 +81,10 @@ class OverviewDashboard(Dashboard):
 this_dir = pathlib.Path(__file__).parent
 uploads_dir = this_dir / 'uploads'
 engine = create_async_engine('postgresql+asyncpg://postgres:postgres@localhost/ohmyadmin', future=True, echo=True)
+dbsession = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 file_storage = LocalDirectoryStorage(this_dir / 'uploads')
 
 admin = OhMyAdmin(
-    engine=engine,
     title='Admin Demo',
     logo_url='https://haj.aliashkevich.com/static/logo.svg',
     auth_policy=AuthPolicy(),
@@ -91,6 +92,7 @@ admin = OhMyAdmin(
     file_storage=file_storage,
     pages=[SettingsPage(), ProfilePage()],
     dashboards=[OverviewDashboard()],
+    middleware=[Middleware(DbSessionMiddleware, dbsession=dbsession)],
     resources=[
         BrandResource(),
         ProductResource(),

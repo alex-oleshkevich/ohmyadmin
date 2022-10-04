@@ -3,8 +3,6 @@ import os
 import pathlib
 import time
 import typing
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
-from sqlalchemy.orm import sessionmaker
 from starlette.middleware import Middleware
 from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.requests import Request
@@ -16,7 +14,7 @@ from starlette.types import Receive, Scope, Send
 from ohmyadmin.auth import AnonymousAuthPolicy, BaseAuthPolicy, RequireLoginMiddleware, UserMenu
 from ohmyadmin.dashboards import Dashboard
 from ohmyadmin.flash import FlashMiddleware, flash
-from ohmyadmin.globals import globalize_dbsession, globalize_request
+from ohmyadmin.globals import globalize_request
 from ohmyadmin.i18n import _
 from ohmyadmin.layout import FormElement, Grid
 from ohmyadmin.media_server import MediaServer
@@ -32,7 +30,6 @@ this_dir = pathlib.Path(__file__).parent
 class OhMyAdmin(Router):
     def __init__(
         self,
-        engine: AsyncEngine,
         title: str = 'Oh My Admin!',
         logo_url: str = '',
         resources: typing.Iterable[Resource] | None = None,
@@ -44,10 +41,8 @@ class OhMyAdmin(Router):
         auth_policy: BaseAuthPolicy | None = None,
         middleware: typing.Sequence[Middleware] | None = None,
     ) -> None:
-        self.engine = engine
         self.title = title
         self.logo_url = logo_url
-        self._make_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
         self.file_storage = file_storage
         self.pages = pages or []
         self.resources = resources or []
@@ -163,15 +158,13 @@ class OhMyAdmin(Router):
         from ohmyadmin.globals import globalize_admin
 
         request = Request(scope, receive)
-        async with self._make_session() as session:
-            with globalize_admin(self), globalize_request(request), globalize_dbsession(session):
-                scope.setdefault('state', {})
-                scope['state']['admin'] = self
-                scope['state']['file_storage'] = self.file_storage
-                scope['state']['auth_policy'] = self.auth_policy
-                scope['state']['dbsession'] = session
-                app = super().__call__
-                for middleware in reversed(self.middleware):
-                    app = middleware.cls(app, **middleware.options)
+        with globalize_admin(self), globalize_request(request):
+            scope.setdefault('state', {})
+            scope['state']['admin'] = self
+            scope['state']['file_storage'] = self.file_storage
+            scope['state']['auth_policy'] = self.auth_policy
+            app = super().__call__
+            for middleware in reversed(self.middleware):
+                app = middleware.cls(app, **middleware.options)
 
-                await app(scope, receive, send)
+            await app(scope, receive, send)

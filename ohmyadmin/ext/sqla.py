@@ -4,9 +4,10 @@ import typing
 import wtforms
 from slugify import slugify
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import InstrumentedAttribute
+from sqlalchemy.orm import InstrumentedAttribute, sessionmaker
 from starlette.requests import Request
 from starlette.responses import Response
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 from ohmyadmin.actions import BatchAction, ButtonColor
 from ohmyadmin.filters import (
@@ -154,6 +155,17 @@ class FloatFilter(BaseFloatFilter, IntegerFilter):
 
 class DecimalFilter(BaseDecimalFilter, IntegerFilter):
     cast_to = sa.Numeric
+
+
+class DbSessionMiddleware:
+    def __init__(self, app: ASGIApp, dbsession: sessionmaker) -> None:
+        self.app = app
+        self.sessionmaker = dbsession
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        async with self.sessionmaker() as session:
+            scope['state']['dbsession'] = session
+            await self.app(scope, receive, send)
 
 
 class StringFilter(BaseStringFilter):
