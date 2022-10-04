@@ -33,12 +33,20 @@ class Link(DisplayComponent):
 
 
 class Image(DisplayComponent):
-    def __init__(self, height: int = 40, width: int | None = None, lazy: bool = False) -> None:
+    def __init__(
+        self,
+        height: int = 40,
+        width: int | None = None,
+        lazy: bool = False,
+        url_generator: typing.Callable[[str], str] | None = None,
+    ) -> None:
         self.lazy = lazy
         self.width = width
         self.height = height
+        self.url_generator = url_generator
 
     def render(self, value: typing.Any) -> str:
+        value = self.url_generator(value) if self.url_generator is not None else value
         macros = macro('ohmyadmin/display.html', 'image')
         return macros(value, height=self.height, width=self.width, lazy=self.lazy)
 
@@ -53,9 +61,9 @@ class DateTime(DisplayComponent):
     def __init__(self, format: str = '%d %B, %Y') -> None:
         self.format = format
 
-    def render(self, value: str) -> str:
-        date_value = datetime.datetime.fromisoformat(value)
-        return date_value.strftime(self.format)
+    def render(self, value: datetime.datetime | str) -> str:
+        value = datetime.datetime.fromisoformat(value) if isinstance(value, str) else value
+        return value.strftime(self.format)
 
 
 class Number(DisplayComponent):
@@ -98,7 +106,6 @@ class DisplayField:
         search_in: str = '',
         link: bool | LinkFactory = False,
         value_getter: ValueGetter | None = None,
-        value_formatter: str | typing.Callable[[typing.Any], str] = '{value}',
         component: DisplayComponent | None = None,
     ) -> None:
         self.name = name
@@ -110,17 +117,12 @@ class DisplayField:
         self.component = component or Text()
         self.label = label or name.replace('_', ' ').capitalize()
         self.value_getter = value_getter or (lambda obj: getattr(obj, name))
-        self.value_formatter = value_formatter
 
     def get_value(self, entity: typing.Any) -> str:
         return self.value_getter(entity)
 
     def render(self, request: Request, entity: typing.Any) -> str:
         value = self.get_value(entity)
-        if callable(self.value_formatter):
-            value = self.value_formatter(value)
-        else:
-            value = self.value_formatter.format(value=value)
 
         if self.link:
             if callable(self.link):

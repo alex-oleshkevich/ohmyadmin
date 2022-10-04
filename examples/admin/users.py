@@ -11,7 +11,7 @@ from ohmyadmin.components.display import DisplayField
 from ohmyadmin.ext.sqla import BatchDeleteAction, SQLAlchemyResource
 from ohmyadmin.forms import BooleanField, EmailField, FileField, Form, HiddenField, StringField, Uploader
 from ohmyadmin.helpers import media_url_or_redirect
-from ohmyadmin.projections import Projection
+from ohmyadmin.projections import DefaultProjection, Projection
 
 
 class DuplicateActionForm(wtforms.Form):
@@ -44,8 +44,13 @@ class ExportAction(ModalAction):
 
 
 class ActiveUsers(Projection):
-    def apply_filter(self, stmt: sa.sql.Select) -> sa.sql.Select:
-        return stmt.filter(User.is_active == True)
+    def apply(self, query: sa.sql.Select) -> sa.sql.Select:
+        return query.filter(User.is_active == True)
+
+
+class DisabledUsers(Projection):
+    def apply(self, query: sa.sql.Select) -> sa.sql.Select:
+        return query.filter(User.is_active == False)
 
 
 class UserResource(SQLAlchemyResource):
@@ -54,11 +59,10 @@ class UserResource(SQLAlchemyResource):
     label_plural = 'Users'
     entity_class = User
     queryset = sa.select(entity_class).order_by(User.id)
-    projections = (ActiveUsers,)
 
     def get_list_fields(self) -> typing.Iterable[DisplayField]:
         yield DisplayField('id', label='ID')
-        yield DisplayField('photo', component=display.Image(), value_formatter=media_url_or_redirect)
+        yield DisplayField('photo', component=display.Image(url_generator=media_url_or_redirect))
         yield DisplayField(
             'full_name',
             label='Name',
@@ -99,3 +103,8 @@ class UserResource(SQLAlchemyResource):
 
     def get_page_actions(self, request: Request) -> typing.Iterable[Action]:
         yield ExportAction()
+
+    def get_projections(self, request: Request) -> typing.Iterable[Projection]:
+        yield DefaultProjection(self.get_queryset(request), 'All Users')
+        yield ActiveUsers()
+        yield DisabledUsers()

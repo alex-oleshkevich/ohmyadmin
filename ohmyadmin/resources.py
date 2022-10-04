@@ -34,6 +34,7 @@ from ohmyadmin.i18n import _
 from ohmyadmin.metrics import Metric
 from ohmyadmin.ordering import SortingHelper, SortingType, get_ordering_value
 from ohmyadmin.pagination import Page, get_page_size_value, get_page_value
+from ohmyadmin.projections import Projection
 from ohmyadmin.templating import TemplateResponse, admin_context
 
 
@@ -193,7 +194,13 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
         raise NotImplementedError(f'{self.__class__.__name__} must implement get_object() method.')
 
     @abc.abstractmethod
-    async def get_objects(self, request: Request, state: ListState, filters: list[BaseFilter]) -> Page[typing.Any]:
+    async def get_objects(
+        self,
+        request: Request,
+        state: ListState,
+        filters: list[BaseFilter],
+        projection: Projection | None,
+    ) -> Page[typing.Any]:
         raise NotImplementedError(f'{self.__class__.__name__} must implement get_objects() method.')
 
     @abc.abstractmethod
@@ -298,6 +305,13 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
     def get_metrics(self, request: Request) -> typing.Iterable[Metric]:
         return []
 
+    def get_projections(self, request: Request) -> typing.Iterable[Projection]:
+        return []
+
+    def get_current_projection(self, request: Request) -> Projection | None:
+        projection_id = request.query_params.get('_project', '')
+        return {projection.slug: projection for projection in self.get_projections(request)}.get(projection_id, None)
+
     async def index_view(self, request: Request) -> Response:
         """Display list of objects."""
         page_number = get_page_value(request, self.page_param)
@@ -316,13 +330,22 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
         page_actions = list(self.get_configured_page_actions(request))
         batch_actions = list(self.get_configured_batch_actions(request))
         metrics = list(self.get_metrics(request))
+
+        # projections
+        projection_id = request.query_params.get('_project', '')
+        projections = list(self.get_projections(request))
+        projection = {projection.slug: projection for projection in self.get_projections(request)}.get(
+            projection_id, None
+        )
+
+        # filters
         filters = list(self.get_filters(request))
         for filter_ in filters:
             if isinstance(filter_, Prefill):
                 await filter_.prefill(request, wtforms.Form())
 
         has_active_filters = any([filter_.is_active(request) for filter_ in filters])
-        page = await self.get_objects(request, state, filters)
+        page = await self.get_objects(request, state, filters, projection)
         if not page and not has_active_filters and not search_term:
             return TemplateResponse(
                 'ohmyadmin/empty_state.html',
@@ -343,6 +366,8 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
                 'request': request,
                 'metrics': metrics,
                 'filters': filters,
+                'projection': projection,
+                'projections': projections,
                 'page_size': page_size,
                 'pk': self.get_pk_value,
                 'content': view_content,

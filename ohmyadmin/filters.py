@@ -146,11 +146,11 @@ class BaseDateRangeFilter(BaseFilter):
                 'and <span class="text-amber-700 font-medium">{after}</span>'
             ).format(before=formatted_before, after=formatted_after)
         elif value_before:
-            value_html = _('before <span class="text-amber-700 font-medium">{{date}</span>').format(
+            value_html = _('before <span class="text-amber-700 font-medium">{date}</span>').format(
                 date=display.DateTime().render(value_before.isoformat()),
             )
         elif value_after:
-            value_html = _('after <span class="text-amber-700 font-medium">{{date}</span>').format(
+            value_html = _('after <span class="text-amber-700 font-medium">{date}</span>').format(
                 date=display.DateTime().render(value_after.isoformat()),
             )
 

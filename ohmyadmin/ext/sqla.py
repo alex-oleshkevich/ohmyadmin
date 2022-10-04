@@ -25,6 +25,7 @@ from ohmyadmin.helpers import camel_to_sentence, pluralize, snake_to_sentence
 from ohmyadmin.i18n import _
 from ohmyadmin.ordering import SortingType
 from ohmyadmin.pagination import Page
+from ohmyadmin.projections import Projection
 from ohmyadmin.resources import ListState, Resource
 
 
@@ -280,11 +281,16 @@ class SQLAlchemyResource(Resource):
         result = await request.state.dbsession.scalars(stmt)
         return result.one()
 
-    async def get_objects(self, request: Request, state: ListState, filters: list[BaseFilter]) -> Page[typing.Any]:
+    async def get_objects(
+        self, request: Request, state: ListState, filters: list[BaseFilter], projection: Projection | None
+    ) -> Page[typing.Any]:
         stmt = self.get_queryset(request)
         stmt = self.apply_search(stmt, state.search_term, state.searchable_fields)
         stmt = self.apply_ordering(stmt, state.ordering, state.sortable_fields)
         stmt = await self.apply_filters(request, filters, stmt)
+        if projection:
+            stmt = projection.apply(stmt)
+
         paged_stmt = self.apply_pagination(stmt, page_number=state.page, page_size=state.page_size)
         row_count = await self.get_object_count(request, stmt)
         result = await request.state.dbsession.scalars(paged_stmt)

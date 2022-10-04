@@ -1,4 +1,4 @@
-import sqlalchemy as sa
+import abc
 import typing
 from slugify import slugify
 
@@ -8,19 +8,26 @@ from ohmyadmin.helpers import camel_to_sentence
 class ProjectionMeta(type):
     def __new__(cls, name: str, bases: tuple, attrs: dict[str, typing.Any], **kwargs: typing.Any) -> typing.Type:
         if name != 'Projection':
-            attrs['id'] = attrs.get('id', slugify(name.removesuffix('Projection')))
+            attrs['slug'] = attrs.get('id', slugify(camel_to_sentence(name.removesuffix('Projection'))))
             attrs['label'] = attrs.get('label', camel_to_sentence(name.removesuffix('Projection')))
 
         return super().__new__(cls, name, bases, attrs)
 
 
 class Projection(metaclass=ProjectionMeta):
-    id: str = ''
+    slug: str = ''
     label: str = ''
 
-    def __init__(self, label: str = '', id: str | None = None) -> None:
-        self.id = id or self.id
-        self.label = label or self.label
+    @abc.abstractmethod
+    def apply(self, query: typing.Any) -> typing.Any:
+        ...
 
-    def apply_filter(self, stmt: sa.sql.Select) -> sa.sql.Select:
-        return stmt
+
+class DefaultProjection(Projection):
+    def __init__(self, query: str, label: str) -> None:
+        self.slug = ''
+        self.query = query
+        self.label = label
+
+    def apply(self, _: typing.Any) -> typing.Any:
+        return self.query
