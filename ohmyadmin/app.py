@@ -1,4 +1,3 @@
-import functools
 import jinja2
 import os
 import pathlib
@@ -25,7 +24,7 @@ from ohmyadmin.menu import MenuGroup, MenuItem, MenuLink
 from ohmyadmin.pages import Page
 from ohmyadmin.resources import Resource
 from ohmyadmin.storage import FileStorage
-from ohmyadmin.templating import DynamicChoiceLoader, jinja_env
+from ohmyadmin.templating import DynamicChoiceLoader, TemplateResponse, admin_context, jinja_env
 
 this_dir = pathlib.Path(__file__).parent
 
@@ -103,31 +102,6 @@ class OhMyAdmin(Router):
     def static_url(self, request: Request, path: str) -> str:
         return self.url_for(request, 'ohmyadmin_static', path=path) + f'?{time.time()}'
 
-    def render(self, template_name: str, context: typing.Mapping | None = None) -> str:
-        template = self.jinja_env.get_template(template_name)
-        return template.render(context or {})
-
-    def render_to_response(
-        self,
-        request: Request,
-        template_name: str,
-        context: typing.Mapping | None = None,
-        status_code: int = 200,
-    ) -> Response:
-        context = dict(context or {})
-        context.update(
-            {
-                'request': request,
-                'url': request.url_for,
-                'main_menu': list(self.build_main_menu(request)),
-                'user_menu': self.build_user_menu(request),
-                'static': functools.partial(self.static_url, request),
-                'flash_messages': flash(request),
-            }
-        )
-        content = self.render(template_name, context)
-        return Response(content, status_code=status_code, media_type='text/html')
-
     def get_routes(self) -> typing.Iterable[BaseRoute]:
         yield Route('/', self.index_view, name='ohmyadmin_welcome')
         yield Route('/login', self.login_view, name='ohmyadmin_login', methods=['GET', 'POST'])
@@ -147,7 +121,13 @@ class OhMyAdmin(Router):
             yield Mount(f'/dashboard/{dashboard.slug}', dashboard)
 
     async def index_view(self, request: Request) -> Response:
-        return self.render_to_response(request, 'ohmyadmin/index.html')
+        return TemplateResponse(
+            'ohmyadmin/index.html',
+            {
+                'page_title': _('Welcome'),
+                **admin_context(request),
+            },
+        )
 
     async def login_view(self, request: Request) -> Response:
         next_url = request.query_params.get('next', request.url_for('ohmyadmin_welcome'))
@@ -162,8 +142,7 @@ class OhMyAdmin(Router):
                 flash(request).error(_('Invalid credentials.'))
 
         form_layout = Grid(children=[FormElement(field) for field in form])
-        return self.render_to_response(
-            request,
+        return TemplateResponse(
             'ohmyadmin/login.html',
             {
                 'request': request,
@@ -171,6 +150,7 @@ class OhMyAdmin(Router):
                 'next_url': next_url,
                 'form_layout': form_layout,
                 'page_title': _('Login'),
+                **admin_context(request),
             },
         )
 

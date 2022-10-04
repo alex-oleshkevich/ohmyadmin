@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import functools
 import jinja2
 import typing
@@ -70,3 +72,8 @@ def admin_context(request: Request) -> dict[str, typing.Any]:
 def macro(template_name: str, macro_name: str) -> Macro:
     template = jinja_env.get_template(template_name)
     return getattr(template.module, macro_name)
+
+
+def render_to_string(template_name: str, context: dict[str, typing.Any] | None = None) -> str:
+    template = jinja_env.get_template(template_name)
+    return template.render(context or {})

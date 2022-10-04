@@ -1,15 +1,8 @@
 from __future__ import annotations
 
 import re
-import typing
 
 from ohmyadmin.globals import get_current_request
-from ohmyadmin.templating import jinja_env
-
-
-def render_to_string(template_name: str, context: dict[str, typing.Any] | None = None) -> str:
-    template = jinja_env.get_template(template_name)
-    return template.render(context or {})
 
 
 def camel_to_sentence(text: str) -> str:
