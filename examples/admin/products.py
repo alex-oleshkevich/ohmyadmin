@@ -6,9 +6,8 @@ from starlette.requests import Request
 
 from examples.admin.brands import BrandResource
 from examples.models import Brand, Image, Product
-from ohmyadmin.components import display
-from ohmyadmin.components.display import DisplayField
-from ohmyadmin.components.layout import Card, FormElement, Grid, Group, LayoutComponent
+from ohmyadmin import display
+from ohmyadmin.display import DisplayField
 from ohmyadmin.ext.sqla import (
     ChoiceFilter,
     DecimalFilter,
@@ -33,6 +32,7 @@ from ohmyadmin.forms import (
     TextAreaField,
     Uploader,
 )
+from ohmyadmin.layout import Card, FormElement, Grid, Group, LayoutComponent
 from ohmyadmin.metrics import Metric, ValueMetric
 
 

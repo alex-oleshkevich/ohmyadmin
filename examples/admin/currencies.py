@@ -4,7 +4,7 @@ import wtforms
 from starlette.requests import Request
 
 from examples.models import Currency
-from ohmyadmin.components.display import DisplayField
+from ohmyadmin.display import DisplayField
 from ohmyadmin.ext.sqla import SQLAlchemyResource
 from ohmyadmin.forms import Form, StringField
 from ohmyadmin.globals import get_dbsession

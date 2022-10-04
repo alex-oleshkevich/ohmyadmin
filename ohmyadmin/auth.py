@@ -8,10 +8,10 @@ from starlette.requests import HTTPConnection, Request
 from starlette.responses import RedirectResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-from ohmyadmin.components import MenuItem
 from ohmyadmin.flash import flash
 from ohmyadmin.forms import EmailField, Form, HiddenField, PasswordField
 from ohmyadmin.i18n import _
+from ohmyadmin.menu import MenuItem
 
 SESSION_KEY = '_auth_user_id_'
 

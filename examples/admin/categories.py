@@ -3,11 +3,11 @@ import wtforms
 from starlette.requests import Request
 
 from examples.models import Category
-from ohmyadmin.components import display
-from ohmyadmin.components.display import DisplayField
-from ohmyadmin.components.layout import Card, Date, FormElement, FormText, Grid, Group, LayoutComponent
+from ohmyadmin import display
+from ohmyadmin.display import DisplayField
 from ohmyadmin.ext.sqla import SQLAlchemyResource, choices_from
 from ohmyadmin.forms import BooleanField, Form, MarkdownField, SelectField, SlugField, StringField
+from ohmyadmin.layout import Card, Date, FormElement, FormText, Grid, Group, LayoutComponent
 
 
 def safe_int(value: int | str) -> int | None:

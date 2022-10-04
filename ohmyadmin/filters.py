@@ -11,7 +11,7 @@ from starlette.requests import Request
 from wtforms.fields.core import UnboundField
 from wtforms.meta import DefaultMeta
 
-from ohmyadmin.components import display
+from ohmyadmin import display
 from ohmyadmin.forms import (
     CheckboxListWidget,
     Choices,

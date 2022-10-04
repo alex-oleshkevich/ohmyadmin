@@ -3,12 +3,12 @@ import wtforms
 from starlette.requests import Request
 
 from examples.models import Brand
-from ohmyadmin.components import display, layout
-from ohmyadmin.components.display import DisplayField
-from ohmyadmin.components.layout import Card, FormElement, FormText, Grid, Group, LayoutComponent
+from ohmyadmin import display, layout
+from ohmyadmin.display import DisplayField
 from ohmyadmin.ext.sqla import ChoiceFilter, SQLAlchemyResource
 from ohmyadmin.filters import BaseFilter
 from ohmyadmin.forms import BooleanField, Form, MarkdownField, SlugField, StringField, URLField
+from ohmyadmin.layout import Card, FormElement, FormText, Grid, Group, LayoutComponent
 
 
 class BrandResource(SQLAlchemyResource):

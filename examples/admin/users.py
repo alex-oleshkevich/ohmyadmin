@@ -5,9 +5,9 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from examples.models import User
+from ohmyadmin import display
 from ohmyadmin.actions import Action, BatchAction, LinkRowAction, ModalAction, ModalRowAction, RowAction, RowActionGroup
-from ohmyadmin.components import display
-from ohmyadmin.components.display import DisplayField
+from ohmyadmin.display import DisplayField
 from ohmyadmin.ext.sqla import BatchDeleteAction, SQLAlchemyResource
 from ohmyadmin.forms import BooleanField, EmailField, FileField, Form, HiddenField, StringField, Uploader
 from ohmyadmin.helpers import media_url_or_redirect

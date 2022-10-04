@@ -5,9 +5,8 @@ from sqlalchemy.orm import joinedload, selectinload, with_expression
 from starlette.requests import Request
 
 from examples.models import Country, Currency, Customer, Order, OrderItem, Product
-from ohmyadmin.components import display
-from ohmyadmin.components.display import DisplayField
-from ohmyadmin.components.layout import Card, Date, FormElement, FormText, Grid, Group, LayoutComponent
+from ohmyadmin import display
+from ohmyadmin.display import DisplayField
 from ohmyadmin.ext.sqla import ChoiceFilter, DateRangeFilter, DecimalFilter, SQLAlchemyResource, choices_from
 from ohmyadmin.filters import BaseFilter
 from ohmyadmin.forms import (
@@ -21,6 +20,7 @@ from ohmyadmin.forms import (
     SelectField,
     StringField,
 )
+from ohmyadmin.layout import Card, Date, FormElement, FormText, Grid, Group, LayoutComponent
 from ohmyadmin.metrics import Metric, ValueMetric
 
 

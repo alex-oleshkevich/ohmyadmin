@@ -13,6 +13,7 @@ from starlette.responses import RedirectResponse, Response
 from starlette.routing import BaseRoute, Route, Router
 from starlette.types import Receive, Scope, Send
 
+from ohmyadmin import layout
 from ohmyadmin.actions import (
     Action,
     BatchAction,
@@ -23,14 +24,13 @@ from ohmyadmin.actions import (
     RowAction,
     RowActionGroup,
 )
-from ohmyadmin.components import layout
-from ohmyadmin.components.display import DisplayField
-from ohmyadmin.components.layout import LayoutComponent
+from ohmyadmin.display import DisplayField
 from ohmyadmin.filters import BaseFilter
 from ohmyadmin.flash import flash
 from ohmyadmin.forms import Form, Prefill
 from ohmyadmin.helpers import camel_to_sentence, pluralize, render_to_string
 from ohmyadmin.i18n import _
+from ohmyadmin.layout import LayoutComponent
 from ohmyadmin.metrics import Metric
 from ohmyadmin.ordering import SortingHelper, SortingType, get_ordering_value
 from ohmyadmin.pagination import Page, get_page_size_value, get_page_value

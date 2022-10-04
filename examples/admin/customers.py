@@ -5,11 +5,11 @@ import wtforms
 from starlette.requests import Request
 
 from examples.models import Customer
-from ohmyadmin.components.display import DisplayField
-from ohmyadmin.components.layout import Card, Date, FormElement, FormText, Grid, Group, LayoutComponent
+from ohmyadmin.display import DisplayField
 from ohmyadmin.ext.sqla import DateFilter, SQLAlchemyResource
 from ohmyadmin.filters import BaseFilter
 from ohmyadmin.forms import DateField, EmailField, Form, StringField
+from ohmyadmin.layout import Card, Date, FormElement, FormText, Grid, Group, LayoutComponent
 
 
 class CustomerResource(SQLAlchemyResource):
