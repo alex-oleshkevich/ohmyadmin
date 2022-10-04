@@ -126,8 +126,12 @@ class OrderResource(SQLAlchemyResource):
         yield MarkdownField(name='notes')
         yield FieldList(
             name='items',
-            unbound_field=FormField(default=OrderItem, form_class=EditOrderItem, widget=GridWidget(columns=3)),
             default=[],
+            unbound_field=FormField(
+                default=OrderItem,
+                form_class=EditOrderItem,
+                widget=GridWidget(columns=3),
+            ),
         )
 
     def get_form_layout(self, request: Request, form: Form, instance: Order) -> LayoutComponent:
