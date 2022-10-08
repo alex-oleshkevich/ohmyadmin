@@ -6,6 +6,9 @@ import './globals.d';
 import { Events } from './global_events';
 
 window.Alpine = Alpine;
+type Choice = [string | number, string];
+type ChoiceCache = Record<string, Choice[]>;
+const loaderCache: ChoiceCache = {};
 
 document.addEventListener('alpine:init', () => {
     Alpine.data('app', () => ({
@@ -60,6 +63,31 @@ document.addEventListener('alpine:init', () => {
                 this.selected = [];
             }
         },
+    }));
+
+    Alpine.data('select', ({ value = '', loader = '' }) => ({
+        value: '',
+        loader: loader,
+        state: 'idle' as 'idle' | 'loading',
+        choices: [] as Choice[],
+        init() {
+            this.fetchChoices().then(() => {
+                this.value = value;
+            });
+        },
+        async fetchChoices() {
+            if (loaderCache[loader]) {
+                this.choices = loaderCache[loader];
+            } else {
+                this.state = 'loading';
+                const url = new URL(window.__FIELD_AUTOCOMPLETE_ENDPOINT__);
+                url.searchParams.set('loader', this.loader);
+                const choices = await fetch(url).then(res => res.json().then(data => data));
+                loaderCache[loader] = choices;
+                this.choices = choices;
+                this.state = 'idle';
+            }
+        }
     }));
 });
 
