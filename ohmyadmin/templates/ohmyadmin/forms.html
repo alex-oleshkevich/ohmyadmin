@@ -34,6 +34,10 @@
         {{ file_field(field) }}
     {% elif field.type == 'MultipleFileField' %}
         {{ multiple_file_field(field) }}
+    {% elif field.type == 'FieldList' %}
+        {{ list_field(field) }}
+    {% elif field.type == 'FormField' %}
+        {{ form_form_field(field) }}
     {% else %}
         <div class="form-group">
             {{ form_label(field) }}
@@ -155,5 +159,32 @@
                 {{ tabler_icon('plus') }} {{ _('Add a new item') }}
             </button>
         </div>
+    </div>
+{% endmacro %}
+
+{% macro form_form_field(field) %}
+    {{ field }}
+{% endmacro %}
+
+{% macro ajax_select_input(field) %}
+    <select
+        id="{{ field.id }}"
+        name="{{ field.name }}"
+        :disabled="state == 'loading'"
+        x-data="select({value: '{{ field.data|default("", true) }}', loader: '{{ field.loader }}'})"
+        x-model="value"
+    >
+        <option></option>
+        <template x-for="choice in choices">
+            <option :value="choice[0]" x-text="choice[1]"></option>
+        </template>
+    </select>
+{% endmacro %}
+
+{% macro grid_layout(field, layout) %}
+    <div class="grid grid-cols-{{ layout.columns }} gap-{{ layout.gap }}">
+    {% for subfield in field %}
+        {{ form_field(subfield) }}
+    {% endfor %}
     </div>
 {% endmacro %}

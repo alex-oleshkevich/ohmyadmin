@@ -256,12 +256,8 @@ class GridWidget:
         self.gap = gap
 
     def __call__(self, field: wtforms.Field, **kwargs: typing.Any) -> str:
-        html: list[str] = []
-        html.append(f'<div class="grid grid-cols-{self.columns} gap-{self.gap}">')
-        for subfield in field:
-            html.append(str(subfield))
-        html.append('</div>')
-        return ''.join(html)
+        macros = macro('ohmyadmin/forms.html', 'grid_layout')
+        return macros(field, self)
 
 
 class FieldList(wtforms.FieldList, Prefill):
