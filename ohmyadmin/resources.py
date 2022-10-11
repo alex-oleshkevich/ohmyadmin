@@ -232,8 +232,18 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
     def get_form_class_for_edit(self, request: Request) -> typing.Type[Form]:
         return self.get_form_class(request)
 
+    async def create_form_for_edit(self, request: Request, entity: typing.Any) -> Form:
+        form_data = await request.form() if request.method in ['POST', 'PUT', 'PATCH', 'DELETE'] else None
+        form_class = self.get_form_class_for_edit(request)
+        return form_class(formdata=form_data, obj=entity)
+
     def get_form_class_for_create(self, request: Request) -> typing.Type[Form]:
         return self.get_form_class(request)
+
+    async def create_form_for_create(self, request: Request, entity: typing.Any) -> Form:
+        form_data = await request.form() if request.method in ['POST', 'PUT', 'PATCH', 'DELETE'] else None
+        form_class = self.get_form_class_for_create(request)
+        return form_class(formdata=form_data, obj=entity)
 
     def get_form_layout(self, request: Request, form: wtforms.Form, instance: typing.Any) -> LayoutComponent:
         return layout.Grid([layout.FormElement(field, max_width='lg') for field in form])
@@ -390,21 +400,23 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
 
         pk = request.path_params.get('pk', '')
         instance = self.create_new_entity()
-        form_class = self.get_form_class_for_create(request)
         if pk:
             instance = await self.get_object(request, pk)
             if not instance:
                 raise HTTPException(404, _('Object does not exists.'))
-            form_class = self.get_form_class_for_edit(request)
 
         form_submitted = request.method in ['POST', 'PUT', 'PATCH', 'DELETE']
         form_data = await request.form() if form_submitted else None
-        form = form_class(formdata=form_data, obj=instance)
+
+        form = (
+            await self.create_form_for_edit(request, instance)
+            if pk
+            else await self.create_form_for_edit(request, instance)
+        )
         await self.prefill_form_choices(request, form, instance)
 
         if form_submitted and await self.validate_form(request, form, instance):
             assert form_data
-
             await form.populate_obj_async(instance)
             await self.save_entity(request, form, instance)
             flash(request).success(_('{resource} has been saved.').format(resource=self.label))

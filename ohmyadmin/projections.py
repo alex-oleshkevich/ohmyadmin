@@ -24,7 +24,7 @@ class Projection(metaclass=ProjectionMeta):
 
 
 class DefaultProjection(Projection):
-    def __init__(self, query: str, label: str) -> None:
+    def __init__(self, query: typing.Any, label: str) -> None:
         self.slug = ''
         self.query = query
         self.label = label
