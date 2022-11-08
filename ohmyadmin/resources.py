@@ -408,6 +408,7 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
             await form.populate_obj_async(instance)
             await self.save_entity(request, form, instance)
             flash(request).success(_('{resource} has been saved.').format(resource=self.label))
+            pk = self.get_pk_value(instance)
 
             if '_new' in form_data:
                 return RedirectResponse(url=request.url_for(self.url_name('create')), status_code=302)

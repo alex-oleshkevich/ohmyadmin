@@ -146,7 +146,7 @@ class FileField(wtforms.FileField):
         *,
         uploader: Uploader,
         label: str | None = None,
-        validators: typing.Callable[[wtforms.Form, wtforms.Field], None] = None,
+        validators: typing.Callable[[wtforms.Form, wtforms.Field], None] | None = None,
         description: str = "",
         id: str | None = None,
         render_kw: dict[str, typing.Any] | None = None,
@@ -165,7 +165,9 @@ class FileField(wtforms.FileField):
         self.uploader = uploader
         self._should_delete = False
 
-    def process(self, formdata: FormData, data: str = unset_value, extra_filters: typing.Callable = None) -> None:
+    def process(
+        self, formdata: FormData, data: str = unset_value, extra_filters: typing.Callable | None = None
+    ) -> None:
         if formdata:
             marker = '%s-delete' % self.name
             if marker in formdata:

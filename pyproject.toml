@@ -32,17 +32,15 @@ SQLAlchemy = { extras = ["mypy"], version = "^1.4.35" }
 WTForms = "^3.0"
 python-multipart = "^0.0.5"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 asyncpg = "^0.26"
-pytest = "^7.1"
+pytest = "^7.2"
 pytest-asyncio = "^0.19"
-pytest-cov = "^3.0"
-black = "^22.8"
-mypy = "^0.971"
+pytest-cov = "^4.0"
+black = "^22.10"
+mypy = "^0.990"
 flake8 = "^5.0"
 types-python-slugify = "^6.1"
-
-[tool.poetry.group.dev.dependencies]
 passlib = "^1.7.4"
 itsdangerous = "^2.1.2"
 Faker = "^15.0.0"
@@ -108,7 +106,7 @@ files = ["ohmyadmin", "examples", "tests"]
 plugins = ["sqlalchemy.ext.mypy.plugin"]
 
 [tool.pytest.ini_options]
-minversion = "7.1"
+minversion = "7.2"
 python_files = ["tests.py", "test_*.py", "*_tests.py"]
 norecursedirs = [
     "node_modules", "frontend", "storage", "dist", ".git",

@@ -43,6 +43,7 @@ class LoginForm(Form):
 class UserLike(BaseUser):
     is_anonymous = False
 
+    @abc.abstractmethod
     def get_id(self) -> str:
         ...
 
