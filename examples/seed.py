@@ -9,6 +9,7 @@ from sqlalchemy.orm import sessionmaker
 
 from examples.models import (
     Address,
+    BlogPost,
     Brand,
     Category,
     Comment,
@@ -310,6 +311,19 @@ def seed_order_items(session: AsyncSession) -> None:
     )
 
 
+def seed_blog_posts(session: AsyncSession) -> None:
+    session.add_all(
+        [
+            BlogPost(
+                title=fake.sentence(5),
+                content='',
+                author_id=random.randint(1, OBJECTS_COUNT - 1),
+            )
+            for _ in range(1, OBJECTS_COUNT * 5)
+        ]
+    )
+
+
 async def main() -> None:
     engine = create_async_engine('postgresql+asyncpg://postgres:postgres@localhost/ohmyadmin', future=True)
     async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
@@ -333,6 +347,7 @@ async def main() -> None:
         seed_product_comments,
         seed_orders,
         seed_order_items,
+        seed_blog_posts,
     ]
 
     async with async_session() as session:  # type: AsyncSession

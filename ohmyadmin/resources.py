@@ -114,6 +114,7 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
     icon: typing.ClassVar[str] = ''
     label: typing.ClassVar[str] = ''
     label_plural: typing.ClassVar[str] = ''
+    group: typing.ClassVar[str] = 'Resources'
     slug: typing.ClassVar[str] = ''
     index_template: typing.ClassVar[str] = 'ohmyadmin/list.html'
     form_template: typing.ClassVar[str] = 'ohmyadmin/form.html'
@@ -497,7 +498,7 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
         return await metric.dispatch(request)
 
     @classmethod
-    def url_name(cls, name: str) -> str:
+    def url_name(cls, name: str = 'list') -> str:
         """Generate route name for this resource actions."""
         return f'ohmyadmin.{cls.slug}.{name}'.replace('-', '_')
 

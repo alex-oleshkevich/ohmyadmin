@@ -254,3 +254,19 @@ class OrderItem(Base):
 
     order: Order = relationship(Order, back_populates='items')
     product: Product = relationship(Product, backref=backref('items', cascade='all, delete-orphan'))
+
+
+class BlogPost(Base):
+    __tablename__ = 'blog_posts'
+
+    id = sa.Column(sa.BigInteger, primary_key=True)
+    title = sa.Column(
+        sa.String,
+    )
+    content = sa.Column(sa.Text, default='')
+    author_id = sa.Column(sa.ForeignKey(User.id))
+
+    author = relationship(User)
+
+    def __str__(self) -> str:
+        return self.title

@@ -1,4 +1,6 @@
+import itertools
 import jinja2
+import operator
 import os
 import pathlib
 import time
@@ -70,23 +72,26 @@ class OhMyAdmin(Router):
         )
 
     def build_main_menu(self, request: Request) -> typing.Iterable[MenuItem]:
-        for dashboard in self.dashboards:
-            yield MenuLink(text=dashboard.label, icon=dashboard.icon, url=request.url_for(dashboard.url_name()))
-
-        yield MenuGroup(
-            text=_('Resources'),
-            items=[
-                MenuLink(text=resource.label_plural, icon=resource.icon, url=request.url_for(resource.url_name('list')))
-                for resource in self.resources
+        groups = itertools.groupby(
+            [
+                *self.dashboards,
+                *self.resources,
+                *self.pages,
             ],
+            key=operator.attrgetter('group'),
         )
-        yield MenuGroup(
-            text=_('Pages'),
-            items=[
-                MenuLink(text=page.label, icon=page.icon, url=request.url_for(page.get_route_name()))
-                for page in self.pages
-            ],
-        )
+        for group in groups:
+            yield MenuGroup(
+                text=group[0],
+                items=[
+                    MenuLink(
+                        text=getattr(item, 'label_plural', getattr(item, 'label')),
+                        icon=getattr(item, 'icon', ''),
+                        url=request.url_for(item.url_name()),  # type: ignore[attr-defined]
+                    )
+                    for item in group[1]
+                ],
+            )
 
     def build_user_menu(self, request: Request) -> UserMenu:
         return self.auth_policy.get_user_menu(request)

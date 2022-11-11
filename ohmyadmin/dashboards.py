@@ -23,6 +23,7 @@ class DashboardMeta(type):
 class Dashboard(Router, metaclass=DashboardMeta):
     slug: typing.ClassVar[str] = ''
     label: typing.ClassVar[str] = ''
+    group: typing.ClassVar[str] = 'Dashboards'
     icon: typing.ClassVar[str] = ''
     metrics: typing.ClassVar[typing.Iterable[Metric] | None] = None
     template = 'ohmyadmin/dashboard.html'

@@ -11,6 +11,7 @@ from starlette.requests import HTTPConnection, Request
 from starlette.responses import Response
 from starlette.routing import Mount, Route
 
+from examples.admin.blog_posts import BlogPostResource
 from examples.admin.brands import BrandResource
 from examples.admin.categories import CategoryResource
 from examples.admin.countries import CountryResource
@@ -56,8 +57,8 @@ class AuthPolicy(BaseAuthPolicy):
                 user_name=str(conn.user),
                 avatar=conn.user.avatar,
                 menu=[
-                    MenuLink(text='My profile', url=conn.url_for(ProfilePage.get_route_name()), icon='user'),
-                    MenuLink(text='Settings', url=conn.url_for(SettingsPage.get_route_name()), icon='settings'),
+                    MenuLink(text='My profile', url=conn.url_for(ProfilePage.url_name()), icon='user'),
+                    MenuLink(text='Settings', url=conn.url_for(SettingsPage.url_name()), icon='settings'),
                 ],
             )
         return super().get_user_menu(conn)
@@ -102,6 +103,7 @@ admin = OhMyAdmin(
         CurrencyResource(),
         CountryResource(),
         UserResource(),
+        BlogPostResource(),
     ],
 )
 

@@ -20,6 +20,7 @@ class PageMeta(type):
 class Page(Router, metaclass=PageMeta):
     id: typing.ClassVar[str] = ''
     label: typing.ClassVar[str] = ''
+    group: typing.ClassVar[str] = 'Pages'
     icon: typing.ClassVar[str] = ''
     template: typing.ClassVar[str] = 'ohmyadmin/page.html'
 
@@ -27,12 +28,12 @@ class Page(Router, metaclass=PageMeta):
         super().__init__(routes=list(self.get_routes()))
 
     @classmethod
-    def get_route_name(cls, sub_page: str = '') -> str:
+    def url_name(cls, sub_page: str = '') -> str:
         sub_page = f'_{sub_page}' if sub_page else ''
         return f'ohmyadmin_pages_{cls.id}{sub_page}'
 
     def get_routes(self) -> typing.Iterable[BaseRoute]:
-        yield Route('/', self.dispatch, name=self.get_route_name())
+        yield Route('/', self.dispatch, name=self.url_name())
 
     async def get_template_context(self, request: Request) -> dict[str, typing.Any]:
         return {**admin_context(request)}
