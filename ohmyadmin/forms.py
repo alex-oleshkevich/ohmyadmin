@@ -14,6 +14,7 @@ from starlette.datastructures import FormData, UploadFile
 from starlette.requests import Request
 from wtforms.utils import unset_value
 
+from ohmyadmin import rich_text
 from ohmyadmin.storage import FileStorage
 from ohmyadmin.templating import macro
 
@@ -127,7 +128,11 @@ def coerce_bool(value: str) -> bool:
 
 
 class RichTextField(wtforms.TextAreaField):
-    ...
+    widget = macro('ohmyadmin/forms.html', 'rich_text_input')
+
+    def __init__(self, toolbar: rich_text.EditorToolbar | None = None, **kwargs: typing.Any) -> None:
+        super().__init__(**kwargs)
+        self.toolbar = toolbar
 
 
 class MarkdownField(wtforms.TextAreaField):

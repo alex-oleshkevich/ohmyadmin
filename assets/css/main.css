@@ -2,6 +2,7 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 @import "notyf/notyf.min.css";
+@import "rich_text.css";
 
 @layer base {
     body {

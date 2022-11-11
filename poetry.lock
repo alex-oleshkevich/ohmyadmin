@@ -491,7 +491,7 @@ full = ["httpx (>=0.22.0)", "itsdangerous", "jinja2", "python-multipart", "pyyam
 
 [[package]]
 name = "tabler-icons"
-version = "0.2.0"
+version = "0.4.0"
 description = "SVG tabler icons for your apps."
 category = "main"
 optional = false
@@ -561,7 +561,7 @@ email = ["email-validator"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "269fb234b4baf7466f70d7ea5772e91da49e7f0da001a4149c7d9e1541cbe58f"
+content-hash = "841d918160360f584e41f138092d3107a6c7ed7b61141dcf2b44c5b9acfb9d64"
 
 [metadata.files]
 anyio = [
@@ -966,8 +966,8 @@ starlette = [
     {file = "starlette-0.21.0.tar.gz", hash = "sha256:b1b52305ee8f7cfc48cde383496f7c11ab897cd7112b33d998b1317dc8ef9027"},
 ]
 tabler-icons = [
-    {file = "tabler_icons-0.2.0-py3-none-any.whl", hash = "sha256:fd722138bc1a5e8c91f1599bdf7a9fe9dd10ec968ade5acbbd6def27a4d24dda"},
-    {file = "tabler_icons-0.2.0.tar.gz", hash = "sha256:ac184875678588322c3ab791da8d8c77c58b91e907e000a8e475926e3ce4b356"},
+    {file = "tabler_icons-0.4.0-py3-none-any.whl", hash = "sha256:cec10b578724fc59bc9c04dc01d39756a06a3d0051764b7869e4bca1d0e22144"},
+    {file = "tabler_icons-0.4.0.tar.gz", hash = "sha256:4c04ede2e2cf7ae533c4f3ef24b62725c4dcfc4ffa7c8cd3cdbd7df517e312b6"},
 ]
 text-unidecode = [
     {file = "text-unidecode-1.3.tar.gz", hash = "sha256:bad6603bb14d279193107714b288be206cac565dfa49aa5b105294dd5c4aab93"},

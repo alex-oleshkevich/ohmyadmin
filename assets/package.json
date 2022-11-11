@@ -7,7 +7,7 @@
         "build:js": "esbuild js/main.ts --bundle --outfile=../ohmyadmin/statics/build/main.js"
     },
     "devDependencies": {
-        "@tailwindcss/typography": "^0.5.2",
+        "@tailwindcss/typography": "^0.5.8",
         "autoprefixer": "^10.4.4",
         "cssnano": "^5.1.5",
         "esbuild": "^0.14.32",
@@ -20,6 +20,12 @@
     "dependencies": {
         "@tailwindcss/aspect-ratio": "^0.4.0",
         "@tailwindcss/forms": "^0.5.0",
+        "@tiptap/core": "^2.0.0-beta.202",
+        "@tiptap/extension-highlight": "^2.0.0-beta.202",
+        "@tiptap/extension-image": "^2.0.0-beta.202",
+        "@tiptap/extension-link": "^2.0.0-beta.202",
+        "@tiptap/extension-placeholder": "^2.0.0-beta.202",
+        "@tiptap/starter-kit": "^2.0.0-beta.202",
         "alpinejs": "^3.9.5",
         "axios": "^0.26.1",
         "htmx": "^0.0.2",

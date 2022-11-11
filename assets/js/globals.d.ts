@@ -1,5 +1,6 @@
 import Alpine from 'alpinejs';
 import { Notyf } from 'notyf';
+import {createRichEditor} from './editor';
 import { ToastType } from './notifications';
 
 declare global {

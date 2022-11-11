@@ -1,0 +1,39 @@
+{% macro simple_toolbar_button(button) %}
+    <button
+        title="{{ button.title }}"
+        type="button"
+        class="p-1.5 rounded hover:bg-gray-100 active:bg-gray-200"
+        :class="{'bg-gray-300': isActive('{{ button.action }}', updateCounter)}"
+        @click="toggle('{{ button.action }}')">
+        {{ tabler_icon(button.icon) }}
+    </button>
+{% endmacro %}
+
+{% macro toolbar_separator(button) %}
+    <button disabled type="button" class="py-1.5 px-0.5 text-gray-400">
+        {{ tabler_icon('minus-vertical') }}
+    </button>
+{% endmacro %}
+
+{% macro heading_button(button) %}
+    <div class="relative inline-block" x-data="{open: false}" @click.outside="open = false">
+        <button title="{{ button.title }}" type="button" class="p-1.5 rounded hover:bg-gray-100 active:bg-gray-200"
+                @click="open = !open" :class="{'bg-gray-300': isActive('heading', updateCounter)}">
+            {{ tabler_icon('heading') }}
+        </button>
+        <template x-if="open">
+            <div class="dropdown w-40 left-0">
+                <ul>
+                    {% for level in button.levels %}
+                        <li>
+                            <button type="button" @click="toggleHeading({{ level }})" class="dropdown-item"
+                                    :class="{'bg-gray-200': isActive('heading', updateCounter, { level: {{ level }} })}">
+                                {{ _('Heading {level}').format(level=level) }}
+                            </button>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </template>
+    </div>
+{% endmacro %}

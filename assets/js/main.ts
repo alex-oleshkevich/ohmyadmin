@@ -2,10 +2,12 @@ import Alpine from 'alpinejs';
 import './tables';
 import './actions';
 import './global_events';
+import './editor';
 import './globals.d';
 import { Events } from './global_events';
 
 window.Alpine = Alpine;
+
 type Choice = [string | number, string];
 type ChoiceCache = Record<string, Choice[]>;
 const loaderCache: ChoiceCache = {};

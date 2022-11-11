@@ -183,8 +183,25 @@
 
 {% macro grid_layout(field, layout) %}
     <div class="grid grid-cols-{{ layout.columns }} gap-{{ layout.gap }}">
-    {% for subfield in field %}
-        {{ form_field(subfield) }}
-    {% endfor %}
+        {% for subfield in field %}
+            {{ form_field(subfield) }}
+        {% endfor %}
+    </div>
+{% endmacro %}
+
+{% macro rich_text_input(field) %}
+    <div x-data="richEditor('{{ field.id }}')" class="border border-gray-300 rounded">
+        {% if field.toolbar %}
+            <template x-if="ready">
+                <div class="space-x-px py-1.5 border-b border-gray-300 mb-2">
+                    {% for button in field.toolbar %}
+                        {{ button }}
+                    {% endfor %}
+                </div>
+            </template>
+        {% endif %}
+        <textarea style="display: none" name="{{ field.name }}"
+                  x-ref="textarea">{{ field.data|default('', true) }}</textarea>
+        <div x-ref="editor" class="rich-text"></div>
     </div>
 {% endmacro %}
