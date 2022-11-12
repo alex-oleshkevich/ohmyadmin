@@ -1,5 +1,6 @@
 import Alpine from 'alpinejs';
 
+import { MarkType, NodeType } from 'prosemirror-model';
 import { Editor } from '@tiptap/core';
 import { Level } from '@tiptap/extension-heading';
 import { Image } from '@tiptap/extension-image';
@@ -67,15 +68,13 @@ document.addEventListener('alpine:init', () => {
                     },
                 });
             },
-            isLoaded() {
-                console.log('is loaded', editor);
+            get editor(): Editor {
                 return editor;
             },
-            isActive(action: string, _:any, opts?: any) {
-                console.log(action, _, opts)
+            isActive(action: string, _: any, opts?: any) {
                 return editor.isActive(action, opts);
             },
-            toggle(action: string, opts?) {
+            toggle(action: string, opts?: any) {
                 const actionMap: Record<string, any> = {
                     'bold': () => editor.chain().toggleBold().focus().run(),
                     'italic': () => editor.chain().toggleItalic().focus().run(),
@@ -84,15 +83,40 @@ document.addEventListener('alpine:init', () => {
                     'ordered_list': () => editor.chain().toggleOrderedList().focus().run(),
                     'code': () => editor.chain().toggleCode().focus().run(),
                     'code_block': () => editor.chain().toggleCodeBlock().focus().run(),
-                    'heading': (level: Level) => editor.chain().toggleHeading({ level }).focus().run(),
-                    'link': ({ href, target }) => editor.commands.toggleLink({ href, target }),
                     'highlight': () => editor.commands.toggleHighlight({ color: 'red' }),
                 };
                 actionMap[action](opts);
             },
-            toggleHeading(level: Level) {
+            toggleHeading(level: Level): void {
                 editor.chain().toggleHeading({ level }).focus().run();
-            }
+            },
+            toggleLink(href: string, target?: string): void {
+                editor.chain().toggleLink({ href, target });
+            },
         };
     });
+
+    Alpine.data('richEditorLink', (editor: Editor) => ({
+        href: '',
+        target: '',
+        open: false,
+        save() {
+            editor.commands.toggleLink({ href: this.href, target: this.target });
+        },
+        inputInitializer() {
+            this.href = editor.getAttributes('link').href || '';
+            this.target = editor.getAttributes('link').target || '';
+        },
+        onSubmit() {
+            this.save();
+            this.open = false;
+        },
+        onTargetInputChange(el: Event) {
+            const checked = el.target.checked;
+            this.target = checked ? '_blank' : '';
+        },
+        clear() {
+            editor.commands.unsetLink();
+        }
+    }));
 });

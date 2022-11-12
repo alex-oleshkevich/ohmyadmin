@@ -48,7 +48,7 @@
     }
 
     .rich-text mark {
-        @apply inline-block rounded bg-yellow-200 px-1;
+        @apply inline-block rounded bg-yellow-100 px-1;
     }
 
     .ProseMirror {

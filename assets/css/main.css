@@ -40,9 +40,7 @@
     td.actions {
         @apply flex justify-end items-center gap-1;
     }
-}
 
-@layer components {
     input[type="text"],
     input[type="url"],
     input[type="password"],
@@ -79,7 +77,9 @@
     textarea {
         min-height: 128px;
     }
+}
 
+@layer components {
     .btn {
         @apply inline-flex gap-1 items-center rounded-md border border-transparent px-3 py-1.5 font-medium leading-5;
         @apply border-slate-300 bg-white hover:bg-slate-100 active:bg-slate-200;

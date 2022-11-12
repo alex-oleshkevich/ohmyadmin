@@ -30,6 +30,7 @@ class BlogPostResource(SQLAlchemyResource):
         yield StringField(name='title', validators=[wtforms.validators.data_required()])
         yield RichTextField(
             name='content',
+            placeholder='Enter some cool storey',
             toolbar=EditorToolbar(
                 [
                     rich_text.Bold(),

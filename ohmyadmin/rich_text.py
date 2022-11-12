@@ -56,6 +56,7 @@ class CodeBlock(EditorAction):
 class Link(EditorAction):
     icon = 'link'
     action = 'link'
+    widget = macro('ohmyadmin/forms/rich_text.html', 'toggle_link_button')
 
 
 class Highlight(EditorAction):

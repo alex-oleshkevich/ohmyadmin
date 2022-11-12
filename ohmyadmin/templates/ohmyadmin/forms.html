@@ -190,7 +190,8 @@
 {% endmacro %}
 
 {% macro rich_text_input(field) %}
-    <div x-data="richEditor('{{ field.id }}')" class="border border-gray-300 rounded">
+    <div x-data="richEditor('{{ field.id }}', {placeholder: '{{ field.placeholder }}'})"
+         class="border border-gray-300 rounded">
         {% if field.toolbar %}
             <template x-if="ready">
                 <div class="space-x-px py-1.5 border-b border-gray-300 mb-2">
@@ -200,8 +201,10 @@
                 </div>
             </template>
         {% endif %}
-        <textarea style="display: none" name="{{ field.name }}"
-                  x-ref="textarea">{{ field.data|default('', true) }}</textarea>
+        <textarea
+            style="display: none"
+            name="{{ field.name }}"
+            x-ref="textarea">{{ field.data|default('', true) }}</textarea>
         <div x-ref="editor" class="rich-text"></div>
     </div>
 {% endmacro %}
