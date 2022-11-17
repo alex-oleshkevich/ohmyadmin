@@ -3,7 +3,7 @@
         title="{{ button.title }}"
         type="button"
         class="p-1.5 rounded hover:bg-gray-100 active:bg-gray-200"
-        :class="{'bg-gray-300': isActive('{{ button.action }}', updateCounter)}"
+        :class="{'bg-gray-300 hover:bg-gray-300': isActive('{{ button.action }}', updateCounter)}"
         @click="toggle('{{ button.action }}')">
         {{ tabler_icon(button.icon) }}
     </button>
@@ -18,7 +18,7 @@
 {% macro heading_button(button) %}
     <div class="relative inline-block" x-data="{open: false}" @click.outside="open = false">
         <button title="{{ button.title }}" type="button" class="p-1.5 rounded hover:bg-gray-100 active:bg-gray-200"
-                @click="open = !open" :class="{'bg-gray-300': isActive('heading', updateCounter)}">
+                @click="open = !open" :class="{'bg-gray-300 hover:bg-gray-300': isActive('heading', updateCounter)}">
             {{ tabler_icon('heading') }}
         </button>
         <template x-if="open">
@@ -41,16 +41,16 @@
 {% macro toggle_link_button(button) %}
     <div
         class="relative inline-block"
-        x-data="richEditorLink(editor)"
+        x-data="richEditorLink(getTipTap)"
         @click.outside="open = false"
     >
         <button title="{{ button.title }}" type="button" class="p-1.5 rounded hover:bg-gray-100 active:bg-gray-200"
-                @click="open = !open" :class="{'bg-gray-300': isActive('{{ button.action }}', updateCounter)}">
+                @click="open = !open" :class="{'bg-gray-300 hover:bg-gray-300': isActive('{{ button.action }}', updateCounter)}">
             {{ tabler_icon(button.icon) }}
         </button>
 
         <template x-if="open">
-            <form @submit.prevent="onSubmit" class="dropdown w-96 left-0 p-2 mt-2">
+            <form @submit.prevent="save" class="dropdown w-96 left-0 p-2 mt-2">
                 <div>
 
                     <input
@@ -62,16 +62,16 @@
                     >
 
                     <div class="flex items-center gap-2 mb-3">
-                        <input type="checkbox" @input="onTargetInputChange($event)" id="link-target">
+                        <input type="checkbox" @input="onTargetInputChange($event)" :checked="checked" id="link-target">
                         <label for="link-target">{{ _('Open in a new tab') }}</label>
                     </div>
 
                     <div class="border-t border-gray-200 pt-1 flex items-center gap-2">
-                        <button class="btn btn-text" @click="save()">
+                        <button class="btn btn-text" type="button" @click="save">
                             {{ tabler_icon('check') }}
                             {{ _('Apply') }}
                         </button>
-                        <button class="btn btn-text" @click="clear">
+                        <button class="btn btn-text" type="button" @click="clear">
                             {{ tabler_icon('x') }}
                             {{ _('Clear') }}
                         </button>

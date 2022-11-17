@@ -44,7 +44,6 @@ document.addEventListener('alpine:init', () => {
                             placeholder: options?.placeholder || '',
                         }),
                         Link.configure({
-                            protocols: ['mailto'],
                             openOnClick: false,
                         }),
                         Highlight.configure({}),
@@ -68,7 +67,7 @@ document.addEventListener('alpine:init', () => {
                     },
                 });
             },
-            get editor(): Editor {
+            getTipTap(): Editor {
                 return editor;
             },
             isActive(action: string, _: any, opts?: any) {
@@ -90,33 +89,34 @@ document.addEventListener('alpine:init', () => {
             toggleHeading(level: Level): void {
                 editor.chain().toggleHeading({ level }).focus().run();
             },
-            toggleLink(href: string, target?: string): void {
-                editor.chain().toggleLink({ href, target });
-            },
         };
     });
 
-    Alpine.data('richEditorLink', (editor: Editor) => ({
+    Alpine.data('richEditorLink', (getTipTap: () => Editor) => ({
         href: '',
         target: '',
         open: false,
+        get checked() {
+            return this.target == '_blank';
+        },
         save() {
-            editor.commands.toggleLink({ href: this.href, target: this.target });
+            getTipTap().chain().toggleLink({ href: 'https://google.com', target: '_parent' }).run();
+            this.close()
         },
-        inputInitializer() {
-            this.href = editor.getAttributes('link').href || '';
-            this.target = editor.getAttributes('link').target || '';
-        },
-        onSubmit() {
-            this.save();
+        close() {
             this.open = false;
         },
+        inputInitializer() {
+            this.href = getTipTap().getAttributes('link').href || '';
+            this.target = getTipTap().getAttributes('link').target || '';
+        },
         onTargetInputChange(el: Event) {
-            const checked = el.target.checked;
+            const checked = el.target!.checked;
             this.target = checked ? '_blank' : '';
         },
         clear() {
-            editor.commands.unsetLink();
+            getTipTap().commands.unsetLink();
+            this.close();
         }
     }));
 });
