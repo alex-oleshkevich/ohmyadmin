@@ -24,14 +24,14 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.10"
-Jinja2 = "^3.1"
-starlette = "^0.21"
+Jinja2 = "^3"
+starlette = "*"
 tabler-icons = "^0.4"
-python-slugify = "^6.1"
-WTForms = "^3.0"
+python-slugify = "^7.0"
+WTForms = "^3"
 python-multipart = "^0.0.5"
-starlette-babel = "^0.2.1"
-starlette-flash = "^0.1.0"
+starlette-babel = "^0.2"
+starlette-flash = "^0.1"
 
 [tool.poetry.group.dev.dependencies]
 SQLAlchemy = { extras = ["mypy"], version = "^1.4.35" }
