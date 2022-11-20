@@ -26,13 +26,15 @@ classifiers = [
 python = "^3.10"
 Jinja2 = "^3.1"
 starlette = "^0.21"
-tabler-icons = "^0.2"
+tabler-icons = "^0.4"
 python-slugify = "^6.1"
-SQLAlchemy = { extras = ["mypy"], version = "^1.4.35" }
 WTForms = "^3.0"
 python-multipart = "^0.0.5"
+starlette-babel = "^0.2.1"
+starlette-flash = "^0.1.0"
 
 [tool.poetry.group.dev.dependencies]
+SQLAlchemy = { extras = ["mypy"], version = "^1.4.35" }
 asyncpg = "^0.26"
 pytest = "^7.2"
 pytest-asyncio = "^0.19"
@@ -45,7 +47,7 @@ passlib = "^1.7.4"
 itsdangerous = "^2.1.2"
 Faker = "^15.0.0"
 uvicorn = "^0.18.3"
-starception = "^0.4.1"
+starception = "^1.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
