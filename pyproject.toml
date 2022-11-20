@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "ohmyadmin"
 description = "Awesome admin panel for your business."
-version = "0.3.1"
+version = "0.3.2"
 authors = ["Alex Oleshkevich <alex.oleshkevich@gmail.com>"]
 license = "MIT"
 readme = "README.md"
