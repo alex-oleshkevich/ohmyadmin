@@ -183,8 +183,28 @@
 
 {% macro grid_layout(field, layout) %}
     <div class="grid grid-cols-{{ layout.columns }} gap-{{ layout.gap }}">
-    {% for subfield in field %}
-        {{ form_field(subfield) }}
-    {% endfor %}
+        {% for subfield in field %}
+            {{ form_field(subfield) }}
+        {% endfor %}
     </div>
+{% endmacro %}
+
+{% macro trix_input(field) %}
+    <style>
+        trix-toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background: white;
+        }
+
+        .trix-button-group--file-tools {
+            display: none !important;
+        }
+    </style>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/trix@2.0.0-beta.0/dist/trix.css">
+    <script type="text/javascript" src="https://unpkg.com/trix@2.0.0-beta.0/dist/trix.umd.min.js"></script>
+
+    <textarea id="{{ field.id }}" name="{{ field.name }}" style="display: none">{{ field.data|e }}</textarea>
+    <trix-editor input="{{ field.id }}" class="rich-text"></trix-editor>
 {% endmacro %}

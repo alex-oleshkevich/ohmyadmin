@@ -126,6 +126,10 @@ def coerce_bool(value: str) -> bool:
     return value in ['1', 1, True, 'true', 'True', 'on']
 
 
+class TrixField(wtforms.TextAreaField):
+    widget = macro('ohmyadmin/forms.html', 'trix_input')
+
+
 class RichTextField(wtforms.TextAreaField):
     ...
 

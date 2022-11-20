@@ -5,7 +5,7 @@ from starlette.requests import Request
 from examples.models import BlogPost, Category, User
 from ohmyadmin.display import DisplayField
 from ohmyadmin.ext.sqla import SQLAlchemyResource, choices_from
-from ohmyadmin.forms import Form, SelectField, StringField, TextAreaField
+from ohmyadmin.forms import Form, SelectField, StringField, TrixField
 from ohmyadmin.layout import Card, FormElement, Grid, LayoutComponent
 
 
@@ -26,7 +26,7 @@ class BlogPostResource(SQLAlchemyResource):
 
     def get_form_fields(self, request: Request) -> typing.Iterable[wtforms.Field]:
         yield StringField(name='title', validators=[wtforms.validators.data_required()])
-        yield TextAreaField(name='content')
+        yield TrixField(name='content')
         yield SelectField(name='author_id', choices=choices_from(User, label_column='full_name'), coerce=safe_int)
 
     def get_form_layout(self, request: Request, form: Form, instance: Category) -> LayoutComponent:

@@ -1,0 +1,72 @@
+@layer components {
+    .rich-text {
+        @apply text-base;
+    }
+
+    .rich-text h1 {
+        @apply font-semibold mb-4 text-2xl
+    }
+
+    .rich-text h2 {
+        @apply font-semibold mb-4 text-xl
+    }
+
+    .rich-text h3 {
+        @apply font-semibold mb-4 text-lg
+    }
+
+    .rich-text h4 {
+        @apply font-semibold mb-4
+    }
+
+    .rich-text h5 {
+        @apply font-semibold font-medium mb-4
+    }
+
+    .rich-text h6 {
+        @apply font-medium text-sm mb-4
+    }
+
+    .rich-text p {
+        @apply mb-4;
+    }
+
+    .rich-text img {
+        @apply mb-4 w-full px-10;
+    }
+
+    .rich-text a {
+        @apply underline text-blue-700;
+    }
+
+    .rich-text p > code {
+        @apply font-mono inline-block px-1 rounded bg-gray-100 text-red-700;
+    }
+
+    .rich-text blockquote {
+        font-style: italic;
+        @apply border-l-2 border-gray-300 mx-4 mb-4 px-2 text-gray-700;
+    }
+
+    .rich-text pre {
+        @apply text-white rounded-md bg-slate-800 p-3 mb-5 font-mono text-sm;
+    }
+
+    .rich-text mark {
+        @apply inline-block rounded bg-yellow-100 px-1;
+    }
+
+    .rich-text ul {
+        @apply list-disc list-inside;
+    }
+
+    .rich-text ol {
+        @apply list-decimal list-inside;
+    }
+
+    .rich-text ul li > p, .rich-text ol li > p {
+        display: inline-block;
+        margin-bottom: 0;
+    }
+
+}
