@@ -1,2 +1,3 @@
-def _(message: str) -> str:
-    return message
+from starlette_babel import gettext_lazy
+
+_ = gettext_lazy
