@@ -6,9 +6,8 @@ import typing
 from jinja2.runtime import Macro
 from starlette.requests import Request
 from starlette.templating import Jinja2Templates
+from starlette_flash import flash
 from tabler_icons import tabler_icon
-
-from ohmyadmin.flash import flash
 
 
 def dict_to_attrs(attrs: dict[str, typing.Any]) -> str:

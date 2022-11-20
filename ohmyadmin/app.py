@@ -12,10 +12,10 @@ from starlette.responses import RedirectResponse, Response
 from starlette.routing import BaseRoute, Mount, Route, Router
 from starlette.staticfiles import StaticFiles
 from starlette.types import Receive, Scope, Send
+from starlette_flash import flash
 
 from ohmyadmin.auth import AnonymousAuthPolicy, BaseAuthPolicy, RequireLoginMiddleware, UserMenu
 from ohmyadmin.dashboards import Dashboard
-from ohmyadmin.flash import FlashMiddleware, flash
 from ohmyadmin.globals import globalize_request
 from ohmyadmin.i18n import _
 from ohmyadmin.layout import FormElement, Grid
@@ -53,7 +53,6 @@ class OhMyAdmin(Router):
         self.middleware = list(middleware or [])
         self.middleware.extend(
             [
-                Middleware(FlashMiddleware),
                 Middleware(AuthenticationMiddleware, backend=self.auth_policy.get_authentication_backend()),
                 Middleware(RequireLoginMiddleware, exclude_paths=['/login', '/logout', '/static', '/media']),
             ]

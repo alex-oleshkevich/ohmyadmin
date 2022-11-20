@@ -7,8 +7,8 @@ from starlette.authentication import AuthCredentials, AuthenticationBackend, Bas
 from starlette.requests import HTTPConnection, Request
 from starlette.responses import RedirectResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
+from starlette_flash import flash
 
-from ohmyadmin.flash import flash
 from ohmyadmin.forms import EmailField, Form, HiddenField, PasswordField
 from ohmyadmin.i18n import _
 from ohmyadmin.menu import MenuItem

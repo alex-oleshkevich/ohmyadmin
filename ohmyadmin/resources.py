@@ -12,6 +12,7 @@ from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
 from starlette.routing import BaseRoute, Route, Router
 from starlette.types import Receive, Scope, Send
+from starlette_flash import flash
 
 from ohmyadmin import layout
 from ohmyadmin.actions import (
@@ -26,7 +27,6 @@ from ohmyadmin.actions import (
 )
 from ohmyadmin.display import DisplayField
 from ohmyadmin.filters import BaseFilter
-from ohmyadmin.flash import flash
 from ohmyadmin.forms import Form, Prefill
 from ohmyadmin.helpers import camel_to_sentence, pluralize
 from ohmyadmin.i18n import _

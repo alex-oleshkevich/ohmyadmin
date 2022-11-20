@@ -4,8 +4,7 @@ import json
 import typing
 from starlette import responses
 from starlette.datastructures import URL
-
-from ohmyadmin.flash import FlashCategory
+from starlette_flash import FlashCategory
 
 
 class HXResponse(responses.Response):
