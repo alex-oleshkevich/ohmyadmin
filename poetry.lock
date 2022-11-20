@@ -523,14 +523,14 @@ starlette = ">=0.21.0,<0.22.0"
 
 [[package]]
 name = "starlette-flash"
-version = "0.1.0"
+version = "0.2.0"
 description = "Flash messages for Starlette framework."
 category = "main"
 optional = false
 python-versions = ">=3.10.0,<4.0.0"
 
 [package.dependencies]
-starlette = ">=0.21.0,<0.22.0"
+starlette = "*"
 
 [[package]]
 name = "tabler-icons"
@@ -604,7 +604,7 @@ email = ["email-validator"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "109705bf438e9c87b69a20db67c11fca44e23d831000f9fdd7044c109d0107d0"
+content-hash = "b647ebadd6f230df723118c3d8bea0f925e92c7545bc6846724ff964688814a5"
 
 [metadata.files]
 anyio = [
@@ -1033,8 +1033,8 @@ starlette-babel = [
     {file = "starlette_babel-0.2.1.tar.gz", hash = "sha256:5a8399055ccde4f9cbf2560a070b17f69b8bf39b3c285c8b87785144d9d61bf8"},
 ]
 starlette-flash = [
-    {file = "starlette_flash-0.1.0-py3-none-any.whl", hash = "sha256:2f5551d0c7a6c362f8fd36b623cd3dbbb7da70410af3e1e163f00cf503fa03d7"},
-    {file = "starlette_flash-0.1.0.tar.gz", hash = "sha256:0a27741dee88cbfbe92365de1419d26d66d99d11a2206448733cbf351aabaf3f"},
+    {file = "starlette_flash-0.2.0-py3-none-any.whl", hash = "sha256:99cddf3956a5fcb7e775c779e8a6a9e68cfbfa10233d629efe1fe36b3effd1e9"},
+    {file = "starlette_flash-0.2.0.tar.gz", hash = "sha256:009a50d4e9d9c95487b62dea4fe571c393589b12edcde2b7d4e545ae8c731b31"},
 ]
 tabler-icons = [
     {file = "tabler_icons-0.4.0-py3-none-any.whl", hash = "sha256:cec10b578724fc59bc9c04dc01d39756a06a3d0051764b7869e4bca1d0e22144"},

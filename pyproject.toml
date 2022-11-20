@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "ohmyadmin"
 description = "Awesome admin panel for your business."
-version = "0.3.3"
+version = "0.3.4"
 authors = ["Alex Oleshkevich <alex.oleshkevich@gmail.com>"]
 license = "MIT"
 readme = "README.md"
@@ -30,8 +30,8 @@ tabler-icons = "^0.4"
 python-slugify = "^7.0"
 WTForms = "^3"
 python-multipart = "^0.0.5"
-starlette-babel = "^0.2"
-starlette-flash = "^0.1"
+starlette-babel = "*"
+starlette-flash = "*"
 
 [tool.poetry.group.dev.dependencies]
 SQLAlchemy = { extras = ["mypy"], version = "^1.4.35" }
