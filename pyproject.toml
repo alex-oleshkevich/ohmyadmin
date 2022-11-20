@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "ohmyadmin"
 description = "Awesome admin panel for your business."
-version = "0.3.4"
+version = "0.3.5"
 authors = ["Alex Oleshkevich <alex.oleshkevich@gmail.com>"]
 license = "MIT"
 readme = "README.md"
@@ -26,7 +26,7 @@ classifiers = [
 python = "^3.10"
 Jinja2 = "^3"
 starlette = "*"
-tabler-icons = "^0.4"
+tabler-icons = "*"
 python-slugify = "^7.0"
 WTForms = "^3"
 python-multipart = "^0.0.5"
