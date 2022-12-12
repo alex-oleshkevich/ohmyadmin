@@ -151,7 +151,7 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
     @property
     def search_placeholder(self) -> str:
         template = _('Search in {fields}.')
-        fields = ', '.join([field.label for field in self.fields if field.searchable])
+        fields = ', '.join([str(field.label) for field in self.fields if field.searchable])
         return template.format(fields=fields)
 
     def can_edit(self, request: Request) -> bool:
