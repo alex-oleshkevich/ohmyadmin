@@ -9,17 +9,7 @@ from ohmyadmin import display
 from ohmyadmin.display import DisplayField
 from ohmyadmin.ext.sqla import ChoiceFilter, DateRangeFilter, DecimalFilter, SQLAlchemyResource, choices_from
 from ohmyadmin.filters import BaseFilter
-from ohmyadmin.forms import (
-    DecimalField,
-    FieldList,
-    Form,
-    FormField,
-    GridWidget,
-    IntegerField,
-    MarkdownField,
-    SelectField,
-    StringField,
-)
+from ohmyadmin.forms import AsyncForm, AsyncSelectField, FieldList, FormField, GridWidget
 from ohmyadmin.layout import Card, Date, FormElement, FormText, Grid, Group, LayoutComponent
 from ohmyadmin.metrics import Metric, ValueMetric
 
@@ -50,10 +40,12 @@ class AveragePrice(ValueMetric):
         return result.one()
 
 
-class EditOrderItem(Form):
-    product_id = SelectField(validators=[wtforms.validators.data_required()], choices=choices_from(Product), coerce=int)
-    quantity = IntegerField(validators=[wtforms.validators.data_required()])
-    unit_price = DecimalField(validators=[wtforms.validators.data_required()])
+class EditOrderItem(AsyncForm):
+    product_id = AsyncSelectField(
+        validators=[wtforms.validators.data_required()], choices=choices_from(Product), coerce=int
+    )
+    quantity = wtforms.IntegerField(validators=[wtforms.validators.data_required()])
+    unit_price = wtforms.DecimalField(validators=[wtforms.validators.data_required()])
 
 
 class OrderResource(SQLAlchemyResource):
@@ -106,24 +98,26 @@ class OrderResource(SQLAlchemyResource):
         yield DisplayField('created_at', label='Order date', component=display.DateTime())
 
     def get_form_fields(self, request: Request) -> typing.Iterable[wtforms.Field]:
-        yield StringField(name='number', validators=[wtforms.validators.data_required()])
-        yield SelectField(
+        yield wtforms.StringField(name='number', validators=[wtforms.validators.data_required()])
+        yield AsyncSelectField(
             name='customer_id',
             coerce=int,
             choices=choices_from(Customer),
             validators=[wtforms.validators.data_required()],
         )
-        yield SelectField(name='status', choices=Order.Status.choices, validators=[wtforms.validators.data_required()])
-        yield SelectField(
+        yield AsyncSelectField(
+            name='status', choices=Order.Status.choices, validators=[wtforms.validators.data_required()]
+        )
+        yield AsyncSelectField(
             name='currency_code',
             validators=[wtforms.validators.data_required()],
             choices=choices_from(Currency, value_column='code'),
         )
-        yield SelectField(name='country_code', choices=choices_from(Country, value_column='code'))
-        yield StringField(name='address')
-        yield StringField(name='city')
-        yield StringField(name='zip')
-        yield MarkdownField(name='notes')
+        yield AsyncSelectField(name='country_code', choices=choices_from(Country, value_column='code'))
+        yield wtforms.StringField(name='address')
+        yield wtforms.StringField(name='city')
+        yield wtforms.StringField(name='zip')
+        yield wtforms.TextAreaField(name='notes')
         yield FieldList(
             name='items',
             default=[],
@@ -134,7 +128,7 @@ class OrderResource(SQLAlchemyResource):
             ),
         )
 
-    def get_form_layout(self, request: Request, form: Form, instance: Order) -> LayoutComponent:
+    def get_form_layout(self, request: Request, form: AsyncForm, instance: Order) -> LayoutComponent:
         return Grid(
             columns=3,
             children=[

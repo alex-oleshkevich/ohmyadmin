@@ -9,7 +9,7 @@ from starlette.responses import RedirectResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 from starlette_flash import flash
 
-from ohmyadmin.forms import EmailField, Form, HiddenField, PasswordField
+from ohmyadmin.forms import AsyncForm
 from ohmyadmin.i18n import _
 from ohmyadmin.menu import MenuItem
 
@@ -23,21 +23,21 @@ class UserMenu:
     menu: list[MenuItem] = dataclasses.field(default_factory=list)
 
 
-class LoginForm(Form):
-    identity = EmailField(
+class LoginForm(AsyncForm):
+    identity = wtforms.EmailField(
         label=_('Email'),
         render_kw={'autocomplete': 'email', 'inputmode': 'email'},
         validators=[
             wtforms.validators.data_required(),
         ],
     )
-    password = PasswordField(
+    password = wtforms.PasswordField(
         render_kw={'autocomplete': 'password'},
         validators=[
             wtforms.validators.data_required(),
         ],
     )
-    next_url = HiddenField()
+    next_url = wtforms.HiddenField()
 
 
 class UserLike(BaseUser):
@@ -65,7 +65,7 @@ class AnonymousUser(UserLike):
 
 
 class BaseAuthPolicy(abc.ABC):
-    login_form_class: typing.ClassVar[typing.Type[Form]] = LoginForm
+    login_form_class: typing.ClassVar[typing.Type[AsyncForm]] = LoginForm
 
     @abc.abstractmethod
     async def authenticate(self, conn: HTTPConnection, identity: str, password: str) -> UserLike | None:
@@ -85,7 +85,7 @@ class BaseAuthPolicy(abc.ABC):
     def is_authenticated(self, conn: HTTPConnection) -> bool:
         return conn.user.is_authenticated
 
-    def get_login_form_class(self) -> typing.Type[Form]:
+    def get_login_form_class(self) -> typing.Type[AsyncForm]:
         return self.login_form_class
 
     def get_authentication_backend(self) -> AuthenticationBackend:

@@ -12,17 +12,7 @@ from wtforms.fields.core import UnboundField
 from wtforms.meta import DefaultMeta
 
 from ohmyadmin import display
-from ohmyadmin.forms import (
-    CheckboxListWidget,
-    Choices,
-    ChoicesFactory,
-    DecimalField,
-    FloatField,
-    Form,
-    IntegerField,
-    Prefill,
-    SelectField,
-)
+from ohmyadmin.forms import AsyncForm, CheckboxListWidget, Choices, ChoicesFactory, Prefill
 from ohmyadmin.helpers import snake_to_sentence
 from ohmyadmin.i18n import _
 from ohmyadmin.templating import macro
@@ -179,7 +169,7 @@ class BaseChoiceFilter(BaseFilter, Prefill):
             else:
                 self.choices = choices  # type: ignore
 
-    async def prefill(self, request: Request, form: Form) -> None:
+    async def prefill(self, request: Request, form: AsyncForm) -> None:
         if self.choices_factory:
             self.choices = await self.choices_factory(request, wtforms.Form())
 
@@ -281,8 +271,8 @@ class BaseNumericFilter(BaseFilter, typing.Generic[_VT]):
 class BaseIntegerFilter(BaseNumericFilter[int]):
     def get_subform_class(self) -> typing.Type[wtforms.Form]:
         class SubForm(wtforms.Form):
-            operation = SelectField(choices=self.operations)
-            query = IntegerField()
+            operation = wtforms.SelectField(choices=self.operations)
+            query = wtforms.IntegerField()
 
         return SubForm
 
@@ -290,8 +280,8 @@ class BaseIntegerFilter(BaseNumericFilter[int]):
 class BaseFloatFilter(BaseNumericFilter[float]):
     def get_subform_class(self) -> typing.Type[wtforms.Form]:
         class SubForm(wtforms.Form):
-            operation = SelectField(choices=self.operations)
-            query = FloatField()
+            operation = wtforms.SelectField(choices=self.operations)
+            query = wtforms.FloatField()
 
         return SubForm
 
@@ -299,8 +289,8 @@ class BaseFloatFilter(BaseNumericFilter[float]):
 class BaseDecimalFilter(BaseNumericFilter[decimal.Decimal]):
     def get_subform_class(self) -> typing.Type[wtforms.Form]:
         class SubForm(wtforms.Form):
-            operation = SelectField(choices=self.operations)
-            query = DecimalField()
+            operation = wtforms.SelectField(choices=self.operations)
+            query = wtforms.DecimalField()
 
         return SubForm
 

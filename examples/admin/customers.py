@@ -8,7 +8,7 @@ from examples.models import Customer
 from ohmyadmin.display import DisplayField
 from ohmyadmin.ext.sqla import DateFilter, SQLAlchemyResource
 from ohmyadmin.filters import BaseFilter
-from ohmyadmin.forms import DateField, EmailField, Form, StringField
+from ohmyadmin.forms import AsyncForm
 from ohmyadmin.layout import Card, Date, FormElement, FormText, Grid, Group, LayoutComponent
 
 
@@ -26,12 +26,12 @@ class CustomerResource(SQLAlchemyResource):
         yield DisplayField('phone', searchable=True)
 
     def get_form_fields(self, request: Request) -> typing.Iterable[wtforms.Field]:
-        yield StringField(name='name', validators=[wtforms.validators.data_required()])
-        yield EmailField(name='email', validators=[wtforms.validators.data_required()])
-        yield StringField(name='phone')
-        yield DateField(name='birthday')
+        yield wtforms.StringField(name='name', validators=[wtforms.validators.data_required()])
+        yield wtforms.EmailField(name='email', validators=[wtforms.validators.data_required()])
+        yield wtforms.StringField(name='phone')
+        yield wtforms.DateField(name='birthday')
 
-    def get_form_layout(self, request: Request, form: Form, instance: Customer) -> LayoutComponent:
+    def get_form_layout(self, request: Request, form: AsyncForm, instance: Customer) -> LayoutComponent:
         return Grid(
             columns=3,
             children=[

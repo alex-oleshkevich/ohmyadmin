@@ -19,19 +19,7 @@ from ohmyadmin.ext.sqla import (
     choices_from,
 )
 from ohmyadmin.filters import BaseFilter
-from ohmyadmin.forms import (
-    BooleanField,
-    DateField,
-    DecimalField,
-    FieldList,
-    FileField,
-    Form,
-    IntegerField,
-    SelectField,
-    StringField,
-    TextAreaField,
-    Uploader,
-)
+from ohmyadmin.forms import AsyncFileField, AsyncForm, AsyncSelectField, FieldList, Uploader
 from ohmyadmin.layout import Card, FormElement, Grid, Group, LayoutComponent
 from ohmyadmin.metrics import Metric, ValueMetric
 
@@ -128,28 +116,28 @@ class ProductResource(SQLAlchemyResource):
         yield DisplayField('visible', label='Visibility', component=display.Boolean())
 
     def get_form_fields(self, request: Request) -> typing.Iterable[wtforms.Field]:
-        yield StringField(name='name', validators=[wtforms.validators.data_required()])
-        yield StringField(name='slug', validators=[wtforms.validators.data_required()])
-        yield TextAreaField(name='description')
-        yield DecimalField(name='price', validators=[wtforms.validators.data_required()])
-        yield DecimalField(name='compare_at_price', validators=[wtforms.validators.data_required()])
-        yield DecimalField(
+        yield wtforms.StringField(name='name', validators=[wtforms.validators.data_required()])
+        yield wtforms.StringField(name='slug', validators=[wtforms.validators.data_required()])
+        yield wtforms.TextAreaField(name='description')
+        yield wtforms.DecimalField(name='price', validators=[wtforms.validators.data_required()])
+        yield wtforms.DecimalField(name='compare_at_price', validators=[wtforms.validators.data_required()])
+        yield wtforms.DecimalField(
             name='cost_per_item',
             description="Customers won't see this price.",
             validators=[wtforms.validators.data_required()],
         )
         yield FieldList(
             name='images',
-            unbound_field=FileField(
+            unbound_field=AsyncFileField(
                 uploader=ImageUploader(
                     storage=request.state.admin.file_storage,
                     upload_to='products/{prefix}_{file_name}',
                 )
             ),
         )
-        yield IntegerField(name='sku', validators=[wtforms.validators.data_required()])
-        yield IntegerField(name='quantity', validators=[wtforms.validators.data_required()])
-        yield IntegerField(
+        yield wtforms.IntegerField(name='sku', validators=[wtforms.validators.data_required()])
+        yield wtforms.IntegerField(name='quantity', validators=[wtforms.validators.data_required()])
+        yield wtforms.IntegerField(
             name='security_stock',
             validators=[wtforms.validators.data_required()],
             description=(
@@ -157,17 +145,17 @@ class ProductResource(SQLAlchemyResource):
                 'if the product stock will soon be out of stock.'
             ),
         )
-        yield StringField(
+        yield wtforms.StringField(
             name='barcode', label='Barcode (ISBN, UPC, GTIN, etc.)', validators=[wtforms.validators.data_required()]
         )
-        yield BooleanField(name='can_be_returned', label='This product can be returned')
-        yield BooleanField(name='can_be_shipped', label='This product can be shipped')
-        yield BooleanField(name='visible', description='This product will be hidden from all sales channels.')
-        yield DateField(name='availability', validators=[wtforms.validators.data_required()])
-        yield SelectField(name='brand_id', coerce=int, choices=choices_from(Brand))
+        yield wtforms.BooleanField(name='can_be_returned', label='This product can be returned')
+        yield wtforms.BooleanField(name='can_be_shipped', label='This product can be shipped')
+        yield wtforms.BooleanField(name='visible', description='This product will be hidden from all sales channels.')
+        yield wtforms.DateField(name='availability', validators=[wtforms.validators.data_required()])
+        yield AsyncSelectField(name='brand_id', coerce=int, choices=choices_from(Brand))
         # categories = SelectMultipleField(required=True)
 
-    def get_form_layout(self, request: Request, form: Form, instance: typing.Any) -> LayoutComponent:
+    def get_form_layout(self, request: Request, form: AsyncForm, instance: typing.Any) -> LayoutComponent:
         return Grid(
             columns=3,
             children=[

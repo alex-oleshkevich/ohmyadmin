@@ -27,7 +27,7 @@ from ohmyadmin.actions import (
 )
 from ohmyadmin.display import DisplayField
 from ohmyadmin.filters import BaseFilter
-from ohmyadmin.forms import Form, Prefill
+from ohmyadmin.forms import AsyncForm, Prefill
 from ohmyadmin.helpers import camel_to_sentence, pluralize
 from ohmyadmin.i18n import _
 from ohmyadmin.layout import LayoutComponent
@@ -208,17 +208,17 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
     def get_form_fields(self, request: Request) -> typing.Iterable[wtforms.Field]:
         raise NotImplementedError()
 
-    async def create_form_class(self, request: Request) -> typing.Type[Form]:
+    async def create_form_class(self, request: Request) -> typing.Type[AsyncForm]:
         return typing.cast(
-            typing.Type[Form],
+            typing.Type[AsyncForm],
             type(
                 f'{self.__class__.__name__}Form',
-                (Form,),
+                (AsyncForm,),
                 {field.name: field for field in self.get_form_fields(request)},
             ),
         )
 
-    async def get_form_class(self, request: Request) -> typing.Type[Form]:
+    async def get_form_class(self, request: Request) -> typing.Type[AsyncForm]:
         """
         Get form class.
 
@@ -230,16 +230,16 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
             return self.form_class
         return await self.create_form_class(request)
 
-    async def get_form_class_for_edit(self, request: Request) -> typing.Type[Form]:
+    async def get_form_class_for_edit(self, request: Request) -> typing.Type[AsyncForm]:
         return await self.get_form_class(request)
 
-    async def get_form_class_for_create(self, request: Request) -> typing.Type[Form]:
+    async def get_form_class_for_create(self, request: Request) -> typing.Type[AsyncForm]:
         return await self.get_form_class(request)
 
     def get_form_layout(self, request: Request, form: wtforms.Form, instance: typing.Any) -> LayoutComponent:
         return layout.Grid([layout.FormElement(field, max_width='lg') for field in form])
 
-    async def validate_form(self, request: Request, form: Form, instance: typing.Any) -> bool:
+    async def validate_form(self, request: Request, form: AsyncForm, instance: typing.Any) -> bool:
         """
         Validate form.
 
@@ -247,7 +247,7 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
         """
         return await form.validate_async()
 
-    async def prefill_form_choices(self, request: Request, form: Form, instance: typing.Any) -> None:
+    async def prefill_form_choices(self, request: Request, form: AsyncForm, instance: typing.Any) -> None:
         """Use this hook to load and prefill form field choices."""
         await form.prefill(request)
 

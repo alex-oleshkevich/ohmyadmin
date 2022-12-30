@@ -21,7 +21,7 @@ from ohmyadmin.filters import (
     BaseMultiChoiceFilter,
     BaseStringFilter,
 )
-from ohmyadmin.forms import Choices, ChoicesFactory, Form
+from ohmyadmin.forms import AsyncForm, Choices, ChoicesFactory
 from ohmyadmin.helpers import camel_to_sentence, pluralize, snake_to_sentence
 from ohmyadmin.i18n import _
 from ohmyadmin.ordering import SortingType
@@ -54,7 +54,7 @@ def choices_from(
     value_column: str = 'id',
     label_column: str = 'name',
 ) -> ChoicesFactory:
-    async def loader(request: Request, form: Form) -> Choices:
+    async def loader(request: Request, form: AsyncForm) -> Choices:
         stmt = sa.select(entity_class)
         stmt = where(stmt) if where else stmt
         return await as_choices(request.state.dbsession, stmt, label_column=label_column, value_column=value_column)

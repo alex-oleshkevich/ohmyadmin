@@ -7,7 +7,7 @@ from ohmyadmin import display, layout
 from ohmyadmin.display import DisplayField
 from ohmyadmin.ext.sqla import ChoiceFilter, SQLAlchemyResource
 from ohmyadmin.filters import BaseFilter
-from ohmyadmin.forms import BooleanField, Form, MarkdownField, SlugField, StringField, URLField
+from ohmyadmin.forms import AsyncForm
 from ohmyadmin.layout import Card, FormElement, FormText, Grid, Group, LayoutComponent
 
 
@@ -31,13 +31,13 @@ class BrandResource(SQLAlchemyResource):
         yield DisplayField('updated_at', component=display.DateTime())
 
     def get_form_fields(self, request: Request) -> typing.Iterable[wtforms.Field]:
-        yield StringField(name='name', validators=[wtforms.validators.DataRequired()])
-        yield SlugField(name='slug', validators=[wtforms.validators.DataRequired()])
-        yield URLField(name='website')
-        yield BooleanField(name='visible_to_customers')
-        yield MarkdownField(name='description')
+        yield wtforms.StringField(name='name', validators=[wtforms.validators.DataRequired()])
+        yield wtforms.StringField(name='slug', validators=[wtforms.validators.DataRequired()])
+        yield wtforms.URLField(name='website')
+        yield wtforms.BooleanField(name='visible_to_customers')
+        yield wtforms.TextAreaField(name='description')
 
-    def get_form_layout(self, request: Request, form: Form, instance: typing.Any) -> LayoutComponent:
+    def get_form_layout(self, request: Request, form: AsyncForm, instance: typing.Any) -> LayoutComponent:
         return Grid(
             columns=3,
             children=[

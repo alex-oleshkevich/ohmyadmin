@@ -6,11 +6,11 @@ from starlette.requests import Request
 from examples.models import Currency
 from ohmyadmin.display import DisplayField
 from ohmyadmin.ext.sqla import SQLAlchemyResource
-from ohmyadmin.forms import Form, StringField
+from ohmyadmin.forms import AsyncForm
 from ohmyadmin.globals import get_dbsession
 
 
-async def code_is_unique(form: Form, field: wtforms.Field) -> None:
+async def code_is_unique(form: AsyncForm, field: wtforms.Field) -> None:
     if field.data == field.object_data:
         return
     stmt = sa.select(sa.exists(sa.select(Currency).where(Currency.code == field.data)))
@@ -27,5 +27,5 @@ class CurrencyResource(SQLAlchemyResource):
         yield DisplayField('code', searchable=True)
 
     def get_form_fields(self, request: Request) -> typing.Iterable[wtforms.Field]:
-        yield StringField(name='name', validators=[wtforms.validators.data_required()])
-        yield StringField(name='code', validators=[code_is_unique, wtforms.validators.data_required()])
+        yield wtforms.StringField(name='name', validators=[wtforms.validators.data_required()])
+        yield wtforms.StringField(name='code', validators=[code_is_unique, wtforms.validators.data_required()])

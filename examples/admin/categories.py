@@ -6,7 +6,7 @@ from examples.models import Category
 from ohmyadmin import display
 from ohmyadmin.display import DisplayField
 from ohmyadmin.ext.sqla import SQLAlchemyResource, choices_from
-from ohmyadmin.forms import BooleanField, Form, MarkdownField, SelectField, SlugField, StringField
+from ohmyadmin.forms import AsyncForm, AsyncSelectField
 from ohmyadmin.layout import Card, Date, FormElement, FormText, Grid, Group, LayoutComponent
 
 
@@ -27,13 +27,13 @@ class CategoryResource(SQLAlchemyResource):
         yield DisplayField('updated_at', component=display.DateTime())
 
     def get_form_fields(self, request: Request) -> typing.Iterable[wtforms.Field]:
-        yield StringField(name='name', validators=[wtforms.validators.data_required()])
-        yield SlugField(name='slug', validators=[wtforms.validators.data_required()])
-        yield SelectField(name='parent_id', choices=choices_from(Category), coerce=safe_int)
-        yield BooleanField(name='visible_to_customers')
-        yield MarkdownField(name='description')
+        yield wtforms.StringField(name='name', validators=[wtforms.validators.data_required()])
+        yield wtforms.StringField(name='slug', validators=[wtforms.validators.data_required()])
+        yield AsyncSelectField(name='parent_id', choices=choices_from(Category), coerce=safe_int)
+        yield wtforms.BooleanField(name='visible_to_customers')
+        yield wtforms.TextAreaField(name='description')
 
-    def get_form_layout(self, request: Request, form: Form, instance: Category) -> LayoutComponent:
+    def get_form_layout(self, request: Request, form: AsyncForm, instance: Category) -> LayoutComponent:
         return Grid(
             columns=3,
             children=[

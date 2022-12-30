@@ -20,30 +20,12 @@ from ohmyadmin.templating import macro
 UploadFilename = typing.Callable[[UploadFile, typing.Any], str]
 Validator = typing.Callable[[wtforms.Form, wtforms.Field], None]
 Choices = typing.Iterable[tuple[str | None, str]]
-ChoicesFactory = typing.Callable[[Request, 'Form'], typing.Awaitable[Choices]]
-
-StringField = wtforms.StringField
-BooleanField = wtforms.BooleanField
-TextAreaField = wtforms.TextAreaField
-MonthField = wtforms.MonthField
-DateField = wtforms.DateField
-TimeField = wtforms.TimeField
-DateTimeField = wtforms.DateTimeField
-HiddenField = wtforms.HiddenField
-PasswordField = wtforms.PasswordField
-TelField = wtforms.TelField
-URLField = wtforms.URLField
-EmailField = wtforms.EmailField
-FloatField = wtforms.FloatField
-IntegerField = wtforms.IntegerField
-DecimalField = wtforms.DecimalField
-IntegerRangeField = wtforms.IntegerRangeField
-DecimalRangeField = wtforms.DecimalRangeField
+ChoicesFactory = typing.Callable[[Request, wtforms.Form], typing.Awaitable[Choices]]
 
 
 class Prefill(abc.ABC):
     @abc.abstractmethod
-    async def prefill(self, request: Request, form: Form) -> None:
+    async def prefill(self, request: Request, form: AsyncForm) -> None:
         ...
 
 
@@ -130,19 +112,7 @@ class TrixField(wtforms.TextAreaField):
     widget = macro('ohmyadmin/forms.html', 'trix_input')
 
 
-class RichTextField(wtforms.TextAreaField):
-    ...
-
-
-class MarkdownField(wtforms.TextAreaField):
-    ...
-
-
-class SlugField(wtforms.StringField):
-    ...
-
-
-class FileField(wtforms.FileField):
+class AsyncFileField(wtforms.FileField):
     data: UploadFile | None
 
     def __init__(
@@ -217,15 +187,7 @@ class FileField(wtforms.FileField):
         return bool(value and isinstance(value, UploadFile) and value.filename)
 
 
-class ImageField(wtforms.FileField):
-    ...
-
-
-class DropZoneField(wtforms.FileField):
-    ...
-
-
-class SelectField(wtforms.SelectField, Prefill):
+class AsyncSelectField(wtforms.SelectField, Prefill):
     def __init__(
         self,
         label: str | None = None,
@@ -241,13 +203,9 @@ class SelectField(wtforms.SelectField, Prefill):
             choices = None
         super().__init__(label, validators, coerce, choices=choices, validate_choice=validate_choice, **kwargs)
 
-    async def prefill(self, request: Request, form: Form) -> None:
+    async def prefill(self, request: Request, form: AsyncForm) -> None:
         if self._async_choices:
             self.choices = await self._async_choices(request, form)
-
-
-class RadioField(wtforms.RadioField):
-    ...
 
 
 class ListWidget:
@@ -311,14 +269,14 @@ class FieldList(wtforms.FieldList, Prefill):
 
         setattr(obj, name, output)
 
-    async def prefill(self, request: Request, form: Form) -> None:
+    async def prefill(self, request: Request, form: AsyncForm) -> None:
         for field in self.entries:
             if isinstance(field, Prefill):
                 await field.prefill(request, form)
 
 
 class FormField(wtforms.FormField, Prefill):
-    async def prefill(self, request: Request, form: Form) -> None:
+    async def prefill(self, request: Request, form: AsyncForm) -> None:
         for field in self.form:
             if isinstance(field, Prefill):
                 await field.prefill(request, self.form)
@@ -339,14 +297,6 @@ class FormField(wtforms.FormField, Prefill):
         setattr(obj, name, candidate)
 
 
-class JSONField(wtforms.TextAreaField):
-    ...
-
-
-class CodeField(wtforms.TextAreaField):
-    ...
-
-
 class CheckboxListWidget:
     def __call__(self, field: wtforms.Field, **kwargs: typing.Any) -> str:
         kwargs.setdefault("id", field.id)
@@ -358,7 +308,7 @@ class CheckboxListWidget:
         return ''.join(html)
 
 
-class Form(wtforms.Form):
+class AsyncForm(wtforms.Form):
     __getattr__: typing.Callable[[wtforms.Form, str], wtforms.Field]
 
     async def populate_obj_async(self, obj: typing.Any) -> None:

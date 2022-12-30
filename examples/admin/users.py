@@ -9,7 +9,7 @@ from ohmyadmin import display
 from ohmyadmin.actions import Action, BatchAction, LinkRowAction, ModalAction, ModalRowAction, RowAction, RowActionGroup
 from ohmyadmin.display import DisplayField
 from ohmyadmin.ext.sqla import BatchDeleteAction, SQLAlchemyResource
-from ohmyadmin.forms import BooleanField, EmailField, FileField, Form, HiddenField, StringField, Uploader
+from ohmyadmin.forms import AsyncFileField, AsyncForm, Uploader
 from ohmyadmin.helpers import media_url_or_redirect
 from ohmyadmin.projections import DefaultProjection, Projection
 
@@ -22,7 +22,7 @@ class DuplicateAction(BatchAction):
     icon = 'copy'
     form_class = DuplicateActionForm
 
-    async def apply(self, request: Request, ids: list, form: Form) -> Response:
+    async def apply(self, request: Request, ids: list, form: AsyncForm) -> Response:
         return self.dismiss('Object has been duplicated.')
 
 
@@ -39,7 +39,7 @@ class ExportAction(ModalAction):
     icon = 'download'
     form_class = ExportActionForm
 
-    async def form_valid(self, request: Request, form: Form) -> Response:
+    async def form_valid(self, request: Request, form: AsyncForm) -> Response:
         return self.dismiss('Action completed.')
 
 
@@ -76,15 +76,15 @@ class UserResource(SQLAlchemyResource):
         yield DisplayField('is_active', label='Active', component=display.Boolean())
 
     def get_form_fields(self, request: Request) -> typing.Iterable[wtforms.Field]:
-        yield StringField(name='first_name')
-        yield StringField(name='last_name')
-        yield EmailField(name='email', validators=[wtforms.validators.DataRequired()])
-        yield FileField(
+        yield wtforms.StringField(name='first_name')
+        yield wtforms.StringField(name='last_name')
+        yield wtforms.EmailField(name='email', validators=[wtforms.validators.DataRequired()])
+        yield AsyncFileField(
             name='photo',
             uploader=Uploader(request.state.admin.file_storage, 'photos/{pk}_{prefix}_{file_name}'),
         )
-        yield BooleanField(name='is_active')
-        yield HiddenField(name='password')
+        yield wtforms.BooleanField(name='is_active')
+        yield wtforms.HiddenField(name='password')
 
     def get_row_actions(self, request: Request) -> typing.Iterable[RowAction]:
         yield ModalRowAction(action=DuplicateAction())
