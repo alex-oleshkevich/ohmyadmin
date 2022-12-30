@@ -9,12 +9,19 @@
         "resolveJsonModule": true,
         "esModuleInterop": true,
         "lib": [
-            "esnext",
-            "dom"
+            "ES2020",
+            "dom",
+            "dom.iterable"
         ],
         "skipLibCheck": true,
         "strictNullChecks": true,
         "noUnusedLocals": true,
-        "incremental": false
+        "incremental": false,
+        "plugins": [
+            {
+                "name": "ts-lit-plugin",
+                "strict": true
+            }
+        ]
     }
 }
