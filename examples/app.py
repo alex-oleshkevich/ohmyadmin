@@ -25,6 +25,7 @@ from ohmyadmin.app import OhMyAdmin, UserMenu
 from ohmyadmin.auth import BaseAuthPolicy, UserLike
 from ohmyadmin.dashboards import Dashboard
 from ohmyadmin.ext.sqla import DbSessionMiddleware
+from ohmyadmin.helpers import media_url_or_redirect
 from ohmyadmin.menu import MenuLink
 from ohmyadmin.pages import Page
 from ohmyadmin.storage import LocalDirectoryStorage
@@ -55,7 +56,7 @@ class AuthPolicy(BaseAuthPolicy):
         if conn.user.is_authenticated:
             return UserMenu(
                 user_name=str(conn.user),
-                avatar=conn.user.avatar,
+                avatar=media_url_or_redirect(conn.user.avatar),
                 menu=[
                     MenuLink(text='My profile', url=conn.url_for(ProfilePage.url_name()), icon='user'),
                     MenuLink(text='Settings', url=conn.url_for(SettingsPage.url_name()), icon='settings'),
