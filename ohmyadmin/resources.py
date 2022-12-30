@@ -343,7 +343,7 @@ class Resource(TableMixin, Router, metaclass=ResourceMeta):
         filters = list(self.get_filters(request))
         for filter_ in filters:
             if isinstance(filter_, Prefill):
-                await filter_.prefill(request, wtforms.Form())
+                await filter_.prefill(request, AsyncForm())
 
         has_active_filters = any([filter_.is_active(request) for filter_ in filters])
         page = await self.get_objects(request, state, filters, projection)
