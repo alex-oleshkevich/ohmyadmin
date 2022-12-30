@@ -3,6 +3,7 @@ import './tables';
 import './actions';
 import './global_events';
 import './globals.d';
+import './components';
 import { Events } from './global_events';
 
 window.Alpine = Alpine;
