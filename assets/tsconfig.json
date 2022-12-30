@@ -17,6 +17,7 @@
         "strictNullChecks": true,
         "noUnusedLocals": true,
         "incremental": false,
+        "experimentalDecorators": true,
         "plugins": [
             {
                 "name": "ts-lit-plugin",

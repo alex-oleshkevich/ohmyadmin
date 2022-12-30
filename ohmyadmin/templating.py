@@ -9,6 +9,8 @@ from starlette.templating import Jinja2Templates
 from starlette_flash import flash
 from tabler_icons import tabler_icon
 
+from ohmyadmin.helpers import media_url, media_url_or_redirect
+
 
 def dict_to_attrs(attrs: dict[str, typing.Any]) -> str:
     result: list[str] = []
@@ -29,6 +31,7 @@ class DynamicChoiceLoader(jinja2.ChoiceLoader):
 
 
 jinja_env = jinja2.Environment(
+    auto_reload=True,
     extensions=['jinja2.ext.i18n', 'jinja2.ext.do'],
     loader=DynamicChoiceLoader(
         [
@@ -41,6 +44,8 @@ jinja_env.globals.update(
         # 'admin': self,
         'icon': tabler_icon,
         'tabler_icon': tabler_icon,
+        'media_url': media_url,
+        'media_url_or_redirect': media_url_or_redirect,
     }
 )
 jinja_env.tests.update({})

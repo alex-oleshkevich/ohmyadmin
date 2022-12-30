@@ -12,6 +12,7 @@ import typing
 import wtforms
 from starlette.datastructures import FormData, UploadFile
 from starlette.requests import Request
+from starlette_babel import gettext_lazy as _
 from wtforms.utils import unset_value
 
 from ohmyadmin.storage import FileStorage
@@ -185,6 +186,43 @@ class AsyncFileField(wtforms.FileField):
 
     def _is_uploaded_file(self, value: UploadFile | None) -> bool:
         return bool(value and isinstance(value, UploadFile) and value.filename)
+
+
+class ImageType:
+    def __init__(self, types: list[str]) -> None:
+        self.types = types
+        self.field_flags = {
+            'accept': ', '.join(types),
+        }
+
+    def __call__(self, form: wtforms.Form, field: wtforms.Field) -> None:
+        pass
+
+
+class ImageField(AsyncFileField):
+    widget = macro('ohmyadmin/forms.html', 'image_input')
+
+    def __init__(
+        self,
+        *,
+        uploader: Uploader,
+        label: str | None = None,
+        shape: typing.Literal['circle', 'square'] = 'square',
+        size: typing.Literal['small', 'large'] = 'small',
+        button_label: str = _('Select'),
+        delete_label: str = _('Delete'),
+        **kwargs: typing.Any,
+    ):
+        super().__init__(uploader=uploader, label=label, **kwargs)
+        self.shape = shape
+        self.size = size
+        self.button_label = button_label
+        self.delete_label = delete_label
+
+
+class AvatarField(ImageField):
+    def __init__(self, *, uploader: Uploader, label: str | None = None, **kwargs: typing.Any):
+        super().__init__(uploader=uploader, label=label, size='small', shape='circle', **kwargs)
 
 
 class AsyncSelectField(wtforms.SelectField, Prefill):

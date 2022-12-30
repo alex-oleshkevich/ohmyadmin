@@ -9,7 +9,7 @@ from ohmyadmin import display
 from ohmyadmin.actions import Action, BatchAction, LinkRowAction, ModalAction, ModalRowAction, RowAction, RowActionGroup
 from ohmyadmin.display import DisplayField
 from ohmyadmin.ext.sqla import BatchDeleteAction, SQLAlchemyResource
-from ohmyadmin.forms import AsyncFileField, AsyncForm, Uploader
+from ohmyadmin.forms import AsyncForm, AvatarField, ImageType, Uploader
 from ohmyadmin.helpers import media_url_or_redirect
 from ohmyadmin.projections import DefaultProjection, Projection
 
@@ -79,11 +79,12 @@ class UserResource(SQLAlchemyResource):
         yield wtforms.StringField(name='first_name')
         yield wtforms.StringField(name='last_name')
         yield wtforms.EmailField(name='email', validators=[wtforms.validators.DataRequired()])
-        yield AsyncFileField(
+        yield wtforms.BooleanField(name='is_active')
+        yield AvatarField(
             name='photo',
+            validators=[ImageType(['image/jpeg'])],
             uploader=Uploader(request.state.admin.file_storage, 'photos/{pk}_{prefix}_{file_name}'),
         )
-        yield wtforms.BooleanField(name='is_active')
         yield wtforms.HiddenField(name='password')
 
     def get_row_actions(self, request: Request) -> typing.Iterable[RowAction]:
