@@ -316,6 +316,7 @@
 
     .tabs > .tab, .tabs > li {
         @apply border-b-2 border-transparent hover:border-blue-500 hover:text-blue-600 px-3 py-2 font-medium inline-flex gap-2;
+        @apply text-gray-800;
     }
 
     .tabs > .tab.active, .tabs > li.active {
