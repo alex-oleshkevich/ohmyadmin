@@ -1,0 +1,37 @@
+{% macro pagination(request, page) %}
+    {% with start_index = page.start_index, end_index = page.end_index, total_rows = page.total_rows %}
+        <div class="pagination">
+            <div>
+                {% trans %}Showing {{ start_index }} - {{ end_index }} of {{ total_rows }} results.{% endtrans %}
+            </div>
+
+            {% if page.total_pages > 1 %}
+                <div class="pagination-controls">
+                    {% if page.has_previous %}
+                        <a href="{{ request.url.include_query_params(page=page.previous_page) }}">
+                            {{ tabler_icon('arrow-left') }} {{ _('Previous', domain='ohmyadmin') }}
+                        </a>
+                    {% endif %}
+
+                    {% for page_number in page.iter_pages() %}
+                        {% if page_number %}
+                            <a
+                                href="{{ request.url.include_query_params(page=page_number) }}"
+                                class="{{ 'active' if page_number == page.page else '' }}">
+                                {{ page_number }}
+                            </a>
+                        {% else %}
+                            <span>...</span>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page.has_next %}
+                        <a href="{{ request.url.include_query_params(page=page.next_page) }}">
+                            {{ _('Next', domain='ohmyadmin') }} {{ tabler_icon('arrow-right') }}
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    {% endwith %}
+{% endmacro %}

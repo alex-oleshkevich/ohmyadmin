@@ -87,7 +87,11 @@ admin = OhMyAdmin(
     auth_policy=AuthPolicy(),
     template_dir=this_dir / 'templates',
     file_storage=file_storage,
-    pages=[SettingsPage(), ProfilePage(), UsersResource()],
+    pages=[
+        UsersResource(),
+        SettingsPage(),
+        ProfilePage(),
+    ],
 )
 
 install_error_handler()

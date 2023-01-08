@@ -1,9 +1,39 @@
 {% extends 'ohmyadmin/app.html' %}
+{% import 'ohmyadmin/lib/pagination.html' as pagination %}
 
 {% block content %}
-    Resource index
-    <br>
-    <a href="{{ page_url('create') }}">Create</a>
-    <a href="{{ page_url('edit', pk=1) }}">Edit</a>
-    <a href="{{ page_url('delete', pk=1) }}">Delete</a>
+    <div class="space-y-6">
+        <div class="flex items-center justify-between">
+            <!-- search and actions -->
+            <div class="flex items-center gap-3 flex-1 flex-wrap">
+
+                <!-- search form -->
+                <div class="w-96">
+                    {% if resource.searchable %}
+                        <form method="get"
+                              action="{{ request.url }}"
+                              @submit.prevent="onSubmit"
+                        >
+                            <input
+                                x-model="searchQuery"
+                                type="search" name="{{ resource.search_param }}" value="{{ search_term }}"
+                                placeholder="{{ search_placeholder }}">
+                        </form>
+                    {% endif %}
+                </div>
+                <!-- end search form -->
+
+
+                {#                {% include 'ohmyadmin/list_page/filters.html' %}#}
+            </div>
+            <!-- end search and actions -->
+            {#            {% include 'ohmyadmin/list_page/batch_actions.html' %}#}
+        </div>
+
+        <div id="data">
+            {{ view_content }}
+        </div>
+
+        {{ pagination.pagination(request, objects) }}
+    </div>
 {% endblock %}

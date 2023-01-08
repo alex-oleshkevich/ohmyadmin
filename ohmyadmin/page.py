@@ -72,7 +72,9 @@ class Page(BasePage):
         method = request.method.lower()
         if handler := getattr(self, method, None):
             response = (
-                await handler(request) if inspect.iscoroutinefunction(handler) else run_in_threadpool(handler, request)
+                await handler(request)
+                if inspect.iscoroutinefunction(handler)
+                else await run_in_threadpool(handler, request)
             )
             await response(scope, receive, send)
             return

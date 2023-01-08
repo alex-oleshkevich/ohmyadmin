@@ -1,5 +1,8 @@
+import abc
 import functools
 import typing
+
+from markupsafe import Markup
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
 from starlette.routing import BaseRoute, Mount, Route, Router
@@ -7,10 +10,30 @@ from starlette_babel import gettext_lazy as _
 from starlette_flash import flash
 
 from ohmyadmin.page import BasePage
+from ohmyadmin.pagination import Page
+from ohmyadmin.shortcuts import render_to_string
+
+
+class IndexView:
+    @abc.abstractmethod
+    def render(self, request: Request, objects: list[typing.Any]) -> str: ...
+
+
+class TableView(IndexView):
+
+    def render(self, request: Request, objects: list[typing.Any]) -> str:
+        return Markup(render_to_string(request, 'ohmyadmin/views/table.html', {'table': self, 'objects': objects}))
+
+
+class GridView(IndexView):
+
+    def render(self, request: Request, objects: list[typing.Any]) -> str:
+        return Markup(render_to_string(request, 'ohmyadmin/views/grid.html', {'table': self, 'objects': objects}))
 
 
 class Resource(BasePage, Router):
     group = _('Resources', domain='ohmyadmin')
+    index_view_class: type[IndexView] = TableView
 
     def __init__(self) -> None:
         super().__init__(routes=self.get_routes())
@@ -25,7 +48,15 @@ class Resource(BasePage, Router):
         return self.redirect_to_path(request, f'{self.get_path_name()}.{action}', **path_params)
 
     async def index_view(self, request: Request) -> Response:
-        context = {'page_url': functools.partial(self.page_url, request)}
+        view = self.index_view_class()
+        view_content = view.render(request, [])
+        context = {
+            'resource': self,
+            'objects': Page(rows=[], total_rows=100, page=1, page_size=25),
+            'page_url': functools.partial(self.page_url, request),
+            'view_content': view_content,
+            'page_title': self.label_plural,
+        }
         return self.render_to_response(request, 'ohmyadmin/resources/index.html', context)
 
     async def edit_view(self, request: Request) -> Response:
