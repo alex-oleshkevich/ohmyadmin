@@ -37,7 +37,6 @@ class OhMyAdmin(Router):
         resources: typing.Iterable[Resource] | None = None,
         pages: typing.Iterable[Page] | None = None,
         dashboards: typing.Iterable[Dashboard] | None = None,
-        routes: list[BaseRoute] | None = None,
         template_dir: str | os.PathLike | None = None,
         file_storage: FileStorage | None = None,
         auth_policy: BaseAuthPolicy | None = None,
@@ -63,12 +62,7 @@ class OhMyAdmin(Router):
         if template_dir:
             typing.cast(DynamicChoiceLoader, self.jinja_env.loader).add_loader(jinja2.FileSystemLoader([template_dir]))
 
-        super().__init__(
-            routes=[
-                *(routes or []),
-                *(self.get_routes()),
-            ]
-        )
+        super().__init__(routes=list(self.get_routes()))
 
     def build_main_menu(self, request: Request) -> typing.Iterable[MenuItem]:
         groups = itertools.groupby(
