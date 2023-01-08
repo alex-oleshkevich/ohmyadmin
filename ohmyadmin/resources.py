@@ -56,13 +56,13 @@ class Resource(BasePage, Router):
             Route('/{pk}/delete', self.delete_view, name=f'{self.get_path_name()}.delete', methods=['get', 'post']),
         ]
 
-    @classmethod
-    def get_path_name(cls) -> str:
-        return f'ohmyadmin.resources.{cls.slug}'
-
     def as_route(self) -> Mount:
         return Mount(f'/resources/{self.slug}', self)
 
     @classmethod
     def generate_url(cls, request: Request) -> str:
         return request.url_for(f'{cls.get_path_name()}.index')
+
+    @classmethod
+    def get_path_name(cls) -> str:
+        return f'ohmyadmin.resources.{cls.slug}'

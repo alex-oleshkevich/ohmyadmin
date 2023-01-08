@@ -15,8 +15,9 @@ from ohmyadmin.helpers import camel_to_sentence, pluralize
 class PageMeta(type):
     def __new__(mcs, name: str, bases: tuple[type], attrs: dict[str, typing.Any], **kwargs: typing.Any) -> type:
         if not attrs.get('label'):
-            attrs['slug'] = slugify(name.removesuffix('Page'))
-            attrs['label'] = camel_to_sentence(name.removesuffix('Page'))
+            clean_label = name.removesuffix('Page').removesuffix('Resource')
+            attrs['slug'] = slugify(clean_label)
+            attrs['label'] = camel_to_sentence(clean_label)
             attrs['label_plural'] = attrs.get('label_plural', pluralize(attrs['label']))
 
         return type.__new__(mcs, name, bases, attrs, **kwargs)
@@ -45,13 +46,13 @@ class BasePage(metaclass=PageMeta):
         url = request.url_for(self.get_path_name())
         return RedirectResponse(url, status_code=302)
 
+    @abc.abstractmethod
+    def as_route(cls) -> BaseRoute:
+        raise NotImplementedError()
+
     @classmethod
     @abc.abstractmethod
     def get_path_name(cls) -> str:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def as_route(cls) -> BaseRoute:
         raise NotImplementedError()
 
     @classmethod
@@ -77,10 +78,6 @@ class Page(BasePage):
             return
         raise HTTPException(405, 'Method Not Allowed')
 
-    @classmethod
-    def get_path_name(cls) -> str:
-        return f'ohmyadmin.pages.{cls.slug}'
-
     def as_route(self) -> BaseRoute:
         methods: list[str] = []
         for method in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']:
@@ -88,3 +85,7 @@ class Page(BasePage):
                 methods.append(method)
 
         return Route(f'/{self.slug}', self, methods=methods, name=self.get_path_name())
+
+    @classmethod
+    def get_path_name(cls) -> str:
+        return f'ohmyadmin.pages.{cls.slug}'
