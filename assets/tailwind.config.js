@@ -1,5 +1,4 @@
 module.exports = {
-    mode: 'jit',
     content: [
         '../ohmyadmin/**/*.html',
         '../assets/**/*.ts',

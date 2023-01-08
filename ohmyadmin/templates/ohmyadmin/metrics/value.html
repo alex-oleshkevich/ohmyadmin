@@ -1,8 +1,0 @@
-{% extends 'ohmyadmin/metrics/base.html' %}
-{% block content %}
-    <div class="text-2xl mt-3">
-        {{ metric.value_prefix if metric.value_prefix else '' }}
-        {{ value|round(metric.round) if metric.round else value }}
-        {{ metric.value_suffix if metric.value_suffix else '' }}
-    </div>
-{% endblock %}

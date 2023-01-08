@@ -2,337 +2,337 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 @import "notyf/notyf.min.css";
-@import "rich_text.css";
+@import "components.css";
 
-@layer base {
-    body {
-        @apply text-black
-    }
+/*@layer base {*/
+/*    body {*/
+/*        @apply text-black*/
+/*    }*/
 
-    a {
-        @apply text-blue-800;
-    }
+/*    a {*/
+/*        @apply text-blue-800;*/
+/*    }*/
 
-    table {
-        @apply w-full;
-    }
+/*    table {*/
+/*        @apply w-full;*/
+/*    }*/
 
-    table thead {
-        @apply border-b border-slate-300;
-    }
+/*    table thead {*/
+/*        @apply border-b border-slate-300;*/
+/*    }*/
 
-    table th, table td {
-        @apply text-left p-2;
-    }
+/*    table th, table td {*/
+/*        @apply text-left p-2;*/
+/*    }*/
 
-    table th a {
-        @apply text-black hover:underline;
-    }
+/*    table th a {*/
+/*        @apply text-black hover:underline;*/
+/*    }*/
 
-    table tbody tr {
-        @apply hover:bg-slate-100 border-b border-slate-200;
-    }
+/*    table tbody tr {*/
+/*        @apply hover:bg-slate-100 border-b border-slate-200;*/
+/*    }*/
 
-    table tbody tr.selected {
-        @apply bg-blue-50;
-    }
+/*    table tbody tr.selected {*/
+/*        @apply bg-blue-50;*/
+/*    }*/
 
-    td.actions {
-        @apply flex justify-end items-center gap-1;
-    }
+/*    td.actions {*/
+/*        @apply flex justify-end items-center gap-1;*/
+/*    }*/
+/*}*/
+
+/*@layer components {*/
+/*    input[type="text"],*/
+/*    input[type="url"],*/
+/*    input[type="password"],*/
+/*    input[type="search"],*/
+/*    input[type="date"],*/
+/*    input[type="datetime"],*/
+/*    input[type="datetime-local"],*/
+/*    input[type="time"],*/
+/*    input[type="month"],*/
+/*    input[type="number"],*/
+/*    input[type="week"],*/
+/*    input[type="email"],*/
+/*    input[type="tel"],*/
+/*    select, textarea, select[multiple] {*/
+/*        @apply rounded-md border border-slate-300 shadow-sm bg-white px-3 py-1.5 w-full leading-5 block text-sm;*/
+/*    }*/
+
+/*    input[type="file"] {*/
+/*        @apply px-3 py-1.5 w-full leading-5 block text-sm;*/
+/*    }*/
+
+/*    input[type="checkbox"], input[type="radio"] {*/
+/*        @apply rounded-full border border-slate-400*/
+/*    }*/
+
+/*    input[type="checkbox"] {*/
+/*        @apply rounded*/
+/*    }*/
+
+/*    input[type="radio"] {*/
+/*        @apply rounded-full*/
+/*    }*/
+
+/*    textarea {*/
+/*        min-height: 128px;*/
+/*    }*/
+
+/*    .btn {*/
+/*        @apply inline-flex gap-1 items-center rounded-md border border-transparent px-3 py-1.5 font-medium leading-5;*/
+/*        @apply border-slate-300 bg-white hover:bg-slate-100 active:bg-slate-200;*/
+/*    }*/
+
+/*    .btn[disabled] {*/
+/*        @apply cursor-not-allowed bg-slate-200 text-slate-400 hover:bg-slate-200 active:bg-slate-200;*/
+/*    }*/
+
+/*    .btn-primary {*/
+/*        @apply bg-blue-600 hover:bg-blue-600/75 active:bg-blue-700 text-white;*/
+/*    }*/
+
+/*    .btn-danger {*/
+/*        @apply bg-red-600 hover:bg-red-600/75 active:bg-red-700 text-white;*/
+/*    }*/
+
+/*    .btn-text {*/
+/*        @apply bg-transparent hover:bg-slate-100 active:bg-slate-200 text-slate-900 shadow-none border-transparent;*/
+/*    }*/
+
+/*    .btn-link {*/
+/*        @apply bg-transparent hover:bg-slate-50 active:bg-slate-100 text-slate-900 shadow-none text-blue-700 border-transparent;*/
+/*    }*/
+
+/*    .modal {*/
+/*        @apply fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity;*/
+/*    }*/
+
+/*    .modal .modal-spacer {*/
+/*        @apply flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0;*/
+/*    }*/
+
+/*    .modal .modal-actions {*/
+/*        @apply mt-5 sm:mt-4 sm:flex sm:flex-row-reverse gap-2;*/
+/*    }*/
+
+/*    .modal .modal-content {*/
+/*        @apply relative transform overflow-hidden rounded-lg bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6;*/
+/*    }*/
+
+/*    .dropdown {*/
+/*        @apply absolute right-0 bg-white shadow-xl border border-slate-200 py-1 rounded-md w-48 z-10;*/
+/*    }*/
+
+/*    .dropdown > ul {*/
+/*        @apply space-y-1;*/
+/*    }*/
+
+/*    .dropdown > ul li > .dropdown-item, .dropdown > ul li > a {*/
+/*        @apply px-2 py-1.5 flex items-center gap-3 hover:bg-slate-100 active:bg-slate-200 text-black w-full;*/
+/*    }*/
+
+/*    .dropdown > ul li > .dropdown-item:hover, .dropdown > ul li > a:hover {*/
+/*        @apply no-underline;*/
+/*    }*/
+
+/*    .dropdown > ul li > .dropdown-item.danger {*/
+/*        @apply text-red-700;*/
+/*    }*/
+
+/*    !* tables *!*/
+/*    .row-actions > .row-action-dropdown {*/
+/*        @apply relative hover:bg-slate-200 rounded px-2 py-0.5;*/
+/*    }*/
+
+/*    .row-actions > .row-action {*/
+/*        @apply inline-flex items-center gap-1 hover:underline hover:text-slate-600 text-black p-1;*/
+/*    }*/
+
+/*    .row-actions > .row-action.danger {*/
+/*        color: theme('colors.red.700') !important;*/
+/*        @apply hover:text-red-600;*/
+/*    }*/
+
+/* main menu */
+.main-menu-item {
+    @apply rounded-md flex items-center gap-3 w-full px-2 py-1.5 mb-1 hover:bg-slate-200 text-black active:bg-slate-300;
 }
 
-@layer components {
-    input[type="text"],
-    input[type="url"],
-    input[type="password"],
-    input[type="search"],
-    input[type="date"],
-    input[type="datetime"],
-    input[type="datetime-local"],
-    input[type="time"],
-    input[type="month"],
-    input[type="number"],
-    input[type="week"],
-    input[type="email"],
-    input[type="tel"],
-    select, textarea, select[multiple] {
-        @apply rounded-md border border-slate-300 shadow-sm bg-white px-3 py-1.5 w-full leading-5 block text-sm;
-    }
-
-    input[type="file"] {
-        @apply px-3 py-1.5 w-full leading-5 block text-sm;
-    }
-
-    input[type="checkbox"], input[type="radio"] {
-        @apply rounded-full border border-slate-400
-    }
-
-    input[type="checkbox"] {
-        @apply rounded
-    }
-
-    input[type="radio"] {
-        @apply rounded-full
-    }
-
-    textarea {
-        min-height: 128px;
-    }
-
-    .btn {
-        @apply inline-flex gap-1 items-center rounded-md border border-transparent px-3 py-1.5 font-medium leading-5;
-        @apply border-slate-300 bg-white hover:bg-slate-100 active:bg-slate-200;
-    }
-
-    .btn[disabled] {
-        @apply cursor-not-allowed bg-slate-200 text-slate-400 hover:bg-slate-200 active:bg-slate-200;
-    }
-
-    .btn-primary {
-        @apply bg-blue-600 hover:bg-blue-600/75 active:bg-blue-700 text-white;
-    }
-
-    .btn-danger {
-        @apply bg-red-600 hover:bg-red-600/75 active:bg-red-700 text-white;
-    }
-
-    .btn-text {
-        @apply bg-transparent hover:bg-slate-100 active:bg-slate-200 text-slate-900 shadow-none border-transparent;
-    }
-
-    .btn-link {
-        @apply bg-transparent hover:bg-slate-50 active:bg-slate-100 text-slate-900 shadow-none text-blue-700 border-transparent;
-    }
-
-    .modal {
-        @apply fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity;
-    }
-
-    .modal .modal-spacer {
-        @apply flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0;
-    }
-
-    .modal .modal-actions {
-        @apply mt-5 sm:mt-4 sm:flex sm:flex-row-reverse gap-2;
-    }
-
-    .modal .modal-content {
-        @apply relative transform overflow-hidden rounded-lg bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6;
-    }
-
-    .dropdown {
-        @apply absolute right-0 bg-white shadow-xl border border-slate-200 py-1 rounded-md w-48 z-10;
-    }
-
-    .dropdown > ul {
-        @apply space-y-1;
-    }
-
-    .dropdown > ul li > .dropdown-item, .dropdown > ul li > a {
-        @apply px-2 py-1.5 flex items-center gap-3 hover:bg-slate-100 active:bg-slate-200 text-black w-full;
-    }
-
-    .dropdown > ul li > .dropdown-item:hover, .dropdown > ul li > a:hover {
-        @apply no-underline;
-    }
-
-    .dropdown > ul li > .dropdown-item.danger {
-        @apply text-red-700;
-    }
-
-    /* tables */
-    .row-actions > .row-action-dropdown {
-        @apply relative hover:bg-slate-200 rounded px-2 py-0.5;
-    }
-
-    .row-actions > .row-action {
-        @apply inline-flex items-center gap-1 hover:underline hover:text-slate-600 text-black p-1;
-    }
-
-    .row-actions > .row-action.danger {
-        color: theme('colors.red.700') !important;
-        @apply hover:text-red-600;
-    }
-
-    /* main menu */
-    .main-menu-item {
-        @apply rounded-md flex items-center gap-3 w-full px-2 py-1.5 mb-1 hover:bg-slate-200 text-black active:bg-slate-300;
-    }
-
-    .main-menu-item.active {
-        @apply bg-blue-100 text-blue-800 hover:bg-blue-200;
-    }
-
-    /* pagination */
-    .pagination {
-        @apply flex items-center justify-end gap-1;
-    }
-
-    .pagination > a, .pagination > span {
-        @apply rounded py-2 px-3 font-medium flex items-center gap-2 text-black;
-    }
-
-    .pagination > a {
-        @apply hover:bg-slate-100 active:bg-slate-200;
-    }
-
-    .pagination > a.active {
-        @apply bg-blue-600 hover:bg-blue-600/75 active:bg-blue-700 text-white;
-    }
-
-    /* forms */
-    .form-group {
-
-    }
-
-    .form-group-horizontal {
-        @apply grid grid-cols-3 gap-3;
-    }
-
-    .form-group-horizontal > *:last-child {
-        @apply col-span-2;
-    }
-
-    .form-group > label, .form-group > .form-label {
-        @apply font-medium mb-2 flex items-center gap-1;
-    }
-
-    .form-errors {
-        @apply list-none text-sm mt-1 text-red-500;
-    }
-
-    .form-help {
-        @apply text-slate-600 mt-1 text-sm;
-    }
-
-    .form-check {
-        @apply flex items-center gap-2;
-    }
-
-    .form-group-checkbox > div:first-child {
-        @apply flex items-center gap-2;
-    }
-
-    .form-group-checkbox label, .form-group-checkbox .form-label {
-        @apply mb-0 font-normal;
-    }
-
-    .form-radio-list {
-        @apply flex items-center gap-3;
-    }
-
-    .form-radio-list label {
-        @apply mr-1 inline-flex gap-2 items-center;
-    }
-
-    .form-group-embed {
-
-    }
-
-    .form-actions {
-        @apply flex items-center gap-2 mt-10;
-    }
-
-    .delete-icon {
-        @apply text-red-700 hover:bg-red-50 hover:text-red-700/75 active:text-red-800 rounded-lg p-1;
-    }
-
-    /* alerts */
-    .alert {
-        @apply rounded-md p-4 border flex items-center gap-3 text-sm font-medium;
-    }
-
-    .alert-success {
-        @apply bg-green-50 text-green-800 border-green-100;
-    }
-
-    .alert-error {
-        @apply bg-red-50 text-red-800 border-red-100;
-    }
-
-    /* empty state */
-    .empty-state {
-        @apply text-center;
-    }
-
-    .empty-state figure {
-        @apply flex justify-center max-w-sm mx-auto mb-20;
-    }
-
-    .empty-state figure svg {
-        height: 100%;
-    }
-
-    .empty-state section header {
-        @apply text-2xl font-semibold mb-5;
-    }
-
-    .empty-state section footer {
-        @apply mt-5;
-    }
-
-    /* badges */
-    .badge {
-        @apply px-2 py-0.5 text-sm rounded-md inline-flex items-center gap-2;
-    }
-
-    .badge-red {
-        @apply bg-red-50 text-red-800;
-    }
-
-    .badge-pink {
-        @apply bg-pink-50 text-pink-800;
-    }
-
-    .badge-green {
-        @apply bg-green-50 text-green-800;
-    }
-
-    .badge-teal {
-        @apply bg-teal-50 text-teal-800;
-    }
-
-    .badge-blue {
-        @apply bg-blue-50 text-blue-800;
-    }
-
-    .badge-sky {
-        @apply bg-sky-50 text-sky-800;
-    }
-
-    .badge-yellow {
-        @apply bg-yellow-50 text-yellow-800;
-    }
-
-    .badge-gray {
-        @apply bg-slate-50 text-slate-800;
-    }
-
-    /* tabs */
-    .tabs {
-        @apply flex items-center border-b-2 border-gray-200 gap-2;
-    }
-
-    .tabs > .tab, .tabs > li {
-        @apply border-b-2 border-transparent hover:border-blue-500 hover:text-blue-600 px-3 py-2 font-medium inline-flex gap-2;
-        @apply text-gray-800;
-    }
-
-    .tabs > .tab.active, .tabs > li.active {
-        @apply border-blue-600 text-blue-600;
-    }
-
-    /* cards */
-    .card {
-        @apply border border-gray-300 rounded-lg p-3;
-    }
-
-    .card header {
-        @apply text-lg font-medium mb-5;
-    }
-
-    .card main {
-
-    }
+.main-menu-item.active {
+    @apply bg-blue-100 text-blue-800 hover:bg-blue-200;
 }
+
+/*    !* pagination *!*/
+/*    .pagination {*/
+/*        @apply flex items-center justify-end gap-1;*/
+/*    }*/
+
+/*    .pagination > a, .pagination > span {*/
+/*        @apply rounded py-2 px-3 font-medium flex items-center gap-2 text-black;*/
+/*    }*/
+
+/*    .pagination > a {*/
+/*        @apply hover:bg-slate-100 active:bg-slate-200;*/
+/*    }*/
+
+/*    .pagination > a.active {*/
+/*        @apply bg-blue-600 hover:bg-blue-600/75 active:bg-blue-700 text-white;*/
+/*    }*/
+
+/*    !* forms *!*/
+/*    .form-group {*/
+
+/*    }*/
+
+/*    .form-group-horizontal {*/
+/*        @apply grid grid-cols-3 gap-3;*/
+/*    }*/
+
+/*    .form-group-horizontal > *:last-child {*/
+/*        @apply col-span-2;*/
+/*    }*/
+
+/*    .form-group > label, .form-group > .form-label {*/
+/*        @apply font-medium mb-2 flex items-center gap-1;*/
+/*    }*/
+
+/*    .form-errors {*/
+/*        @apply list-none text-sm mt-1 text-red-500;*/
+/*    }*/
+
+/*    .form-help {*/
+/*        @apply text-slate-600 mt-1 text-sm;*/
+/*    }*/
+
+/*    .form-check {*/
+/*        @apply flex items-center gap-2;*/
+/*    }*/
+
+/*    .form-group-checkbox > div:first-child {*/
+/*        @apply flex items-center gap-2;*/
+/*    }*/
+
+/*    .form-group-checkbox label, .form-group-checkbox .form-label {*/
+/*        @apply mb-0 font-normal;*/
+/*    }*/
+
+/*    .form-radio-list {*/
+/*        @apply flex items-center gap-3;*/
+/*    }*/
+
+/*    .form-radio-list label {*/
+/*        @apply mr-1 inline-flex gap-2 items-center;*/
+/*    }*/
+
+/*    .form-group-embed {*/
+
+/*    }*/
+
+/*    .form-actions {*/
+/*        @apply flex items-center gap-2 mt-10;*/
+/*    }*/
+
+/*    .delete-icon {*/
+/*        @apply text-red-700 hover:bg-red-50 hover:text-red-700/75 active:text-red-800 rounded-lg p-1;*/
+/*    }*/
+
+/*    !* alerts *!*/
+/*    .alert {*/
+/*        @apply rounded-md p-4 border flex items-center gap-3 text-sm font-medium;*/
+/*    }*/
+
+/*    .alert-success {*/
+/*        @apply bg-green-50 text-green-800 border-green-100;*/
+/*    }*/
+
+/*    .alert-error {*/
+/*        @apply bg-red-50 text-red-800 border-red-100;*/
+/*    }*/
+
+/*    !* empty state *!*/
+/*    .empty-state {*/
+/*        @apply text-center;*/
+/*    }*/
+
+/*    .empty-state figure {*/
+/*        @apply flex justify-center max-w-sm mx-auto mb-20;*/
+/*    }*/
+
+/*    .empty-state figure svg {*/
+/*        height: 100%;*/
+/*    }*/
+
+/*    .empty-state section header {*/
+/*        @apply text-2xl font-semibold mb-5;*/
+/*    }*/
+
+/*    .empty-state section footer {*/
+/*        @apply mt-5;*/
+/*    }*/
+
+/*    !* badges *!*/
+/*    .badge {*/
+/*        @apply px-2 py-0.5 text-sm rounded-md inline-flex items-center gap-2;*/
+/*    }*/
+
+/*    .badge-red {*/
+/*        @apply bg-red-50 text-red-800;*/
+/*    }*/
+
+/*    .badge-pink {*/
+/*        @apply bg-pink-50 text-pink-800;*/
+/*    }*/
+
+/*    .badge-green {*/
+/*        @apply bg-green-50 text-green-800;*/
+/*    }*/
+
+/*    .badge-teal {*/
+/*        @apply bg-teal-50 text-teal-800;*/
+/*    }*/
+
+/*    .badge-blue {*/
+/*        @apply bg-blue-50 text-blue-800;*/
+/*    }*/
+
+/*    .badge-sky {*/
+/*        @apply bg-sky-50 text-sky-800;*/
+/*    }*/
+
+/*    .badge-yellow {*/
+/*        @apply bg-yellow-50 text-yellow-800;*/
+/*    }*/
+
+/*    .badge-gray {*/
+/*        @apply bg-slate-50 text-slate-800;*/
+/*    }*/
+
+/*    !* tabs *!*/
+/*    .tabs {*/
+/*        @apply flex items-center border-b-2 border-gray-200 gap-2;*/
+/*    }*/
+
+/*    .tabs > .tab, .tabs > li {*/
+/*        @apply border-b-2 border-transparent hover:border-blue-500 hover:text-blue-600 px-3 py-2 font-medium inline-flex gap-2;*/
+/*        @apply text-gray-800;*/
+/*    }*/
+
+/*    .tabs > .tab.active, .tabs > li.active {*/
+/*        @apply border-blue-600 text-blue-600;*/
+/*    }*/
+
+/*    !* cards *!*/
+/*    .card {*/
+/*        @apply border border-gray-300 rounded-lg p-3;*/
+/*    }*/
+
+/*    .card header {*/
+/*        @apply text-lg font-medium mb-5;*/
+/*    }*/
+
+/*    .card main {*/
+
+/*    }*/
+/*}*/

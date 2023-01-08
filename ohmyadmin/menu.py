@@ -5,7 +5,7 @@ import typing
 from starlette.datastructures import URL
 from starlette.requests import Request
 
-from ohmyadmin.templating import macro
+from ohmyadmin.shortcuts import render_to_string
 
 
 class MenuItem:
@@ -30,8 +30,14 @@ class MenuLink(MenuItem):
         return str(request.url).startswith(self.url)
 
     def render(self, request: Request) -> str:
-        macros = macro('ohmyadmin/menu.html', 'menu_link')
-        return macros(url=self.url, text=self.text, icon=self.icon, is_active=self.is_active(request))
+        return render_to_string(
+            request,
+            'ohmyadmin/menu_item_link.html',
+            {
+                'item': self,
+                'is_active': self.is_active(request),
+            },
+        )
 
 
 class MenuGroup(MenuItem):
@@ -43,5 +49,4 @@ class MenuGroup(MenuItem):
         yield from self.items
 
     def render(self, request: Request) -> str:
-        macros = macro('ohmyadmin/menu.html', 'menu_group')
-        return macros(request=request, text=self.text, icon=self.icon, items=self.items)
+        return render_to_string(request, 'ohmyadmin/menu_group.html', {'group': self})

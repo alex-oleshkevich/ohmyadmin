@@ -1,37 +1,32 @@
 import pathlib
 import sqlalchemy as sa
+from async_storages import FileStorage, LocalStorage
 from passlib.handlers.pbkdf2 import pbkdf2_sha256
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
-from starception import StarceptionMiddleware
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import declarative_base
+from starception import install_error_handler
 from starlette.applications import Starlette
+from starlette.authentication import BaseUser
 from starlette.middleware import Middleware
 from starlette.middleware.sessions import SessionMiddleware
-from starlette.requests import HTTPConnection, Request
+from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import Mount, Route
+from starlette_flash import flash
 
-from examples.admin.blog_posts import BlogPostResource
-from examples.admin.brands import BrandResource
-from examples.admin.categories import CategoryResource
-from examples.admin.countries import CountryResource
-from examples.admin.currencies import CurrencyResource
-from examples.admin.customers import CustomerResource
-from examples.admin.orders import OrderResource, TotalOrders
-from examples.admin.products import ProductResource
-from examples.admin.users import UserResource
 from examples.models import User
-from ohmyadmin.app import OhMyAdmin, UserMenu
-from ohmyadmin.auth import BaseAuthPolicy, UserLike
-from ohmyadmin.dashboards import Dashboard
-from ohmyadmin.ext.sqla import DbSessionMiddleware
-from ohmyadmin.helpers import media_url_or_redirect
-from ohmyadmin.menu import MenuLink
-from ohmyadmin.pages import Page
-from ohmyadmin.storage import LocalDirectoryStorage
+from ohmyadmin.app import OhMyAdmin
+from ohmyadmin.authentication import BaseAuthPolicy, UserMenu
+from ohmyadmin.page import Page
+from ohmyadmin.shortcuts import get_admin
 
 metadata = sa.MetaData()
 Base = declarative_base()
+this_dir = pathlib.Path(__file__).parent
+uploads_dir = this_dir / 'uploads'
+engine = create_async_engine('postgresql+asyncpg://postgres:postgres@localhost/ohmyadmin', future=True, echo=True)
+async_session = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+file_storage = FileStorage(LocalStorage(this_dir / 'uploads'))
 
 
 def index_view(request: Request) -> Response:
@@ -40,51 +35,46 @@ def index_view(request: Request) -> Response:
 
 
 class AuthPolicy(BaseAuthPolicy):
-    async def authenticate(self, conn: HTTPConnection, identity: str, password: str) -> UserLike | None:
-        stmt = sa.select(User).where(User.email == identity)
-        result = await conn.state.dbsession.scalars(stmt)
-        if (user := result.one_or_none()) and pbkdf2_sha256.verify(password, user.password):
-            return user
-        return None
+    async def authenticate(self, request: Request, identity: str, password: str) -> BaseUser | None:
+        async with async_session() as session:
+            stmt = sa.select(User).where(User.email == identity)
+            result = await session.scalars(stmt)
+            if (user := result.one_or_none()) and pbkdf2_sha256.verify(password, user.password):
+                return user
+            return None
 
-    async def load_user(self, conn: HTTPConnection, user_id: str) -> UserLike | None:
-        stmt = sa.select(User).where(User.id == int(user_id))
-        result = await conn.state.dbsession.scalars(stmt)
-        return result.one_or_none()
+    async def load_user(self, request: Request, user_id: str) -> BaseUser | None:
+        async with async_session() as session:
+            stmt = sa.select(User).where(User.id == int(user_id))
+            result = await session.scalars(stmt)
+            return result.one_or_none()
 
-    def get_user_menu(self, conn: HTTPConnection) -> UserMenu:
-        if conn.user.is_authenticated:
+    def get_user_menu(self, request: Request) -> UserMenu:
+        if request.user.is_authenticated:
             return UserMenu(
-                user_name=str(conn.user),
-                avatar=media_url_or_redirect(conn.user.avatar),
+                user_name=str(request.user),
+                avatar=get_admin(request).media_url(request, request.user.avatar),
                 menu=[
-                    MenuLink(text='My profile', url=conn.url_for(ProfilePage.url_name()), icon='user'),
-                    MenuLink(text='Settings', url=conn.url_for(SettingsPage.url_name()), icon='settings'),
+                    # MenuLink(text='My profile', url=request.url_for(ProfilePage.url_name()), icon='user'),
+                    # MenuLink(text='Settings', url=request.url_for(SettingsPage.url_name()), icon='settings'),
                 ],
             )
-        return super().get_user_menu(conn)
+        return super().get_user_menu(request)
 
 
 class SettingsPage(Page):
     icon = 'settings'
+    label_plural = 'Settings'
+    template = 'settings_page.html'
+
+    def post(self, request: Request) -> Response:
+        flash(request).success('Operation successful.')
+        return self.redirect_to_self(request)
 
 
 class ProfilePage(Page):
     icon = 'user'
 
-
-class OverviewDashboard(Dashboard):
-    icon = 'dashboard'
-    metrics = [
-        TotalOrders(),
-    ]
-
-
-this_dir = pathlib.Path(__file__).parent
-uploads_dir = this_dir / 'uploads'
-engine = create_async_engine('postgresql+asyncpg://postgres:postgres@localhost/ohmyadmin', future=True, echo=True)
-dbsession = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
-file_storage = LocalDirectoryStorage(this_dir / 'uploads')
 
 admin = OhMyAdmin(
     title='Admin Demo',
@@ -92,26 +82,13 @@ admin = OhMyAdmin(
     auth_policy=AuthPolicy(),
     template_dir=this_dir / 'templates',
     file_storage=file_storage,
-    pages=[SettingsPage(), ProfilePage()],
-    dashboards=[OverviewDashboard()],
-    middleware=[Middleware(DbSessionMiddleware, dbsession=dbsession)],
-    resources=[
-        BrandResource(),
-        ProductResource(),
-        CustomerResource(),
-        OrderResource(),
-        CategoryResource(),
-        CurrencyResource(),
-        CountryResource(),
-        UserResource(),
-        BlogPostResource(),
-    ],
+    pages=[SettingsPage, ProfilePage],
 )
 
+install_error_handler()
 app = Starlette(
     debug=True,
     middleware=[
-        Middleware(StarceptionMiddleware),
         Middleware(SessionMiddleware, secret_key='key!', path='/'),
     ],
     routes=[

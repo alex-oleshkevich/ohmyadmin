@@ -21,6 +21,7 @@ repos:
           - id: check-merge-conflict
           - id: check-docstring-first
           - id: check-added-large-files
+            args: ["--maxkb=1024"]
           - id: check-executables-have-shebangs
 
     - repo: https://github.com/pycqa/isort

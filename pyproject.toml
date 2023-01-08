@@ -32,9 +32,10 @@ WTForms = "^3"
 python-multipart = "^0.0.5"
 starlette-babel = "*"
 starlette-flash = "*"
+async-storages = "^0.4.1"
 
 [tool.poetry.group.dev.dependencies]
-SQLAlchemy = { extras = ["mypy"], version = "^1.4.35" }
+SQLAlchemy = "^2.0.0b4"
 asyncpg = "^0.26"
 pytest = "^7.2"
 pytest-asyncio = "^0.19"

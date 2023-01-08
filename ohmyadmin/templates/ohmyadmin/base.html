@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="" class="h-full {{ html_tag_classes }}">
+<html lang="" class="h-full">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
@@ -17,17 +17,16 @@
     <meta name="MobileOptimized" content="320"/>
     <meta name="csrf-token" content="{{ csrf_token }}"/>
 
-    <link rel="icon" href="{{ static('logo_square.svg') }}" type="image/x-icon"/>
-    <link rel="shortcut icon" href="{{ static('logo_square.svg') }}" type="image/x-icon"/>
+    <link rel="icon" href="{{ static_url('logo_square.svg') }}" type="image/x-icon"/>
+    <link rel="shortcut icon" href="{{ static_url('logo_square.svg') }}" type="image/x-icon"/>
 
-    <link href="{{ static('main.css') }}" rel="stylesheet"/>
+    <link href="{{ static_url('main.css') }}" rel="stylesheet"/>
     <script src="//unpkg.com/htmx.org@1.8.0"
             integrity="sha384-cZuAZ+ZbwkNRnrKi05G/fjBX+azI9DNOkNYysZ0I/X5ZFgsmMiBXgDZof30F5ofc"
-            crossorigin="anonymous"></script>
-    <script defer src="{{ static('main.js') }}"></script>
+            crossorigin="anonymous">
 
-    <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
-    <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
+    </script>
+    <script defer src="{{ static_url('main.js') }}"></script>
 
     <style>
         [x-cloak] {
@@ -38,27 +37,12 @@
     {% block head %}{% endblock %}
     {% block head_scripts %}{% endblock %}
 </head>
-<body class="antialiased  h-full {{ body_tag_classes }}" x-data="app" x-cloak>
+<body class="antialiased h-full" x-data="{}" x-cloak>
 {% block main %}{% endblock %}
 {% block page_scripts %}{% endblock %}
 <script>
     window.__TOASTS__ = {{ flash_messages|list|tojson }};
-    window.__ACTIONS__ = {{ modal_actions|default({}, true)|tojson }};
-    window.__ACTION_ENDPOINT__ = '{{ action_endpoint }}';
 </script>
-
-<!-- modal actions will be rendered to this container -->
-<template x-if="actionUrl">
-    <div class="modal">
-        <div class="modal-spacer">
-            <div class="modal-content" hx-trigger="load" :hx-get="actionUrl" x-ref="action"
-                 x-init="() => htmx.process($refs.action)"
-            >
-            </div>
-        </div>
-    </div>
-</template>
-<!-- end modal actions -->
 
 </body>
 </html>

@@ -1,8 +1,4 @@
-from __future__ import annotations
-
 import re
-
-from ohmyadmin.globals import get_current_request
 
 
 def camel_to_sentence(text: str) -> str:
@@ -16,20 +12,6 @@ def camel_to_sentence(text: str) -> str:
 
 def snake_to_sentence(text: str) -> str:
     return text.replace('_', ' ')
-
-
-def url(path_name: str, **path_params: str | int) -> str:
-    return get_current_request().url_for(path_name, **(path_params or {}))
-
-
-def media_url(path: str) -> str:
-    return get_current_request().url_for('ohmyadmin_media', path=path)
-
-
-def media_url_or_redirect(path: str) -> str:
-    if path.startswith('http://') or path.startswith('https://'):
-        return path
-    return media_url(path)
 
 
 def pluralize(text: str) -> str:

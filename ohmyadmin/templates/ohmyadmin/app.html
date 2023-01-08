@@ -1,17 +1,85 @@
 {% extends 'ohmyadmin/base.html' %}
 
-{% set html_tag_classes = 'h-full' %}
-{% set body_tag_classes = 'h-full text-sm' %}
+{% set user_menu = admin.get_user_menu(request) %}
+{% set main_menu = admin.get_main_menu(request) %}
 
 {% block main %}
-    <div class="flex h-full overflow-hidden">
+    <div class="block md:hidden p-3">
+        <div class="flex items-center justify-between">
+            <!-- mobile logo -->
+            {% if admin.logo_url %}
+                <div class="flex items-center">
+                    <a href="{{ url('ohmyadmin.welcome') }}">
+                        <img src="{{ admin.logo_url }}" class="max-h-full">
+                    </a>
+                </div>
+            {% else %}
+                <div class="w-full">
+                    <span class="text-lg font-semibold">{{ admin.title }}</span>
+                </div>
+            {% endif %}
+            <!-- end mobile logo -->
 
+            <!-- mobile navigation trigger -->
+            <div class="md:hidden flex items-center justify-between">
+                <button class="p-1 rounded inline-flex items-center justify-center">
+                    {{ tabler_icon('menu-2', class='h-8 w-8') }}
+                </button>
+            </div>
+            <!-- end mobile navigation trigger -->
+        </div>
+
+        <div class="py-3">
+            <!-- user menu -->
+            <div class="relative select-none border-b border-gray-300 pb-2 mb-2">
+                <div class="flex items-center gap-3 p-1 cursor-pointer">
+                    <div class="rounded-md overflow-hidden h-8 w-8 flex items-center justify-center">
+                        {% if user_menu.avatar %}
+                            <img src="{{ user_menu.avatar }}" class="h-full w-full" alt="">
+                        {% else %}
+                            {{ tabler_icon('user') }}
+                        {% endif %}
+                    </div>
+                    <div class="text-base font-semibold">{{ user_menu.user_name }}</div>
+                </div>
+            </div>
+
+            <!-- user menu -->
+            <div class="divide-y divide-gray-200 space-y-1">
+                {% for item in user_menu %}
+                    <a href="{{ item.url }}">
+                        {{ tabler_icon(item.icon) if item.icon else '' }}
+                        {{ item.text }}
+                    </a>
+                {% endfor %}
+
+                {% if not request.user.is_anonymous %}
+                    <form action="{{ url('ohmyadmin.logout') }}" method="post" class="w-full">
+                        <button class="flex w-full items-center gap-2 px-2 py-2">
+                            {{ tabler_icon('logout') }} {{ _('Logout', domain='ohmyadmin') }}
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+
+            <!-- main menu -->
+            {% for item in main_menu %}
+                <a href="{{ item.url }}">
+                    {{ tabler_icon(item.icon) if item.icon else '' }}
+                    {{ item.text }}
+                </a>
+            {% endfor %}
+
+        </div>
+    </div>
+
+    <div class="flex h-full overflow-hidden" x-data="{mobileMenuOpen: false}">
         <!-- sidebar -->
-        <aside class="w-80 border-r border-gray-300 bg-slate-50 px-3 text-sm">
+        <aside class="hidden md:block w-80 border-r border-gray-300 bg-slate-50 px-3 text-sm">
             <!-- logo -->
             {% if admin.logo_url %}
                 <div class="h-16 flex items-center">
-                    <a href="{{ url('ohmyadmin_welcome') }}">
+                    <a href="{{ url('ohmyadmin.welcome') }}">
                         <img src="{{ admin.logo_url }}" class="max-h-full">
                     </a>
                 </div>
@@ -20,13 +88,12 @@
                     <span class="text-lg font-semibold">{{ admin.title }}</span>
                 </div>
             {% endif %}
-
             <!-- end logo -->
 
             <!-- main menu -->
             <nav class="grid grid-cols-1 gap-1 mb-10">
                 {% for item in main_menu %}
-                    {{ item.render(request) }}
+                    {{ item.render(request)|safe }}
                 {% endfor %}
             </nav>
             <!-- end main menu -->
@@ -34,14 +101,14 @@
         <!-- end sidebar -->
 
         <main class="w-full overflow-auto">
-            <header class="border-b border-b-200 flex items-center justify-between px-10 h-16">
-                <div class="py-5">
-                    <!-- header left side actions -->
-                </div>
+            <header class="border-b border-b-200 flex items-center justify-between px-2 md:px-10 h-16">
+                <div></div>
 
                 <div>
                     <!-- user menu -->
-                    <div x-data="{open: false}" class="relative select-none" @click="open = !open"
+                    <div class="hidden md:block relative select-none"
+                         x-data="{open: false}"
+                         @click="open = !open"
                          @click.outside="open = false">
                         <div class="flex items-center gap-3 hover:bg-slate-100 p-1 rounded-md cursor-pointer">
                             <div
@@ -49,56 +116,27 @@
                                 {% if user_menu.avatar %}
                                     <img src="{{ user_menu.avatar }}" class="h-full w-full" alt="">
                                 {% else %}
-                                    {{ icon('user') }}
+                                    {{ tabler_icon('user') }}
                                 {% endif %}
                             </div>
-                            <div>{{ user_menu.user_name }}</div>
+                            <div class="hidden md:block">{{ user_menu.user_name }}</div>
                         </div>
 
                         <!-- dropdown -->
-                        <div x-show="open"
-                             class="dropdown w-64">
-                            <div class="border-b border-slate-300 flex items-center gap-2 pb-2 mb-1 p-2">
-                                <!-- avatar -->
-                                <div
-                                    class="bg-slate-200 rounded-md overflow-hidden flex items-center justify-center h-10 w-10 text-slate-500">
-                                    {% if user_menu.avatar %}
-                                        <img src="{{ user_menu.avatar }}" class="h-full w-full" alt="">
-                                    {% else %}
-                                        {{ icon('user', size=24) }}
-                                    {% endif %}
-                                </div>
-                                <!-- end avatar -->
-
-                                <!-- username -->
-                                <div>
-                                    <div class="text-slate-500">{{ _('Logged in as') }}</div>
-                                    <div class="text-base">{{ user_menu.user_name }}</div>
-                                </div>
-                                <!-- end username -->
-                            </div>
-
-                            <!-- user menu -->
-                            <ul class="py-1">
-                                {% for item in user_menu.menu %}
-                                    <li>
-                                        <a href="{{ item.url }}" class="dropdown-item">
-                                            {{ tabler_icon(item.icon) if item.icon else '' }}
-                                            {{ item.text }}
-                                        </a>
-                                    </li>
-                                {% endfor %}
-                                {% if not request.user.is_anonymous %}
-                                    <li>
-                                        <form action="{{ url('ohmyadmin_logout') }}" method="post">
-                                            <button class="main-menu-item">
-                                                {{ icon('logout') }} {{ _('Logout') }}
-                                            </button>
-                                        </form>
-                                    </li>
-                                {% endif %}
-                            </ul>
-                            <!-- end user menu -->
+                        <div x-show="open" class="w-64 absolute right-0 py-1 dropdown-menu">
+                            {% for item in user_menu.menu %}
+                                <a href="{{ item.url }}">
+                                    {{ tabler_icon(item.icon) if item.icon else '' }}
+                                    {{ item.text }}
+                                </a>
+                            {% endfor %}
+                            {% if not request.user.is_anonymous %}
+                                <form action="{{ url('ohmyadmin.logout') }}" method="post">
+                                    <button class="main-menu-item">
+                                        {{ tabler_icon('logout') }} {{ _('Logout', domain='ohmyadmin') }}
+                                    </button>
+                                </form>
+                            {% endif %}
                         </div>
                         <!-- end dropdown -->
                     </div>
@@ -115,8 +153,4 @@
             </article>
         </main>
     </div>
-{% endblock %}
-
-{% block page_scripts %}
-
 {% endblock %}

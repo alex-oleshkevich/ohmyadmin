@@ -7,10 +7,9 @@ from starlette.authentication import AuthCredentials, AuthenticationBackend, Bas
 from starlette.requests import HTTPConnection, Request
 from starlette.responses import RedirectResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
+from starlette_babel import gettext_lazy as _
 from starlette_flash import flash
 
-from ohmyadmin.forms import AsyncForm
-from ohmyadmin.i18n import _
 from ohmyadmin.menu import MenuItem
 
 SESSION_KEY = '_auth_user_id_'
@@ -18,20 +17,24 @@ SESSION_KEY = '_auth_user_id_'
 
 @dataclasses.dataclass
 class UserMenu:
-    user_name: str = 'Anonymous'
+    user_name: str = ''
     avatar: str = ''
     menu: list[MenuItem] = dataclasses.field(default_factory=list)
 
+    def __iter__(self) -> typing.Iterator[MenuItem]:
+        return iter(self.menu)
 
-class LoginForm(AsyncForm):
+
+class LoginForm(wtforms.Form):
     identity = wtforms.EmailField(
-        label=_('Email'),
+        label=_('Email', domain='ohmyadmin'),
         render_kw={'autocomplete': 'email', 'inputmode': 'email'},
         validators=[
             wtforms.validators.data_required(),
         ],
     )
     password = wtforms.PasswordField(
+        label=_('Password', domain='ohmyadmin'),
         render_kw={'autocomplete': 'password'},
         validators=[
             wtforms.validators.data_required(),
@@ -40,74 +43,55 @@ class LoginForm(AsyncForm):
     next_url = wtforms.HiddenField()
 
 
-class UserLike(BaseUser):
-    is_anonymous = False
-
-    @abc.abstractmethod
-    def get_id(self) -> str:
-        ...
-
-    @property
-    def is_authenticated(self) -> bool:
-        return True
-
-    @property
-    def display_name(self) -> str:
-        return str(self)
-
-
-class AnonymousUser(UserLike):
+class AnonymousUser(UnauthenticatedUser):
     is_anonymous = True
-    display_name = 'Anonymous.'
-
-    def get_id(self) -> str:
-        return ''
+    display_name = _('Anonymous', domain='ohmyadmin')
 
 
 class BaseAuthPolicy(abc.ABC):
-    login_form_class: typing.ClassVar[typing.Type[AsyncForm]] = LoginForm
+    login_form_class: type[LoginForm] = LoginForm
 
     @abc.abstractmethod
-    async def authenticate(self, conn: HTTPConnection, identity: str, password: str) -> UserLike | None:
+    async def authenticate(self, request: Request, identity: str, password: str) -> BaseUser | None:
         ...
-
-    def login(self, conn: HTTPConnection, user: UserLike) -> None:
-        conn.session[SESSION_KEY] = user.get_id()
-
-    def logout(self, conn: HTTPConnection) -> None:
-        if SESSION_KEY in conn.session:
-            del conn.session[SESSION_KEY]
 
     @abc.abstractmethod
-    async def load_user(self, conn: HTTPConnection, user_id: str) -> UserLike | None:
+    async def load_user(self, request: Request, user_id: str) -> BaseUser | None:
         ...
 
-    def is_authenticated(self, conn: HTTPConnection) -> bool:
-        return conn.user.is_authenticated
+    def login(self, request: Request, user: BaseUser) -> None:
+        request.session[SESSION_KEY] = user.identity
 
-    def get_login_form_class(self) -> typing.Type[AsyncForm]:
+    def logout(self, request: Request) -> None:
+        if SESSION_KEY in request.session:
+            del request.session[SESSION_KEY]
+
+    def is_authenticated(self, request: Request) -> bool:
+        return request.user.is_authenticated
+
+    def get_login_form_class(self) -> type[LoginForm]:
         return self.login_form_class
 
     def get_authentication_backend(self) -> AuthenticationBackend:
         return SessionAuthBackend()
 
-    def get_user_menu(self, conn: HTTPConnection) -> UserMenu:
-        return UserMenu(user_name='anon.')
+    def get_user_menu(self, request: Request) -> UserMenu:
+        return UserMenu(user_name=_('anon.', domain='ohmyadmin'))
 
 
 class AnonymousAuthPolicy(BaseAuthPolicy):
-    async def authenticate(self, conn: HTTPConnection, identity: str, password: str) -> UserLike | None:
+    async def authenticate(self, request: Request, identity: str, password: str) -> BaseUser | None:
         return None
 
-    async def load_user(self, conn: HTTPConnection, user_id: str) -> UserLike | None:
+    async def load_user(self, request: Request, user_id: str) -> BaseUser | None:
         return AnonymousUser()
 
 
 class SessionAuthBackend(AuthenticationBackend):
-    async def authenticate(self, conn: HTTPConnection) -> tuple[AuthCredentials, BaseUser] | None:
-        auth_policy: BaseAuthPolicy = conn.state.auth_policy
-        user_id = conn.session.get(SESSION_KEY, '')
-        if user_id and (user := await auth_policy.load_user(conn, user_id)):
+    async def authenticate(self, request: Request) -> tuple[AuthCredentials, BaseUser] | None:
+        auth_policy: BaseAuthPolicy = request.state.admin.auth_policy
+        user_id = request.session.get(SESSION_KEY, '')
+        if user_id and (user := await auth_policy.load_user(request, user_id)):
             return AuthCredentials(), user
         return AuthCredentials([]), UnauthenticatedUser()
 
@@ -127,7 +111,7 @@ class RequireLoginMiddleware:
             await self.app(scope, receive, send)
             return
 
-        flash(Request(scope)).error(_('You need to be logged in to access this page.'))
-        redirect_to = conn.url_for('ohmyadmin_login') + '?next=' + conn.url.path
+        flash(Request(scope)).error(_('You need to be logged in to access this page.', domain='ohmyadmin'))
+        redirect_to = conn.url_for('ohmyadmin.login') + '?next=' + conn.url.path
         response = RedirectResponse(url=redirect_to)
         await response(scope, receive, send)
