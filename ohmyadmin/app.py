@@ -33,7 +33,7 @@ class OhMyAdmin(Router):
         self,
         title: str = 'Oh My Admin!',
         logo_url: str = '',
-        pages: typing.Sequence[type[BasePage]] | None = None,
+        pages: typing.Sequence[BasePage] | None = None,
         template_dir: str | os.PathLike | None = None,
         file_storage: FileStorage | None = None,
         auth_policy: BaseAuthPolicy = AnonymousAuthPolicy(),
@@ -158,7 +158,7 @@ class OhMyAdmin(Router):
         return self.auth_policy.get_user_menu(request)
 
     def get_main_menu(self, request: Request) -> list[MenuItem]:
-        groups: itertools.groupby[str, type[BasePage]] = itertools.groupby(
+        groups = itertools.groupby(
             self.pages,
             key=operator.attrgetter('group'),
         )
@@ -169,7 +169,7 @@ class OhMyAdmin(Router):
                     MenuLink(
                         icon=item.icon,
                         text=item.label_plural,
-                        url=item.generate_url(request),  # type: ignore[attr-defined]
+                        url=item.generate_url(request),
                     )
                     for item in group[1]
                 ],

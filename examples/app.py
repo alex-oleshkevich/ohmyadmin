@@ -18,6 +18,7 @@ from examples.models import User
 from ohmyadmin.app import OhMyAdmin
 from ohmyadmin.authentication import BaseAuthPolicy, UserMenu
 from ohmyadmin.page import Page
+from ohmyadmin.resources import Resource
 from ohmyadmin.shortcuts import get_admin
 
 metadata = sa.MetaData()
@@ -76,13 +77,17 @@ class ProfilePage(Page):
     icon = 'user'
 
 
+class UsersResource(Resource):
+    icon = 'users'
+
+
 admin = OhMyAdmin(
     title='Admin Demo',
     logo_url='https://haj.aliashkevich.com/static/logo.svg',
     auth_policy=AuthPolicy(),
     template_dir=this_dir / 'templates',
     file_storage=file_storage,
-    pages=[SettingsPage, ProfilePage],
+    pages=[SettingsPage(), ProfilePage(), UsersResource()],
 )
 
 install_error_handler()

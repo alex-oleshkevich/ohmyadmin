@@ -1,9 +1,13 @@
+import abc
+import inspect
 import typing
 from slugify import slugify
-from starlette.endpoints import HTTPEndpoint
+from starlette.concurrency import run_in_threadpool
+from starlette.exceptions import HTTPException
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
 from starlette.routing import BaseRoute, Route
+from starlette.types import Receive, Scope, Send
 
 from ohmyadmin.helpers import camel_to_sentence, pluralize
 
@@ -25,10 +29,6 @@ class BasePage(metaclass=PageMeta):
     group: str = ''
     icon: str = ''
 
-    @classmethod
-    def get_path_name(cls) -> str:
-        raise NotImplementedError()
-
     def render_to_response(
         self,
         request: Request,
@@ -46,33 +46,45 @@ class BasePage(metaclass=PageMeta):
         return RedirectResponse(url, status_code=302)
 
     @classmethod
+    @abc.abstractmethod
+    def get_path_name(cls) -> str:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
     def as_route(cls) -> BaseRoute:
         raise NotImplementedError()
 
     @classmethod
+    @abc.abstractmethod
     def generate_url(cls, request: Request) -> str:
-        raise NotImplementedError()
+        return request.url_for(cls.get_path_name())
 
 
-class Page(HTTPEndpoint, BasePage):
+class Page(BasePage):
     template: typing.ClassVar[str] = 'ohmyadmin/pages/blank.html'
 
     async def get(self, request: Request) -> Response:
         return self.render_to_response(request, self.template, {'page_title': self.label})
 
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        request = Request(scope, receive, send)
+        method = request.method.lower()
+        if handler := getattr(self, method, None):
+            response = (
+                await handler(request) if inspect.iscoroutinefunction(handler) else run_in_threadpool(handler, request)
+            )
+            await response(scope, receive, send)
+            return
+        raise HTTPException(405, 'Method Not Allowed')
+
     @classmethod
     def get_path_name(cls) -> str:
         return f'ohmyadmin.pages.{cls.slug}'
 
-    @classmethod
-    def as_route(cls) -> BaseRoute:
+    def as_route(self) -> BaseRoute:
         methods: list[str] = []
         for method in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']:
-            if hasattr(cls, method.lower()):
+            if hasattr(self, method.lower()):
                 methods.append(method)
 
-        return Route(f'/{cls.slug}', cls, methods=methods, name=cls.get_path_name())
-
-    @classmethod
-    def generate_url(cls, request: Request) -> str:
-        return request.url_for(f'ohmyadmin.pages.{cls.slug}')
+        return Route(f'/{self.slug}', self, methods=methods, name=self.get_path_name())
