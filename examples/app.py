@@ -1,8 +1,9 @@
 import pathlib
+
 import sqlalchemy as sa
 from async_storages import FileStorage, LocalStorage
 from passlib.handlers.pbkdf2 import pbkdf2_sha256
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, create_async_engine
 from sqlalchemy.orm import declarative_base
 from starception import install_error_handler
 from starlette.applications import Starlette
@@ -17,9 +18,13 @@ from starlette_flash import flash
 from examples.models import User
 from ohmyadmin.app import OhMyAdmin
 from ohmyadmin.authentication import BaseAuthPolicy, UserMenu
-from ohmyadmin.page import Page
-from ohmyadmin.resources import Resource
+from ohmyadmin.datasource.sqla import SQLADataSource
+from ohmyadmin.formatters import AvatarFormatter, BoolFormatter, DateFormatter
+from ohmyadmin.pages.base import Page
+from ohmyadmin.pages.table import TablePage
+from ohmyadmin.resources import Resource, TableView
 from ohmyadmin.shortcuts import get_admin
+from ohmyadmin.views.table import TableColumn
 
 metadata = sa.MetaData()
 Base = declarative_base()
@@ -73,12 +78,26 @@ class SettingsPage(Page):
         return self.redirect_to_self(request)
 
 
+class UserPage(TablePage):
+    label = 'App users'
+    datasource = SQLADataSource(User, async_session)
+    columns = [
+        TableColumn('photo', formatter=AvatarFormatter()),
+        TableColumn('first_name'),
+        TableColumn('last_name', searchable=True, sortable=True),
+        TableColumn('email', searchable=True),
+        TableColumn('is_active', sortable=True, formatter=BoolFormatter(as_text=True)),
+        TableColumn('created_at', sortable=True, formatter=DateFormatter()),
+    ]
+
+
 class ProfilePage(Page):
     icon = 'user'
 
 
 class UsersResource(Resource):
     icon = 'users'
+    index_view_class = TableView
 
 
 admin = OhMyAdmin(
@@ -89,6 +108,7 @@ admin = OhMyAdmin(
     file_storage=file_storage,
     pages=[
         UsersResource(),
+        UserPage(),
         SettingsPage(),
         ProfilePage(),
     ],

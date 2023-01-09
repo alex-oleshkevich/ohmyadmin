@@ -7,6 +7,7 @@ import time
 import typing
 from async_storages import FileStorage, LocalStorage
 from async_storages.file_server import FileServer
+from markupsafe import Markup
 from starlette import templating
 from starlette.middleware import Middleware
 from starlette.middleware.authentication import AuthenticationMiddleware
@@ -22,7 +23,7 @@ from tabler_icons import tabler_icon
 
 from ohmyadmin.authentication import AnonymousAuthPolicy, BaseAuthPolicy, UserMenu
 from ohmyadmin.menu import MenuGroup, MenuItem, MenuLink
-from ohmyadmin.page import BasePage
+from ohmyadmin.pages.base import BasePage
 
 START_TIME = time.time()
 PACKAGE_NAME = __name__.split('.')[0]
@@ -73,6 +74,8 @@ class OhMyAdmin(Router):
         return request.url_for('ohmyadmin.static', path=path) + f'?{START_TIME}'
 
     def media_url(self, request: Request, path: str) -> str:
+        if path.startswith('http://') or path.startswith('https://'):
+            return path
         return request.url_for('ohmyadmin.media', path=path)
 
     def render_to_string(
@@ -91,7 +94,7 @@ class OhMyAdmin(Router):
                 'flash_messages': flash(request),
             }
         )
-        return self.templates.get_template(template_name).render(context)
+        return Markup(self.templates.get_template(template_name).render(context))
 
     def render_to_response(
         self,

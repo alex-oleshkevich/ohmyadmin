@@ -1,0 +1,20 @@
+<table>
+    <thead>
+    <tr>
+        {% for column in table.columns %}
+            <th>
+                {{ column.render_head_cell(request) }}
+            </th>
+        {% endfor %}
+    </tr>
+    </thead>
+    <tbody>
+    {% for object in objects %}
+        <tr>
+            {% for columm in table.columns %}
+                <td>{{ columm.render(request, object) }}</td>
+            {% endfor %}
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>

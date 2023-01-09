@@ -1,0 +1,41 @@
+{% extends 'ohmyadmin/app.html' %}
+{% import 'ohmyadmin/lib/pagination.html' as pagination %}
+
+
+{% block content %}
+    <div class="space-y-6">
+        <div class="flex items-center justify-between">
+            <!-- search and actions -->
+            <div class="flex items-center gap-3 flex-1 flex-wrap">
+
+                <!-- search form -->
+                <div class="w-96">
+                    {% if page.searchable %}
+                        <form method="get"
+                              action="{{ request.url }}"
+                              @submit.prevent="onSubmit"
+                        >
+                            <input x-model="searchQuery"
+                                   type="search"
+                                   value="{{ search_term }}"
+                                   name="{{ page.search_param }}"
+                                   placeholder="{{ page.search_placeholder }}">
+                        </form>
+                    {% endif %}
+                </div>
+                <!-- end search form -->
+
+
+                {#                {% include 'ohmyadmin/list_page/filters.html' %}#}
+            </div>
+            <!-- end search and actions -->
+            {#            {% include 'ohmyadmin/list_page/batch_actions.html' %}#}
+        </div>
+
+        <div id="data">
+            {{ view_content }}
+        </div>
+
+        {{ pagination.pagination(request, objects) }}
+    </div>
+{% endblock %}

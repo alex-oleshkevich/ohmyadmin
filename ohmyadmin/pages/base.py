@@ -14,11 +14,14 @@ from ohmyadmin.helpers import camel_to_sentence, pluralize
 
 class PageMeta(type):
     def __new__(mcs, name: str, bases: tuple[type], attrs: dict[str, typing.Any], **kwargs: typing.Any) -> type:
-        if not attrs.get('label'):
-            clean_label = name.removesuffix('Page').removesuffix('Resource')
-            attrs['slug'] = slugify(clean_label)
-            attrs['label'] = camel_to_sentence(clean_label)
-            attrs['label_plural'] = attrs.get('label_plural', pluralize(attrs['label']))
+        if '__abstract__' not in attrs:
+            if not attrs.get('label'):
+                clean_label = name.removesuffix('Page').removesuffix('Resource')
+                attrs['label'] = camel_to_sentence(clean_label)
+            if not attrs.get('label_plural'):
+                attrs['label_plural'] = attrs.get('label_plural', pluralize(attrs['label']))
+            if not attrs.get('slug'):
+                attrs['slug'] = slugify(attrs['label'])
 
         return type.__new__(mcs, name, bases, attrs, **kwargs)
 

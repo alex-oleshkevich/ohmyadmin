@@ -1,0 +1,29 @@
+{% macro sortable_cell(column, control) %}
+    <a href="{{ control.url }}" class="flex items-center gap-2">
+        <span>{{ column.label }}</span>
+        <span class="text-gray-400 flex items-center">
+            {% if control.ordering == 'asc' %}
+                {{ tabler_icon('arrow-narrow-down') }}
+            {% elif control.ordering == 'desc' %}
+                {{ tabler_icon('arrow-narrow-up') }}
+            {% else %}
+                {{ tabler_icon('arrows-sort') }}
+            {% endif %}
+
+            {% if control.index %}
+                <span class="text-sm">{{ control.index }}</span>
+            {% endif %}
+    </span>
+    </a>
+{% endmacro %}
+
+{% macro simple_cell(column) %}
+    {{ column.label }}
+{% endmacro %}
+
+{% if column.sortable %}
+    {% set control = sorting.get_control(column.name) %}
+    {{ sortable_cell(column, control) }}
+{% else %}
+    {{ simple_cell(column) }}
+{% endif %}
