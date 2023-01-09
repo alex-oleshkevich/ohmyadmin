@@ -1,0 +1,7 @@
+{% import 'ohmyadmin/lib/pagination.html' as pagination %}
+
+{{ view_content }}
+
+<div class="mt-5" hx-boost="true">
+    {{ pagination.pagination(request, objects) }}
+</div>

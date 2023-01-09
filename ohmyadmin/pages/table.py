@@ -1,5 +1,4 @@
 import typing
-
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette_babel import gettext_lazy as _
@@ -61,7 +60,27 @@ class TablePage(Page):
         objects = await self.get_objects(request)
         view = TableView(columns=self._columns)
         view_content = view.render(request, objects)
-        return self.render_to_response(request, 'ohmyadmin/pages/table.html', {
-            'page_title': self.label_plural, 'objects': objects, 'view_content': view_content, 'page': self,
-            'search_term': get_search_value(request, self.search_param),
-        })
+
+        if 'hx-request' in request.headers:
+            return self.render_to_response(
+                request,
+                'ohmyadmin/pages/table/_content.html',
+                {
+                    'request': request,
+                    'view_content': view_content,
+                    'objects': objects,
+                },
+                headers={'hx-push-url': str(request.url)},
+            )
+
+        return self.render_to_response(
+            request,
+            'ohmyadmin/pages/table/table.html',
+            {
+                'page': self,
+                'objects': objects,
+                'view_content': view_content,
+                'page_title': self.label_plural,
+                'search_term': get_search_value(request, self.search_param),
+            },
+        )

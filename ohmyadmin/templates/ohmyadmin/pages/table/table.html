@@ -1,9 +1,7 @@
 {% extends 'ohmyadmin/app.html' %}
-{% import 'ohmyadmin/lib/pagination.html' as pagination %}
-
 
 {% block content %}
-    <div class="space-y-6">
+    <div class="space-y-6" hx-target="#data">
         <div class="flex items-center justify-between">
             <!-- search and actions -->
             <div class="flex items-center gap-3 flex-1 flex-wrap">
@@ -13,13 +11,15 @@
                     {% if page.searchable %}
                         <form method="get"
                               action="{{ request.url }}"
-                              @submit.prevent="onSubmit"
+                              hx-get="{{ request.url.remove_query_params(page.search_param) }}"
                         >
-                            <input x-model="searchQuery"
-                                   type="search"
+                            <input type="search"
                                    value="{{ search_term }}"
                                    name="{{ page.search_param }}"
-                                   placeholder="{{ page.search_placeholder }}">
+                                   hx-get="{{ request.url.remove_query_params(page.search_param) }}"
+                                   hx-trigger="keyup changed delay:300ms"
+                                   placeholder="{{ page.search_placeholder }}"
+                            >
                         </form>
                     {% endif %}
                 </div>
@@ -33,9 +33,7 @@
         </div>
 
         <div id="data">
-            {{ view_content }}
+            {% include 'ohmyadmin/pages/table/_content.html' %}
         </div>
-
-        {{ pagination.pagination(request, objects) }}
     </div>
 {% endblock %}

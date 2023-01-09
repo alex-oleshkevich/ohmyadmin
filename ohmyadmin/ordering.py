@@ -1,4 +1,5 @@
 import dataclasses
+
 import typing
 from starlette.datastructures import URL, MultiDict
 from starlette.requests import Request
@@ -26,6 +27,7 @@ def get_ordering_value(request: Request, param_name: str) -> dict[str, SortingTy
 class SortControl:
     index: int
     url: URL
+    show_index: bool
     ordering: SortingType
 
 
@@ -35,50 +37,42 @@ class SortingHelper:
         self.query_param_name = query_param
         self.ordering = request.query_params.getlist(query_param)
 
-    def get_current_ordering(self, sort_field: str) -> SortingType | None:
+    def get_current_ordering(self, field: str) -> SortingType | None:
         for order in self.ordering:
-            if order == sort_field:
+            if order == field:
                 return 'asc'
-            if order == f'-{sort_field}':
+            if order == f'-{field}':
                 return 'desc'
 
         return None
 
-    def get_current_ordering_index(self, sort_field: str) -> int | None:
+    def get_current_ordering_index(self, field: str) -> int | None:
         for index, param_name in enumerate(self.ordering):
-            if param_name.endswith(sort_field):
+            if param_name.endswith(field):
                 return index + 1
         return None
 
-    def get_next_sorting(self, current_sorting: SortingType | None) -> SortingType | None:
-        match current_sorting:
-            case None:
-                return 'asc'
-            case 'asc':
-                return 'desc'
-            case 'desc':
-                return None
-
-    def get_url(self, sort_field: str) -> URL:
+    def get_url(self, field: str) -> URL:
         ordering = self.ordering.copy()
-        if sort_field in ordering:
-            index = ordering.index(sort_field)
-            ordering[index] = f'-{sort_field}'
-        elif f'-{sort_field}' in ordering:
-            ordering.remove(f'-{sort_field}')
+        if field in ordering:
+            index = ordering.index(field)
+            ordering[index] = f'-{field}'
+        elif f'-{field}' in ordering:
+            ordering.remove(f'-{field}')
         else:
-            ordering.append(sort_field)
+            ordering.append(field)
 
         params = MultiDict(parse_qsl(self.request.url.query, keep_blank_values=True))
         params.setlist(self.query_param_name, ordering)
         url = self.request.url.replace(query=urlencode(params.multi_items()))
         return url
 
-    def should_show_index(self, request: Request) -> bool:
+    def should_show_index(self) -> bool:
         return len(self.ordering) > 1
 
-    def get_control(self, sort_field: str) -> SortControl:
-        url = self.get_url(sort_field)
-        ordering = self.get_current_ordering(sort_field)
-        index = self.get_current_ordering_index(sort_field)
-        return SortControl(index=index, ordering=ordering, url=url)
+    def get_control(self, column: str) -> SortControl:
+        url = self.get_url(column)
+        ordering = self.get_current_ordering(column)
+        index = self.get_current_ordering_index(column)
+        show_index = self.should_show_index()
+        return SortControl(index=index, ordering=ordering, url=url, show_index=show_index)

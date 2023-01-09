@@ -1,5 +1,5 @@
 {% macro sortable_cell(column, control) %}
-    <a href="{{ control.url }}" class="flex items-center gap-2">
+    <a href="{{ control.url }}" class="flex items-center gap-2" hx-boost="true">
         <span>{{ column.label }}</span>
         <span class="text-gray-400 flex items-center">
             {% if control.ordering == 'asc' %}
@@ -10,7 +10,7 @@
                 {{ tabler_icon('arrows-sort') }}
             {% endif %}
 
-            {% if control.index %}
+            {% if control.show_index %}
                 <span class="text-sm">{{ control.index }}</span>
             {% endif %}
     </span>

@@ -96,11 +96,18 @@ class OhMyAdmin(Router):
         )
         return Markup(self.templates.get_template(template_name).render(context))
 
+    def render_macro(self, template_name: str, macro_name: str, macro_args: dict[str, typing.Any] | None = None) -> str:
+        macro_args = macro_args or {}
+        template = self.templates.get_template(template_name)
+        macros = getattr(template.module, macro_name)
+        return macros(**macro_args)
+
     def render_to_response(
         self,
         request: Request,
         template_name: str,
         context: typing.Mapping[str, typing.Any] | None = None,
+        headers: typing.Mapping[str, typing.Any] | None = None,
     ) -> Response:
         context = dict(context or {})
         context.update(
@@ -112,7 +119,7 @@ class OhMyAdmin(Router):
                 'flash_messages': flash(request),
             }
         )
-        return self.templates.TemplateResponse(template_name, context)
+        return self.templates.TemplateResponse(template_name, context, headers=headers)
 
     def get_routes(self) -> typing.Sequence[BaseRoute]:
         return [

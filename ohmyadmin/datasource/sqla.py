@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import typing
-
 import sqlalchemy as sa
+import typing
 from sqlalchemy import orm
-from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from sqlalchemy.sql.elements import NamedColumn
 from starlette.requests import Request
 
 from ohmyadmin.datasource.base import DataSource
@@ -30,6 +30,24 @@ def get_column_properties(entity_class: typing.Any, prop_names: typing.Sequence[
     return props
 
 
+def create_search_token(column: NamedColumn, search_query: str) -> sa.sql.ColumnElement:
+    string_column = sa.cast(column, sa.Text)
+    if search_query.startswith('^'):
+        search_token = f'{search_query[1:].lower()}%'
+        return string_column.ilike(search_token)
+
+    if search_query.startswith('='):
+        search_token = f'{search_query[1:].lower()}'
+        return sa.func.lower(string_column) == search_token
+
+    if search_query.startswith('@'):
+        search_token = f'{search_query[1:].lower()}'
+        return string_column.regexp_match(search_token)
+
+    search_token = f'%{search_query.lower()}%'
+    return string_column.ilike(search_token)
+
+
 class SQLADataSource(DataSource):
     def __init__(
         self,
@@ -47,6 +65,18 @@ class SQLADataSource(DataSource):
 
     def get_for_index(self) -> DataSource:
         return self._clone(self.query_for_list)
+
+    def apply_search(self, search_term: str, searchable_fields: typing.Sequence[str]) -> DataSource:
+        if not search_term:
+            return self._clone(self._stmt)
+
+        clauses = []
+        props = get_column_properties(self.model_class, searchable_fields)
+        for prop in props.values():
+            if len(prop.columns) > 1:
+                continue
+            clauses.append(create_search_token(prop.columns[0], search_term))
+        return self._clone(self._stmt.where(sa.or_(*clauses)))
 
     def apply_ordering(self, ordering: dict[str, SortingType], sortable_fields: typing.Sequence[str]) -> DataSource:
         stmt = self._stmt.order_by(None)
@@ -84,6 +114,9 @@ class SQLADataSource(DataSource):
 
     def _clone(self, stmt: sa.Select) -> SQLADataSource:
         return self.__class__(
-            model_class=self.model_class, async_session=self.async_session, query=self.query,
-            query_for_list=self.query_for_list, _stmt=stmt,
+            model_class=self.model_class,
+            async_session=self.async_session,
+            query=self.query,
+            query_for_list=self.query_for_list,
+            _stmt=stmt,
         )

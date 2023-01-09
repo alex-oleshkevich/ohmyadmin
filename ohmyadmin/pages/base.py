@@ -9,7 +9,7 @@ from starlette.responses import RedirectResponse, Response
 from starlette.routing import BaseRoute, Route
 from starlette.types import Receive, Scope, Send
 
-from ohmyadmin.helpers import camel_to_sentence, pluralize
+from ohmyadmin.helpers import camel_to_sentence
 
 
 class PageMeta(type):
@@ -19,7 +19,7 @@ class PageMeta(type):
                 clean_label = name.removesuffix('Page').removesuffix('Resource')
                 attrs['label'] = camel_to_sentence(clean_label)
             if not attrs.get('label_plural'):
-                attrs['label_plural'] = attrs.get('label_plural', pluralize(attrs['label']))
+                attrs['label_plural'] = attrs.get('label_plural', attrs['label'])
             if not attrs.get('slug'):
                 attrs['slug'] = slugify(attrs['label'])
 
@@ -33,13 +33,23 @@ class BasePage(metaclass=PageMeta):
     group: str = ''
     icon: str = ''
 
+    def render_macro(
+        self,
+        request: Request,
+        template_name: str,
+        macro_name: str,
+        macro_args: dict[str, typing.Any] | None = None,
+    ) -> Response:
+        return request.state.admin.render_macro(template_name, macro_name, macro_args)
+
     def render_to_response(
         self,
         request: Request,
         template_name: str,
         context: typing.Mapping[str, typing.Any] | None = None,
+        headers: typing.Mapping[str, typing.Any] | None = None,
     ) -> Response:
-        return request.state.admin.render_to_response(request, template_name, context)
+        return request.state.admin.render_to_response(request, template_name, context, headers=headers)
 
     def redirect_to_path(self, request: Request, path_name: str, **path_params: typing.Any) -> RedirectResponse:
         url = request.url_for(path_name, **path_params)
