@@ -14,7 +14,7 @@
     [multiple],
     textarea,
     select {
-        @apply block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 leading-5;
+        @apply block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 leading-4 text-sm;
         @apply focus:border-blue-400 focus:ring focus:ring-blue-200 focus:ring-opacity-50;
         @apply disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500;
         @apply transition duration-150 ease-in-out;
@@ -128,8 +128,8 @@
     }
 
     .btn {
-        @apply inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium leading-5 text-gray-700 shadow-sm gap-2;
-        @apply hover:bg-gray-50 h-[38px];
+        @apply inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium leading-4 text-gray-700 shadow-sm gap-2 text-sm;
+        @apply hover:bg-gray-50 h-[34px];
         @apply focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2;
         @apply transition duration-150 ease-in-out;
     }
@@ -462,6 +462,32 @@
 
     .breadcrumbs ul li a {
         @apply text-slate-500 hover:text-slate-600;
+    }
+
+    .dropdown {
+        @apply w-64 rounded-md bg-white shadow-xl ring-1 ring-black ring-opacity-5 border border-gray-50 py-1;
+        @apply focus:outline-none;
+    }
+
+    .list-menu {
+        @apply divide-y divide-gray-100;
+    }
+
+    .list-menu-item {
+        @apply py-2 px-4 min-h-[32px] flex items-center gap-2 font-medium w-full select-none text-gray-800 cursor-pointer;
+        @apply [&:not(.disabled)]:hover:bg-gray-50 [&:not(.disabled)]:active:bg-gray-100;
+    }
+
+    .list-menu-item.disabled {
+        @apply cursor-not-allowed text-gray-400;
+    }
+
+    .list-menu-item svg {
+        @apply h-5 w-5 text-gray-400;
+    }
+
+    .list-menu-item > * + svg {
+        @apply ml-auto;
     }
 }
 

@@ -1,0 +1,7 @@
+{% for filter in filters %}
+    {% if filter.is_active(request) %}
+        {{ filter.render_indicator(request) }}
+    {% else %}
+        {{ filter.render_form(request) }}
+    {% endif %}
+{% endfor %}

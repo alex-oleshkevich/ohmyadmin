@@ -9,7 +9,7 @@ from starlette.requests import Request
 
 from ohmyadmin.datasource.base import DataSource
 from ohmyadmin.ordering import SortingType
-from ohmyadmin.pagination import Page
+from ohmyadmin.pagination import Pagination
 
 
 def get_column_properties(entity_class: typing.Any, prop_names: typing.Sequence[str]) -> dict[str, orm.ColumnProperty]:
@@ -94,6 +94,23 @@ class SQLADataSource(DataSource):
                 continue
         return self._clone(stmt)
 
+    def apply_string_filter(self, field: str, operation: str, value: str) -> DataSource:
+        column = getattr(self.model_class, field)
+        expr: sa.sql.ColumnElement = sa.func.lower(column)
+
+        mapping = {
+            'exact': lambda stmt: stmt.where(expr == value),
+            'startswith': lambda stmt: stmt.where(expr.startswith(value)),
+            'endswith': lambda stmt: stmt.where(expr.endswith(value)),
+            'contains': lambda stmt: stmt.where(expr.ilike(f'%{value}%')),
+            'pattern': lambda stmt: stmt.where(expr.regexp_match(value)),
+        }
+        if operation not in mapping:
+            return self._clone()
+
+        filter_ = mapping[operation]
+        return self._clone(filter_(self._stmt))
+
     async def count(self, session: AsyncSession) -> int:
         stmt = sa.select(sa.func.count('*')).select_from(self._stmt)
         result = await session.scalars(stmt)
@@ -102,7 +119,7 @@ class SQLADataSource(DataSource):
     async def one(self) -> typing.Any:
         pass
 
-    async def paginate(self, request: Request, page: int, page_size: int) -> Page[typing.Any]:
+    async def paginate(self, request: Request, page: int, page_size: int) -> Pagination[typing.Any]:
         async with self.async_session() as session:
             row_count = await self.count(session)
 
@@ -110,13 +127,13 @@ class SQLADataSource(DataSource):
             stmt = self._stmt.limit(page_size).offset(offset)
             result = await session.scalars(stmt)
             rows = result.all()
-            return Page(rows=list(rows), total_rows=row_count, page=page, page_size=page_size)
+            return Pagination(rows=list(rows), total_rows=row_count, page=page, page_size=page_size)
 
-    def _clone(self, stmt: sa.Select) -> SQLADataSource:
+    def _clone(self, stmt: sa.Select | None = None) -> SQLADataSource:
         return self.__class__(
             model_class=self.model_class,
             async_session=self.async_session,
             query=self.query,
             query_for_list=self.query_for_list,
-            _stmt=stmt,
+            _stmt=stmt if stmt is not None else self._stmt,
         )

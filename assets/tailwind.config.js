@@ -4,11 +4,9 @@ module.exports = {
         '../assets/**/*.ts',
         '../examples/**/*.html',
     ],
-    safelist: [
-        {pattern: /.*/},
-    ],
     plugins: [
         require('@tailwindcss/forms'),
-        require('@tailwindcss/aspect-ratio'),
-    ]
+        require('tailwindcss/nesting'),
+        require('@tailwindcss/typography'),
+    ],
 };

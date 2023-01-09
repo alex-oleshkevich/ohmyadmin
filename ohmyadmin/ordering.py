@@ -25,10 +25,10 @@ def get_ordering_value(request: Request, param_name: str) -> dict[str, SortingTy
 
 @dataclasses.dataclass
 class SortControl:
-    index: int
+    index: int | None
     url: URL
     show_index: bool
-    ordering: SortingType
+    ordering: SortingType | None
 
 
 class SortingHelper:

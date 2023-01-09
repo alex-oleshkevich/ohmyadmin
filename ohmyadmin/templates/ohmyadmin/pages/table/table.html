@@ -25,8 +25,9 @@
                 </div>
                 <!-- end search form -->
 
-
-                {#                {% include 'ohmyadmin/list_page/filters.html' %}#}
+                <div id="filter-bar" hx-get hx-trigger="filters-reload" hx-target="this">
+                    {% include 'ohmyadmin/pages/table/_filters.html' %}
+                </div>
             </div>
             <!-- end search and actions -->
             {#            {% include 'ohmyadmin/list_page/batch_actions.html' %}#}

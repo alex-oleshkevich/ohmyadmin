@@ -25,7 +25,7 @@ def get_page_size_value(request: Request, param_name: str, max_size: int, defaul
     return min(page_size, max_size)
 
 
-class Page(typing.Generic[M]):
+class Pagination(typing.Generic[M]):
     def __init__(self, rows: typing.Sequence[M], total_rows: int, page: int, page_size: int) -> None:
         self.rows = rows
         self.total_rows = total_rows

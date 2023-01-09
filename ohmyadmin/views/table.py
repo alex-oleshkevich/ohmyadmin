@@ -1,11 +1,10 @@
 import typing
-
 from markupsafe import Markup
 from starlette.requests import Request
 
 from ohmyadmin.formatters import DataFormatter, ToStringFormatter
 from ohmyadmin.ordering import SortingHelper
-from ohmyadmin.pagination import Page
+from ohmyadmin.pagination import Pagination
 from ohmyadmin.shortcuts import render_to_string
 from ohmyadmin.views.base import IndexView
 
@@ -33,20 +32,30 @@ class TableColumn:
         return getattr(obj, self.name, 'undefined')
 
     def format_value(self, request: Request, value: typing.Any) -> str:
-        return self.formatter.format(request, value)
+        return self.formatter(request, value)
 
     def render(self, request: Request, obj: typing.Any) -> str:
         value = self.get_value(obj)
         display_value = self.format_value(request, value)
-        return request.state.admin.render_to_string(request, 'ohmyadmin/views/table/table_cell.html', {
-            'column': self, 'value': display_value,
-        })
+        return request.state.admin.render_to_string(
+            request,
+            'ohmyadmin/views/table/table_cell.html',
+            {
+                'column': self,
+                'value': display_value,
+            },
+        )
 
     def render_head_cell(self, request: Request) -> str:
         sorting: SortingHelper = request.state.table_sorting
-        return request.state.admin.render_to_string(request, 'ohmyadmin/views/table/table_head_cell.html', {
-            'column': self, 'sorting': sorting,
-        })
+        return request.state.admin.render_to_string(
+            request,
+            'ohmyadmin/views/table/table_head_cell.html',
+            {
+                'column': self,
+                'sorting': sorting,
+            },
+        )
 
 
 class TableView(IndexView):
@@ -54,8 +63,15 @@ class TableView(IndexView):
         self.columns = columns
         self.query_param = query_param
 
-    def render(self, request: Request, objects: Page[typing.Any]) -> str:
+    def render(self, request: Request, objects: Pagination[typing.Any]) -> str:
         request.state.table_sorting = SortingHelper(request, self.query_param)
-        return Markup(render_to_string(request, 'ohmyadmin/views/table/table.html', {
-            'table': self, 'objects': objects,
-        }))
+        return Markup(
+            render_to_string(
+                request,
+                'ohmyadmin/views/table/table.html',
+                {
+                    'table': self,
+                    'objects': objects,
+                },
+            )
+        )

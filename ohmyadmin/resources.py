@@ -1,6 +1,5 @@
 import functools
 import typing
-
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
 from starlette.routing import BaseRoute, Mount, Route, Router
@@ -8,9 +7,8 @@ from starlette_babel import gettext_lazy as _
 from starlette_flash import flash
 
 from ohmyadmin.datasource.base import DataSource
-from ohmyadmin.ordering import get_ordering_value
 from ohmyadmin.pages.base import BasePage
-from ohmyadmin.pagination import get_page_size_value, get_page_value, Page
+from ohmyadmin.pagination import Pagination
 from ohmyadmin.views.base import IndexView
 from ohmyadmin.views.table import TableView
 
@@ -34,26 +32,11 @@ class Resource(BasePage, Router):
         super().__init__(routes=self.get_routes())
 
     async def index_view(self, request: Request) -> Response:
-        page_number = get_page_value(request, self.page_param)
-        page_size = get_page_size_value(request, self.page_size_param, self.max_page_size, self.page_size)
-        search_term = get_search_value(request, self.search_param)
-        ordering = get_ordering_value(request, self.ordering_param)
-
-        # query = self.datasource.clone()
-        # if search_term:
-        #     query = query.apply_search(search_term)
-        # if ordering:
-        #     query = query.apply_ordering(ordering)
-        # objects = await query.paginate(request, page=page_number, page_size=page_size)
-
-        objects = Page([], 0, 1, 25)
-        view = self.index_view_class()
-        view_content = view.render(request, objects)
         context = {
             'resource': self,
-            'objects': objects,
+            'objects': Pagination([], 1, 1, 1),
             'page_url': functools.partial(self.page_url, request),
-            'view_content': view_content,
+            'view_content': '',
             'page_title': self.label_plural,
         }
         return self.render_to_response(request, 'ohmyadmin/resources/index.html', context)
