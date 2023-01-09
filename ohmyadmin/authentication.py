@@ -56,7 +56,7 @@ class BaseAuthPolicy(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def load_user(self, request: Request, user_id: str) -> BaseUser | None:
+    async def load_user(self, conn: HTTPConnection, user_id: str) -> BaseUser | None:
         ...
 
     def login(self, request: Request, user: BaseUser) -> None:
@@ -83,15 +83,15 @@ class AnonymousAuthPolicy(BaseAuthPolicy):
     async def authenticate(self, request: Request, identity: str, password: str) -> BaseUser | None:
         return None
 
-    async def load_user(self, request: Request, user_id: str) -> BaseUser | None:
+    async def load_user(self, conn: HTTPConnection, user_id: str) -> BaseUser | None:
         return AnonymousUser()
 
 
 class SessionAuthBackend(AuthenticationBackend):
-    async def authenticate(self, request: Request) -> tuple[AuthCredentials, BaseUser] | None:
-        auth_policy: BaseAuthPolicy = request.state.admin.auth_policy
-        user_id = request.session.get(SESSION_KEY, '')
-        if user_id and (user := await auth_policy.load_user(request, user_id)):
+    async def authenticate(self, conn: HTTPConnection) -> tuple[AuthCredentials, BaseUser] | None:
+        auth_policy: BaseAuthPolicy = conn.state.admin.auth_policy
+        user_id = conn.session.get(SESSION_KEY, '')
+        if user_id and (user := await auth_policy.load_user(conn, user_id)):
             return AuthCredentials(), user
         return AuthCredentials([]), UnauthenticatedUser()
 

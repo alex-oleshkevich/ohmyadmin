@@ -71,7 +71,8 @@ class OhMyAdmin(Router):
         return request.url_for(path_name, **path_params)
 
     def static_url(self, request: Request, path: str) -> str:
-        return request.url_for('ohmyadmin.static', path=path) + f'?{START_TIME}'
+        _suffix = time.time() if request.app.debug else START_TIME
+        return request.url_for('ohmyadmin.static', path=path) + f'?{_suffix}'
 
     def media_url(self, request: Request, path: str) -> str:
         if path.startswith('http://') or path.startswith('https://'):

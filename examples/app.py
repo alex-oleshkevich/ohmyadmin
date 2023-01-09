@@ -1,9 +1,8 @@
 import pathlib
-
 import sqlalchemy as sa
 from async_storages import FileStorage, LocalStorage
 from passlib.handlers.pbkdf2 import pbkdf2_sha256
-from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 from starception import install_error_handler
 from starlette.applications import Starlette
@@ -49,7 +48,7 @@ class AuthPolicy(BaseAuthPolicy):
                 return user
             return None
 
-    async def load_user(self, request: Request, user_id: str) -> BaseUser | None:
+    async def load_user(self, conn: Request, user_id: str) -> BaseUser | None:
         async with async_session() as session:
             stmt = sa.select(User).where(User.id == int(user_id))
             result = await session.scalars(stmt)

@@ -1,7 +1,7 @@
 {% extends 'ohmyadmin/app.html' %}
 
 {% block content %}
-    <div class="space-y-6" hx-target="#data">
+    <div class="space-y-6" hx-target="#data" hx-indicator="#load-indicator">
         <div class="flex items-center justify-between">
             <!-- search and actions -->
             <div class="flex items-center gap-3 flex-1 flex-wrap">
@@ -32,8 +32,15 @@
             {#            {% include 'ohmyadmin/list_page/batch_actions.html' %}#}
         </div>
 
-        <div id="data">
-            {% include 'ohmyadmin/pages/table/_content.html' %}
+        <div>
+            <div class="-mb-[1px] htmx-indicator" id="load-indicator">
+                <div class="progress progress-indeterminate progress-square progress-xs">
+                    <div class="progress-bar"></div>
+                </div>
+            </div>
+            <div id="data">
+                {% include 'ohmyadmin/pages/table/_content.html' %}
+            </div>
         </div>
     </div>
 {% endblock %}

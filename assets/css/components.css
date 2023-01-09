@@ -359,12 +359,31 @@
         @apply relative flex h-2 w-full overflow-hidden rounded-full bg-slate-200;
     }
 
+    .progress.progress-square {
+        @apply rounded-none;
+    }
+
+    .progress.progress-indeterminate {
+        position: relative;
+    }
+
+    .progress.progress-indeterminate .progress-bar {
+        width: 50%;
+        left: -50%;
+        position: absolute;
+        animation: indeterminate-progress 1.85s ease-in 0.5s infinite;
+    }
+
     .progress-bar {
         @apply flex h-full bg-blue-500;
     }
 
+    .progress.progress-xxs {
+        height: 1px;
+    }
+
     .progress.progress-xs {
-        @apply h-px;
+        height: 2px;
     }
 
     .progress.progress-sm {
@@ -373,6 +392,16 @@
 
     .progress.progress-lg {
         @apply h-4;
+    }
+
+    @keyframes indeterminate-progress {
+        0% {
+            transform: translateX(0);
+            width: 50%;
+        }
+        to {
+            transform: translateX(400%)
+        }
     }
 
     .tabs {

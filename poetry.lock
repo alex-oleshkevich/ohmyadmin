@@ -926,14 +926,14 @@ full = ["httpx (>=0.22.0)", "itsdangerous", "jinja2", "python-multipart", "pyyam
 
 [[package]]
 name = "starlette-babel"
-version = "0.2.3"
+version = "0.2.4"
 description = "Locale support for Starlette"
 category = "main"
 optional = false
 python-versions = ">=3.10,<4.0"
 files = [
-    {file = "starlette_babel-0.2.3-py3-none-any.whl", hash = "sha256:7cdd4ef47742978488734222d805255d101afd75ea16d758c998f82d9d9e09cc"},
-    {file = "starlette_babel-0.2.3.tar.gz", hash = "sha256:062e6651ed80bd82ccae83e41bba600195707d53a0d9d6d9b30edbdb5a75d7bf"},
+    {file = "starlette_babel-0.2.4-py3-none-any.whl", hash = "sha256:6b672a46c95f089e12c16dd82b5551d9fba28f77838acb2717f500b452b10463"},
+    {file = "starlette_babel-0.2.4.tar.gz", hash = "sha256:2e5c7d0f18c045a841835f6772a55aa0220ee22cc8ce83c946806ca2f255020b"},
 ]
 
 [package.dependencies]
