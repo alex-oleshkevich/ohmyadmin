@@ -91,6 +91,7 @@ class UserPage(TablePage):
     ]
     filters = [
         StringFilter('first_name'),
+        StringFilter('last_name'),
     ]
 
 

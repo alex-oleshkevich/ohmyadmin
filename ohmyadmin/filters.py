@@ -21,13 +21,12 @@ class BaseFilter(abc.ABC, typing.Generic[_FT]):
     form_class: type[_FT] = wtforms.Form
     form: _FT
 
-    def __new__(cls, *args: typing.Any, **kwargs: typing.Any) -> UnboundFilter | BaseFilter:
-        if hasattr(cls, '__unbound'):
+    def __new__(cls, *args: typing.Any, **kwargs: typing.Any) -> UnboundFilter | BaseFilter:  # type: ignore[misc]
+        if '_create' in kwargs:
             return super().__new__(cls)
-        setattr(cls, '__unbound', True)
         return UnboundFilter(cls, args, kwargs)
 
-    def __init__(self, query_param: str, label: str = '') -> None:
+    def __init__(self, query_param: str, label: str = '', **kwargs: typing.Any) -> None:
         self.query_param = query_param
         self.label = label or snake_to_sentence(self.query_param.title())
         self.form = self.form_class(prefix=self.query_param)
@@ -51,7 +50,9 @@ class BaseFilter(abc.ABC, typing.Generic[_FT]):
         return render_to_string(request, self.template, {'filter': self, 'form': self.form})
 
     def render_indicator(self, request: Request) -> str:
-        clear_url = request.url.remove_query_params([form_field.name for form_field in self.form])
+        clear_url = request.url.remove_query_params([form_field.name for form_field in self.form]).include_query_params(
+            clear=1
+        )
         indicator = self.get_indicator_context(self.form.data)
         return render_to_string(
             request,
@@ -71,7 +72,7 @@ class UnboundFilter:
     kwargs: dict[str, typing.Any]
 
     async def create(self, request: Request) -> BaseFilter:
-        instance = self.filter_class(*self.args, **self.kwargs)
+        instance = self.filter_class(*self.args, _create=True, **self.kwargs)
         await instance.prepare(request)
         return instance
 

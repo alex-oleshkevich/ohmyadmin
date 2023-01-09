@@ -72,7 +72,18 @@ class TablePage(Page):
         view_content = view.render(request, objects)
 
         if request.headers.get('hx-target', '') == 'filter-bar':
-            return self.render_to_response(request, 'ohmyadmin/pages/table/_filters.html', {'filters': filters})
+            headers = {}
+            if 'clear' in request.query_params:
+                headers = {
+                    'hx-push-url': str(request.url.remove_query_params('clear')),
+                    'hx-trigger-after-settle': json.dumps({'data-reload': ''}),
+                }
+            return self.render_to_response(
+                request,
+                'ohmyadmin/pages/table/_filters.html',
+                {'filters': filters},
+                headers=headers,
+            )
 
         if request.headers.get('hx-target', '') == 'data':
             return self.render_to_response(
@@ -80,8 +91,8 @@ class TablePage(Page):
                 'ohmyadmin/pages/table/_content.html',
                 {
                     'request': request,
-                    'view_content': view_content,
                     'objects': objects,
+                    'view_content': view_content,
                 },
                 headers={
                     'hx-push-url': str(request.url),

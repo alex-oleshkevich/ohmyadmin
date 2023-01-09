@@ -9,15 +9,15 @@
                 <!-- search form -->
                 <div class="w-96">
                     {% if page.searchable %}
-                        <form method="get"
+                        <form method="get" role="search"
                               action="{{ request.url }}"
                               hx-get="{{ request.url.remove_query_params(page.search_param) }}"
                         >
-                            <input type="search"
+                            <input type="search" incremental
                                    value="{{ search_term }}"
                                    name="{{ page.search_param }}"
                                    hx-get="{{ request.url.remove_query_params(page.search_param) }}"
-                                   hx-trigger="keyup changed delay:300ms"
+                                   hx-trigger="keyup changed delay:300ms, search delay:300ms"
                                    placeholder="{{ page.search_placeholder }}"
                             >
                         </form>
@@ -39,7 +39,7 @@
                     <div class="progress-bar"></div>
                 </div>
             </div>
-            <div id="data">
+            <div id="data" hx-get hx-trigger="data-reload from:body" hx-target="this">
                 {% include 'ohmyadmin/pages/table/_content.html' %}
             </div>
         </div>
