@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import abc
+import datetime
 import decimal
 import enum
 import typing
@@ -56,6 +57,10 @@ class DataSource(abc.ABC):
     def apply_number_filter(
         self, field: str, operation: NumberOperation, value: int | float | decimal.Decimal
     ) -> DataSource:
+        ...
+
+    @abc.abstractmethod
+    def apply_date_filter(self, field: str, value: datetime.date) -> DataSource:
         ...
 
     @abc.abstractmethod

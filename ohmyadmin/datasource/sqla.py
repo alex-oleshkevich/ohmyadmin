@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import decimal
 import sqlalchemy as sa
 import typing
@@ -131,6 +132,10 @@ class SQLADataSource(DataSource):
 
         filter_ = mapping[operation]
         return self._clone(filter_(self._stmt))
+
+    def apply_date_filter(self, field: str, value: datetime.date) -> DataSource:
+        column = getattr(self.model_class, field)
+        return self._clone(self._stmt.where(column == value))
 
     async def count(self, session: AsyncSession) -> int:
         stmt = sa.select(sa.func.count('*')).select_from(self._stmt)  # type: ignore[arg-type]

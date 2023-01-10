@@ -146,3 +146,26 @@ class DecimalFilterForm(wtforms.Form):
 
 class DecimalFilter(IntegerFilter):
     form_class = DecimalFilterForm
+
+
+class DateFilterForm(wtforms.Form):
+    query = wtforms.DateField()
+
+
+class DateFilter(BaseFilter[DateFilterForm]):
+    form_class = DateFilterForm
+    indicator_template = 'ohmyadmin/filters/date_indicator.html'
+
+    def apply(self, request: Request, query: DataSource) -> DataSource:
+        value = self.form.data['query']
+        if not value:
+            return query
+        return query.apply_date_filter(self.query_param, value)
+
+    def is_active(self, request: Request) -> bool:
+        return bool(self.form.data['query'])
+
+    def get_indicator_context(self, value: dict[str, typing.Any]) -> dict[str, typing.Any]:
+        return {
+            'value': value['query'],
+        }
