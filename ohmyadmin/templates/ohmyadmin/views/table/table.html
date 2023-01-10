@@ -2,7 +2,7 @@
     <thead>
     <tr>
         {% for column in table.columns %}
-            <th>
+            <th class="whitespace-nowrap">
                 {{ column.render_head_cell(request) }}
             </th>
         {% endfor %}
