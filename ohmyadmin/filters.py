@@ -6,9 +6,8 @@ import abc
 import typing
 import wtforms
 from starlette.requests import Request
-from starlette_babel import gettext_lazy as _
 
-from ohmyadmin.datasource.base import DataSource
+from ohmyadmin.datasource.base import DataSource, NumberOperation, StringOperation
 from ohmyadmin.helpers import snake_to_sentence
 from ohmyadmin.shortcuts import render_to_string
 
@@ -78,33 +77,54 @@ class UnboundFilter:
 
 
 class StringFilterForm(wtforms.Form):
-    operation = wtforms.SelectField(
-        choices=(
-            ('exact', _('same as', domain='ohmyadmin')),
-            ('startswith', _('starts with', domain='ohmyadmin')),
-            ('endswith', _('ends with', domain='ohmyadmin')),
-            ('contains', _('contains', domain='ohmyadmin')),
-            ('pattern', _('matches', domain='ohmyadmin')),
-        )
-    )
+    operation = wtforms.SelectField(choices=StringOperation.choices())
     query = wtforms.StringField()
 
 
 class StringFilter(BaseFilter[StringFilterForm]):
     form_class = StringFilterForm
-    indicator_template = 'ohmyadmin/filters/string_indicator.html'
+    indicator_template = 'ohmyadmin/filters/enum_indicator.html'
 
     def apply(self, request: Request, query: DataSource) -> DataSource:
         operation = self.form.data['operation']
+        if not operation:
+            return query
+
         value = self.form.data['query']
-        return query.apply_string_filter(self.query_param, operation, value)
+        return query.apply_string_filter(self.query_param, StringOperation[operation], value)
 
     def is_active(self, request: Request) -> bool:
         return bool(self.form.data['query'])
 
     def get_indicator_context(self, value: dict[str, typing.Any]) -> dict[str, typing.Any]:
-        operations_by_key: dict[str, str] = {x[0]: x[1] for x in self.form.operation.choices}
         return {
-            'operation': operations_by_key[value['operation']],
+            'operation': StringOperation[value['operation']],
+            'value': value['query'],
+        }
+
+
+class IntegerFilterForm(wtforms.Form):
+    operation = wtforms.SelectField(choices=NumberOperation.choices())
+    query = wtforms.IntegerField()
+
+
+class IntegerFilter(BaseFilter[IntegerFilterForm]):
+    form_class = IntegerFilterForm
+    indicator_template = 'ohmyadmin/filters/enum_indicator.html'
+
+    def apply(self, request: Request, query: DataSource) -> DataSource:
+        operation = self.form.data['operation']
+        if not operation:
+            return query
+        operation = NumberOperation[operation]
+        value = self.form.data['query']
+        return query.apply_integer_filter(self.query_param, operation, value)
+
+    def is_active(self, request: Request) -> bool:
+        return bool(self.form.data['query'])
+
+    def get_indicator_context(self, value: dict[str, typing.Any]) -> dict[str, typing.Any]:
+        return {
+            'operation': NumberOperation[value['operation']],
             'value': value['query'],
         }

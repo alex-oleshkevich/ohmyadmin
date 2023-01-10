@@ -1,14 +1,16 @@
 import datetime
 import typing
-
 from starlette.requests import Request
 from starlette_babel import gettext_lazy as _
 
 from ohmyadmin.shortcuts import render_to_string
 
+TextAlign = typing.Literal['left', 'right', 'center']
+
 
 class DataFormatter(typing.Protocol):
-    def __call__(self, request: Request, value: typing.Any) -> str: ...
+    def __call__(self, request: Request, value: typing.Any) -> str:
+        ...
 
 
 class BaseFormatter:
@@ -50,7 +52,8 @@ class BoolFormatter(BaseFormatter):
     template: str = 'ohmyadmin/formatters/bool.html'
 
     def __init__(
-        self, as_text: bool = False,
+        self,
+        as_text: bool = False,
         true_text: str = _('Yes', domain='ohmyadmin'),
         false_text: str = _('No', domain='ohmyadmin'),
     ) -> None:
@@ -61,3 +64,12 @@ class BoolFormatter(BaseFormatter):
 
 class AvatarFormatter(BaseFormatter):
     template: str = 'ohmyadmin/formatters/avatar.html'
+
+
+class NumberFormatter(BaseFormatter):
+    template: str = 'ohmyadmin/formatters/number.html'
+
+    def __init__(self, *, prefix: str = '', suffix: str = '', align: TextAlign = 'right') -> None:
+        self.prefix = prefix
+        self.suffix = suffix
+        self.align = align

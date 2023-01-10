@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.sql.elements import NamedColumn
 from starlette.requests import Request
 
-from ohmyadmin.datasource.base import DataSource
+from ohmyadmin.datasource.base import DataSource, NumberOperation, StringOperation
 from ohmyadmin.ordering import SortingType
 from ohmyadmin.pagination import Pagination
 
@@ -22,11 +22,13 @@ def get_column_properties(entity_class: typing.Any, prop_names: typing.Sequence[
     props: dict[str, orm.ColumnProperty] = {}
     for name in prop_names:
         if name in mapper.all_orm_descriptors:
-            props[name] = mapper.all_orm_descriptors[name].property
+            props[name] = mapper.all_orm_descriptors[name].property  # type: ignore[attr-defined]
         elif '.' in name:
             related_attr, related_column = name.split('.')
             if related_property := mapper.all_orm_descriptors.get(related_attr):
-                props[name] = related_property.entity.all_orm_descriptors[related_column].property
+                props[name] = related_property.entity.all_orm_descriptors[  # type: ignore[attr-defined]
+                    related_column
+                ].property  # type: ignore[attr-defined]
     return props
 
 
@@ -94,16 +96,32 @@ class SQLADataSource(DataSource):
                 continue
         return self._clone(stmt)
 
-    def apply_string_filter(self, field: str, operation: str, value: str) -> DataSource:
+    def apply_string_filter(self, field: str, operation: StringOperation, value: str) -> DataSource:
         column = getattr(self.model_class, field)
         expr: sa.sql.ColumnElement = sa.func.lower(column)
 
         mapping = {
-            'exact': lambda stmt: stmt.where(expr == value),
-            'startswith': lambda stmt: stmt.where(expr.startswith(value)),
-            'endswith': lambda stmt: stmt.where(expr.endswith(value)),
-            'contains': lambda stmt: stmt.where(expr.ilike(f'%{value}%')),
-            'pattern': lambda stmt: stmt.where(expr.regexp_match(value)),
+            StringOperation.exact: lambda stmt: stmt.where(expr == value),
+            StringOperation.startswith: lambda stmt: stmt.where(expr.startswith(value)),
+            StringOperation.endswith: lambda stmt: stmt.where(expr.endswith(value)),
+            StringOperation.contains: lambda stmt: stmt.where(expr.ilike(f'%{value}%')),
+            StringOperation.pattern: lambda stmt: stmt.where(expr.regexp_match(value)),
+        }
+        if operation not in mapping:
+            return self._clone()
+
+        filter_ = mapping[operation]
+        return self._clone(filter_(self._stmt))
+
+    def apply_integer_filter(self, field: str, operation: NumberOperation, value: int) -> DataSource:
+        column = getattr(self.model_class, field)
+        number_column = sa.sql.cast(column, sa.Integer)
+        mapping = {
+            NumberOperation.eq: lambda stmt: stmt.where(number_column == value),
+            NumberOperation.gt: lambda stmt: stmt.where(number_column > value),
+            NumberOperation.gte: lambda stmt: stmt.where(number_column >= value),
+            NumberOperation.lt: lambda stmt: stmt.where(number_column < value),
+            NumberOperation.lte: lambda stmt: stmt.where(number_column <= value),
         }
         if operation not in mapping:
             return self._clone()
@@ -112,7 +130,7 @@ class SQLADataSource(DataSource):
         return self._clone(filter_(self._stmt))
 
     async def count(self, session: AsyncSession) -> int:
-        stmt = sa.select(sa.func.count('*')).select_from(self._stmt)
+        stmt = sa.select(sa.func.count('*')).select_from(self._stmt)  # type: ignore[arg-type]
         result = await session.scalars(stmt)
         return result.one()
 

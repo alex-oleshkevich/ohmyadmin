@@ -14,12 +14,12 @@ from starlette.responses import Response
 from starlette.routing import Mount, Route
 from starlette_flash import flash
 
-from examples.models import User
+from examples.models import Product, User
 from ohmyadmin.app import OhMyAdmin
 from ohmyadmin.authentication import BaseAuthPolicy, UserMenu
 from ohmyadmin.datasource.sqla import SQLADataSource
-from ohmyadmin.filters import StringFilter
-from ohmyadmin.formatters import AvatarFormatter, BoolFormatter, DateFormatter
+from ohmyadmin.filters import IntegerFilter, StringFilter
+from ohmyadmin.formatters import AvatarFormatter, BoolFormatter, DateFormatter, NumberFormatter
 from ohmyadmin.pages.base import Page
 from ohmyadmin.pages.table import TablePage
 from ohmyadmin.resources import Resource, TableView
@@ -95,6 +95,24 @@ class UserPage(TablePage):
     ]
 
 
+class ProductPage(TablePage):
+    label = 'Product'
+    datasource = SQLADataSource(Product, async_session)
+    columns = [
+        TableColumn('name'),
+        TableColumn('price', sortable=True, formatter=NumberFormatter(suffix='USD')),
+        TableColumn('sku', sortable=True),
+        TableColumn('barcode', searchable=True),
+        TableColumn('visible', sortable=True, formatter=BoolFormatter(as_text=True)),
+        TableColumn('availability', sortable=True, formatter=DateFormatter()),
+        TableColumn('created_at', sortable=True, formatter=DateFormatter()),
+    ]
+    filters = [
+        StringFilter('name'),
+        IntegerFilter('price'),
+    ]
+
+
 class ProfilePage(Page):
     icon = 'user'
 
@@ -113,6 +131,7 @@ admin = OhMyAdmin(
     pages=[
         UsersResource(),
         UserPage(),
+        ProductPage(),
         SettingsPage(),
         ProfilePage(),
     ],
