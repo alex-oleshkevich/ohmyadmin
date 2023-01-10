@@ -18,7 +18,7 @@ from examples.models import Product, User
 from ohmyadmin.app import OhMyAdmin
 from ohmyadmin.authentication import BaseAuthPolicy, UserMenu
 from ohmyadmin.datasource.sqla import SQLADataSource
-from ohmyadmin.filters import IntegerFilter, StringFilter
+from ohmyadmin.filters import DecimalFilter, FloatFilter, IntegerFilter, StringFilter
 from ohmyadmin.formatters import AvatarFormatter, BoolFormatter, DateFormatter, NumberFormatter
 from ohmyadmin.pages.base import Page
 from ohmyadmin.pages.table import TablePage
@@ -101,6 +101,7 @@ class ProductPage(TablePage):
     columns = [
         TableColumn('name'),
         TableColumn('price', sortable=True, formatter=NumberFormatter(suffix='USD')),
+        TableColumn('compare_at_price', sortable=True, formatter=NumberFormatter(suffix='USD')),
         TableColumn('sku', sortable=True),
         TableColumn('barcode', searchable=True),
         TableColumn('visible', sortable=True, formatter=BoolFormatter(as_text=True)),
@@ -109,7 +110,9 @@ class ProductPage(TablePage):
     ]
     filters = [
         StringFilter('name'),
-        IntegerFilter('price'),
+        DecimalFilter('price'),
+        FloatFilter('compare_at_price'),
+        IntegerFilter('sku'),
     ]
 
 

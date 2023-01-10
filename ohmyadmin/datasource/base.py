@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import abc
+import decimal
 import enum
 import typing
 from starlette.requests import Request
@@ -52,7 +53,9 @@ class DataSource(abc.ABC):
         ...
 
     @abc.abstractmethod
-    def apply_integer_filter(self, field: str, operation: NumberOperation, value: int) -> DataSource:
+    def apply_number_filter(
+        self, field: str, operation: NumberOperation, value: int | float | decimal.Decimal
+    ) -> DataSource:
         ...
 
     @abc.abstractmethod

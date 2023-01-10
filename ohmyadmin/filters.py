@@ -118,7 +118,7 @@ class IntegerFilter(BaseFilter[IntegerFilterForm]):
             return query
         operation = NumberOperation[operation]
         value = self.form.data['query']
-        return query.apply_integer_filter(self.query_param, operation, value)
+        return query.apply_number_filter(self.query_param, operation, value)
 
     def is_active(self, request: Request) -> bool:
         return bool(self.form.data['query'])
@@ -128,3 +128,21 @@ class IntegerFilter(BaseFilter[IntegerFilterForm]):
             'operation': NumberOperation[value['operation']],
             'value': value['query'],
         }
+
+
+class FloatFilterForm(wtforms.Form):
+    operation = wtforms.SelectField(choices=NumberOperation.choices())
+    query = wtforms.IntegerField()
+
+
+class FloatFilter(IntegerFilter):
+    form_class = FloatFilterForm
+
+
+class DecimalFilterForm(wtforms.Form):
+    operation = wtforms.SelectField(choices=NumberOperation.choices())
+    query = wtforms.IntegerField()
+
+
+class DecimalFilter(IntegerFilter):
+    form_class = DecimalFilterForm

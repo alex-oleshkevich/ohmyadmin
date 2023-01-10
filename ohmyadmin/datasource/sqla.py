@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import decimal
 import sqlalchemy as sa
 import typing
 from sqlalchemy import orm
@@ -113,7 +114,9 @@ class SQLADataSource(DataSource):
         filter_ = mapping[operation]
         return self._clone(filter_(self._stmt))
 
-    def apply_integer_filter(self, field: str, operation: NumberOperation, value: int) -> DataSource:
+    def apply_number_filter(
+        self, field: str, operation: NumberOperation, value: int | float | decimal.Decimal
+    ) -> DataSource:
         column = getattr(self.model_class, field)
         number_column = sa.sql.cast(column, sa.Integer)
         mapping = {
