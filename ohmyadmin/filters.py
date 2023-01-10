@@ -91,7 +91,7 @@ class UnboundFilter:
 
 class StringFilterForm(wtforms.Form):
     operation = wtforms.SelectField(choices=StringOperation.choices())
-    query = wtforms.StringField()
+    query = wtforms.StringField(validators=[wtforms.validators.data_required()])
 
 
 class StringFilter(BaseFilter[StringFilterForm]):
@@ -118,7 +118,7 @@ class StringFilter(BaseFilter[StringFilterForm]):
 
 class IntegerFilterForm(wtforms.Form):
     operation = wtforms.SelectField(choices=NumberOperation.choices())
-    query = wtforms.IntegerField()
+    query = wtforms.StringField(validators=[wtforms.validators.data_required()])
 
 
 class IntegerFilter(BaseFilter[IntegerFilterForm]):
@@ -145,7 +145,7 @@ class IntegerFilter(BaseFilter[IntegerFilterForm]):
 
 class FloatFilterForm(wtforms.Form):
     operation = wtforms.SelectField(choices=NumberOperation.choices())
-    query = wtforms.IntegerField()
+    query = wtforms.StringField(validators=[wtforms.validators.data_required()])
 
 
 class FloatFilter(IntegerFilter):
@@ -154,7 +154,7 @@ class FloatFilter(IntegerFilter):
 
 class DecimalFilterForm(wtforms.Form):
     operation = wtforms.SelectField(choices=NumberOperation.choices())
-    query = wtforms.IntegerField()
+    query = wtforms.StringField(validators=[wtforms.validators.data_required()])
 
 
 class DecimalFilter(IntegerFilter):
@@ -209,7 +209,9 @@ class DateRangeFilter(BaseFilter[DateRangeFilterForm]):
 
 
 class ChoiceFilterForm(wtforms.Form):
-    choice = wtforms.SelectField(label=_('Choices', domain='ohmyadmin'))
+    choice = wtforms.SelectField(
+        label=_('Choices', domain='ohmyadmin'), validators=[wtforms.validators.data_required()]
+    )
 
 
 class ChoiceFilter(BaseFilter[ChoiceFilterForm]):
@@ -253,7 +255,9 @@ class ChoiceFilter(BaseFilter[ChoiceFilterForm]):
 
 
 class MultiChoiceFilterForm(wtforms.Form):
-    choice = wtforms.SelectMultipleField(label=_('Select multiple', domain='ohmyadmin'))
+    choice = wtforms.SelectMultipleField(
+        label=_('Select multiple', domain='ohmyadmin'), validators=[wtforms.validators.data_required()]
+    )
 
 
 class MultiChoiceFilter(BaseFilter[MultiChoiceFilterForm]):

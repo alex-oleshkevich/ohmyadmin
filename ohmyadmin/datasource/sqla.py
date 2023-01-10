@@ -38,7 +38,7 @@ def create_search_token(column: NamedColumn, search_query: str) -> sa.sql.Column
     string_column = sa.cast(column, sa.Text)
     if search_query.startswith('^'):
         search_token = f'{search_query[1:].lower()}%'
-        return string_column.ilike(search_token)
+        return string_column.startswith(search_token)
 
     if search_query.startswith('='):
         search_token = f'{search_query[1:].lower()}'
@@ -47,6 +47,10 @@ def create_search_token(column: NamedColumn, search_query: str) -> sa.sql.Column
     if search_query.startswith('@'):
         search_token = f'{search_query[1:].lower()}'
         return string_column.regexp_match(search_token)
+
+    if search_query.startswith('$'):
+        search_token = f'{search_query[1:].lower()}'
+        return string_column.endswith(search_token)
 
     search_token = f'%{search_query.lower()}%'
     return string_column.ilike(search_token)
