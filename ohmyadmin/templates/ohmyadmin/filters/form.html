@@ -28,8 +28,5 @@
                 {{ _('Apply', domain='ohmyadmin') }}
             </button>
         </div>
-        {% for key, value in request.query_params.items() %}
-            <input type="hidden" name="{{ key }}" value="{{ value }}">
-        {% endfor %}
     </form>
 </div>
