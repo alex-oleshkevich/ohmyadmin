@@ -137,6 +137,17 @@ class SQLADataSource(DataSource):
         column = getattr(self.model_class, field)
         return self._clone(self._stmt.where(column == value))
 
+    def apply_date_range_filter(
+        self, field: str, before: datetime.date | None, after: datetime.date | None
+    ) -> DataSource:
+        column = getattr(self.model_class, field)
+        query = self
+        if before:
+            query = query._clone(query._stmt.where(column <= before))
+        if after:
+            query = query._clone(query._stmt.where(column >= after))
+        return query
+
     async def count(self, session: AsyncSession) -> int:
         stmt = sa.select(sa.func.count('*')).select_from(self._stmt)  # type: ignore[arg-type]
         result = await session.scalars(stmt)
@@ -163,3 +174,6 @@ class SQLADataSource(DataSource):
             query_for_list=self.query_for_list,
             _stmt=stmt if stmt is not None else self._stmt,
         )
+
+    def __repr__(self) -> str:
+        return repr(self._stmt)

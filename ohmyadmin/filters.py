@@ -169,3 +169,27 @@ class DateFilter(BaseFilter[DateFilterForm]):
         return {
             'value': value['query'],
         }
+
+
+class DateRangeFilterForm(wtforms.Form):
+    after = wtforms.DateField()
+    before = wtforms.DateField()
+
+
+class DateRangeFilter(BaseFilter[DateRangeFilterForm]):
+    form_class = DateRangeFilterForm
+    indicator_template = 'ohmyadmin/filters/date_range_indicator.html'
+
+    def apply(self, request: Request, query: DataSource) -> DataSource:
+        before = self.form.data['before']
+        after = self.form.data['after']
+        return query.apply_date_range_filter(self.query_param, before, after)
+
+    def is_active(self, request: Request) -> bool:
+        return self.form.data['before'] or self.form.data['after']
+
+    def get_indicator_context(self, value: dict[str, typing.Any]) -> dict[str, typing.Any]:
+        return {
+            'before': value['before'],
+            'after': value['after'],
+        }

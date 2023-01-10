@@ -64,6 +64,12 @@ class DataSource(abc.ABC):
         ...
 
     @abc.abstractmethod
+    def apply_date_range_filter(
+        self, field: str, before: datetime.date | None, after: datetime.date | None
+    ) -> DataSource:
+        ...
+
+    @abc.abstractmethod
     async def one(self) -> typing.Any:
         ...
 
