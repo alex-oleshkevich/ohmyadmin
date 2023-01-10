@@ -79,7 +79,7 @@
     }
 
     table td, table th {
-        @apply px-3 py-1.5;
+        @apply px-3 py-2;
     }
 
     table thead tr {
@@ -97,6 +97,10 @@
 
     table tbody td {
 
+    }
+
+    table tbody tr {
+        @apply hover:bg-gray-100;
     }
 }
 
