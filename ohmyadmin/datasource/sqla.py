@@ -148,6 +148,10 @@ class SQLADataSource(DataSource):
             query = query._clone(query._stmt.where(column >= after))
         return query
 
+    def apply_choice_filter(self, field: str, choices: list[typing.Any], coerce: typing.Callable) -> DataSource:
+        column = getattr(self.model_class, field)
+        return self._clone(self._stmt.where(column.in_(choices)))
+
     async def count(self, session: AsyncSession) -> int:
         stmt = sa.select(sa.func.count('*')).select_from(self._stmt)  # type: ignore[arg-type]
         result = await session.scalars(stmt)

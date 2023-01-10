@@ -70,6 +70,10 @@ class DataSource(abc.ABC):
         ...
 
     @abc.abstractmethod
+    def apply_choice_filter(self, field: str, choices: list[typing.Any], coerce: typing.Callable) -> DataSource:
+        ...
+
+    @abc.abstractmethod
     async def one(self) -> typing.Any:
         ...
 

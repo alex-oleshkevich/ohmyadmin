@@ -3,9 +3,14 @@ from __future__ import annotations
 import dataclasses
 
 import abc
+import decimal
+import inspect
+import logging
 import typing
 import wtforms
+from markupsafe import Markup
 from starlette.requests import Request
+from starlette_babel import gettext_lazy as _
 
 from ohmyadmin.datasource.base import DataSource, NumberOperation, StringOperation
 from ohmyadmin.helpers import snake_to_sentence
@@ -32,6 +37,10 @@ class BaseFilter(abc.ABC, typing.Generic[_FT]):
 
     async def prepare(self, request: Request) -> None:
         self.form.process(request.query_params)
+        await self.initialize(request)
+
+    async def initialize(self, request: Request) -> None:
+        pass
 
     @abc.abstractmethod
     def apply(self, request: Request, query: DataSource) -> DataSource:
@@ -52,16 +61,20 @@ class BaseFilter(abc.ABC, typing.Generic[_FT]):
         clear_url = request.url.remove_query_params([form_field.name for form_field in self.form]).include_query_params(
             clear=1
         )
-        indicator = self.get_indicator_context(self.form.data)
-        return render_to_string(
-            request,
-            self.indicator_template,
-            {
-                'filter': self,
-                'indicator': indicator,
-                'clear_url': clear_url,
-            },
-        )
+        try:
+            indicator = self.get_indicator_context(self.form.data)
+            return render_to_string(
+                request,
+                self.indicator_template,
+                {
+                    'filter': self,
+                    'indicator': indicator,
+                    'clear_url': clear_url,
+                },
+            )
+        except Exception as ex:
+            logging.exception(ex)
+            return Markup(f'Error: {ex}')
 
 
 @dataclasses.dataclass
@@ -193,3 +206,92 @@ class DateRangeFilter(BaseFilter[DateRangeFilterForm]):
             'before': value['before'],
             'after': value['after'],
         }
+
+
+class ChoiceFilterForm(wtforms.Form):
+    choice = wtforms.SelectField(label=_('Choices', domain='ohmyadmin'))
+
+
+class ChoiceFilter(BaseFilter[ChoiceFilterForm]):
+    form_class = ChoiceFilterForm
+    indicator_template = 'ohmyadmin/filters/choice_indicator.html'
+
+    def __init__(
+        self,
+        query_param: str,
+        label: str = '',
+        *,
+        choices: typing.Any,
+        coerce: type[str | int | float | decimal.Decimal] = str,
+        **kwargs: typing.Any,
+    ) -> None:
+        super().__init__(query_param, label, **kwargs)
+        self.coerce = coerce
+        self.choices = choices
+        self.form.choice.coerce = self.coerce
+
+    async def initialize(self, request: Request) -> None:
+        if inspect.iscoroutinefunction(self.choices):
+            self.form.choice.choices = await self.choices()
+        elif callable(self.choices):
+            self.form.choice.choices = self.choices()
+        else:
+            self.form.choice.choices = self.choices
+
+    def apply(self, request: Request, query: DataSource) -> DataSource:
+        choice = self.form.data['choice']
+        if not choice:
+            return query
+        return query.apply_choice_filter(self.query_param, [choice], self.coerce)
+
+    def is_active(self, request: Request) -> bool:
+        return bool(self.form.data['choice'])
+
+    def get_indicator_context(self, value: dict[str, typing.Any]) -> dict[str, typing.Any]:
+        choice = next((choice for choice in self.form.choice.choices if choice[0] == value['choice']))
+        return {'value': choice[1]}
+
+
+class MultiChoiceFilterForm(wtforms.Form):
+    choice = wtforms.SelectMultipleField(label=_('Select multiple', domain='ohmyadmin'))
+
+
+class MultiChoiceFilter(BaseFilter[MultiChoiceFilterForm]):
+    form_class = MultiChoiceFilterForm
+    indicator_template = 'ohmyadmin/filters/multi_choice_indicator.html'
+
+    def __init__(
+        self,
+        query_param: str,
+        label: str = '',
+        *,
+        choices: typing.Any,
+        coerce: type[str | int | float | decimal.Decimal] = str,
+        **kwargs: typing.Any,
+    ) -> None:
+        super().__init__(query_param, label, **kwargs)
+        self.coerce = coerce
+        self.choices = choices
+        self.form.choice.coerce = self.coerce
+
+    async def initialize(self, request: Request) -> None:
+        if inspect.iscoroutinefunction(self.choices):
+            self.form.choice.choices = await self.choices()
+        elif callable(self.choices):
+            self.form.choice.choices = self.choices()
+        else:
+            self.form.choice.choices = self.choices
+
+    def apply(self, request: Request, query: DataSource) -> DataSource:
+        choice = self.form.data['choice']
+        if not choice:
+            return query
+        return query.apply_choice_filter(self.query_param, choice, self.coerce)
+
+    def is_active(self, request: Request) -> bool:
+        return bool(self.form.data['choice'])
+
+    def get_indicator_context(self, value: dict[str, typing.Any]) -> dict[str, typing.Any]:
+        choices = (choice for choice in self.form.choice.choices if choice[0] in value['choice'])
+        values = [choice[1] for choice in choices]
+        return {'value': values}

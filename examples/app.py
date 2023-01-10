@@ -18,7 +18,16 @@ from examples.models import Product, User
 from ohmyadmin.app import OhMyAdmin
 from ohmyadmin.authentication import BaseAuthPolicy, UserMenu
 from ohmyadmin.datasource.sqla import SQLADataSource
-from ohmyadmin.filters import DateFilter, DateRangeFilter, DecimalFilter, FloatFilter, IntegerFilter, StringFilter
+from ohmyadmin.filters import (
+    ChoiceFilter,
+    DateFilter,
+    DateRangeFilter,
+    DecimalFilter,
+    FloatFilter,
+    IntegerFilter,
+    MultiChoiceFilter,
+    StringFilter,
+)
 from ohmyadmin.formatters import AvatarFormatter, BoolFormatter, DateFormatter, NumberFormatter
 from ohmyadmin.pages.base import Page
 from ohmyadmin.pages.table import TablePage
@@ -103,6 +112,7 @@ class ProductPage(TablePage):
         TableColumn('price', sortable=True, formatter=NumberFormatter(suffix='USD')),
         TableColumn('compare_at_price', sortable=True, formatter=NumberFormatter(suffix='USD')),
         TableColumn('sku', sortable=True),
+        TableColumn('quantity', sortable=True),
         TableColumn('barcode', searchable=True),
         TableColumn('visible', sortable=True, formatter=BoolFormatter(as_text=True)),
         TableColumn('availability', sortable=True, formatter=DateFormatter()),
@@ -115,6 +125,22 @@ class ProductPage(TablePage):
         IntegerFilter('sku'),
         DateFilter('created_at'),
         DateRangeFilter('created_at'),
+        ChoiceFilter(
+            'barcode',
+            label='Bar code',
+            choices=[
+                ('0686594913423', 'Code 1'),
+                ('0616403740810', 'Code 2'),
+            ],
+        ),
+        MultiChoiceFilter(
+            'quantity',
+            choices=[
+                (5, 'Five'),
+                (15, 'Fifteen'),
+            ],
+            coerce=int,
+        ),
     ]
 
 

@@ -1,0 +1,5 @@
+{% extends 'ohmyadmin/filters/base_indicator.html' %}
+
+{% block content %}
+    <span class="text-amber-700">{{ _('is', domain='ohmyadmin') }}</span> {{ indicator.value }}
+{% endblock %}
