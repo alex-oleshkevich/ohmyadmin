@@ -34,6 +34,9 @@ class ActionResponse(Response):
     def refresh_datatable(self) -> ActionResponse:
         return self.trigger('refresh-datatable')
 
+    def close_modal(self) -> ActionResponse:
+        return self.trigger('modals.close')
+
     def trigger(self, event: str, data: str | dict[str, str | float] = '') -> ActionResponse:
         payload = json.loads(self.headers.get('hx-trigger', '{}'))
         payload[event] = data

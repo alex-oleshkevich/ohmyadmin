@@ -1,14 +1,7 @@
-import { toast, ToastType } from './notifications';
+import { toast, ToastOptions } from './toasts';
+import { Events } from './events';
+import { ModalElement } from './components';
 
-export const Events = {
-    Toast: 'toast',
-    DismissModal: 'modals.dismiss',
-} as const;
-
-type ToastOptions = {
-    message: string,
-    category: ToastType,
-}
 
 function onToastEvent(e: Event | CustomEvent<ToastOptions>) {
     if (e instanceof CustomEvent) {
@@ -41,3 +34,12 @@ function onHTMXResponseError(e: CustomEvent<HtmxErrorResponseType> | Event) {
 }
 
 document.body.addEventListener('htmx:responseError', onHTMXResponseError);
+
+
+function popModal() {
+    const topMostModal: ModalElement | null = document.querySelector('#modals [data-modal-wrapper]:first-child');
+    if (!topMostModal) return;
+    topMostModal.close();
+}
+
+document.addEventListener(Events.ModalClose, popModal);

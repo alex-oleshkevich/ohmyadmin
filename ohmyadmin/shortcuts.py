@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import typing
+
 from starlette.requests import HTTPConnection, Request
+from starlette.responses import Response
 
 if typing.TYPE_CHECKING:
     from ohmyadmin.app import OhMyAdmin
@@ -17,3 +19,11 @@ def render_to_string(
     context: typing.Mapping[str, typing.Any] | None = None,
 ) -> str:
     return request.state.admin.render_to_string(request, template_name, context)
+
+
+def render_to_response(
+    request: Request,
+    template_name: str,
+    context: typing.Mapping[str, typing.Any] | None = None,
+) -> Response:
+    return request.state.admin.render_to_response(request, template_name, context)

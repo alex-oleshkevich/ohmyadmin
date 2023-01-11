@@ -92,6 +92,7 @@ class Page(BasePage):
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         request = Request(scope, receive, send)
+        request.state.page = self
         response = await self.handler(request)
         await response(scope, receive, send)
 

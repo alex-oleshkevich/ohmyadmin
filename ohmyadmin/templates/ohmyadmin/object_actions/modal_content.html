@@ -1,0 +1,36 @@
+{% import 'ohmyadmin/lib/forms.html' as forms %}
+
+<x-modal data-modal-wrapper hx-target="this" hx-swap="outerHTML">
+    <div class="modal">
+        <form class="modal-dialog" method="post" hx-post="{{ request.url }}">
+            <header>
+                <span>{{ modal.title }}</span>
+                <button type="button" @click="closeModal">
+                    {{ tabler_icon('x') }}
+                </button>
+            </header>
+            <main>
+                {% if modal.message %}
+                    <div class="mb-5">{{ modal.message.format(object=object) }}</div>
+                {% endif %}
+                {% block before_form %}{% endblock %}
+                {% block form %}
+                    {% for field in form %}
+                        {{ forms.form_field(field) }}
+                    {% endfor %}
+                {% endblock %}
+                {% block after_form %}{% endblock %}
+            </main>
+            <footer>
+                {% block actions %}
+                    <button class="btn btn-{{ 'danger' if modal.dangerous else 'accent' }}">
+                        {{ _('Submit', domain='ohmyadmin') }}
+                    </button>
+                    <button class="btn btn-text" type="button" @click="closeModal;">
+                        {{ _('Cancel', domain='ohmyadmin') }}
+                    </button>
+                {% endblock %}
+            </footer>
+        </form>
+    </div>
+</x-modal>

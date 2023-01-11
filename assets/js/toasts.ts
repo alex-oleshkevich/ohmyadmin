@@ -1,7 +1,10 @@
 import { Notyf } from 'notyf';
 
 export type ToastType = 'success' | 'error';
-
+export type ToastOptions = {
+    message: string,
+    category: ToastType,
+}
 export const toast = new Notyf({
     position: { x: 'center', y: 'bottom' },
     ripple: false,

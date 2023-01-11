@@ -159,7 +159,7 @@
     }
 
     .btn.btn-text {
-        @apply border-transparent active:bg-gray-100;
+        @apply border-transparent active:bg-gray-100 bg-transparent;
     }
 
     .btn.btn-icon {
@@ -281,11 +281,11 @@
     }
 
     .modal-dialog {
-        @apply sm:p-0 bg-white z-20 max-w-lg w-full shadow-xl rounded-lg transition-all relative transform;
+        @apply sm:p-0 bg-white z-20 max-w-lg w-full shadow-xl rounded-lg transition-all relative transform overflow-hidden;
     }
 
     .modal header {
-        @apply p-4 text-lg font-medium leading-6 text-gray-900 text-left;
+        @apply p-4 text-lg font-medium leading-6 text-gray-900 text-left flex items-center justify-between;
     }
 
     .modal main {

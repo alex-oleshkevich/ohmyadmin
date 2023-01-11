@@ -1,8 +1,12 @@
 import pathlib
+import typing
+
 import sqlalchemy as sa
+import wtforms
 from async_storages import FileStorage, LocalStorage
+from markupsafe import Markup
 from passlib.handlers.pbkdf2 import pbkdf2_sha256
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, create_async_engine
 from sqlalchemy.orm import declarative_base
 from starception import install_error_handler
 from starlette.applications import Starlette
@@ -30,6 +34,7 @@ from ohmyadmin.filters import (
     StringFilter,
 )
 from ohmyadmin.formatters import AvatarFormatter, BoolFormatter, DateFormatter, NumberFormatter
+from ohmyadmin.object_actions import ModalAction
 from ohmyadmin.pages.base import Page
 from ohmyadmin.pages.table import TablePage
 from ohmyadmin.resources import Resource, TableView
@@ -41,7 +46,7 @@ metadata = sa.MetaData()
 Base = declarative_base()
 this_dir = pathlib.Path(__file__).parent
 uploads_dir = this_dir / 'uploads'
-engine = create_async_engine('postgresql+asyncpg://postgres:postgres@localhost/ohmyadmin', future=True, echo=True)
+engine = create_async_engine('postgresql+asyncpg://postgres:postgres@localhost/ohmyadmin', future=True)
 async_session = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 file_storage = FileStorage(LocalStorage(this_dir / 'uploads'))
 
@@ -117,14 +122,63 @@ async def toggle_visibility(request: Request) -> Response:
     return ActionResponse().show_toast('Visibility has been changed.').refresh_datatable()
 
 
+async def delete_product_action(request: Request) -> Response:
+    object_id = request.query_params.get('_ids')
+    async with async_session() as session:
+        product = await session.get(Product, int(object_id))
+        await session.delete(product)
+        await session.commit()
+    return ActionResponse().show_toast('Product has been deleted.').refresh_datatable()
+
+
+def product_name_validator(form, field):
+    if field.data == 'fail':
+        raise wtforms.ValidationError('Product name is invalid.')
+
+
+class EditProductForm(wtforms.Form):
+    name = wtforms.StringField(validators=[wtforms.validators.data_required(), product_name_validator])
+    price = wtforms.DecimalField(validators=[wtforms.validators.data_required()])
+    compare_at_price = wtforms.DecimalField(validators=[wtforms.validators.data_required()])
+    sku = wtforms.IntegerField(default=0)
+    quantity = wtforms.IntegerField(default=0)
+    barcode = wtforms.StringField(default='')
+    visible = wtforms.BooleanField(default=False)
+
+
+class EditProductAction(ModalAction):
+    title = 'Edit product'
+    message: str = Markup('Feel free to update <b>{object.name}</b>.')
+    form_class = EditProductForm
+
+    async def dispatch(self, request: Request) -> Response:
+        async with async_session() as session:
+            request.state.db = session
+            return await super().dispatch(request)
+
+    async def get_object(self, request: Request) -> typing.Any | None:
+        object_id = request.query_params.get('_ids')
+        result = await request.state.db.scalars(sa.select(Product).where(Product.id == int(object_id)))
+        return result.one()
+
+    async def handle_submit(self, request: Request, form: wtforms.Form, instance: typing.Any | None) -> Response:
+        form.populate_obj(instance)
+        await request.state.db.commit()
+        return ActionResponse().show_toast('Product has been updated.').refresh_datatable().close_modal()
+
+
 class ProductPage(TablePage):
     label = 'Product'
     datasource = SQLADataSource(Product, async_session, sa.select(Product).order_by(Product.created_at.desc()))
     object_actions = [
         object_actions.Dispatch('Toggle visibility', toggle_visibility, 'eye', method='post'),
+        object_actions.Modal('Edit info', EditProductAction(), 'pencil'),
         object_actions.Link('No icon', '#'),
         object_actions.Link('View profile', '#', 'eye'),
-        object_actions.Link('Delete', '#', 'trash', dangerous=True),
+        object_actions.Dispatch(
+            'Delete', delete_product_action, 'trash', dangerous=True, method='delete',
+            confirmation='Do you really want to delete this object?',
+        ),
     ]
     columns = [
         TableColumn('name'),

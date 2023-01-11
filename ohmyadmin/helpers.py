@@ -1,4 +1,5 @@
 import dataclasses
+import inspect
 
 import re
 import typing
@@ -46,3 +47,9 @@ def resolve_url(request: Request, url: str | URL | LazyURL) -> str:
     if isinstance(url, LazyURL):
         return url.resolve(request)
     return str(url)
+
+
+def get_callable_name(obj: typing.Any) -> str:
+    if inspect.isfunction(obj):
+        return obj.__name__
+    return obj.__class__.__name__
