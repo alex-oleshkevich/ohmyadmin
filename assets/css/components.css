@@ -478,8 +478,13 @@
     }
 
     .list-menu-item {
-        @apply py-2 px-4 min-h-[32px] flex items-center gap-2 font-medium w-full select-none text-gray-800 cursor-pointer;
-        @apply [&:not(.disabled)]:hover:bg-gray-50 [&:not(.disabled)]:active:bg-gray-100;
+        @apply py-2 px-4 min-h-[32px] flex items-center gap-3 font-medium w-full select-none text-gray-800 cursor-pointer;
+        @apply [&:not(.disabled)]:hover:bg-gray-100 [&:not(.disabled)]:active:bg-gray-200;
+    }
+
+    .list-menu-item.danger {
+        @apply text-red-700;
+        @apply [&:not(.disabled)]:hover:bg-red-100 [&:not(.disabled)]:active:bg-red-200;
     }
 
     .list-menu-item.disabled {
@@ -488,6 +493,10 @@
 
     .list-menu-item svg {
         @apply h-5 w-5 text-gray-400;
+    }
+
+    .list-menu-item.danger svg {
+        @apply text-red-400;
     }
 
     .list-menu-item > * + svg {

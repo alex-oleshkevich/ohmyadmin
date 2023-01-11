@@ -39,7 +39,7 @@
                     <div class="progress-bar"></div>
                 </div>
             </div>
-            <div id="data" hx-get hx-trigger="data-reload from:body" hx-target="this">
+            <div id="data" hx-get hx-trigger="refresh-datatable from:body" hx-target="this">
                 {% include 'ohmyadmin/pages/table/_content.html' %}
             </div>
         </div>

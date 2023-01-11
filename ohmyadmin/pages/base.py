@@ -80,18 +80,20 @@ class Page(BasePage):
     async def get(self, request: Request) -> Response:
         return self.render_to_response(request, self.template, {'page_title': self.label})
 
-    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        request = Request(scope, receive, send)
+    async def handler(self, request: Request) -> Response:
         method = request.method.lower()
         if handler := getattr(self, method, None):
-            response = (
+            return (
                 await handler(request)
                 if inspect.iscoroutinefunction(handler)
                 else await run_in_threadpool(handler, request)
             )
-            await response(scope, receive, send)
-            return
         raise HTTPException(405, 'Method Not Allowed')
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        request = Request(scope, receive, send)
+        response = await self.handler(request)
+        await response(scope, receive, send)
 
     def as_route(self) -> BaseRoute:
         methods: list[str] = []

@@ -15,6 +15,7 @@ from starlette.routing import Mount, Route
 from starlette_flash import flash
 
 from examples.models import Product, User
+from ohmyadmin import object_actions
 from ohmyadmin.app import OhMyAdmin
 from ohmyadmin.authentication import BaseAuthPolicy, UserMenu
 from ohmyadmin.datasource.sqla import SQLADataSource
@@ -32,6 +33,7 @@ from ohmyadmin.formatters import AvatarFormatter, BoolFormatter, DateFormatter, 
 from ohmyadmin.pages.base import Page
 from ohmyadmin.pages.table import TablePage
 from ohmyadmin.resources import Resource, TableView
+from ohmyadmin.responses import ActionResponse
 from ohmyadmin.shortcuts import get_admin
 from ohmyadmin.views.table import TableColumn
 
@@ -104,9 +106,26 @@ class UserPage(TablePage):
     ]
 
 
+async def toggle_visibility(request: Request) -> Response:
+    if request.method == 'GET':
+        return Response(status_code=204)
+
+    object_id = request.query_params.get('_ids')
+    async with async_session() as session:
+        await session.execute(sa.update(Product).where(Product.id == int(object_id)).values(visible=~Product.visible))
+        await session.commit()
+    return ActionResponse().show_toast('Visibility has been changed.').refresh_datatable()
+
+
 class ProductPage(TablePage):
     label = 'Product'
-    datasource = SQLADataSource(Product, async_session)
+    datasource = SQLADataSource(Product, async_session, sa.select(Product).order_by(Product.created_at.desc()))
+    object_actions = [
+        object_actions.Dispatch('Toggle visibility', toggle_visibility, 'eye', method='post'),
+        object_actions.Link('No icon', '#'),
+        object_actions.Link('View profile', '#', 'eye'),
+        object_actions.Link('Delete', '#', 'trash', dangerous=True),
+    ]
     columns = [
         TableColumn('name'),
         TableColumn('price', sortable=True, formatter=NumberFormatter(suffix='USD')),

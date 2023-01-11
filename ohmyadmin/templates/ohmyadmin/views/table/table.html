@@ -6,6 +6,9 @@
                 {{ column.render_head_cell(request) }}
             </th>
         {% endfor %}
+        {% if table.object_actions %}
+            <th class="text-right"></th>
+        {% endif %}
     </tr>
     </thead>
     <tbody>
@@ -14,6 +17,33 @@
             {% for columm in table.columns %}
                 <td>{{ columm.render(request, object) }}</td>
             {% endfor %}
+            {% if table.object_actions %}
+                <td>
+                    <div class="flex gap-1 justify-end items-center relative"
+                         x-data="{menuOpen: false}"
+                         @click.outside="menuOpen = false"
+                    >
+                        <button class="btn btn-icon" @click="menuOpen = !menuOpen">
+                            {{ tabler_icon('dots-vertical') }}
+                        </button>
+                        <div class="dropdown absolute top-10 z-10"
+                             x-show="menuOpen"
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="transform opacity-0 scale-95"
+                             x-transition:enter-end="transform opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="transform opacity-100 scale-100"
+                             x-transition:leave-end="transform opacity-0 scale-95"
+                        >
+                            <div class="list-menu">
+                                {% for action in table.object_actions %}
+                                    {{ action.render_menu_item(request, object) }}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            {% endif %}
         </tr>
     {% endfor %}
     </tbody>

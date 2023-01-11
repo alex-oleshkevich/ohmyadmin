@@ -2,10 +2,12 @@ import json
 import typing
 from starlette.requests import Request
 from starlette.responses import Response
+from starlette.routing import BaseRoute, Route
 from starlette_babel import gettext_lazy as _
 
 from ohmyadmin.datasource.base import DataSource
 from ohmyadmin.filters import BaseFilter, UnboundFilter
+from ohmyadmin.object_actions import ObjectAction
 from ohmyadmin.ordering import get_ordering_value
 from ohmyadmin.pages.base import Page
 from ohmyadmin.pagination import Pagination, get_page_size_value, get_page_value
@@ -22,20 +24,22 @@ class TablePage(Page):
     ordering_param: typing.ClassVar[str] = 'ordering'
     page_size: typing.ClassVar[int] = 25
     max_page_size: typing.ClassVar[int] = 100
-    columns: typing.ClassVar[typing.Sequence[TableColumn] | None] = None
-    filters: typing.ClassVar[typing.Sequence[UnboundFilter] | None] = None
+    columns: typing.Sequence[TableColumn] | None = None
+    filters: typing.Sequence[UnboundFilter] | None = None
+    object_actions: typing.Sequence[ObjectAction] | None = None
 
     def __init__(self) -> None:
-        self._columns = self.columns or []
-        self._filters = self.filters or []
+        self.columns = self.columns or []
+        self.filters = self.filters or []
+        self.object_actions = self.object_actions or []
 
     @property
     def sortable_fields(self) -> list[str]:
-        return [column.sort_by for column in self._columns if column.sortable]
+        return [column.sort_by for column in self.columns if column.sortable]
 
     @property
     def searchable_fields(self) -> list[str]:
-        return [column.search_in for column in self._columns if column.searchable]
+        return [column.search_in for column in self.columns if column.searchable]
 
     @property
     def searchable(self) -> bool:
@@ -44,7 +48,7 @@ class TablePage(Page):
     @property
     def search_placeholder(self) -> str:
         template = _('Search in {fields}.')
-        fields = ', '.join([str(column.label) for column in self._columns if column.searchable])
+        fields = ', '.join([str(column.label) for column in self.columns if column.searchable])
         return template.format(fields=fields)
 
     async def get_objects(self, request: Request, filters: list[BaseFilter]) -> Pagination:
@@ -66,9 +70,9 @@ class TablePage(Page):
         return await query.paginate(request, page=page_number, page_size=page_size)
 
     async def get(self, request: Request) -> Response:
-        filters = [await _filter.create(request) for _filter in self._filters]
+        filters = [await _filter.create(request) for _filter in self.filters]
         objects = await self.get_objects(request, filters)
-        view = TableView(columns=self._columns)
+        view = TableView(columns=self.columns, object_actions=self.object_actions)
         view_content = view.render(request, objects)
 
         if request.headers.get('hx-target', '') == 'filter-bar':
@@ -76,7 +80,7 @@ class TablePage(Page):
             if 'clear' in request.query_params:
                 headers = {
                     'hx-push-url': str(request.url.remove_query_params('clear')),
-                    'hx-trigger-after-settle': json.dumps({'data-reload': ''}),
+                    'hx-trigger-after-settle': json.dumps({'refresh-datatable': ''}),
                 }
             return self.render_to_response(
                 request,
@@ -112,3 +116,17 @@ class TablePage(Page):
                 'search_term': get_search_value(request, self.search_param),
             },
         )
+
+    async def dispatch_action(self, request: Request, action_slug: str) -> Response:
+        action = next((action for action in self.object_actions if action.slug == action_slug))
+        return await action.dispatch(request)
+
+    async def handler(self, request: Request) -> Response:
+        if '_action' in request.query_params:
+            return await self.dispatch_action(request, request.query_params['_action'])
+
+        return await super().handler(request)
+
+    def as_route(self) -> BaseRoute:
+        methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
+        return Route(f'/{self.slug}', self, methods=methods, name=self.get_path_name())

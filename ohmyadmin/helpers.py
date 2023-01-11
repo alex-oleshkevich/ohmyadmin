@@ -1,4 +1,9 @@
+import dataclasses
+
 import re
+import typing
+from starlette.datastructures import URL
+from starlette.requests import Request
 
 
 def camel_to_sentence(text: str) -> str:
@@ -26,3 +31,18 @@ def pluralize(text: str) -> str:
     if text.endswith('s'):
         return text + 'es'
     return text + 's'
+
+
+@dataclasses.dataclass
+class LazyURL:
+    path_name: str
+    path_params: dict[str, typing.Any] = dataclasses.field(default_factory=dict)
+
+    def resolve(self, request: Request) -> str:
+        return request.url_for(self.path_name, **self.path_params)
+
+
+def resolve_url(request: Request, url: str | URL | LazyURL) -> str:
+    if isinstance(url, LazyURL):
+        return url.resolve(request)
+    return str(url)

@@ -1,5 +1,5 @@
 {% macro sortable_cell(column, control) %}
-    <a href="{{ control.url }}" class="flex items-center gap-2" hx-boost="true">
+    <a href="{{ control.url }}" class="flex items-center gap-2 whitespace-nowrap" hx-boost="true">
         <span>{{ column.label }}</span>
         <span class="text-gray-400 flex items-center">
             {% if control.ordering == 'asc' %}
@@ -27,4 +27,3 @@
 {% else %}
     {{ simple_cell(column) }}
 {% endif %}
-tar

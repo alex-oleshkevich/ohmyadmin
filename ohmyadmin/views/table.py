@@ -3,6 +3,7 @@ from markupsafe import Markup
 from starlette.requests import Request
 
 from ohmyadmin.formatters import DataFormatter, ToStringFormatter
+from ohmyadmin.object_actions import ObjectAction
 from ohmyadmin.ordering import SortingHelper
 from ohmyadmin.pagination import Pagination
 from ohmyadmin.shortcuts import render_to_string
@@ -59,9 +60,15 @@ class TableColumn:
 
 
 class TableView(IndexView):
-    def __init__(self, columns: typing.Sequence[TableColumn], query_param: str = 'ordering') -> None:
+    def __init__(
+        self,
+        columns: typing.Sequence[TableColumn],
+        query_param: str = 'ordering',
+        object_actions: typing.Sequence[ObjectAction] | None = None,
+    ) -> None:
         self.columns = columns
         self.query_param = query_param
+        self.object_actions = object_actions
 
     def render(self, request: Request, objects: Pagination[typing.Any]) -> str:
         request.state.table_sorting = SortingHelper(request, self.query_param)
