@@ -1,0 +1,23 @@
+<form :action="action"
+      :hx-get="action"
+      hx-method="get"
+      hx-target="#modals"
+      @submit="$nextTick(() => action = '')"
+      x-data="{action: '', objectIds: []}"
+      method="get"
+>
+    {% if page.batch_actions %}
+        <x-batch-selected-rows @change="objectIds = $event.detail"></x-batch-selected-rows>
+        <div class="btn-group">
+            <select name="_action" class="w-64" x-model="action" :disabled="!objectIds.length">
+                <option value="">{{ _('Select action', domain='ohmyadmin') }}</option>
+                {% for action in page.batch_actions %}
+                    <option value="{{ action.slug }}">{{ action.label }}</option>
+                {% endfor %}
+            </select>
+            <button class="btn btn-accent" :disabled="action == '' || !objectIds.length">
+                {{ tabler_icon('player-play') }}
+            </button>
+        </div>
+    {% endif %}
+</form>

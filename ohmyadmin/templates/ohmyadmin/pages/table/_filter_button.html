@@ -1,0 +1,6 @@
+<button class="btn" @click="showFilterBar = !showFilterBar">
+    {{ tabler_icon('filter') }}
+    <template x-if="selectedFiltersCount">
+        <span class="badge badge-blue" x-text="selectedFiltersCount"></span>
+    </template>
+</button>
