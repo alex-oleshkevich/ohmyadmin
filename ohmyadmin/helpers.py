@@ -46,7 +46,7 @@ class LazyURL:
 def resolve_url(request: Request, url: str | URL | LazyURL) -> URL:
     if isinstance(url, LazyURL):
         return url.resolve(request)
-    return URL(url)
+    return URL(str(url))
 
 
 def get_callable_name(obj: typing.Any) -> str:

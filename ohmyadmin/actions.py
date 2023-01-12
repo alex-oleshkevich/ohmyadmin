@@ -3,18 +3,18 @@ from __future__ import annotations
 import abc
 import json
 import typing
-from urllib.parse import parse_qsl, urlencode
-
 import wtforms
 from slugify import slugify
 from starlette.background import BackgroundTask
-from starlette.datastructures import MultiDict, URL
+from starlette.datastructures import URL, MultiDict
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette_babel import gettext_lazy as _
+from urllib.parse import parse_qsl, urlencode
 
 from ohmyadmin.datasource.base import DataSource
-from ohmyadmin.helpers import camel_to_sentence, get_callable_name, LazyURL, resolve_url
+from ohmyadmin.forms import create_form, validate_form
+from ohmyadmin.helpers import LazyURL, camel_to_sentence, get_callable_name, resolve_url
 from ohmyadmin.shortcuts import render_to_response, render_to_string
 
 
@@ -32,12 +32,12 @@ class ActionResponse(Response):
 
     def redirect(self, request: Request, url: str | LazyURL) -> ActionResponse:
         """Triggers a client-side redirect to a new location."""
-        self.headers['hx-redirect'] = url.resolve(request) if isinstance(url, LazyURL) else url
+        self.headers['hx-redirect'] = str(url.resolve(request)) if isinstance(url, LazyURL) else url
         return self
 
     def refresh(self, request: Request, url: str | LazyURL) -> ActionResponse:
         """Trigger full refresh of the page."""
-        self.headers['hx-refresh'] = url.resolve(request) if isinstance(url, LazyURL) else url
+        self.headers['hx-refresh'] = str(url.resolve(request)) if isinstance(url, LazyURL) else url
         return self
 
     def refresh_datatable(self) -> ActionResponse:
@@ -128,7 +128,7 @@ class Callback(ObjectAction):
         object_ids = request.query_params.getlist('_ids')
         if not object_ids and request.method != 'GET':
             form_data = await request.form()
-            object_ids = form_data.getlist('_ids')
+            object_ids = typing.cast(list[str], form_data.getlist('_ids'))
         return object_ids
 
     async def dispatch(self, request: Request) -> Response:
@@ -147,13 +147,13 @@ class ModalAction(abc.ABC):
 
     async def render_form(self, request: Request, object_ids: list[str]) -> Response:
         model = await self.get_form_object(request)
-        form = self.form_class(obj=model)
+        form = await create_form(request, self.form_class, model)
         return render_to_response(request, self.content_template, {'modal': self, 'form': form, 'object': model})
 
     async def handle_form(self, request: Request, object_ids: list[str]) -> Response:
         model = await self.get_form_object(request)
-        form = self.form_class(formdata=await request.form(), obj=model)
-        if form.validate():
+        form = await create_form(request, self.form_class, model)
+        if await validate_form(form):
             return await self.apply(request, form, object_ids)
         return render_to_response(request, self.content_template, {'modal': self, 'form': form, 'object': model})
 
