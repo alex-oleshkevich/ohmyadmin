@@ -156,6 +156,10 @@ class SQLADataSource(DataSource):
         column = getattr(self.model_class, field)
         return self._clone(self._stmt.where(column.in_(choices)))
 
+    def apply_boolean_filter(self, field: str, value: bool) -> DataSource:
+        column = getattr(self.model_class, field)
+        return self._clone(self._stmt.where(column.is_(value)))
+
     async def count(self, session: AsyncSession) -> int:
         stmt = sa.select(sa.func.count('*')).select_from(self._stmt)  # type: ignore[arg-type]
         result = await session.scalars(stmt)

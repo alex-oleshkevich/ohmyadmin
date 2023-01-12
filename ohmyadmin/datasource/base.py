@@ -74,6 +74,10 @@ class DataSource(abc.ABC):
         ...
 
     @abc.abstractmethod
+    def apply_boolean_filter(self, field: str, value: bool) -> DataSource:
+        pass
+
+    @abc.abstractmethod
     async def one(self) -> typing.Any:
         ...
 
