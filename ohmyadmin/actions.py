@@ -83,8 +83,8 @@ class Link(ObjectAction):
         raise NotImplementedError('Link action cannot be dispatched.')
 
 
-class Dispatch(ObjectAction):
-    template = 'ohmyadmin/object_actions/object_action_dispatch.html'
+class Simple(ObjectAction):
+    template = 'ohmyadmin/object_actions/simple_action.html'
 
     def __init__(
         self,
@@ -97,19 +97,19 @@ class Dispatch(ObjectAction):
         method: typing.Literal['get', 'post', 'patch', 'put', 'delete'] = 'get',
         hx_target: str = '',
     ) -> None:
+        self.icon = icon
+        self.label = label
         self.method = method
         self.callback = callback
-        self.slug = slug or slugify(camel_to_sentence(get_callable_name(callback)))
-        self.icon = icon or self.icon
-        self.label = label or self.label
         self.hx_target = hx_target
-        self.dangerous = dangerous or self.dangerous
-        self.confirmation = confirmation or self.confirmation
+        self.dangerous = dangerous
+        self.confirmation = confirmation
+        self.slug = slug or slugify(camel_to_sentence(get_callable_name(callback)))
 
     def render_menu_item(self, request: Request, obj: typing.Any) -> str:
         params = MultiDict(parse_qsl(request.url.query, keep_blank_values=True))
         params.append('_action', self.slug)
-        params.setlist('_ids', [obj.id])  # FIXME: .id must not be hardcoded
+        params.setlist('_ids', [request.state.page.datasource.get_pk(obj)])
         menu_link = request.url.replace(query=urlencode(params.multi_items()))
         return render_to_string(
             request,
@@ -118,7 +118,6 @@ class Dispatch(ObjectAction):
                 'action': self,
                 'object': obj,
                 'menu_link': menu_link,
-                'hx_target': self.hx_target,
             },
         )
 
@@ -160,22 +159,19 @@ class ModalAction:
         return await self.dispatch(request)
 
 
-class Modal(Dispatch):
+class Modal(Simple):
     def __init__(
         self,
         label: str,
         modal: ModalAction,
         icon: str = '',
-        dangerous: bool = False,
-        confirmation: str = '',
         slug: str = '',
     ) -> None:
         super().__init__(
             label=label,
             callback=modal,
             icon=icon,
-            dangerous=dangerous,
-            confirmation=confirmation,
+            dangerous=modal.dangerous,
             method='get',
             slug=slug,
             hx_target='#modals',

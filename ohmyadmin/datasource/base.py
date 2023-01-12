@@ -42,6 +42,10 @@ class DataSource(abc.ABC):
         ...
 
     @abc.abstractmethod
+    def get_pk(self, obj: typing.Any) -> str:
+        ...
+
+    @abc.abstractmethod
     def apply_search(self, search_term: str, searchable_fields: typing.Sequence[str]) -> DataSource:
         ...
 

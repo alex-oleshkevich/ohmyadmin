@@ -63,8 +63,10 @@ class SQLADataSource(DataSource):
         async_session: async_sessionmaker,
         query: sa.Select | None = None,
         query_for_list: sa.Select | None = None,
+        pk_column: str = 'id',
         _stmt: sa.Select | None = None,
     ) -> None:
+        self.pk_column = pk_column
         self.model_class = model_class
         self.async_session = async_session
         self.query = query if query is not None else sa.select(model_class)
@@ -73,6 +75,9 @@ class SQLADataSource(DataSource):
 
     def get_for_index(self) -> DataSource:
         return self._clone(self.query_for_list)
+
+    def get_pk(self, obj: typing.Any) -> str:
+        return getattr(obj, self.pk_column)
 
     def apply_search(self, search_term: str, searchable_fields: typing.Sequence[str]) -> DataSource:
         if not search_term:

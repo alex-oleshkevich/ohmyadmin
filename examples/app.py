@@ -172,11 +172,11 @@ class ProductPage(TablePage):
         actions.Modal('Edit info', EditProductAction(), 'pencil'),
     ]
     object_actions = [
-        actions.Dispatch('Toggle visibility', toggle_visibility, 'eye', method='post'),
+        actions.Simple('Toggle visibility', toggle_visibility, 'eye', method='post'),
         actions.Modal('Edit info', EditProductAction(), 'pencil'),
         actions.Link('No icon', '#'),
         actions.Link('View profile', '#', 'eye'),
-        actions.Dispatch(
+        actions.Simple(
             'Delete',
             delete_product_action,
             'trash',

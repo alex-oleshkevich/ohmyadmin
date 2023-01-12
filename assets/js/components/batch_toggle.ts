@@ -28,9 +28,9 @@ export class BatchSelectAllElement extends LitElement {
     onClick(e: InputEvent) {
         const ids: string[] = [];
         this.closest('#data')!
-            .querySelectorAll('input[name="_ids"]')
+            .querySelectorAll<HTMLInputElement>('input[name="_ids"]')
             .forEach(el => {
-                (el as HTMLInputElement).checked = (e.target as HTMLInputElement).checked;
+                el.checked = (e.target as HTMLInputElement).checked;
                 ids.push(el.value);
             });
         this.dispatchEvent(new CustomEvent('rows.select-all', { detail: ids, bubbles: true }));
