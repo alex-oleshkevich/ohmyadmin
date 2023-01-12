@@ -1,7 +1,14 @@
 {% extends 'ohmyadmin/app.html' %}
 
 {% block content %}
-    <div class="space-y-6" hx-target="#data" hx-indicator="#load-indicator">
+    <div class="space-y-6"
+         hx-target="#data"
+         hx-indicator="#load-indicator"
+         data-active-filters="{{ active_filter_count }}"
+         x-data="{selectedFiltersCount: parseInt($el.dataset.activeFilters), showFilterBar: parseInt($el.dataset.activeFilters) > 0}"
+         @filters-activate.window="selectedFiltersCount += 1"
+         @filters-deactivate.window="selectedFiltersCount -= 1;"
+    >
         <!-- search and actions -->
         <div class="flex items-center justify-between">
 
@@ -23,33 +30,42 @@
                 {% endif %}
             </div>
             <!-- end search form -->
-            <form :action="action"
-                  :hx-get="action"
-                  hx-method="get"
-                  hx-target="#modals"
-                  @submit="$nextTick(() => action = '')"
-                  x-data="{action: '', objectIds: []}"
-                  method="get"
-            >
-                {% if page.batch_actions %}
-                    <x-batch-selected-rows @change="objectIds = $event.detail"></x-batch-selected-rows>
-                    <div class="btn-group">
-                        <select name="_action" class="w-64" x-model="action" :disabled="!objectIds.length">
-                            <option value="">{{ _('Select action', domain='ohmyadmin') }}</option>
-                            {% for action in page.batch_actions %}
-                                <option value="{{ action.slug }}">{{ action.label }}</option>
-                            {% endfor %}
-                        </select>
-                        <button class="btn btn-accent" :disabled="action == '' || !objectIds.length">
-                            {{ tabler_icon('player-play') }}
-                        </button>
-                    </div>
-                {% endif %}
-            </form>
-
+            <div class="flex items-center gap-2">
+                <button class="btn" @click="showFilterBar = !showFilterBar">
+                    {{ tabler_icon('filter') }}
+                    <template x-if="selectedFiltersCount">
+                        <span class="badge badge-red" x-text="selectedFiltersCount"></span>
+                    </template>
+                </button>
+                <form :action="action"
+                      :hx-get="action"
+                      hx-method="get"
+                      hx-target="#modals"
+                      @submit="$nextTick(() => action = '')"
+                      x-data="{action: '', objectIds: []}"
+                      method="get"
+                >
+                    {% if page.batch_actions %}
+                        <x-batch-selected-rows @change="objectIds = $event.detail"></x-batch-selected-rows>
+                        <div class="btn-group">
+                            <select name="_action" class="w-64" x-model="action" :disabled="!objectIds.length">
+                                <option value="">{{ _('Select action', domain='ohmyadmin') }}</option>
+                                {% for action in page.batch_actions %}
+                                    <option value="{{ action.slug }}">{{ action.label }}</option>
+                                {% endfor %}
+                            </select>
+                            <button class="btn btn-accent" :disabled="action == '' || !objectIds.length">
+                                {{ tabler_icon('player-play') }}
+                            </button>
+                        </div>
+                    {% endif %}
+                </form>
+            </div>
         </div>
         <!-- end search and actions -->
-        <div id="filter-bar" hx-get hx-trigger="filters-reload" hx-target="this" class="flex items-center gap-2">
+
+        <div id="filter-bar" hx-get hx-trigger="filters-reload" hx-target="this" class="flex items-center gap-2"
+             x-show="showFilterBar">
             {% include 'ohmyadmin/pages/table/_filters.html' %}
         </div>
 

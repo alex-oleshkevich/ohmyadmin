@@ -114,6 +114,7 @@ class TablePage(Page):
                 },
             )
 
+        active_filter_count = sum([1 for filter in filters if filter.is_active(request)])
         return self.render_to_response(
             request,
             'ohmyadmin/pages/table/table.html',
@@ -123,6 +124,7 @@ class TablePage(Page):
                 'filters': filters,
                 'view_content': view_content,
                 'page_title': self.label_plural,
+                'active_filter_count': active_filter_count,
                 'search_term': get_search_value(request, self.search_param),
             },
         )

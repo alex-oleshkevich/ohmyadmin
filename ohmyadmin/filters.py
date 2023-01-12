@@ -118,7 +118,7 @@ class StringFilter(BaseFilter[StringFilterForm]):
 
 class IntegerFilterForm(wtforms.Form):
     operation = wtforms.SelectField(choices=NumberOperation.choices())
-    query = wtforms.StringField(validators=[wtforms.validators.data_required()])
+    query = wtforms.IntegerField(validators=[wtforms.validators.data_required()])
 
 
 class IntegerFilter(BaseFilter[IntegerFilterForm]):
@@ -145,7 +145,7 @@ class IntegerFilter(BaseFilter[IntegerFilterForm]):
 
 class FloatFilterForm(wtforms.Form):
     operation = wtforms.SelectField(choices=NumberOperation.choices())
-    query = wtforms.StringField(validators=[wtforms.validators.data_required()])
+    query = wtforms.FloatField(validators=[wtforms.validators.data_required()])
 
 
 class FloatFilter(IntegerFilter):
@@ -154,7 +154,7 @@ class FloatFilter(IntegerFilter):
 
 class DecimalFilterForm(wtforms.Form):
     operation = wtforms.SelectField(choices=NumberOperation.choices())
-    query = wtforms.StringField(validators=[wtforms.validators.data_required()])
+    query = wtforms.DecimalField(validators=[wtforms.validators.data_required()])
 
 
 class DecimalFilter(IntegerFilter):

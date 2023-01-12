@@ -1,7 +1,11 @@
 <div class="inline-flex gap-2 rounded-lg px-3 py-2 bg-gray-100 font-medium border border-transparent">
     <div class="text-gray-500">{{ filter.label }}:</div>
     <div>{% block content %}{% endblock %}</div>
-    <a href="{{ clear_url }}" class="text-gray-500 hover:text-red-700" hx-get="{{ clear_url }}">
+    <a href="{{ clear_url }}"
+       hx-get="{{ clear_url }}"
+       @click="$dispatch('filters-deactivate');"
+       class="text-gray-500 hover:text-red-700"
+    >
         {{ tabler_icon('x') }}
     </a>
 </div>

@@ -1,23 +1,27 @@
 {% import 'ohmyadmin/lib/forms.html' as forms %}
 
-<div class="inline-block relative z-10" x-data="{open: false}" hx-target="#data" hx-boost="true"
-     hx-indicator="#load-indicator">
+<div class="inline-block relative z-10"
+     x-data="{open: false}"
+     hx-target="#data"
+     hx-boost="true"
+     hx-indicator="#load-indicator"
+>
     <button class="btn" @click="open = !open">
         <span>{{ filter.label }}</span>
         <span class="text-gray-500">{{ tabler_icon('chevron-down') }}</span>
     </button>
     <form method="get"
-          action="{{ request.url }}"
           hx-get
+          action="{{ request.url }}"
           x-show="open"
+          @submit="open = false; $dispatch('filters-activate');"
+          @click.outside="open = false"
           x-transition:enter="transition ease-out duration-100"
           x-transition:enter-start="transform opacity-0 scale-95"
           x-transition:enter-end="transform opacity-100 scale-100"
           x-transition:leave="transition ease-in duration-75"
           x-transition:leave-start="transform opacity-100 scale-100"
           x-transition:leave-end="transform opacity-0 scale-95"
-          @click.outside="open = false"
-          @submit="open = false"
           class="dropdown absolute top-0 left-0 w-64 translate-y-12 px-3 py-2">
         <div>
             {% block content %}{% endblock %}
