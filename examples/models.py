@@ -187,6 +187,7 @@ class Image(Base):
     id: Mapped[int] = mapped_column(sa.BigInteger, primary_key=True)
     image_path: Mapped[str] = mapped_column(sa.Text, nullable=False)
     product_id: Mapped[int] = mapped_column(sa.ForeignKey('products.id'))
+    product: Mapped[Product] = relationship(Product, back_populates='images')
 
 
 class Comment(Base):

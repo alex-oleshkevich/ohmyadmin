@@ -19,7 +19,7 @@ from starlette_flash import flash
 
 from examples.models import Product, User
 from ohmyadmin import actions
-from ohmyadmin.actions import ActionResponse, ModalAction
+from ohmyadmin.actions import ActionResponse, BatchDelete, ModalAction
 from ohmyadmin.app import OhMyAdmin
 from ohmyadmin.authentication import BaseAuthPolicy, UserMenu
 from ohmyadmin.datasource.sqla import SQLADataSource
@@ -109,22 +109,23 @@ class UserPage(TablePage):
     ]
 
 
-async def toggle_visibility(request: Request) -> Response:
-    if request.method == 'GET':
-        return Response(status_code=204)
-
-    object_id = request.query_params.get('_ids')
+async def toggle_visibility(request: Request, object_ids: list[str]) -> Response:
     async with async_session() as session:
-        await session.execute(sa.update(Product).where(Product.id == int(object_id)).values(visible=~Product.visible))
+        for object_id in object_ids:
+            await session.execute(
+                sa.update(Product)
+                .where(Product.id == int(object_id))
+                .values(visible=~Product.visible)
+            )
         await session.commit()
     return ActionResponse().show_toast('Visibility has been changed.').refresh_datatable()
 
 
-async def delete_product_action(request: Request) -> Response:
-    object_id = request.query_params.get('_ids')
+async def delete_product_action(request: Request, object_ids: list[str]) -> Response:
     async with async_session() as session:
-        product = await session.get(Product, int(object_id))
-        await session.delete(product)
+        for object_id in object_ids:
+            product = await session.get(Product, int(object_id))
+            await session.delete(product)
         await session.commit()
     return ActionResponse().show_toast('Product has been deleted.').refresh_datatable()
 
@@ -149,17 +150,19 @@ class EditProductAction(ModalAction):
     message: str = Markup('Feel free to update <b>{object.name}</b>.')
     form_class = EditProductForm
 
-    async def dispatch(self, request: Request) -> Response:
+    async def dispatch(self, request: Request, object_ids: list[str]) -> Response:
         async with async_session() as session:
             request.state.db = session
-            return await super().dispatch(request)
+            return await super().dispatch(request, object_ids)
 
-    async def get_object(self, request: Request) -> typing.Any | None:
+    async def get_form_object(self, request: Request) -> typing.Any | None:
         object_id = request.query_params.get('_ids')
         result = await request.state.db.scalars(sa.select(Product).where(Product.id == int(object_id)))
         return result.one()
 
-    async def handle_submit(self, request: Request, form: wtforms.Form, instance: typing.Any | None) -> Response:
+    async def apply(self, request: Request, form: wtforms.Form, object_ids: list[str]) -> Response:
+        result = await request.state.db.scalars(sa.select(Product).where(Product.id == int(object_ids.pop())))
+        instance = result.one()
         form.populate_obj(instance)
         await request.state.db.commit()
         return ActionResponse().show_toast('Product has been updated.').refresh_datatable().close_modal()
@@ -169,14 +172,14 @@ class ProductPage(TablePage):
     label = 'Product'
     datasource = SQLADataSource(Product, async_session, sa.select(Product).order_by(Product.created_at.desc()))
     batch_actions = [
-        actions.Modal('Edit info', EditProductAction(), 'pencil'),
+        actions.Modal('Batch delete', BatchDelete(), 'trash'),
     ]
     object_actions = [
-        actions.Simple('Toggle visibility', toggle_visibility, 'eye', method='post'),
+        actions.Callback('Toggle visibility', toggle_visibility, 'eye', method='post'),
         actions.Modal('Edit info', EditProductAction(), 'pencil'),
         actions.Link('No icon', '#'),
         actions.Link('View profile', '#', 'eye'),
-        actions.Simple(
+        actions.Callback(
             'Delete',
             delete_product_action,
             'trash',

@@ -21,7 +21,10 @@
         <tr x-data="{selected: false}" :class="{selected: selected}">
             {% if table.show_row_selector %}
                 <td>
-                    <x-batch-toggle object-id="{{ object.id }}" @input="selected = event.target.checked"></x-batch-toggle>
+                    <!-- FIXME: unhardcode .id -->
+                    <x-batch-toggle object-id="{{ object.id }}"
+                                    @input="selected = event.target.checked"
+                    ></x-batch-toggle>
                 </td>
             {% endif %}
             {% for columm in table.columns %}

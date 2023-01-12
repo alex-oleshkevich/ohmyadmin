@@ -88,3 +88,6 @@ class DataSource(abc.ABC):
     @abc.abstractmethod
     async def paginate(self, request: Request, page: int, page_size: int) -> Pagination[typing.Any]:
         ...
+
+    @abc.abstractmethod
+    async def delete(self, *object_ids: list[str]) -> None: ...

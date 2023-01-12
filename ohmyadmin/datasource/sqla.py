@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import datetime
 import decimal
-import sqlalchemy as sa
 import typing
+import uuid
+
+import sqlalchemy as sa
 from sqlalchemy import orm
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
+from sqlalchemy.orm import ColumnProperty
 from sqlalchemy.sql.elements import NamedColumn
 from starlette.requests import Request
 
@@ -14,13 +17,13 @@ from ohmyadmin.ordering import SortingType
 from ohmyadmin.pagination import Pagination
 
 
-def get_column_properties(entity_class: typing.Any, prop_names: typing.Sequence[str]) -> dict[str, orm.ColumnProperty]:
+def get_column_properties(model_class: typing.Any, prop_names: typing.Sequence[str]) -> dict[str, orm.ColumnProperty]:
     """
     Return SQLAlchemy columns defined on entity class by their string names.
 
     Looks up in the relations too.
     """
-    mapper: orm.Mapper = orm.class_mapper(entity_class)
+    mapper: orm.Mapper = orm.class_mapper(model_class)
     props: dict[str, orm.ColumnProperty] = {}
     for name in prop_names:
         if name in mapper.all_orm_descriptors:
@@ -56,6 +59,33 @@ def create_search_token(column: NamedColumn, search_query: str) -> sa.sql.Column
     return string_column.ilike(search_token)
 
 
+def guess_pk_field(model_class: type) -> str:
+    mapper: orm.Mapper = orm.class_mapper(model_class)
+    pk_columns = [c.name for c in mapper.all_orm_descriptors if hasattr(c, 'primary_key') and c.primary_key]
+    if len(pk_columns) == 0:
+        raise ValueError(f'Model class {model_class} does not contain any primary key.')
+    if len(pk_columns) > 1:
+        raise ValueError(f'Model class {model_class} defines composite primary key which are not supported.')
+    return pk_columns[0]
+
+
+def guess_pk_type(model_class: type, pk_field: str) -> typing.Callable:
+    mapper: orm.Mapper = orm.class_mapper(model_class)
+    column = mapper.columns[pk_field]
+    match column.type:
+        case sa.String() | sa.Text():
+            return str
+        case sa.Integer():
+            return int
+        case sa.Float():
+            return float
+        case sa.Numeric():
+            return decimal.Decimal
+        case sa.UUID():
+            return uuid.UUID
+    raise ValueError(f'Failed to guess primary key column caster for {column} (type={column.type}).')
+
+
 class SQLADataSource(DataSource):
     def __init__(
         self,
@@ -63,10 +93,12 @@ class SQLADataSource(DataSource):
         async_session: async_sessionmaker,
         query: sa.Select | None = None,
         query_for_list: sa.Select | None = None,
-        pk_column: str = 'id',
+        pk_column: str | None = None,
+        pk_cast: typing.Callable | None = None,
         _stmt: sa.Select | None = None,
     ) -> None:
-        self.pk_column = pk_column
+        self.pk_column = pk_column or guess_pk_field(model_class)
+        self.pk_cast = pk_cast or guess_pk_type(model_class, self.pk_column)
         self.model_class = model_class
         self.async_session = async_session
         self.query = query if query is not None else sa.select(model_class)
@@ -182,6 +214,13 @@ class SQLADataSource(DataSource):
             result = await session.scalars(stmt)
             rows = result.all()
             return Pagination(rows=list(rows), total_rows=row_count, page=page, page_size=page_size)
+
+    async def delete(self, *object_ids: list[str]) -> None:
+        typed_ids = list(map(self.pk_cast, object_ids))
+        stmt = sa.delete(self.model_class).where(sa.column(self.pk_column).in_(typed_ids))
+        async with self.async_session() as session:
+            async for instance in await session.stream(stmt):
+                await session.delete(instance)
 
     def _clone(self, stmt: sa.Select | None = None) -> SQLADataSource:
         return self.__class__(

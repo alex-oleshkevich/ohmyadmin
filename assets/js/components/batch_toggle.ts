@@ -65,6 +65,7 @@ export class BatchSelectedRowsElement extends LitElement {
         if (e instanceof CustomEvent) {
             this._selectValue(e.detail);
             this.requestUpdate();
+            this._triggerChangeEvent();
         }
     }
 
@@ -72,7 +73,12 @@ export class BatchSelectedRowsElement extends LitElement {
         if (e instanceof CustomEvent) {
             e.detail.forEach(this._selectValue.bind(this));
             this.requestUpdate();
+            this._triggerChangeEvent();
         }
+    }
+
+    private _triggerChangeEvent() {
+        this.dispatchEvent(new CustomEvent('change', { detail: this.selected, bubbles: true }));
     }
 
     private _selectValue(value: string) {

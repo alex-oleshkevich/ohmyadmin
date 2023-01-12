@@ -3,15 +3,18 @@ from __future__ import annotations
 import abc
 import json
 import typing
+from urllib.parse import parse_qsl, urlencode
+
 import wtforms
 from slugify import slugify
 from starlette.background import BackgroundTask
-from starlette.datastructures import URL, MultiDict
+from starlette.datastructures import MultiDict, URL
 from starlette.requests import Request
 from starlette.responses import Response
-from urllib.parse import parse_qsl, urlencode
+from starlette_babel import gettext_lazy as _
 
-from ohmyadmin.helpers import LazyURL, camel_to_sentence, get_callable_name, resolve_url
+from ohmyadmin.datasource.base import DataSource
+from ohmyadmin.helpers import camel_to_sentence, get_callable_name, LazyURL, resolve_url
 from ohmyadmin.shortcuts import render_to_response, render_to_string
 
 
@@ -25,7 +28,7 @@ class ActionResponse(Response):
         super().__init__(status_code=status_code, headers=headers, background=background)
 
     def show_toast(self, message: str, category: typing.Literal['success', 'error'] = 'success') -> ActionResponse:
-        return self.trigger('toast', {'message': message, 'category': category})
+        return self.trigger('toast', {'message': str(message), 'category': category})
 
     def redirect(self, request: Request, url: str | LazyURL) -> ActionResponse:
         """Triggers a client-side redirect to a new location."""
@@ -83,13 +86,13 @@ class Link(ObjectAction):
         raise NotImplementedError('Link action cannot be dispatched.')
 
 
-class Simple(ObjectAction):
-    template = 'ohmyadmin/object_actions/simple_action.html'
+class Callback(ObjectAction):
+    template = 'ohmyadmin/object_actions/callback.html'
 
     def __init__(
         self,
         label: str,
-        callback: typing.Callable[[Request], typing.Awaitable[Response]],
+        callback: typing.Callable[[Request, list[str]], typing.Awaitable[Response]],
         icon: str = '',
         dangerous: bool = False,
         confirmation: str = '',
@@ -109,7 +112,7 @@ class Simple(ObjectAction):
     def render_menu_item(self, request: Request, obj: typing.Any) -> str:
         params = MultiDict(parse_qsl(request.url.query, keep_blank_values=True))
         params.append('_action', self.slug)
-        params.setlist('_ids', [request.state.page.datasource.get_pk(obj)])
+        params.setlist('_ids', [obj.id])  # FIXME: unhardcode .id
         menu_link = request.url.replace(query=urlencode(params.multi_items()))
         return render_to_string(
             request,
@@ -121,45 +124,53 @@ class Simple(ObjectAction):
             },
         )
 
+    async def parse_object_ids(self, request: Request) -> list[str]:
+        object_ids = request.query_params.getlist('_ids')
+        if not object_ids and request.method != 'GET':
+            form_data = await request.form()
+            object_ids = form_data.getlist('_ids')
+        return object_ids
+
     async def dispatch(self, request: Request) -> Response:
-        return await self.callback(request)
+        return await self.callback(request, await self.parse_object_ids(request))
 
 
-class ModalAction:
+class ModalAction(abc.ABC):
     title: str = ''
     dangerous: bool = False
     message: str = ''
     form_class: type[wtforms.Form] = wtforms.Form
     content_template: str = 'ohmyadmin/object_actions/modal_content.html'
 
-    async def get_object(self, request: Request) -> typing.Any | None:
+    async def get_form_object(self, request: Request) -> typing.Any | None:
         return None
 
-    async def render_form(self, request: Request) -> Response:
-        model = await self.get_object(request)
+    async def render_form(self, request: Request, object_ids: list[str]) -> Response:
+        model = await self.get_form_object(request)
         form = self.form_class(obj=model)
         return render_to_response(request, self.content_template, {'modal': self, 'form': form, 'object': model})
 
-    async def handler(self, request: Request) -> Response:
-        model = await self.get_object(request)
+    async def handle_form(self, request: Request, object_ids: list[str]) -> Response:
+        model = await self.get_form_object(request)
         form = self.form_class(formdata=await request.form(), obj=model)
         if form.validate():
-            return await self.handle_submit(request, form, model)
+            return await self.apply(request, form, object_ids)
         return render_to_response(request, self.content_template, {'modal': self, 'form': form, 'object': model})
 
-    async def handle_submit(self, request: Request, form: wtforms.Form, instance: typing.Any | None) -> Response:
-        return ActionResponse().close_modal()
+    @abc.abstractmethod
+    async def apply(self, request: Request, form: wtforms.Form, object_ids: list[str]) -> Response:
+        ...
 
-    async def dispatch(self, request: Request) -> Response:
+    async def dispatch(self, request: Request, object_ids: list[str]) -> Response:
         if request.method == 'GET':
-            return await self.render_form(request)
-        return await self.handler(request)
+            return await self.render_form(request, object_ids)
+        return await self.handle_form(request, object_ids)
 
-    async def __call__(self, request: Request) -> Response:
-        return await self.dispatch(request)
+    async def __call__(self, request: Request, object_ids: list[str]) -> Response:
+        return await self.dispatch(request, object_ids)
 
 
-class Modal(Simple):
+class Modal(Callback):
     def __init__(
         self,
         label: str,
@@ -177,3 +188,14 @@ class Modal(Simple):
             hx_target='#modals',
         )
         self.modal = modal
+
+
+class BatchDelete(ModalAction):
+    title = _('Delete multiple objects', domain='ohmyadmin')
+    message = _('Are you sure you want to delete selected objects?', domain='ohmyadmin')
+    dangerous = True
+
+    async def apply(self, request: Request, form: wtforms.Form, object_ids: list[str]) -> Response:
+        datasource: DataSource = request.state.datasource
+        await datasource.delete(*object_ids)
+        return ActionResponse().show_toast('HUI').close_modal()

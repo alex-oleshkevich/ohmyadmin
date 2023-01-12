@@ -5,7 +5,7 @@ from starlette.responses import Response
 from starlette.routing import BaseRoute, Route
 from starlette_babel import gettext_lazy as _
 
-from ohmyadmin.actions import Modal, ObjectAction
+from ohmyadmin.actions import ActionResponse, Modal, ObjectAction
 from ohmyadmin.datasource.base import DataSource
 from ohmyadmin.filters import BaseFilter, UnboundFilter
 from ohmyadmin.ordering import get_ordering_value
@@ -128,10 +128,16 @@ class TablePage(Page):
         )
 
     async def dispatch_action(self, request: Request, action_slug: str) -> Response:
-        action = next((action for action in self.object_actions if action.slug == action_slug))
+        all_actions = self.object_actions + self.batch_actions
+        try:
+            action = next((action for action in all_actions if action.slug == action_slug))
+        except StopIteration:
+            return ActionResponse().show_toast(_('Action is undefined.', domain='ohmyadmin'), 'error')
         return await action.dispatch(request)
 
     async def handler(self, request: Request) -> Response:
+        request.state.datasource = self.datasource
+
         if '_action' in request.query_params:
             return await self.dispatch_action(request, request.query_params['_action'])
 
