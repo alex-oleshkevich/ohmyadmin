@@ -5,13 +5,14 @@ from starlette.responses import Response
 from starlette.routing import BaseRoute, Route
 from starlette_babel import gettext_lazy as _
 
+from ohmyadmin.actions import Modal, ObjectAction
 from ohmyadmin.datasource.base import DataSource
 from ohmyadmin.filters import BaseFilter, UnboundFilter
-from ohmyadmin.object_actions import ObjectAction
 from ohmyadmin.ordering import get_ordering_value
 from ohmyadmin.pages.base import Page
 from ohmyadmin.pagination import Pagination, get_page_size_value, get_page_value
 from ohmyadmin.resources import get_search_value
+from ohmyadmin.views.base import IndexView
 from ohmyadmin.views.table import TableColumn, TableView
 
 
@@ -27,11 +28,13 @@ class TablePage(Page):
     columns: typing.Sequence[TableColumn] | None = None
     filters: typing.Sequence[UnboundFilter] | None = None
     object_actions: typing.Sequence[ObjectAction] | None = None
+    batch_actions: typing.Sequence[Modal] | None = None
 
     def __init__(self) -> None:
         self.columns = self.columns or []
         self.filters = self.filters or []
         self.object_actions = self.object_actions or []
+        self.batch_actions = self.batch_actions or []
 
     @property
     def sortable_fields(self) -> list[str]:
@@ -69,10 +72,17 @@ class TablePage(Page):
 
         return await query.paginate(request, page=page_number, page_size=page_size)
 
+    def get_view(self) -> IndexView:
+        return TableView(
+            columns=self.columns,
+            object_actions=self.object_actions,
+            show_row_selector=bool(self.batch_actions),
+        )
+
     async def get(self, request: Request) -> Response:
         filters = [await _filter.create(request) for _filter in self.filters]
         objects = await self.get_objects(request, filters)
-        view = TableView(columns=self.columns, object_actions=self.object_actions)
+        view = self.get_view()
         view_content = view.render(request, objects)
 
         if request.headers.get('hx-target', '') == 'filter-bar':

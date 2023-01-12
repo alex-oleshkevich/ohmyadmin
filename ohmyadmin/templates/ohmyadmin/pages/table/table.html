@@ -2,35 +2,54 @@
 
 {% block content %}
     <div class="space-y-6" hx-target="#data" hx-indicator="#load-indicator">
+        <!-- search and actions -->
         <div class="flex items-center justify-between">
-            <!-- search and actions -->
-            <div class="flex items-center gap-3 flex-1 flex-wrap">
 
-                <!-- search form -->
-                <div class="w-96">
-                    {% if page.searchable %}
-                        <form method="get" role="search"
-                              action="{{ request.url }}"
-                              hx-get="{{ request.url.remove_query_params(page.search_param) }}"
+            <!-- search form -->
+            <div class="w-96">
+                {% if page.searchable %}
+                    <form method="get" role="search"
+                          action="{{ request.url }}"
+                          hx-get="{{ request.url.remove_query_params(page.search_param) }}"
+                    >
+                        <input type="search" incremental
+                               value="{{ search_term }}"
+                               name="{{ page.search_param }}"
+                               hx-get="{{ request.url.remove_query_params(page.search_param) }}"
+                               hx-trigger="keyup changed delay:300ms, search delay:300ms"
+                               placeholder="{{ page.search_placeholder }}"
                         >
-                            <input type="search" incremental
-                                   value="{{ search_term }}"
-                                   name="{{ page.search_param }}"
-                                   hx-get="{{ request.url.remove_query_params(page.search_param) }}"
-                                   hx-trigger="keyup changed delay:300ms, search delay:300ms"
-                                   placeholder="{{ page.search_placeholder }}"
-                            >
-                        </form>
-                    {% endif %}
-                </div>
-                <!-- end search form -->
-
-                <div id="filter-bar" hx-get hx-trigger="filters-reload" hx-target="this" class="flex items-center gap-2">
-                    {% include 'ohmyadmin/pages/table/_filters.html' %}
-                </div>
+                    </form>
+                {% endif %}
             </div>
-            <!-- end search and actions -->
-            {#            {% include 'ohmyadmin/list_page/batch_actions.html' %}#}
+            <!-- end search form -->
+            <form :action="action" method="post"
+                  :hx-get="action"
+                  hx-method="get"
+                  hx-target="#modals"
+                  @submit="$nextTick(() => action = '')"
+                  x-data="{action: ''}"
+            >
+                {% if page.batch_actions %}
+                    <x-batch-selected-rows></x-batch-selected-rows>
+                    <div class="btn-group">
+                        <select name="_action" class="w-64" x-model="action">
+                            <option value="">{{ _('Select action', domain='ohmyadmin') }}</option>
+                            {% for action in page.batch_actions %}
+                                <option value="{{ action.slug }}">{{ action.label }}</option>
+                            {% endfor %}
+                        </select>
+                        <button class="btn btn-accent" :disabled="action == ''">
+                            {{ tabler_icon('player-play') }}
+                        </button>
+                    </div>
+                {% endif %}
+            </form>
+
+        </div>
+        <!-- end search and actions -->
+        <div id="filter-bar" hx-get hx-trigger="filters-reload" hx-target="this" class="flex items-center gap-2">
+            {% include 'ohmyadmin/pages/table/_filters.html' %}
         </div>
 
         <div>

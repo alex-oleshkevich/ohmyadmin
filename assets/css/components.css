@@ -14,7 +14,7 @@
     [multiple],
     textarea,
     select {
-        @apply block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 leading-4 text-sm;
+        @apply block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 leading-4 text-sm pr-8;
         @apply focus:border-blue-400 focus:ring focus:ring-blue-200 focus:ring-opacity-50;
         @apply disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500;
         @apply transition duration-150 ease-in-out;
@@ -102,6 +102,10 @@
     table tbody tr {
         @apply hover:bg-gray-100;
     }
+
+    table tbody tr.selected {
+        @apply bg-blue-100;
+    }
 }
 
 @layer components {
@@ -136,22 +140,27 @@
         @apply hover:bg-gray-50 h-[34px];
         @apply focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2;
         @apply transition duration-150 ease-in-out;
+        @apply disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed;
     }
 
-    .btn.btn-accent {
+    .btn.btn-accent:not(:disabled) {
         @apply border-transparent bg-blue-500 text-white hover:bg-blue-600;
     }
 
-    .btn.btn-primary {
+    .btn.btn-primary:not(:disabled) {
         @apply border-transparent bg-gray-800 text-white hover:bg-gray-700;
     }
 
-    .btn.btn-danger {
+    .btn.btn-danger:not(:disabled) {
         @apply border-transparent bg-red-500 text-white hover:bg-red-700;
     }
 
-    .btn.btn-warning {
+    .btn.btn-warning:not(:disabled) {
         @apply border-transparent bg-yellow-600 text-white hover:bg-yellow-700;
+    }
+
+    .btn.btn-success:not(:disabled) {
+        @apply border-transparent bg-green-600 text-white hover:bg-green-700;
     }
 
     .btn.btn-block {
@@ -164,11 +173,27 @@
 
     .btn.btn-icon {
         aspect-ratio: 1;
-        @apply border-transparent p-1 flex items-center justify-center;
+        @apply border-transparent p-1 flex items-center justify-center bg-transparent shadow-none;
     }
 
     .btn > svg {
         @apply h-5 w-5;
+    }
+
+    .btn-group {
+        @apply flex items-center;
+    }
+
+    .btn-group > *:not(:first-child):not(:last-child) {
+        @apply rounded-tr-none rounded-br-none rounded-tl-none rounded-bl-none;
+    }
+
+    .btn-group > *:first-child {
+        @apply rounded-tr-none rounded-br-none;
+    }
+
+    .btn-group > *:last-child {
+        @apply rounded-tl-none rounded-bl-none;
     }
 
     .dropdown-menu {

@@ -1,12 +1,11 @@
 import pathlib
-import typing
-
 import sqlalchemy as sa
+import typing
 import wtforms
 from async_storages import FileStorage, LocalStorage
 from markupsafe import Markup
 from passlib.handlers.pbkdf2 import pbkdf2_sha256
-from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 from starception import install_error_handler
 from starlette.applications import Starlette
@@ -19,7 +18,8 @@ from starlette.routing import Mount, Route
 from starlette_flash import flash
 
 from examples.models import Product, User
-from ohmyadmin import object_actions
+from ohmyadmin import actions
+from ohmyadmin.actions import ActionResponse, ModalAction
 from ohmyadmin.app import OhMyAdmin
 from ohmyadmin.authentication import BaseAuthPolicy, UserMenu
 from ohmyadmin.datasource.sqla import SQLADataSource
@@ -34,11 +34,9 @@ from ohmyadmin.filters import (
     StringFilter,
 )
 from ohmyadmin.formatters import AvatarFormatter, BoolFormatter, DateFormatter, NumberFormatter
-from ohmyadmin.object_actions import ModalAction
 from ohmyadmin.pages.base import Page
 from ohmyadmin.pages.table import TablePage
 from ohmyadmin.resources import Resource, TableView
-from ohmyadmin.responses import ActionResponse
 from ohmyadmin.shortcuts import get_admin
 from ohmyadmin.views.table import TableColumn
 
@@ -170,13 +168,20 @@ class EditProductAction(ModalAction):
 class ProductPage(TablePage):
     label = 'Product'
     datasource = SQLADataSource(Product, async_session, sa.select(Product).order_by(Product.created_at.desc()))
+    batch_actions = [
+        actions.Modal('Edit info', EditProductAction(), 'pencil'),
+    ]
     object_actions = [
-        object_actions.Dispatch('Toggle visibility', toggle_visibility, 'eye', method='post'),
-        object_actions.Modal('Edit info', EditProductAction(), 'pencil'),
-        object_actions.Link('No icon', '#'),
-        object_actions.Link('View profile', '#', 'eye'),
-        object_actions.Dispatch(
-            'Delete', delete_product_action, 'trash', dangerous=True, method='delete',
+        actions.Dispatch('Toggle visibility', toggle_visibility, 'eye', method='post'),
+        actions.Modal('Edit info', EditProductAction(), 'pencil'),
+        actions.Link('No icon', '#'),
+        actions.Link('View profile', '#', 'eye'),
+        actions.Dispatch(
+            'Delete',
+            delete_product_action,
+            'trash',
+            dangerous=True,
+            method='delete',
             confirmation='Do you really want to delete this object?',
         ),
     ]
@@ -184,8 +189,8 @@ class ProductPage(TablePage):
         TableColumn('name'),
         TableColumn('price', sortable=True, formatter=NumberFormatter(suffix='USD')),
         TableColumn('compare_at_price', sortable=True, formatter=NumberFormatter(suffix='USD')),
-        TableColumn('sku', sortable=True),
-        TableColumn('quantity', sortable=True),
+        TableColumn('sku', sortable=True, label='SKU'),
+        TableColumn('quantity', sortable=True, label='Qty.'),
         TableColumn('barcode', searchable=True),
         TableColumn('visible', sortable=True, formatter=BoolFormatter(as_text=True)),
         TableColumn('availability', sortable=True, formatter=DateFormatter()),

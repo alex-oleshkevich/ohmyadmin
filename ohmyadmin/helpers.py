@@ -1,6 +1,6 @@
 import dataclasses
-import inspect
 
+import inspect
 import re
 import typing
 from starlette.datastructures import URL
@@ -39,14 +39,14 @@ class LazyURL:
     path_name: str
     path_params: dict[str, typing.Any] = dataclasses.field(default_factory=dict)
 
-    def resolve(self, request: Request) -> str:
-        return request.url_for(self.path_name, **self.path_params)
+    def resolve(self, request: Request) -> URL:
+        return URL(request.url_for(self.path_name, **self.path_params))
 
 
-def resolve_url(request: Request, url: str | URL | LazyURL) -> str:
+def resolve_url(request: Request, url: str | URL | LazyURL) -> URL:
     if isinstance(url, LazyURL):
         return url.resolve(request)
-    return str(url)
+    return URL(url)
 
 
 def get_callable_name(obj: typing.Any) -> str:

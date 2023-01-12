@@ -1,6 +1,11 @@
 <table>
     <thead>
     <tr>
+        {% if table.show_row_selector %}
+            <th>
+                <x-batch-select-all></x-batch-select-all>
+            </th>
+        {% endif %}
         {% for column in table.columns %}
             <th class="whitespace-nowrap">
                 {{ column.render_head_cell(request) }}
@@ -13,7 +18,12 @@
     </thead>
     <tbody>
     {% for object in objects %}
-        <tr>
+        <tr x-data="{selected: false}" :class="{selected: selected}">
+            {% if table.show_row_selector %}
+                <td>
+                    <x-batch-toggle object-id="{{ object.id }}" @input="selected = event.target.checked"></x-batch-toggle>
+                </td>
+            {% endif %}
             {% for columm in table.columns %}
                 <td>{{ columm.render(request, object) }}</td>
             {% endfor %}
