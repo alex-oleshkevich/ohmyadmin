@@ -31,7 +31,9 @@ export class BatchSelectAllElement extends LitElement {
             .querySelectorAll<HTMLInputElement>('input[name="_ids"]')
             .forEach(el => {
                 el.checked = (e.target as HTMLInputElement).checked;
-                ids.push(el.value);
+                if (el.checked) {
+                    ids.push(el.value);
+                }
             });
         this.dispatchEvent(new CustomEvent('rows.select-all', { detail: ids, bubbles: true }));
     }
@@ -71,6 +73,7 @@ export class BatchSelectedRowsElement extends LitElement {
 
     onAllRowsSelected(e: Event | CustomEvent<string[]>) {
         if (e instanceof CustomEvent) {
+            this.selected = [];
             e.detail.forEach(this._selectValue.bind(this));
             this.requestUpdate();
             this._triggerChangeEvent();

@@ -199,11 +199,11 @@
     }
 
     .btn-group > *:not(:first-child):not(:last-child) {
-        @apply rounded-tr-none rounded-br-none rounded-tl-none rounded-bl-none;
+        @apply rounded-tr-none rounded-br-none rounded-tl-none rounded-bl-none border-r-0;
     }
 
     .btn-group > *:first-child {
-        @apply rounded-tr-none rounded-br-none;
+        @apply rounded-tr-none rounded-br-none border-r-0;
     }
 
     .btn-group > *:last-child {

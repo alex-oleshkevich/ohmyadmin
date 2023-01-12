@@ -30,13 +30,18 @@
                 {% endif %}
             </div>
             <!-- end search form -->
+
             <div class="flex items-center gap-2">
-                <button class="btn" @click="showFilterBar = !showFilterBar">
-                    {{ tabler_icon('filter') }}
-                    <template x-if="selectedFiltersCount">
-                        <span class="badge badge-red" x-text="selectedFiltersCount"></span>
-                    </template>
-                </button>
+
+                {% if page.filters %}
+                    <button class="btn" @click="showFilterBar = !showFilterBar">
+                        {{ tabler_icon('filter') }}
+                        <template x-if="selectedFiltersCount">
+                            <span class="badge badge-red" x-text="selectedFiltersCount"></span>
+                        </template>
+                    </button>
+                {% endif %}
+
                 <form :action="action"
                       :hx-get="action"
                       hx-method="get"
@@ -64,10 +69,12 @@
         </div>
         <!-- end search and actions -->
 
-        <div id="filter-bar" hx-get hx-trigger="filters-reload" hx-target="this" class="flex items-center gap-2"
-             x-show="showFilterBar">
-            {% include 'ohmyadmin/pages/table/_filters.html' %}
-        </div>
+        {% if page.filters %}
+            <div id="filter-bar" hx-get hx-trigger="filters-reload" hx-target="this" class="flex items-center gap-2"
+                 x-show="showFilterBar">
+                {% include 'ohmyadmin/pages/table/_filters.html' %}
+            </div>
+        {% endif %}
 
         <div>
             <div class="-mb-[1px] htmx-indicator" id="load-indicator">
