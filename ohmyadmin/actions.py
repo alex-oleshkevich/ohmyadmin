@@ -235,4 +235,4 @@ class BatchDelete(ModalAction):
     async def apply(self, request: Request, form: wtforms.Form, object_ids: list[str]) -> Response:
         datasource: DataSource = request.state.datasource
         await datasource.delete(*object_ids)
-        return ActionResponse().show_toast('HUI').close_modal()
+        return ActionResponse().show_toast(_('Objects has been deleted.', domain='ohmyadmin')).close_modal()

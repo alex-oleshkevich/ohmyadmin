@@ -181,7 +181,7 @@ class ProductPage(TablePage):
         actions.Modal('Batch delete', BatchDelete(), 'trash'),
     ]
     page_actions = [
-        actions.Link('Add new', '/admin/product'),
+        actions.Link('Add new', '/admin/product', icon='plus'),
         actions.Modal('Edit in modal', EditProductAction(), 'plus'),
     ]
     object_actions = [
