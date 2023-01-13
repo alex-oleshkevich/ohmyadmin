@@ -129,17 +129,15 @@
                         <!-- dropdown -->
                         <div x-show="open" class="absolute right-0 dropdown">
                             <nav class="list-menu">
-                                {% for item in user_menu.menu %}
+                                {% for item in user_menu %}
                                     <a href="{{ item.url }}" class="list-menu-item">
                                         {{ tabler_icon(item.icon) if item.icon else '' }}
                                         {{ item.text }}
                                     </a>
                                 {% endfor %}
-                                {% if not request.user.is_anonymous %}
-                                    <button class="list-menu-item" @click="$refs.logoutForm.submit();">
-                                        {{ tabler_icon('logout') }} {{ _('Logout', domain='ohmyadmin') }}
-                                    </button>
-                                {% endif %}
+                                <button class="list-menu-item" @click="$refs.logoutForm.submit();">
+                                    {{ tabler_icon('logout') }} {{ _('Logout', domain='ohmyadmin') }}
+                                </button>
                             </nav>
                             <form action="{{ url('ohmyadmin.logout') }}" method="post" x-ref="logoutForm"></form>
                         </div>
