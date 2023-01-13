@@ -123,20 +123,21 @@
                         </div>
 
                         <!-- dropdown -->
-                        <div x-show="open" class="w-64 absolute right-0 py-1 dropdown-menu">
-                            {% for item in user_menu.menu %}
-                                <a href="{{ item.url }}">
-                                    {{ tabler_icon(item.icon) if item.icon else '' }}
-                                    {{ item.text }}
-                                </a>
-                            {% endfor %}
-                            {% if not request.user.is_anonymous %}
-                                <form action="{{ url('ohmyadmin.logout') }}" method="post">
-                                    <button class="main-menu-item">
+                        <div x-show="open" class="absolute right-0 dropdown">
+                            <nav class="list-menu">
+                                {% for item in user_menu.menu %}
+                                    <a href="{{ item.url }}" class="list-menu-item">
+                                        {{ tabler_icon(item.icon) if item.icon else '' }}
+                                        {{ item.text }}
+                                    </a>
+                                {% endfor %}
+                                {% if not request.user.is_anonymous %}
+                                    <button class="list-menu-item" @click="$refs.logoutForm.submit();">
                                         {{ tabler_icon('logout') }} {{ _('Logout', domain='ohmyadmin') }}
                                     </button>
-                                </form>
-                            {% endif %}
+                                {% endif %}
+                            </nav>
+                            <form action="{{ url('ohmyadmin.logout') }}" method="post" x-ref="logoutForm"></form>
                         </div>
                         <!-- end dropdown -->
                     </div>
