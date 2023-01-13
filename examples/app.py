@@ -18,10 +18,10 @@ from starlette.routing import Mount, Route
 from starlette_flash import flash
 
 from examples.models import Product, User
-from ohmyadmin import actions
+from ohmyadmin import actions, menu
 from ohmyadmin.actions import ActionResponse, BatchDelete, ModalAction
 from ohmyadmin.app import OhMyAdmin
-from ohmyadmin.authentication import BaseAuthPolicy, UserMenu
+from ohmyadmin.authentication import BaseAuthPolicy
 from ohmyadmin.datasource.sqla import SQLADataSource
 from ohmyadmin.filters import (
     ChoiceFilter,
@@ -34,11 +34,11 @@ from ohmyadmin.filters import (
     StringFilter,
 )
 from ohmyadmin.formatters import AvatarFormatter, BoolFormatter, DateFormatter, NumberFormatter
+from ohmyadmin.helpers import LazyURL
 from ohmyadmin.pages.form import FormPage
 from ohmyadmin.pages.page import Page
 from ohmyadmin.pages.table import TablePage
 from ohmyadmin.resources import Resource, TableView
-from ohmyadmin.shortcuts import get_admin
 from ohmyadmin.views.table import TableColumn
 
 metadata = sa.MetaData()
@@ -69,18 +69,6 @@ class AuthPolicy(BaseAuthPolicy):
             stmt = sa.select(User).where(User.id == int(user_id))
             result = await session.scalars(stmt)
             return result.one_or_none()
-
-    def get_user_menu(self, request: Request) -> UserMenu:
-        if request.user.is_authenticated:
-            return UserMenu(
-                user_name=str(request.user),
-                avatar=get_admin(request).media_url(request, request.user.avatar),
-                menu=[
-                    # MenuLink(text='My profile', url=request.url_for(ProfilePage.url_name()), icon='user'),
-                    # MenuLink(text='Settings', url=request.url_for(SettingsPage.url_name()), icon='settings'),
-                ],
-            )
-        return super().get_user_menu(request)
 
 
 class SettingsPage(Page):
@@ -250,6 +238,10 @@ admin = OhMyAdmin(
     auth_policy=AuthPolicy(),
     template_dir=this_dir / 'templates',
     file_storage=file_storage,
+    user_menu=[
+        menu.MenuLink('My profile', '/admin/profile', icon='address-book'),
+        menu.MenuLink('Settings', url=LazyURL(SettingsPage.get_path_name()), icon='address-book'),
+    ],
     pages=[
         UsersResource(),
         UserPage(),

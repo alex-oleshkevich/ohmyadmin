@@ -21,8 +21,8 @@ from starlette_babel.contrib.jinja import configure_jinja_env
 from starlette_flash import flash
 from tabler_icons import tabler_icon
 
-from ohmyadmin.authentication import AnonymousAuthPolicy, BaseAuthPolicy, UserMenu
-from ohmyadmin.menu import MenuGroup, MenuItem, MenuLink
+from ohmyadmin.authentication import AdminUser, AnonymousAuthPolicy, BaseAuthPolicy
+from ohmyadmin.menu import MenuGroup, MenuLink, NavItem
 from ohmyadmin.pages.base import BasePage
 
 START_TIME = time.time()
@@ -37,12 +37,14 @@ class OhMyAdmin(Router):
         pages: typing.Sequence[BasePage] | None = None,
         template_dir: str | os.PathLike | None = None,
         file_storage: FileStorage | None = None,
+        user_menu: typing.Sequence[NavItem] | None = None,
         auth_policy: BaseAuthPolicy = AnonymousAuthPolicy(),
     ) -> None:
         self.title = title
         self.pages = pages or []
         self.logo_url = logo_url
         self.auth_policy = auth_policy
+        self.user_menu = user_menu or []
         self.file_storage = file_storage or FileStorage(LocalStorage('/tmp/ohmyadmin', mkdirs=True))
         self.middleware: list[Middleware] = [
             Middleware(AuthenticationMiddleware, backend=auth_policy.get_authentication_backend()),
@@ -165,10 +167,14 @@ class OhMyAdmin(Router):
         flash(request).success(_('You have been logged out.', domain='ohmyadmin'))
         return RedirectResponse(request.url_for('ohmyadmin.login'), status_code=302)
 
-    def get_user_menu(self, request: Request) -> UserMenu:
-        return self.auth_policy.get_user_menu(request)
+    def get_current_user(self, request: Request) -> AdminUser:
+        return request.user
 
-    def get_main_menu(self, request: Request) -> list[MenuItem]:
+    def get_user_menu(self, request: Request) -> typing.Sequence[NavItem]:
+        user_menu = self.user_menu
+        return user_menu
+
+    def get_main_menu(self, request: Request) -> list[NavItem]:
         groups = itertools.groupby(
             self.pages,
             key=operator.attrgetter('group'),

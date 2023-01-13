@@ -1,5 +1,3 @@
-import dataclasses
-
 import abc
 import typing
 import wtforms.validators
@@ -10,19 +8,12 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 from starlette_babel import gettext_lazy as _
 from starlette_flash import flash
 
-from ohmyadmin.menu import MenuItem
-
 SESSION_KEY = '_auth_user_id_'
 
 
-@dataclasses.dataclass
-class UserMenu:
-    user_name: str = ''
-    avatar: str = ''
-    menu: list[MenuItem] = dataclasses.field(default_factory=list)
-
-    def __iter__(self) -> typing.Iterator[MenuItem]:
-        return iter(self.menu)
+class AdminUser(typing.Protocol):
+    display_name: str
+    avatar: str
 
 
 class LoginForm(wtforms.Form):
@@ -74,9 +65,6 @@ class BaseAuthPolicy(abc.ABC):
 
     def get_authentication_backend(self) -> AuthenticationBackend:
         return SessionAuthBackend()
-
-    def get_user_menu(self, request: Request) -> UserMenu:
-        return UserMenu(user_name=_('anon.', domain='ohmyadmin'))
 
 
 class AnonymousAuthPolicy(BaseAuthPolicy):
