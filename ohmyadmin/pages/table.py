@@ -5,7 +5,8 @@ from starlette.responses import Response
 from starlette.routing import BaseRoute, Route
 from starlette_babel import gettext_lazy as _
 
-from ohmyadmin.actions import ActionResponse, Modal, ObjectAction
+from ohmyadmin import actions
+from ohmyadmin.actions import ActionResponse, Modal, Action
 from ohmyadmin.datasource.base import DataSource
 from ohmyadmin.filters import BaseFilter, UnboundFilter
 from ohmyadmin.ordering import get_ordering_value
@@ -27,12 +28,14 @@ class TablePage(Page):
     max_page_size: typing.ClassVar[int] = 100
     columns: typing.Sequence[TableColumn] | None = None
     filters: typing.Sequence[UnboundFilter] | None = None
-    object_actions: typing.Sequence[ObjectAction] | None = None
+    page_actions: typing.Sequence[actions.Action] | None = None
+    object_actions: typing.Sequence[Action] | None = None
     batch_actions: typing.Sequence[Modal] | None = None
 
     def __init__(self) -> None:
         self.columns = self.columns or []
         self.filters = self.filters or []
+        self.page_actions = self.page_actions or []
         self.object_actions = self.object_actions or []
         self.batch_actions = self.batch_actions or []
 

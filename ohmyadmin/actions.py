@@ -53,30 +53,30 @@ class ActionResponse(Response):
         return self
 
 
-class ObjectAction(abc.ABC):
+class Action(abc.ABC):
     label: str = ''
     icon: str = ''
     confirmation: str = ''
     method: typing.Literal['get', 'post', 'put', 'patch', 'delete']
     dangerous: bool = False
+    menu_template: str = ''
     template: str = ''
-    button_template: str = ''
 
     def render_menu_item(self, request: Request, obj: typing.Any) -> str:
-        return render_to_string(request, self.template, {'action': self})
+        return render_to_string(request, self.menu_template, {'action': self})
 
-    def render_button(self, request: Request) -> str:
-        assert self.button_template, f'button_template is not defined on class {self.__class__.__name__}'
-        return render_to_string(request, self.button_template, {'action': self})
+    def render(self, request: Request) -> str:
+        assert self.template, f'button_template is not defined on class {self.__class__.__name__}'
+        return render_to_string(request, self.template, {'action': self})
 
     @abc.abstractmethod
     async def dispatch(self, request: Request) -> Response:
         ...
 
 
-class Link(ObjectAction):
-    template = 'ohmyadmin/object_actions/link.html'
-    button_template = 'ohmyadmin/object_actions/link_button.html'
+class Link(Action):
+    menu_template = 'ohmyadmin/actions/link_menu_item.html'
+    template = 'ohmyadmin/actions/link.html'
 
     def __init__(self, label: str, url: str | LazyURL, icon: str = '', dangerous: bool = False) -> None:
         self.url = url
@@ -92,8 +92,8 @@ class Link(ObjectAction):
         raise NotImplementedError('Link action cannot be dispatched.')
 
 
-class Submit(ObjectAction):
-    button_template = 'ohmyadmin/object_actions/submit.html'
+class Submit(Action):
+    template = 'ohmyadmin/actions/submit.html'
 
     def __init__(
         self,
@@ -115,8 +115,9 @@ class Submit(ObjectAction):
         raise NotImplementedError('Submit action cannot be dispatched.')
 
 
-class Callback(ObjectAction):
-    template = 'ohmyadmin/object_actions/callback.html'
+class Callback(Action):
+    menu_template = 'ohmyadmin/actions/callback_menu_item.html'
+    template = 'ohmyadmin/actions/callback.html'
 
     def __init__(
         self,
@@ -145,13 +146,20 @@ class Callback(ObjectAction):
         menu_link = request.url.replace(query=urlencode(params.multi_items()))
         return render_to_string(
             request,
-            self.template,
+            self.menu_template,
             {
                 'action': self,
                 'object': obj,
                 'menu_link': menu_link,
             },
         )
+
+    def render(self, request: Request) -> str:
+        params = MultiDict(parse_qsl(request.url.query, keep_blank_values=True))
+        params.append('_action', self.slug)
+        params.setlist('_ids', [])
+        menu_link = request.url.replace(query=urlencode(params.multi_items()))
+        return render_to_string(request, self.template, {'action': self, 'menu_link': menu_link})
 
     async def parse_object_ids(self, request: Request) -> list[str]:
         object_ids = request.query_params.getlist('_ids')
@@ -169,7 +177,7 @@ class ModalAction(abc.ABC):
     dangerous: bool = False
     message: str = ''
     form_class: type[wtforms.Form] = wtforms.Form
-    content_template: str = 'ohmyadmin/object_actions/modal_content.html'
+    template: str = 'ohmyadmin/actions/modal.html'
 
     async def get_form_object(self, request: Request) -> typing.Any | None:
         return None
@@ -177,14 +185,14 @@ class ModalAction(abc.ABC):
     async def render_form(self, request: Request, object_ids: list[str]) -> Response:
         model = await self.get_form_object(request)
         form = await create_form(request, self.form_class, model)
-        return render_to_response(request, self.content_template, {'modal': self, 'form': form, 'object': model})
+        return render_to_response(request, self.template, {'modal': self, 'form': form, 'object': model})
 
     async def handle_form(self, request: Request, object_ids: list[str]) -> Response:
         model = await self.get_form_object(request)
         form = await create_form(request, self.form_class, model)
         if await validate_form(form):
             return await self.apply(request, form, object_ids)
-        return render_to_response(request, self.content_template, {'modal': self, 'form': form, 'object': model})
+        return render_to_response(request, self.template, {'modal': self, 'form': form, 'object': model})
 
     @abc.abstractmethod
     async def apply(self, request: Request, form: wtforms.Form, object_ids: list[str]) -> Response:

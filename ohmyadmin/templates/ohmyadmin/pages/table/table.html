@@ -1,5 +1,11 @@
 {% extends 'ohmyadmin/app.html' %}
 
+{% block page_actions %}
+    {% for action in page.page_actions %}
+        {{ action.render(request) }}
+    {% endfor %}
+{% endblock %}
+
 {% block content %}
     <div class="space-y-6"
          hx-target="#data"

@@ -180,6 +180,10 @@ class ProductPage(TablePage):
     batch_actions = [
         actions.Modal('Batch delete', BatchDelete(), 'trash'),
     ]
+    page_actions = [
+        actions.Link('Add new', '/admin/product'),
+        actions.Modal('Edit in modal', EditProductAction(), 'plus'),
+    ]
     object_actions = [
         actions.Callback('Toggle visibility', toggle_visibility, 'eye', method='post'),
         actions.Modal('Edit info', EditProductAction(), 'pencil'),
@@ -198,8 +202,8 @@ class ProductPage(TablePage):
         TableColumn('name'),
         TableColumn('price', sortable=True, formatter=NumberFormatter(suffix='USD')),
         TableColumn('compare_at_price', sortable=True, formatter=NumberFormatter(suffix='USD')),
-        TableColumn('sku', sortable=True, label='SKU'),
-        TableColumn('quantity', sortable=True, label='Qty.'),
+        TableColumn('sku', sortable=True, label='SKU', formatter=NumberFormatter()),
+        TableColumn('quantity', sortable=True, label='Qty.', formatter=NumberFormatter()),
         TableColumn('barcode', searchable=True),
         TableColumn('visible', sortable=True, formatter=BoolFormatter(as_text=True)),
         TableColumn('availability', sortable=True, formatter=DateFormatter()),

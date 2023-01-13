@@ -11,7 +11,7 @@
         <div class="form-actions">
             {% block form_actions %}
                 {% for form_action in form_actions %}
-                    {{ form_action.render_button(request) }}
+                    {{ form_action.render(request) }}
                 {% endfor %}
             {% endblock %}
         </div>
