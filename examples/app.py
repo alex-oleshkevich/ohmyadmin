@@ -34,7 +34,8 @@ from ohmyadmin.filters import (
     StringFilter,
 )
 from ohmyadmin.formatters import AvatarFormatter, BoolFormatter, DateFormatter, NumberFormatter
-from ohmyadmin.pages.base import Page
+from ohmyadmin.pages.form import FormPage
+from ohmyadmin.pages.page import Page
 from ohmyadmin.pages.table import TablePage
 from ohmyadmin.resources import Resource, TableView
 from ohmyadmin.shortcuts import get_admin
@@ -113,9 +114,7 @@ async def toggle_visibility(request: Request, object_ids: list[str]) -> Response
     async with async_session() as session:
         for object_id in object_ids:
             await session.execute(
-                sa.update(Product)
-                .where(Product.id == int(object_id))
-                .values(visible=~Product.visible)
+                sa.update(Product).where(Product.id == int(object_id)).values(visible=~Product.visible)
             )
         await session.commit()
     return ActionResponse().show_toast('Visibility has been changed.').refresh_datatable()
@@ -166,6 +165,13 @@ class EditProductAction(ModalAction):
         form.populate_obj(instance)
         await request.state.db.commit()
         return ActionResponse().show_toast('Product has been updated.').refresh_datatable().close_modal()
+
+
+class CreateProductPage(FormPage):
+    label = 'Create Product'
+    form_class = EditProductForm
+    datasource = SQLADataSource(Product, async_session)
+    form_actions = [actions.Submit('Submit', variant='primary'), actions.Link('Back', '/')]
 
 
 class ProductPage(TablePage):
@@ -244,6 +250,7 @@ admin = OhMyAdmin(
         UsersResource(),
         UserPage(),
         ProductPage(),
+        CreateProductPage(),
         SettingsPage(),
         ProfilePage(),
     ],

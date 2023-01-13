@@ -2,13 +2,11 @@ from __future__ import annotations
 
 import datetime
 import decimal
+import sqlalchemy as sa
 import typing
 import uuid
-
-import sqlalchemy as sa
 from sqlalchemy import orm
-from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession
-from sqlalchemy.orm import ColumnProperty
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.sql.elements import NamedColumn
 from starlette.requests import Request
 
@@ -214,6 +212,13 @@ class SQLADataSource(DataSource):
             result = await session.scalars(stmt)
             rows = result.all()
             return Pagination(rows=list(rows), total_rows=row_count, page=page, page_size=page_size)
+
+    async def create(self, **attributes: typing.Any) -> typing.Any:
+        async with self.async_session() as session:
+            entity = self.model_class(**attributes)
+            session.add(entity)
+            await session.commit()
+            return entity
 
     async def delete(self, *object_ids: list[str]) -> None:
         typed_ids = list(map(self.pk_cast, object_ids))

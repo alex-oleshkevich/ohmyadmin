@@ -57,12 +57,17 @@ class ObjectAction(abc.ABC):
     label: str = ''
     icon: str = ''
     confirmation: str = ''
-    template: str = ''
     method: typing.Literal['get', 'post', 'put', 'patch', 'delete']
     dangerous: bool = False
+    template: str = ''
+    button_template: str = ''
 
     def render_menu_item(self, request: Request, obj: typing.Any) -> str:
         return render_to_string(request, self.template, {'action': self})
+
+    def render_button(self, request: Request) -> str:
+        assert self.button_template, f'button_template is not defined on class {self.__class__.__name__}'
+        return render_to_string(request, self.button_template, {'action': self})
 
     @abc.abstractmethod
     async def dispatch(self, request: Request) -> Response:
@@ -70,7 +75,8 @@ class ObjectAction(abc.ABC):
 
 
 class Link(ObjectAction):
-    template = 'ohmyadmin/object_actions/object_action_link.html'
+    template = 'ohmyadmin/object_actions/link.html'
+    button_template = 'ohmyadmin/object_actions/link_button.html'
 
     def __init__(self, label: str, url: str | LazyURL, icon: str = '', dangerous: bool = False) -> None:
         self.url = url
@@ -84,6 +90,29 @@ class Link(ObjectAction):
 
     async def dispatch(self, request: Request) -> Response:
         raise NotImplementedError('Link action cannot be dispatched.')
+
+
+class Submit(ObjectAction):
+    button_template = 'ohmyadmin/object_actions/submit.html'
+
+    def __init__(
+        self,
+        label: str,
+        variant: typing.Literal['', 'accent', 'primary', 'danger', 'success', 'warning'],
+        name: str = '',
+    ) -> None:
+        self.name = name
+        self.label = label
+        self.variant = variant
+
+    def render_menu_item(self, request: Request, obj: typing.Any) -> str:
+        raise NotImplementedError('Submit actions cannot be used as menu items.')
+
+    def resolve(self, request: Request) -> URL:
+        raise NotImplementedError('Submit actions have no URLs.')
+
+    async def dispatch(self, request: Request) -> Response:
+        raise NotImplementedError('Submit action cannot be dispatched.')
 
 
 class Callback(ObjectAction):

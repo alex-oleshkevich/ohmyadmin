@@ -9,7 +9,7 @@ from ohmyadmin.actions import ActionResponse, Modal, ObjectAction
 from ohmyadmin.datasource.base import DataSource
 from ohmyadmin.filters import BaseFilter, UnboundFilter
 from ohmyadmin.ordering import get_ordering_value
-from ohmyadmin.pages.base import Page
+from ohmyadmin.pages.page import Page
 from ohmyadmin.pagination import Pagination, get_page_size_value, get_page_value
 from ohmyadmin.resources import get_search_value
 from ohmyadmin.views.base import IndexView

@@ -90,5 +90,9 @@ class DataSource(abc.ABC):
         ...
 
     @abc.abstractmethod
+    async def create(self, **attributes: typing.Any) -> typing.Any:
+        ...
+
+    @abc.abstractmethod
     async def delete(self, *object_ids: str) -> None:
         ...
