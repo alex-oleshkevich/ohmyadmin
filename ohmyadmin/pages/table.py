@@ -92,7 +92,7 @@ class TablePage(Page):
     def get_page_actions(self, request: Request) -> typing.Sequence[actions.Action]:
         return self.page_actions or []
 
-    def get_object_actions(self, request: Request, object_id: str) -> typing.Sequence[actions.ObjectAction]:
+    def get_object_actions(self, request: Request, obj: typing.Any) -> typing.Sequence[actions.ObjectAction]:
         return self.object_actions or []
 
     async def get(self, request: Request) -> Response:
@@ -146,18 +146,18 @@ class TablePage(Page):
         )
 
     async def dispatch_action(self, request: Request, action_slug: str) -> Response:
-        all_actions = {action.slug: action for action in self.get_page_actions(request) if isinstance(action, Dispatch)}
+        actions_ = {action.slug: action for action in self.get_page_actions(request) if isinstance(action, Dispatch)}
         try:
-            action = all_actions[action_slug]
+            action = actions_[action_slug]
         except KeyError:
             raise ValueError(f'Action "{action_slug}" is not defined.')
 
         return await action.dispatch(request)
 
     async def dispatch_object_action(self, request: Request, action_slug: str) -> Response:
-        actions = {action.slug: action for action in self.object_actions or [] if isinstance(action, Dispatch)}
+        actions_ = {action.slug: action for action in self.object_actions or [] if isinstance(action, Dispatch)}
         try:
-            action = actions[action_slug]
+            action = actions_[action_slug]
         except KeyError:
             raise ValueError(f'Object action "{action_slug}" is not defined.')
 

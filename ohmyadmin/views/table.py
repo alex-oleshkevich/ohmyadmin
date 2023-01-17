@@ -59,12 +59,15 @@ class TableColumn:
         )
 
 
+ObjectActionsFactory: typing.TypeAlias = typing.Callable[[Request, typing.Any], typing.Sequence[actions.ObjectAction]]
+
+
 class TableView(IndexView):
     def __init__(
         self,
         columns: typing.Sequence[TableColumn],
         query_param: str = 'ordering',
-        object_actions_factory: typing.Callable[[Request, str], typing.Sequence[actions.ObjectAction]] | None = None,
+        object_actions_factory: ObjectActionsFactory | None = None,
         show_row_selector: bool = False,
     ) -> None:
         self.columns = columns

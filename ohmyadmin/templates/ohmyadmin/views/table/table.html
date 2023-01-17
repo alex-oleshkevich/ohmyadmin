@@ -18,7 +18,7 @@
     </thead>
     <tbody>
     {% for object in objects %}
-        {% set object_actions = table.get_object_actions(request, object.id) %}
+        {% set object_actions = table.get_object_actions(request, object) %}
 
         <tr x-data="{selected: false}" :class="{selected: selected}">
             {% if table.show_row_selector %}

@@ -256,39 +256,3 @@ class BatchDelete:
     title = _('Delete multiple objects', domain='ohmyadmin')
     message = _('Are you sure you want to delete selected objects?', domain='ohmyadmin')
     dangerous = True
-
-
-#
-#     async def apply(self, request: Request, form: wtforms.Form, object_ids: list[str]) -> Response:
-#         datasource: DataSource = request.state.datasource
-#         await datasource.delete(*object_ids)
-#         return ActionResponse().show_toast(_('Objects has been deleted.', domain='ohmyadmin')).close_modal()
-
-# def render_menu_item(self, request: Request, obj: typing.Any) -> str:
-#     params = MultiDict(parse_qsl(request.url.query, keep_blank_values=True))
-#     params.append('_action', self.slug)
-#     params.setlist('_ids', [obj.id])  # FIXME: unhardcode .id
-#     menu_link = request.url.replace(query=urlencode(params.multi_items()))
-#     return render_to_string(
-#         request,
-#         self.menu_template,
-#         {
-#             'action': self,
-#             'object': obj,
-#             'menu_link': menu_link,
-#         },
-#     )
-
-# async def parse_object_ids(self, request: Request) -> list[str]:
-#     object_ids = request.query_params.getlist('_ids')
-#     if not object_ids and request.method != 'GET':
-#         form_data = await request.form()
-#         object_ids = typing.cast(list[str], form_data.getlist('_ids'))
-#     return object_ids
-
-# def render(self, request: Request) -> str:
-#     params = MultiDict(parse_qsl(request.url.query, keep_blank_values=True))
-#     params.append('_action', self.slug)
-#     params.setlist('_ids', [])
-#     menu_link = request.url.replace(query=urlencode(params.multi_items()))
-#     return render_to_string(request, self.template, {'action': self, 'menu_link': menu_link})
