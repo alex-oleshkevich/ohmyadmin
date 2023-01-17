@@ -1,3 +1,4 @@
+import jinja2
 import typing
 from markupsafe import Markup
 
@@ -18,3 +19,8 @@ def as_html_attrs(value: typing.Mapping) -> str:
             continue
         parts.append(f'{attr_name}="{attr_value}"')
     return Markup(' '.join(parts))
+
+
+@jinja2.pass_context
+def pk_filter(context: jinja2.runtime.Context, obj: typing.Any) -> str:
+    return context['request'].state.datasource.get_pk(obj)

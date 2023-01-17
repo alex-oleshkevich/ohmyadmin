@@ -24,7 +24,7 @@ from tabler_icons import tabler_icon
 from ohmyadmin.authentication import AnonymousAuthPolicy, BaseAuthPolicy
 from ohmyadmin.menu import MenuGroup, MenuLink, NavItem
 from ohmyadmin.pages.base import BasePage
-from ohmyadmin.templates import as_html_attrs
+from ohmyadmin.templates import as_html_attrs, pk_filter
 
 START_TIME = time.time()
 PACKAGE_NAME = __name__.split('.')[0]
@@ -65,6 +65,7 @@ class OhMyAdmin(Router):
         )
         self.jinja_env.filters.update(
             {
+                'pk': pk_filter,
                 'as_html_attrs': as_html_attrs,
             }
         )

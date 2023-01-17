@@ -11,13 +11,15 @@
                 {{ column.render_head_cell(request) }}
             </th>
         {% endfor %}
-        {% if table.object_actions %}
+        {% if table.object_actions_factory %}
             <th class="text-right"></th>
         {% endif %}
     </tr>
     </thead>
     <tbody>
     {% for object in objects %}
+        {% set object_actions = table.get_object_actions(request, object.id) %}
+
         <tr x-data="{selected: false}" :class="{selected: selected}">
             {% if table.show_row_selector %}
                 <td>
@@ -30,7 +32,7 @@
             {% for columm in table.columns %}
                 <td>{{ columm.render(request, object) }}</td>
             {% endfor %}
-            {% if table.object_actions %}
+            {% if object_actions %}
                 <td>
                     <div class="flex gap-1 justify-end items-center relative"
                          x-data="{menuOpen: false}"
@@ -49,8 +51,8 @@
                              x-transition:leave-end="transform opacity-0 scale-95"
                         >
                             <div class="list-menu">
-                                {% for action in table.object_actions %}
-                                    {{ action.render_menu_item(request, object) }}
+                                {% for action in object_actions %}
+                                    {{ action.render(request, object) }}
                                 {% endfor %}
                             </div>
                         </div>

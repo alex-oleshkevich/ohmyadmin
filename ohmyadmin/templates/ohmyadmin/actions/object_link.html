@@ -1,5 +1,4 @@
-<a href="{{ action.resolve(request) }}" class="list-menu-item {{ 'danger' if action.dangerous else '' }}"
->
+<a href="{{ action.resolve(request, object) }}" class="list-menu-item">
     <span class="h-5 w-5">{{ tabler_icon(action.icon) if action.icon else '' }}</span>
     <span>{{ action.label }}</span>
 </a>

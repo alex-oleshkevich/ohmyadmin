@@ -2,7 +2,7 @@ import typing
 from markupsafe import Markup
 from starlette.requests import Request
 
-from ohmyadmin.actions import FormModal
+from ohmyadmin import actions
 from ohmyadmin.formatters import DataFormatter, ToStringFormatter
 from ohmyadmin.ordering import SortingHelper
 from ohmyadmin.pagination import Pagination
@@ -64,13 +64,16 @@ class TableView(IndexView):
         self,
         columns: typing.Sequence[TableColumn],
         query_param: str = 'ordering',
-        object_actions: typing.Sequence[FormModal] | None = None,
+        object_actions_factory: typing.Callable[[Request, str], typing.Sequence[actions.ObjectAction]] | None = None,
         show_row_selector: bool = False,
     ) -> None:
         self.columns = columns
         self.query_param = query_param
-        self.object_actions = object_actions
+        self.object_actions_factory = object_actions_factory
         self.show_row_selector = show_row_selector
+
+    def get_object_actions(self, request: Request, object_id: str) -> typing.Sequence[actions.ObjectAction]:
+        return self.object_actions_factory(request, object_id) if self.object_actions_factory else []
 
     def render(self, request: Request, objects: Pagination[typing.Any]) -> str:
         request.state.table_sorting = SortingHelper(request, self.query_param)

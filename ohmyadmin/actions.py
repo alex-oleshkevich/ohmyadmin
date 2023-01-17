@@ -193,6 +193,31 @@ class FormModal:
         return await self.dispatch(request)
 
 
+class ObjectAction:
+    template: str = ''
+
+    def render(self, request: Request, object: typing.Any) -> str:
+        assert self.template
+        return render_to_string(request, self.template, {'action': self, 'object': object})
+
+
+ObjectURLFactory = typing.Callable[[Request, typing.Any], URL | str]
+
+
+class ObjectLink(ObjectAction):
+    template = 'ohmyadmin/actions/object_link.html'
+
+    def __init__(self, label: str, url: str | LazyURL | ObjectURLFactory, icon: str = '') -> None:
+        self.url = url
+        self.icon = icon
+        self.label = label
+
+    def resolve(self, request: Request, object: typing.Any) -> URL:
+        if isinstance(self.url, (str, LazyURL)):
+            return resolve_url(request, self.url)
+        return URL(str(self.url(request, object)))
+
+
 class BatchDelete:
     title = _('Delete multiple objects', domain='ohmyadmin')
     message = _('Are you sure you want to delete selected objects?', domain='ohmyadmin')

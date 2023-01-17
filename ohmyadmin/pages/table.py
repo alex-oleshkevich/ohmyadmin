@@ -6,7 +6,7 @@ from starlette.routing import BaseRoute, Route
 from starlette_babel import gettext_lazy as _
 
 from ohmyadmin import actions
-from ohmyadmin.actions import Action, Dispatch, FormModal
+from ohmyadmin.actions import Dispatch, FormModal
 from ohmyadmin.datasource.base import DataSource
 from ohmyadmin.filters import BaseFilter, UnboundFilter
 from ohmyadmin.ordering import get_ordering_value
@@ -29,7 +29,7 @@ class TablePage(Page):
     columns: typing.Sequence[TableColumn] | None = None
     filters: typing.Sequence[UnboundFilter] | None = None
     page_actions: typing.Sequence[actions.Action] | None = None
-    object_actions: typing.Sequence[Action] | None = None
+    object_actions: typing.Sequence[actions.ObjectAction] | None = None
     batch_actions: typing.Sequence[FormModal] | None = None
 
     def __init__(self) -> None:
@@ -81,7 +81,8 @@ class TablePage(Page):
     def get_view(self) -> IndexView:
         return TableView(
             columns=self.get_columns(),
-            object_actions=self.object_actions,
+            # view needs to know if there are object actions set or not
+            object_actions_factory=self.get_object_actions if self.object_actions else None,
             show_row_selector=bool(self.batch_actions),
         )
 
@@ -90,6 +91,9 @@ class TablePage(Page):
 
     def get_page_actions(self, request: Request) -> typing.Sequence[actions.Action]:
         return self.page_actions or []
+
+    def get_object_actions(self, request: Request, object_id: str) -> typing.Sequence[actions.ObjectAction]:
+        return self.object_actions or []
 
     async def get(self, request: Request) -> Response:
         filters = [await _filter.create(request) for _filter in self.get_filters(request)]
@@ -142,12 +146,10 @@ class TablePage(Page):
         )
 
     async def dispatch_action(self, request: Request, action_slug: str) -> Response:
-        all_actions = self.get_page_actions(request)
+        all_actions = {action.slug: action for action in self.get_page_actions(request) if isinstance(action, Dispatch)}
         try:
-            action = next(
-                (action for action in all_actions if isinstance(action, Dispatch) and action.slug == action_slug)
-            )
-        except StopIteration:
+            action = all_actions[action_slug]
+        except KeyError:
             raise ValueError(f'Action "{action_slug}" is not defined.')
 
         return await action.dispatch(request)

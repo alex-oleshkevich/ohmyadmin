@@ -19,6 +19,7 @@ from ohmyadmin.filters import (
     StringFilter,
 )
 from ohmyadmin.formatters import BoolFormatter, DateFormatter, NumberFormatter
+from ohmyadmin.helpers import LazyURL
 from ohmyadmin.pages.form import FormPage
 from ohmyadmin.pages.table import TablePage
 from ohmyadmin.views.table import TableColumn
@@ -126,6 +127,11 @@ class ProductPage(TablePage):
         actions.Link('Add new', '/admin/product', icon='plus', variant='accent'),
     ]
     object_actions = [
+        actions.ObjectLink(label='Go to homepage', url='/', icon='link'),
+        actions.ObjectLink(label='Go to homepage (route)', url=LazyURL(path_name='ohmyadmin.welcome'), icon='home'),
+        actions.ObjectLink(
+            label='For object', url=lambda r, o: r.url.include_query_params(obj=o.id), icon='accessible'
+        ),
         # actions.Callback('Toggle visibility', toggle_visibility, 'eye', method='post'),
         # actions.Modal('Edit info', EditProductAction(), 'pencil'),
         # actions.Link('No icon', '#'),
