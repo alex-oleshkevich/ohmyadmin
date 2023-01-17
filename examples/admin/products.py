@@ -32,6 +32,10 @@ async def refresh_page_action(request: Request) -> Response:
     return ActionResponse().show_toast(f'Clicked! Method: {request.method}').refresh()
 
 
+async def handle_modal_form(request: Request, form: wtforms.Form) -> ActionResponse:
+    return ActionResponse().show_toast('Form submitted.').close_modal()
+
+
 async def toggle_visibility(request: Request, object_ids: list[str]) -> Response:
     async with async_session() as session:
         for object_id in object_ids:
@@ -105,13 +109,19 @@ class ProductPage(TablePage):
     ]
     page_actions = [
         actions.Callback(
+            'modal',
             'Open modal',
-            FormModal(title='This is a modal', message='Please double check your action', form_class=EditProductForm),
+            FormModal(
+                title='This is a modal',
+                message='Please double check your action',
+                form_class=EditProductForm,
+                callback=handle_modal_form,
+            ),
             icon='window-maximize',
         ),
-        actions.Callback('Refresh page', refresh_page_action, 'refresh'),
+        actions.Callback('refresh', 'Refresh page', refresh_page_action, 'refresh'),
         actions.Callback(
-            'Click me', echo_action, 'hand-finger', color='success', method='get', confirmation='Call it?'
+            'click', 'Click me', echo_action, 'hand-finger', color='success', method='get', confirmation='Call it?'
         ),
         actions.Link('Add new', '/admin/product', icon='plus', variant='accent'),
     ]
