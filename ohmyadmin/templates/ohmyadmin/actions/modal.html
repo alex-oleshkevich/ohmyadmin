@@ -23,12 +23,9 @@
             </main>
             <footer>
                 {% block actions %}
-                    <button class="btn btn-{{ 'danger' if modal.dangerous else 'accent' }}">
-                        {{ _('Submit', domain='ohmyadmin') }}
-                    </button>
-                    <button class="btn btn-text" type="button" @click="closeModal;">
-                        {{ _('Cancel', domain='ohmyadmin') }}
-                    </button>
+                    {% for action in modal.actions %}
+                        {{ action.render(request) }}
+                    {% endfor %}
                 {% endblock %}
             </footer>
         </form>

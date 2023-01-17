@@ -1,14 +1,12 @@
 import sqlalchemy as sa
-import typing
 import wtforms
-from markupsafe import Markup
 from starlette.requests import Request
 from starlette.responses import Response
 
 from examples.config import async_session
 from examples.models import Product
 from ohmyadmin import actions
-from ohmyadmin.actions import ActionResponse, BatchDelete, ModalAction
+from ohmyadmin.actions import ActionResponse, FormModal
 from ohmyadmin.datasource.sqla import SQLADataSource
 from ohmyadmin.filters import (
     ChoiceFilter,
@@ -24,6 +22,14 @@ from ohmyadmin.formatters import BoolFormatter, DateFormatter, NumberFormatter
 from ohmyadmin.pages.form import FormPage
 from ohmyadmin.pages.table import TablePage
 from ohmyadmin.views.table import TableColumn
+
+
+async def echo_action(request: Request) -> Response:
+    return ActionResponse().show_toast(f'Clicked! Method: {request.method}')
+
+
+async def refresh_page_action(request: Request) -> Response:
+    return ActionResponse().show_toast(f'Clicked! Method: {request.method}').refresh()
 
 
 async def toggle_visibility(request: Request, object_ids: list[str]) -> Response:
@@ -60,27 +66,28 @@ class EditProductForm(wtforms.Form):
     visible = wtforms.BooleanField(default=False)
 
 
-class EditProductAction(ModalAction):
-    title = 'Edit product'
-    message: str = Markup('Feel free to update <b>{object.name}</b>.')
-    form_class = EditProductForm
-
-    async def dispatch(self, request: Request, object_ids: list[str]) -> Response:
-        async with async_session() as session:
-            request.state.db = session
-            return await super().dispatch(request, object_ids)
-
-    async def get_form_object(self, request: Request) -> typing.Any | None:
-        object_id = request.query_params.get('_ids')
-        result = await request.state.db.scalars(sa.select(Product).where(Product.id == int(object_id)))
-        return result.one()
-
-    async def apply(self, request: Request, form: wtforms.Form, object_ids: list[str]) -> Response:
-        result = await request.state.db.scalars(sa.select(Product).where(Product.id == int(object_ids.pop())))
-        instance = result.one()
-        form.populate_obj(instance)
-        await request.state.db.commit()
-        return ActionResponse().show_toast('Product has been updated.').refresh_datatable().close_modal()
+#
+# class EditProductAction(ModalAction):
+#     title = 'Edit product'
+#     message: str = Markup('Feel free to update <b>{object.name}</b>.')
+#     form_class = EditProductForm
+#
+#     async def dispatch(self, request: Request, object_ids: list[str]) -> Response:
+#         async with async_session() as session:
+#             request.state.db = session
+#             return await super().dispatch(request, object_ids)
+#
+#     async def get_form_object(self, request: Request) -> typing.Any | None:
+#         object_id = request.query_params.get('_ids')
+#         result = await request.state.db.scalars(sa.select(Product).where(Product.id == int(object_id)))
+#         return result.one()
+#
+#     async def apply(self, request: Request, form: wtforms.Form, object_ids: list[str]) -> Response:
+#         result = await request.state.db.scalars(sa.select(Product).where(Product.id == int(object_ids.pop())))
+#         instance = result.one()
+#         form.populate_obj(instance)
+#         await request.state.db.commit()
+#         return ActionResponse().show_toast('Product has been updated.').refresh_datatable().close_modal()
 
 
 class CreateProductPage(FormPage):
@@ -94,25 +101,33 @@ class ProductPage(TablePage):
     label = 'Product'
     datasource = SQLADataSource(Product, async_session, sa.select(Product).order_by(Product.created_at.desc()))
     batch_actions = [
-        actions.Modal('Batch delete', BatchDelete(), 'trash'),
+        # actions.Modal('Batch delete', BatchDelete(), 'trash'),
     ]
     page_actions = [
-        actions.Link('Add new', '/admin/product', icon='plus'),
-        actions.Modal('Edit in modal', EditProductAction(), 'plus'),
+        actions.Callback(
+            'Open modal',
+            FormModal(title='This is a modal', message='Please double check your action', form_class=EditProductForm),
+            icon='window-maximize',
+        ),
+        actions.Callback('Refresh page', refresh_page_action, 'refresh'),
+        actions.Callback(
+            'Click me', echo_action, 'hand-finger', color='success', method='get', confirmation='Call it?'
+        ),
+        actions.Link('Add new', '/admin/product', icon='plus', variant='accent'),
     ]
     object_actions = [
-        actions.Callback('Toggle visibility', toggle_visibility, 'eye', method='post'),
-        actions.Modal('Edit info', EditProductAction(), 'pencil'),
-        actions.Link('No icon', '#'),
-        actions.Link('View profile', '#', 'eye'),
-        actions.Callback(
-            'Delete',
-            delete_product_action,
-            'trash',
-            dangerous=True,
-            method='delete',
-            confirmation='Do you really want to delete this object?',
-        ),
+        # actions.Callback('Toggle visibility', toggle_visibility, 'eye', method='post'),
+        # actions.Modal('Edit info', EditProductAction(), 'pencil'),
+        # actions.Link('No icon', '#'),
+        # actions.Link('View profile', '#', 'eye'),
+        # actions.Callback(
+        #     'Delete',
+        #     delete_product_action,
+        #     'trash',
+        #     dangerous=True,
+        #     method='delete',
+        #     confirmation='Do you really want to delete this object?',
+        # ),
     ]
     columns = [
         TableColumn('name'),

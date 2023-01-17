@@ -35,7 +35,7 @@ Base = declarative_base()
 
 
 def index_view(request: Request) -> Response:
-    url = request.url_for('ohmyadmin_welcome')
+    url = request.url_for('ohmyadmin.welcome')
     return Response(f'<a href="{url}">admin</a>')
 
 

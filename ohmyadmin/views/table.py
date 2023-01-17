@@ -2,7 +2,7 @@ import typing
 from markupsafe import Markup
 from starlette.requests import Request
 
-from ohmyadmin.actions import Modal
+from ohmyadmin.actions import FormModal
 from ohmyadmin.formatters import DataFormatter, ToStringFormatter
 from ohmyadmin.ordering import SortingHelper
 from ohmyadmin.pagination import Pagination
@@ -64,7 +64,7 @@ class TableView(IndexView):
         self,
         columns: typing.Sequence[TableColumn],
         query_param: str = 'ordering',
-        object_actions: typing.Sequence[Modal] | None = None,
+        object_actions: typing.Sequence[FormModal] | None = None,
         show_row_selector: bool = False,
     ) -> None:
         self.columns = columns

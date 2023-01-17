@@ -21,9 +21,10 @@ from starlette_babel.contrib.jinja import configure_jinja_env
 from starlette_flash import flash
 from tabler_icons import tabler_icon
 
-from ohmyadmin.authentication import AdminUser, AnonymousAuthPolicy, BaseAuthPolicy
+from ohmyadmin.authentication import AnonymousAuthPolicy, BaseAuthPolicy
 from ohmyadmin.menu import MenuGroup, MenuLink, NavItem
 from ohmyadmin.pages.base import BasePage
+from ohmyadmin.templates import as_html_attrs
 
 START_TIME = time.time()
 PACKAGE_NAME = __name__.split('.')[0]
@@ -60,6 +61,11 @@ class OhMyAdmin(Router):
             {
                 'admin': self,
                 'tabler_icon': tabler_icon,
+            }
+        )
+        self.jinja_env.filters.update(
+            {
+                'as_html_attrs': as_html_attrs,
             }
         )
         configure_jinja_env(self.jinja_env)
@@ -166,9 +172,6 @@ class OhMyAdmin(Router):
         self.auth_policy.logout(request)
         flash(request).success(_('You have been logged out.', domain='ohmyadmin'))
         return RedirectResponse(request.url_for('ohmyadmin.login'), status_code=302)
-
-    def get_current_user(self, request: Request) -> AdminUser:
-        return request.user
 
     def get_user_menu(self, request: Request) -> typing.Sequence[NavItem]:
         user_menu = self.user_menu

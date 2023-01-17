@@ -1,4 +1,4 @@
-<button class="btn btn-{{ 'danger' if action.dangerous else '' }}"
+<button class="btn btn-{{ action.color }}"
         hx-confirm="{{ action.confirmation }}"
         hx-{{ action.method }}="{{ menu_link }}"
         hx-target="{{ action.hx_target }}"
