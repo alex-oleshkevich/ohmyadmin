@@ -1,7 +1,7 @@
 <button class="list-menu-item {{ 'danger' if action.dangerous else '' }}" @click="menuOpen = false;"
+        hx-target="#modals"
         hx-confirm="{{ action.confirmation }}"
-        hx-{{ action.method }}="{{ menu_link }}"
-        hx-target="{{ action.hx_target }}"
+        hx-{{ action.method }}="{{ action.resolve_url(request, object) }}"
 >
     <span class="h-5 w-5">{{ tabler_icon(action.icon) if action.icon else '' }}</span>
     <span>{{ action.label }}</span>

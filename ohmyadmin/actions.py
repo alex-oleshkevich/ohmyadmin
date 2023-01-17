@@ -7,10 +7,11 @@ import json
 import typing
 import wtforms
 from starlette.background import BackgroundTask
-from starlette.datastructures import URL
+from starlette.datastructures import URL, MultiDict
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette_babel import gettext_lazy as _
+from urllib.parse import parse_qsl, urlencode
 
 from ohmyadmin.forms import create_form, validate_on_submit
 from ohmyadmin.helpers import LazyURL, resolve_url
@@ -57,6 +58,7 @@ class ActionResponse(Response):
 
 ActionCallback = typing.Callable[[Request], typing.Awaitable[ActionResponse]]
 ModalActionCallback = typing.Callable[[Request, wtforms.Form], typing.Awaitable[ActionResponse]]
+ObjectActionCallback = typing.Callable[[Request, list[str]], typing.Awaitable[ActionResponse]]
 
 
 class Action(abc.ABC):
@@ -216,6 +218,38 @@ class ObjectLink(ObjectAction):
         if isinstance(self.url, (str, LazyURL)):
             return resolve_url(request, self.url)
         return URL(str(self.url(request, object)))
+
+
+class ObjectCallback(Dispatch, ObjectAction):
+    template = 'ohmyadmin/actions/object_callback.html'
+
+    def __init__(
+        self,
+        slug: str,
+        label: str,
+        callback: ObjectActionCallback,
+        icon: str = '',
+        dangerous: bool = False,
+        method: RequestMethod = 'get',
+        confirmation: str = '',
+    ) -> None:
+        self.slug = slug
+        self.icon = icon
+        self.label = label
+        self.method = method
+        self.callback = callback
+        self.dangerous = dangerous
+        self.confirmation = confirmation
+
+    def resolve_url(self, request: Request, obj: typing.Any) -> URL:
+        params = MultiDict(parse_qsl(request.url.query, keep_blank_values=True))
+        params.append('_object_action', self.slug)
+        params.setlist('_ids', [request.state.datasource.get_pk(obj)])
+        return request.url.replace(query=urlencode(params.multi_items()))
+
+    async def dispatch(self, request: Request) -> Response:
+        object_ids = request.query_params.getlist('_ids')
+        return await self.callback(request, object_ids)
 
 
 class BatchDelete:

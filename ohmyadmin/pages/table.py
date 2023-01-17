@@ -154,11 +154,23 @@ class TablePage(Page):
 
         return await action.dispatch(request)
 
+    async def dispatch_object_action(self, request: Request, action_slug: str) -> Response:
+        actions = {action.slug: action for action in self.object_actions or [] if isinstance(action, Dispatch)}
+        try:
+            action = actions[action_slug]
+        except KeyError:
+            raise ValueError(f'Object action "{action_slug}" is not defined.')
+
+        return await action.dispatch(request)
+
     async def handler(self, request: Request) -> Response:
         request.state.datasource = self.datasource
 
         if '_action' in request.query_params:
             return await self.dispatch_action(request, request.query_params['_action'])
+
+        if '_object_action' in request.query_params:
+            return await self.dispatch_object_action(request, request.query_params['_object_action'])
 
         return await super().handler(request)
 

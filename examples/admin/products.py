@@ -127,23 +127,17 @@ class ProductPage(TablePage):
         actions.Link('Add new', '/admin/product', icon='plus', variant='accent'),
     ]
     object_actions = [
+        actions.ObjectLink(label='No icon', url='/'),
         actions.ObjectLink(label='Go to homepage', url='/', icon='link'),
         actions.ObjectLink(label='Go to homepage (route)', url=LazyURL(path_name='ohmyadmin.welcome'), icon='home'),
         actions.ObjectLink(
             label='For object', url=lambda r, o: r.url.include_query_params(obj=o.id), icon='accessible'
         ),
-        # actions.Callback('Toggle visibility', toggle_visibility, 'eye', method='post'),
+        actions.ObjectCallback('visibility', 'Toggle visibility', toggle_visibility, 'eye', method='post'),
+        actions.ObjectCallback(
+            'delete', 'Delete', delete_product_action, 'trash', method='delete', confirmation='Delete?', dangerous=True
+        ),
         # actions.Modal('Edit info', EditProductAction(), 'pencil'),
-        # actions.Link('No icon', '#'),
-        # actions.Link('View profile', '#', 'eye'),
-        # actions.Callback(
-        #     'Delete',
-        #     delete_product_action,
-        #     'trash',
-        #     dangerous=True,
-        #     method='delete',
-        #     confirmation='Do you really want to delete this object?',
-        # ),
     ]
     columns = [
         TableColumn('name'),
