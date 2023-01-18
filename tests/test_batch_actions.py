@@ -27,7 +27,7 @@ class _ExampleBatchAction(BaseBatchAction):
 class _DemoPageActions(TablePage):
     slug = 'demo'
     datasource = InMemoryDataSource([User(id='1')])
-    batch_actions = [actions.BatchAction('example', _ExampleBatchAction())]
+    batch_actions = [actions.BatchAction(_ExampleBatchAction(), slug='example')]
 
 
 app = Starlette(

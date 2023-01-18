@@ -149,8 +149,8 @@ class ProductPage(TablePage):
         ),
     ]
     batch_actions = [
-        actions.BatchAction('mass_delete', MassDeleteAction()),
-        actions.BatchAction('mass_mail', MassMailAction()),
+        actions.BatchAction(MassDeleteAction()),
+        actions.BatchAction(MassMailAction()),
     ]
     columns = [
         TableColumn('name'),

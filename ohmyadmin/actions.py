@@ -4,6 +4,7 @@ import abc
 import json
 import typing
 import wtforms
+from slugify import slugify
 from starlette.background import BackgroundTask
 from starlette.datastructures import URL, MultiDict
 from starlette.requests import Request
@@ -171,7 +172,7 @@ class Modal(abc.ABC):
         return await self.dispatch(request)
 
 
-class ObjectAction:
+class ObjectAction(abc.ABC):
     template: str = ''
 
     def render(self, request: Request, object: typing.Any) -> str:
@@ -244,15 +245,10 @@ class BaseBatchAction(abc.ABC):
 
 
 class BatchAction(ObjectCallback):
-    def __init__(self, slug: str, action: BaseBatchAction) -> None:
+    def __init__(self, action: BaseBatchAction, slug: str = '') -> None:
+        slug = slug or slugify(action.__class__.__name__.removesuffix('Action'))
         super().__init__(slug=slug, label=action.label, callback=self.dispatch)
         self.action = action
 
     async def dispatch(self, request: Request) -> Response:
         return await self.action.dispatch(request)
-
-
-class BatchDelete:
-    title = _('Delete multiple objects', domain='ohmyadmin')
-    message = _('Are you sure you want to delete selected objects?', domain='ohmyadmin')
-    dangerous = True
