@@ -6,7 +6,7 @@ from starlette.routing import BaseRoute, Route
 from starlette_babel import gettext_lazy as _
 
 from ohmyadmin import actions
-from ohmyadmin.actions import Dispatch, FormModal
+from ohmyadmin.actions import Dispatch, Modal
 from ohmyadmin.datasource.base import DataSource
 from ohmyadmin.filters import BaseFilter, UnboundFilter
 from ohmyadmin.ordering import get_ordering_value
@@ -30,7 +30,7 @@ class TablePage(Page):
     filters: typing.Sequence[UnboundFilter] | None = None
     page_actions: typing.Sequence[actions.Action] | None = None
     object_actions: typing.Sequence[actions.ObjectAction] | None = None
-    batch_actions: typing.Sequence[FormModal] | None = None
+    batch_actions: typing.Sequence[Modal] | None = None
 
     def __init__(self) -> None:
         self.columns = self.columns or []

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import dataclasses
-
 import abc
 import json
 import typing
@@ -13,7 +11,6 @@ from starlette.responses import Response
 from starlette_babel import gettext_lazy as _
 from urllib.parse import parse_qsl, urlencode
 
-from ohmyadmin.forms import create_form, validate_on_submit
 from ohmyadmin.helpers import LazyURL, resolve_url
 from ohmyadmin.shortcuts import render_to_response, render_to_string
 
@@ -58,7 +55,6 @@ class ActionResponse(Response):
 
 ActionCallback = typing.Callable[[Request], typing.Awaitable[ActionResponse]]
 ModalActionCallback = typing.Callable[[Request, wtforms.Form], typing.Awaitable[ActionResponse]]
-ObjectActionCallback = typing.Callable[[Request, list[str]], typing.Awaitable[ActionResponse]]
 
 
 class Action(abc.ABC):
@@ -146,7 +142,7 @@ class Callback(Dispatch, Action):
         self.confirmation = confirmation
         self.slug = slug
 
-        if isinstance(callback, FormModal):
+        if isinstance(callback, Modal):
             self.hx_target = '#modals'
 
     def render(self, request: Request) -> str:
@@ -157,39 +153,18 @@ class Callback(Dispatch, Action):
         return await self.callback(request)
 
 
-@dataclasses.dataclass
-class FormModal:
-    title: str
-    callback: ModalActionCallback
-    form_class: type[wtforms.Form]
-    message: str = ''
-    actions: typing.Sequence[Submit] | None = None
+class Modal(abc.ABC):
+    title: str = ''
     template: str = 'ohmyadmin/actions/modal.html'
 
-    def __post_init__(self) -> None:
-        self.actions = self.actions or [
-            Submit(_('Submit', domain='ohmyadmin'), variant='accent'),
-            Submit(
-                _('Cancel', domain='ohmyadmin'),
-                variant='text',
-                type='button',
-                html_attrs={
-                    '@click': 'closeModal;',
-                },
-            ),
-        ]
-
+    @abc.abstractmethod
     async def dispatch(self, request: Request) -> Response:
-        form = await create_form(request, self.form_class)
-        if await validate_on_submit(request, form):
-            return await self.handle(request, form)
-        return render_to_response(request, self.template, {'modal': self, 'form': form})
+        ...
 
-    async def handle(self, request: Request, form: wtforms.Form) -> ActionResponse:
-        return await self.callback(request, form)
-
-    async def default_callback(self, request: Request, form: wtforms.Form) -> ActionResponse:
-        return ActionResponse().show_toast('Modal action has no callback.', 'error')
+    def render(self, request: Request, context: typing.Mapping[str, typing.Any] | None = None) -> Response:
+        context = dict(context or {})
+        context.setdefault('modal', self)
+        return render_to_response(request, self.template, context)
 
     async def __call__(self, request: Request) -> Response:
         return await self.dispatch(request)
@@ -227,7 +202,7 @@ class ObjectCallback(Dispatch, ObjectAction):
         self,
         slug: str,
         label: str,
-        callback: ObjectActionCallback,
+        callback: ActionCallback,
         icon: str = '',
         dangerous: bool = False,
         method: RequestMethod = 'get',
@@ -248,8 +223,7 @@ class ObjectCallback(Dispatch, ObjectAction):
         return request.url.replace(query=urlencode(params.multi_items()))
 
     async def dispatch(self, request: Request) -> Response:
-        object_ids = request.query_params.getlist('_ids')
-        return await self.callback(request, object_ids)
+        return await self.callback(request)
 
 
 class BatchDelete:

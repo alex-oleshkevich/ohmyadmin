@@ -4,15 +4,14 @@
     <div class="modal">
         <form class="modal-dialog" method="post" hx-post="{{ request.url }}">
             <header>
-                <span>{{ modal.title }}</span>
-                <button type="button" @click="closeModal">
-                    {{ tabler_icon('x') }}
-                </button>
+                {% block header %}
+                    <span>{{ modal.title }}</span>
+                    <button type="button" @click="closeModal">
+                        {{ tabler_icon('x') }}
+                    </button>
+                {% endblock %}
             </header>
             <main>
-                {% if modal.message %}
-                    <div class="mb-5">{{ modal.message.format(object=object) }}</div>
-                {% endif %}
                 {% block before_form %}{% endblock %}
                 {% block form %}
                     {% for field in form %}
