@@ -12,13 +12,15 @@
                 {% endblock %}
             </header>
             <main>
-                {% block before_form %}{% endblock %}
-                {% block form %}
-                    {% for field in form %}
-                        {{ forms.form_field(field) }}
-                    {% endfor %}
+                {% block content %}
+                    {% block before_form %}{% endblock %}
+                    {% block form %}
+                        {% for field in form %}
+                            {{ forms.form_field(field) }}
+                        {% endfor %}
+                    {% endblock %}
+                    {% block after_form %}{% endblock %}
                 {% endblock %}
-                {% block after_form %}{% endblock %}
             </main>
             <footer>
                 {% block actions %}

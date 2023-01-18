@@ -6,7 +6,7 @@ from starlette.routing import BaseRoute, Route
 from starlette_babel import gettext_lazy as _
 
 from ohmyadmin import actions
-from ohmyadmin.actions import Dispatch, Modal
+from ohmyadmin.actions import Dispatch
 from ohmyadmin.datasource.base import DataSource
 from ohmyadmin.filters import BaseFilter, UnboundFilter
 from ohmyadmin.ordering import get_ordering_value
@@ -30,7 +30,7 @@ class TablePage(Page):
     filters: typing.Sequence[UnboundFilter] | None = None
     page_actions: typing.Sequence[actions.Action] | None = None
     object_actions: typing.Sequence[actions.ObjectAction] | None = None
-    batch_actions: typing.Sequence[Modal] | None = None
+    batch_actions: typing.Sequence[actions.BatchAction] | None = None
 
     def __init__(self) -> None:
         self.columns = self.columns or []
@@ -94,6 +94,9 @@ class TablePage(Page):
 
     def get_object_actions(self, request: Request, obj: typing.Any) -> typing.Sequence[actions.ObjectAction]:
         return self.object_actions or []
+
+    def get_batch_actions(self, request: Request) -> typing.Sequence[actions.BatchAction]:
+        return self.batch_actions or []
 
     async def get(self, request: Request) -> Response:
         filters = [await _filter.create(request) for _filter in self.get_filters(request)]
@@ -163,6 +166,15 @@ class TablePage(Page):
 
         return await action.dispatch(request)
 
+    async def dispatch_batch_action(self, request: Request, action_slug: str) -> Response:
+        actions_ = {action.slug: action for action in self.batch_actions or []}
+        try:
+            action = actions_[action_slug]
+        except KeyError:
+            raise ValueError(f'Batch action "{action_slug}" is not defined.')
+
+        return await action.dispatch(request)
+
     async def handler(self, request: Request) -> Response:
         request.state.datasource = self.datasource
 
@@ -171,6 +183,9 @@ class TablePage(Page):
 
         if '_object_action' in request.query_params:
             return await self.dispatch_object_action(request, request.query_params['_object_action'])
+
+        if '_batch_action' in request.query_params:
+            return await self.dispatch_batch_action(request, request.query_params['_batch_action'])
 
         return await super().handler(request)
 

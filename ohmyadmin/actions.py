@@ -11,11 +11,13 @@ from starlette.responses import Response
 from starlette_babel import gettext_lazy as _
 from urllib.parse import parse_qsl, urlencode
 
+from ohmyadmin.forms import create_form, validate_on_submit
 from ohmyadmin.helpers import LazyURL, resolve_url
 from ohmyadmin.shortcuts import render_to_response, render_to_string
 
 ButtonType = typing.Literal['default', 'accent', 'primary', 'danger', 'warning', 'success', 'text', 'link']
 RequestMethod = typing.Literal['get', 'post', 'patch', 'put', 'delete']
+ObjectURLFactory = typing.Callable[[Request, typing.Any], URL | str]
 
 
 class ActionResponse(Response):
@@ -53,8 +55,7 @@ class ActionResponse(Response):
         return self
 
 
-ActionCallback = typing.Callable[[Request], typing.Awaitable[ActionResponse]]
-ModalActionCallback = typing.Callable[[Request, wtforms.Form], typing.Awaitable[ActionResponse]]
+ActionCallback = typing.Callable[[Request], typing.Awaitable[Response]]
 
 
 class Action(abc.ABC):
@@ -178,9 +179,6 @@ class ObjectAction:
         return render_to_string(request, self.template, {'action': self, 'object': object})
 
 
-ObjectURLFactory = typing.Callable[[Request, typing.Any], URL | str]
-
-
 class ObjectLink(ObjectAction):
     template = 'ohmyadmin/actions/object_link.html'
 
@@ -224,6 +222,34 @@ class ObjectCallback(Dispatch, ObjectAction):
 
     async def dispatch(self, request: Request) -> Response:
         return await self.callback(request)
+
+
+class BaseBatchAction(abc.ABC):
+    label: str = '<unlabeled>'
+    dangerous: bool = False
+    message: str = _('Do you really want to appy this action on selected rows?', domain='ohmyadmin')
+    form_class: type[wtforms.Form] = wtforms.Form
+    template = 'ohmyadmin/actions/batch_action_modal.html'
+
+    async def dispatch(self, request: Request) -> Response:
+        object_ids = request.query_params.getlist('_ids')
+        form = await create_form(request, self.form_class)
+        if await validate_on_submit(request, form):
+            return await self.apply(request, object_ids, form)
+        return render_to_response(request, self.template, {'object_ids': object_ids, 'action': self, 'form': form})
+
+    @abc.abstractmethod
+    async def apply(self, request: Request, object_ids: list[str], form: wtforms.Form) -> Response:
+        ...
+
+
+class BatchAction(ObjectCallback):
+    def __init__(self, slug: str, action: BaseBatchAction) -> None:
+        super().__init__(slug=slug, label=action.label, callback=self.dispatch)
+        self.action = action
+
+    async def dispatch(self, request: Request) -> Response:
+        return await self.action.dispatch(request)
 
 
 class BatchDelete:

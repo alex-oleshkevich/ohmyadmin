@@ -6,7 +6,7 @@ from starlette.responses import Response
 from examples.config import async_session
 from examples.models import Product
 from ohmyadmin import actions
-from ohmyadmin.actions import ActionResponse
+from ohmyadmin.actions import ActionResponse, BaseBatchAction
 from ohmyadmin.datasource.sqla import SQLADataSource
 from ohmyadmin.filters import (
     ChoiceFilter,
@@ -97,6 +97,28 @@ async def update_product(request: Request, form: wtforms.Form, object_ids: list[
     return ActionResponse().show_toast('Product has been updated.').refresh_datatable().close_modal()
 
 
+class MassDeleteAction(BaseBatchAction):
+    dangerous = True
+    label = 'Mass delete'
+    message = 'Do you really want to apply mass delete action?'
+
+    async def apply(self, request: Request, object_ids: list[str], form: wtforms.Form) -> Response:
+        return ActionResponse().show_toast(f'Mass deleted {len(object_ids)} objects.').close_modal()
+
+
+class MassMailAction(BaseBatchAction):
+    class MassDeleteForm(wtforms.Form):
+        subject = wtforms.StringField()
+        message = wtforms.TextAreaField()
+
+    label = 'Mass mail'
+    form_class = MassDeleteForm
+    message = 'Do you really want to sent messages to selected users?'
+
+    async def apply(self, request: Request, object_ids: list[str], form: wtforms.Form) -> Response:
+        return ActionResponse().show_toast(f'Mass mailed {len(object_ids)} objects. Data: {form.data}.').close_modal()
+
+
 class CreateProductPage(FormPage):
     label = 'Create Product'
     form_class = EditProductForm
@@ -107,9 +129,6 @@ class CreateProductPage(FormPage):
 class ProductPage(TablePage):
     label = 'Product'
     datasource = SQLADataSource(Product, async_session, sa.select(Product).order_by(Product.created_at.desc()))
-    batch_actions = [
-        # actions.Modal('Batch delete', BatchDelete(), 'trash'),
-    ]
     page_actions = [
         actions.Callback('modal', 'New product', EditProductAction(), icon='window-maximize'),
         actions.Callback('refresh', 'Refresh page', refresh_page_action, 'refresh'),
@@ -128,6 +147,10 @@ class ProductPage(TablePage):
         actions.ObjectCallback(
             'delete', 'Delete', delete_product_action, 'trash', method='delete', confirmation='Delete?', dangerous=True
         ),
+    ]
+    batch_actions = [
+        actions.BatchAction('mass_delete', MassDeleteAction()),
+        actions.BatchAction('mass_mail', MassMailAction()),
     ]
     columns = [
         TableColumn('name'),
