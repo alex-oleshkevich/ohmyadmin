@@ -23,6 +23,7 @@ from tabler_icons import tabler_icon
 
 from ohmyadmin.authentication import AnonymousAuthPolicy, BaseAuthPolicy
 from ohmyadmin.menu import MenuGroup, MenuLink, NavItem
+from ohmyadmin.middleware import LoginRequiredMiddleware
 from ohmyadmin.pages.base import BasePage
 from ohmyadmin.templates import as_html_attrs, pk_filter
 
@@ -132,13 +133,14 @@ class OhMyAdmin(Router):
         return self.templates.TemplateResponse(template_name, context, headers=headers)
 
     def get_routes(self) -> typing.Sequence[BaseRoute]:
+        middleware = [Middleware(LoginRequiredMiddleware)]
         return [
             Route('/', self.index_view, name='ohmyadmin.welcome'),
             Route('/login', self.login_view, name='ohmyadmin.login', methods=['GET', 'POST']),
             Route('/logout', self.logout_view, name='ohmyadmin.logout', methods=['POST']),
             Mount('/static', StaticFiles(packages=['ohmyadmin']), name='ohmyadmin.static'),
-            Mount('/media', FileServer(self.file_storage), name='ohmyadmin.media'),
-            *[page.as_route() for page in self.pages],
+            Mount('/media', FileServer(self.file_storage), name='ohmyadmin.media', middleware=middleware),
+            Mount('/', routes=[page.as_route() for page in self.pages], middleware=middleware),
         ]
 
     def index_view(self, request: Request) -> Response:
