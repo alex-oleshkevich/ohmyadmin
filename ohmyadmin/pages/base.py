@@ -1,6 +1,7 @@
 import abc
 import typing
 from slugify import slugify
+from starlette.datastructures import URL
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
 from starlette.routing import BaseRoute
@@ -52,6 +53,9 @@ class BasePage(metaclass=PageMeta):
 
     def redirect_to_path(self, request: Request, path_name: str, **path_params: typing.Any) -> RedirectResponse:
         url = request.url_for(path_name, **path_params)
+        return RedirectResponse(url, status_code=302)
+
+    def redirect_to(self, url: str | URL) -> RedirectResponse:
         return RedirectResponse(url, status_code=302)
 
     def redirect_to_self(self, request: Request) -> RedirectResponse:

@@ -14,7 +14,11 @@ export const toast = new Notyf({
 window.toast = toast;
 
 
-// show flash messages as toasts
-(window.__TOASTS__ || []).forEach(message => {
-    toast.open({ type: message.category, message: message.message });
-});
+function showPendingToasts() {
+    const toasts: ToastOptions[] = window.__TOASTS__ || [];
+    toasts.forEach(message => {
+        toast.open({ type: message.category, message: message.message });
+    });
+}
+
+document.addEventListener('DOMContentLoaded', showPendingToasts);

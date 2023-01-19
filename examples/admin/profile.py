@@ -2,8 +2,9 @@ import typing
 import wtforms
 from starlette.requests import Request
 from starlette.responses import Response
-from starlette_flash import flash
 
+from examples.models import User
+from ohmyadmin.actions import ActionResponse
 from ohmyadmin.pages.form import FormPage
 
 
@@ -18,10 +19,9 @@ class ProfilePage(FormPage):
     form_class = ProfileForm
 
     async def get_form_object(self, request: Request) -> typing.Any:
-        return request.user
+        return await request.state.dbsession.get(User, int(request.user.id))
 
     async def handle_submit(self, request: Request, form: wtforms.Form, model: typing.Any) -> Response:
         form.populate_obj(model)
         await request.state.dbsession.commit()
-        flash(request).success('Profile updated')
-        return self.redirect_to_self(request)
+        return ActionResponse().show_toast('Profile updated')
