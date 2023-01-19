@@ -93,7 +93,7 @@ class EditProductObjectAction(actions.BaseFormObjectAction):
     async def get_form_object(self, request: Request, object_id: str) -> typing.Any:
         stmt = sa.select(Product).where(Product.id == int(object_id))
         result = await request.state.dbsession.scalars(stmt)
-        return result.one()
+        return result.get()
 
     async def handle(self, request: Request, form: wtforms.Form, model: typing.Any) -> Response:
         form.populate_obj(model)
@@ -103,7 +103,7 @@ class EditProductObjectAction(actions.BaseFormObjectAction):
 
 async def update_product(request: Request, form: wtforms.Form, object_ids: list[str]) -> Response:
     result = await request.state.db.scalars(sa.select(Product).where(Product.id == int(object_ids.pop())))
-    instance = result.one()
+    instance = result.get()
     form.populate_obj(instance)
     await request.state.db.commit()
     return ActionResponse().show_toast('Product has been updated.').refresh_datatable().close_modal()

@@ -1,7 +1,7 @@
 {% extends 'ohmyadmin/app.html' %}
 
 {% block page_actions %}
-    {% for action in page.page_actions %}
+    {% for action in page.get_page_actions(request) %}
         {{ action.render(request) }}
     {% endfor %}
 {% endblock %}

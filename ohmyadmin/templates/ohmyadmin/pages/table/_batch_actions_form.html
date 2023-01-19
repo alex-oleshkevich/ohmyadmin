@@ -1,3 +1,5 @@
+{% set batch_actions = page.get_batch_actions(request) %}
+
 <form :action="action"
       :hx-get="action"
       hx-method="get"
@@ -6,12 +8,12 @@
       x-data="{action: '', objectIds: []}"
       method="get"
 >
-    {% if page.batch_actions %}
+    {% if batch_actions %}
         <x-batch-selected-rows @change="objectIds = $event.detail"></x-batch-selected-rows>
         <div class="btn-group">
             <select name="_batch_action" class="w-64" x-model="action" :disabled="!objectIds.length">
                 <option value="">{{ _('Select action', domain='ohmyadmin') }}</option>
-                {% for action in page.get_batch_actions(request) %}
+                {% for action in batch_actions %}
                     <option value="{{ action.slug }}">{{ action.label }}</option>
                 {% endfor %}
             </select>

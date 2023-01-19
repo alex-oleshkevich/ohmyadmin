@@ -8,6 +8,7 @@ from starlette.routing import Mount, Route
 
 from examples import config
 from examples.admin.auth import AuthPolicy
+from examples.admin.categories import CategoryResource
 from examples.admin.products import ProductPage
 from examples.admin.profile import ProfilePage
 from examples.admin.settings import SettingsPage
@@ -17,17 +18,11 @@ from ohmyadmin import menu
 from ohmyadmin.app import OhMyAdmin
 from ohmyadmin.contrib.sqlalchemy import DatabaseSessionMiddleware
 from ohmyadmin.helpers import LazyURL
-from ohmyadmin.resources import Resource, TableView
 
 
 def index_view(request: Request) -> Response:
     url = request.url_for('ohmyadmin.welcome')
     return Response(f'<a href="{url}">admin</a>')
-
-
-class UsersResource(Resource):
-    icon = 'users'
-    index_view_class = TableView
 
 
 admin = OhMyAdmin(
@@ -41,7 +36,7 @@ admin = OhMyAdmin(
         menu.MenuLink('Settings', url=LazyURL(SettingsPage.get_path_name()), icon='address-book'),
     ],
     pages=[
-        UsersResource(),
+        CategoryResource(),
         UserPage(),
         ProductPage(),
         SettingsPage(),

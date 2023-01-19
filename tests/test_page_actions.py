@@ -14,6 +14,7 @@ from ohmyadmin.actions import ActionResponse
 from ohmyadmin.app import OhMyAdmin
 from ohmyadmin.datasource.memory import InMemoryDataSource
 from ohmyadmin.pages.table import TablePage
+from tests.utils import AuthTestPolicy
 
 
 async def example_callback_action(request: Request) -> ActionResponse:
@@ -40,7 +41,7 @@ class _DemoPageActions(TablePage):
 
 
 app = Starlette(
-    routes=[Mount('/admin', OhMyAdmin(pages=[_DemoPageActions()]))],
+    routes=[Mount('/admin', OhMyAdmin(pages=[_DemoPageActions()], auth_policy=AuthTestPolicy()))],
     middleware=[
         Middleware(SessionMiddleware, secret_key='key!'),
     ],

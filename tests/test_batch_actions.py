@@ -14,6 +14,7 @@ from ohmyadmin.actions import ActionResponse, BaseBatchAction
 from ohmyadmin.app import OhMyAdmin
 from ohmyadmin.datasource.memory import InMemoryDataSource
 from ohmyadmin.pages.table import TablePage
+from tests.utils import AuthTestPolicy
 
 
 class _ExampleBatchAction(BaseBatchAction):
@@ -30,7 +31,7 @@ class _DemoPageActions(TablePage):
 
 
 app = Starlette(
-    routes=[Mount('/admin', OhMyAdmin(pages=[_DemoPageActions()]))],
+    routes=[Mount('/admin', OhMyAdmin(pages=[_DemoPageActions()], auth_policy=AuthTestPolicy()))],
     middleware=[
         Middleware(SessionMiddleware, secret_key='key!'),
     ],

@@ -200,8 +200,12 @@ class SQLADataSource(DataSource):
         result = await session.scalars(stmt)
         return result.one()
 
-    async def one(self) -> typing.Any:
-        pass
+    async def get(self, pk: str) -> typing.Any:
+        async with self.async_session() as session:
+            column = getattr(self.model_class, self.pk_column)
+            stmt = sa.select(self.model_class, column == self.pk_cast(column))
+            result = await session.scalars(stmt)
+            return result.one()
 
     async def paginate(self, request: Request, page: int, page_size: int) -> Pagination[typing.Any]:
         async with self.async_session() as session:

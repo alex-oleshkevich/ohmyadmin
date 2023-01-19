@@ -20,14 +20,14 @@ class TotalOrders(ValueMetric):
     async def calculate(self, request: Request) -> int:
         stmt = sa.select(sa.func.count('*')).select_from(sa.select(Order))
         result = await request.state.dbsession.scalars(stmt)
-        return result.one()
+        return result.get()
 
 
 class OpenOrders(ValueMetric):
     async def calculate(self, request: Request) -> int:
         stmt = sa.select(sa.func.count('*')).select_from(sa.select(Order).where(Order.status == 'New'))
         result = await request.state.dbsession.scalars(stmt)
-        return result.one()
+        return result.get()
 
 
 class AveragePrice(ValueMetric):
@@ -37,7 +37,7 @@ class AveragePrice(ValueMetric):
     async def calculate(self, request: Request) -> int:
         stmt = sa.select(sa.func.avg(OrderItem.unit_price * OrderItem.quantity)).join(Order.items)
         result = await request.state.dbsession.scalars(stmt)
-        return result.one()
+        return result.get()
 
 
 class EditOrderItem(AsyncForm):

@@ -82,7 +82,7 @@ class DataSource(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def one(self) -> typing.Any:
+    async def get(self, pk: str) -> typing.Any:
         ...
 
     @abc.abstractmethod

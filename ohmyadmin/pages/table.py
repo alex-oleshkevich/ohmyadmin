@@ -5,19 +5,21 @@ from starlette.responses import Response
 from starlette.routing import BaseRoute, Route
 from starlette_babel import gettext_lazy as _
 
-from ohmyadmin import actions
-from ohmyadmin.actions import Dispatch
 from ohmyadmin.datasource.base import DataSource
-from ohmyadmin.filters import BaseFilter, UnboundFilter
+from ohmyadmin.filters import BaseFilter
 from ohmyadmin.ordering import get_ordering_value
 from ohmyadmin.pages.page import Page
+from ohmyadmin.pages.pagemixins import HasBatchActions, HasFilters, HasObjectActions, HasPageActions
 from ohmyadmin.pagination import Pagination, get_page_size_value, get_page_value
-from ohmyadmin.resources import get_search_value
 from ohmyadmin.views.base import IndexView
 from ohmyadmin.views.table import TableColumn, TableView
 
 
-class TablePage(Page):
+def get_search_value(request: Request, param_name: str) -> str:
+    return request.query_params.get(param_name, '').strip()
+
+
+class TablePage(HasPageActions, HasFilters, HasObjectActions, HasBatchActions, Page):
     __abstract__ = True
     datasource: typing.ClassVar[DataSource]
     page_param: typing.ClassVar[str] = 'page'
@@ -27,17 +29,9 @@ class TablePage(Page):
     page_size: typing.ClassVar[int] = 25
     max_page_size: typing.ClassVar[int] = 100
     columns: typing.Sequence[TableColumn] | None = None
-    filters: typing.Sequence[UnboundFilter] | None = None
-    page_actions: typing.Sequence[actions.PageAction] | None = None
-    object_actions: typing.Sequence[actions.ObjectAction] | None = None
-    batch_actions: typing.Sequence[actions.BatchAction] | None = None
 
     def __init__(self) -> None:
         self.columns = self.columns or []
-        self.filters = self.filters or []
-        self.page_actions = self.page_actions or []
-        self.object_actions = self.object_actions or []
-        self.batch_actions = self.batch_actions or []
 
     @property
     def sortable_fields(self) -> list[str]:
@@ -78,30 +72,17 @@ class TablePage(Page):
 
         return await query.paginate(request, page=page_number, page_size=page_size)
 
-    def get_view(self) -> IndexView:
+    def get_view(self, request: Request) -> IndexView:
         return TableView(
             columns=self.get_columns(),
-            # view needs to know if there are object actions set or not
-            object_actions_factory=self.get_object_actions if self.object_actions else None,
-            show_row_selector=bool(self.batch_actions),
+            object_actions_factory=self.get_object_actions,
+            show_row_selector=bool(self.get_batch_actions(request)),
         )
 
-    def get_filters(self, request: Request) -> typing.Sequence[UnboundFilter]:
-        return self.filters or []
-
-    def get_page_actions(self, request: Request) -> typing.Sequence[actions.PageAction]:
-        return self.page_actions or []
-
-    def get_object_actions(self, request: Request, obj: typing.Any) -> typing.Sequence[actions.ObjectAction]:
-        return self.object_actions or []
-
-    def get_batch_actions(self, request: Request) -> typing.Sequence[actions.BatchAction]:
-        return self.batch_actions or []
-
     async def get(self, request: Request) -> Response:
-        filters = [await _filter.create(request) for _filter in self.get_filters(request)]
+        filters = await self.create_filters(request)
         objects = await self.get_objects(request, filters)
-        view = self.get_view()
+        view = self.get_view(request)
         view_content = view.render(request, objects)
 
         if request.headers.get('hx-target', '') == 'filter-bar':
@@ -148,45 +129,8 @@ class TablePage(Page):
             },
         )
 
-    async def dispatch_action(self, request: Request, action_slug: str) -> Response:
-        actions_ = {action.slug: action for action in self.get_page_actions(request) if isinstance(action, Dispatch)}
-        try:
-            action = actions_[action_slug]
-        except KeyError:
-            raise ValueError(f'Action "{action_slug}" is not defined.')
-
-        return await action.dispatch(request)
-
-    async def dispatch_object_action(self, request: Request, action_slug: str) -> Response:
-        actions_ = {action.slug: action for action in self.object_actions or [] if isinstance(action, Dispatch)}
-        try:
-            action = actions_[action_slug]
-        except KeyError:
-            raise ValueError(f'Object action "{action_slug}" is not defined.')
-
-        return await action.dispatch(request)
-
-    async def dispatch_batch_action(self, request: Request, action_slug: str) -> Response:
-        actions_ = {action.slug: action for action in self.batch_actions or []}
-        try:
-            action = actions_[action_slug]
-        except KeyError:
-            raise ValueError(f'Batch action "{action_slug}" is not defined.')
-
-        return await action.dispatch(request)
-
     async def handler(self, request: Request) -> Response:
         request.state.datasource = self.datasource
-
-        if '_action' in request.query_params:
-            return await self.dispatch_action(request, request.query_params['_action'])
-
-        if '_object_action' in request.query_params:
-            return await self.dispatch_object_action(request, request.query_params['_object_action'])
-
-        if '_batch_action' in request.query_params:
-            return await self.dispatch_batch_action(request, request.query_params['_batch_action'])
-
         return await super().handler(request)
 
     def as_route(self) -> BaseRoute:

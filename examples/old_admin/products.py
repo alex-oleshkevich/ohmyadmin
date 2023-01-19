@@ -30,7 +30,7 @@ class TotalProducts(ValueMetric):
     async def calculate(self, request: Request) -> int:
         stmt = sa.select(sa.func.count('*')).select_from(sa.select(Product))
         result = await request.state.dbsession.scalars(stmt)
-        return result.one()
+        return result.get()
 
 
 class ProductInventory(ValueMetric):
@@ -39,7 +39,7 @@ class ProductInventory(ValueMetric):
     async def calculate(self, request: Request) -> int:
         stmt = sa.select(sa.func.sum(Product.quantity))
         result = await request.state.dbsession.scalars(stmt)
-        return result.one()
+        return result.get()
 
 
 class AveragePrice(ValueMetric):
@@ -50,7 +50,7 @@ class AveragePrice(ValueMetric):
     async def calculate(self, request: Request) -> int:
         stmt = sa.select(sa.func.avg(Product.price))
         result = await request.state.dbsession.scalars(stmt)
-        return result.one()
+        return result.get()
 
 
 class ImageUploader(Uploader):

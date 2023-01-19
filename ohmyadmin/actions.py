@@ -12,6 +12,7 @@ from starlette.responses import Response
 from starlette_babel import gettext_lazy as _
 from urllib.parse import parse_qsl, urlencode
 
+from ohmyadmin.datasource.base import DataSource
 from ohmyadmin.forms import create_form, validate_on_submit
 from ohmyadmin.helpers import LazyURL, resolve_url
 from ohmyadmin.shortcuts import render_to_response, render_to_string
@@ -385,3 +386,30 @@ class BaseBatchAction(BatchAction):
         if await validate_on_submit(request, form):
             return await self.apply(request, object_ids, form)
         return render_to_response(request, self.template, {'object_ids': object_ids, 'action': self, 'form': form})
+
+
+class BatchDelete(BaseBatchAction):
+    dangerous = True
+    success_message = _('{count} records has been deleted', domain='ohmyadmin')
+    message = _('Are you sure you want to delete selected objects?', domain='ohmyadmin')
+    label = _('Mass delete', domain='ohmyadmin')
+
+    async def apply(self, request: Request, object_ids: list[str], form: wtforms.Form) -> Response:
+        datasource: DataSource = request.state.datasource
+        await datasource.delete(*object_ids)
+        return ActionResponse().show_toast(self.success_message.format(count=len(object_ids))).close_modal()
+
+
+class DeleteObjectAction(BaseObjectAction):
+    icon = 'trash'
+    dangerous = True
+    label = _('Delete', domain='ohmyadmin')
+    success_message = _('{count} has been deleted', domain='ohmyadmin')
+    confirmation = _('Are you sure you want to delete this record?', domain='ohmyadmin')
+    method = 'delete'
+
+    async def apply(self, request: Request, object_id: str) -> Response:
+        datasource: DataSource = request.state.datasource
+        model = await datasource.get(object_id)
+        await datasource.delete(object_id)
+        return ActionResponse().show_toast(self.success_message.format(object=model)).close_modal()
