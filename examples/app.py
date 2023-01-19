@@ -12,9 +12,10 @@ from examples.admin.products import CreateProductPage, ProductPage
 from examples.admin.profile import ProfilePage
 from examples.admin.settings import SettingsPage
 from examples.admin.users import UserPage
-from examples.config import file_storage
+from examples.config import async_session, file_storage
 from ohmyadmin import menu
 from ohmyadmin.app import OhMyAdmin
+from ohmyadmin.contrib.sqlalchemy import DatabaseSessionMiddleware
 from ohmyadmin.helpers import LazyURL
 from ohmyadmin.resources import Resource, TableView
 
@@ -53,6 +54,7 @@ install_error_handler()
 app = Starlette(
     debug=True,
     middleware=[
+        Middleware(DatabaseSessionMiddleware, async_session=async_session),
         Middleware(SessionMiddleware, secret_key='key!', path='/'),
     ],
     routes=[

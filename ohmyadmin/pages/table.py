@@ -28,7 +28,7 @@ class TablePage(Page):
     max_page_size: typing.ClassVar[int] = 100
     columns: typing.Sequence[TableColumn] | None = None
     filters: typing.Sequence[UnboundFilter] | None = None
-    page_actions: typing.Sequence[actions.Action] | None = None
+    page_actions: typing.Sequence[actions.PageAction] | None = None
     object_actions: typing.Sequence[actions.ObjectAction] | None = None
     batch_actions: typing.Sequence[actions.BatchAction] | None = None
 
@@ -89,7 +89,7 @@ class TablePage(Page):
     def get_filters(self, request: Request) -> typing.Sequence[UnboundFilter]:
         return self.filters or []
 
-    def get_page_actions(self, request: Request) -> typing.Sequence[actions.Action]:
+    def get_page_actions(self, request: Request) -> typing.Sequence[actions.PageAction]:
         return self.page_actions or []
 
     def get_object_actions(self, request: Request, obj: typing.Any) -> typing.Sequence[actions.ObjectAction]:

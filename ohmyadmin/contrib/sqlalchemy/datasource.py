@@ -220,7 +220,7 @@ class SQLADataSource(DataSource):
             await session.commit()
             return entity
 
-    async def delete(self, *object_ids: list[str]) -> None:
+    async def delete(self, *object_ids: str) -> None:
         typed_ids = list(map(self.pk_cast, object_ids))
         stmt = sa.delete(self.model_class).where(sa.column(self.pk_column).in_(typed_ids))
         async with self.async_session() as session:

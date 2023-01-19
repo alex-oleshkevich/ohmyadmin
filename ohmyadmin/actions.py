@@ -59,7 +59,7 @@ class ActionResponse(Response):
 ActionCallback = typing.Callable[[Request], typing.Awaitable[Response]]
 
 
-class Action(abc.ABC):
+class PageAction(abc.ABC):
     template: str = ''
 
     def render(self, request: Request) -> str:
@@ -67,7 +67,7 @@ class Action(abc.ABC):
         return render_to_string(request, self.template, {'action': self})
 
 
-class Link(Action):
+class Link(PageAction):
     """
     A link action.
 
@@ -87,7 +87,7 @@ class Link(Action):
         return resolve_url(request, self.url)
 
 
-class Submit(Action):
+class Submit(PageAction):
     """
     Submit actions are regular buttons.
 
@@ -119,7 +119,7 @@ class Dispatch(abc.ABC):
         ...
 
 
-class Callback(Dispatch, Action):
+class Callback(Dispatch, PageAction):
     """Callback actions execute a backend function when clicked."""
 
     template = 'ohmyadmin/actions/callback.html'
@@ -225,12 +225,159 @@ class ObjectCallback(Dispatch, ObjectAction):
         return await self.callback(request)
 
 
-class BaseBatchAction(abc.ABC):
+class BasePageAction(Callback):
+    icon: str = ''
+    button_color: ButtonType = 'default'
+    label: str = '<unlabeled>'
+    confirmation: str = ''
+    method: RequestMethod = 'get'
+
+    def __init__(self, slug: str = '') -> None:
+        slug = slug or slugify(self.__class__.__name__.removesuffix('PageAction'))
+        super().__init__(
+            slug,
+            label=self.label,
+            callback=self.dispatch,
+            icon=self.icon,
+            color=self.button_color,
+            confirmation=self.confirmation,
+            method=self.method,
+            hx_target='#modals',
+        )
+
+    @abc.abstractmethod
+    async def apply(self, request: Request) -> Response:
+        ...
+
+    async def dispatch(self, request: Request) -> Response:
+        return await self.apply(request)
+
+
+class BaseFormPageAction(BasePageAction):
+    form_class: type[wtforms.Form] = wtforms.Form
+    actions: list[Submit | Link] | None = None
+    form_template: str = 'ohmyadmin/actions/form_action.html'
+
+    async def get_form_object(self, request: Request) -> typing.Any:
+        return None
+
+    def get_form_actions(self, request: Request, model: typing.Any) -> list[Submit | Link]:
+        return self.actions or [
+            Submit(label=_('Submit', domain='ohmyadmin'), variant='accent', type='submit'),
+            Submit(
+                label=_('Cancel', domain='ohmyadmin'),
+                variant='text',
+                type='button',
+                html_attrs={
+                    '@click': 'closeModal;',
+                },
+            ),
+        ]
+
+    async def apply(self, request: Request) -> Response:
+        model = await self.get_form_object(request)
+        form = await create_form(request, self.form_class, model)
+        if await validate_on_submit(request, form):
+            return await self.handle(request, form, model)
+
+        return render_to_response(
+            request,
+            self.form_template,
+            {'action': self, 'form': form, 'actions': self.get_form_actions(request, model)},
+        )
+
+    @abc.abstractmethod
+    async def handle(self, request: Request, form: wtforms.Form, model: typing.Any) -> Response:
+        ...
+
+
+class BaseObjectAction(ObjectCallback):
+    icon: str = ''
+    label: str = '<unlabeled>'
+    dangerous: bool = False
+    confirmation: str = ''
+    method: RequestMethod = 'get'
+
+    def __init__(self, slug: str = '') -> None:
+        slug = slug or slugify(self.__class__.__name__.removesuffix('ObjectAction'))
+        super().__init__(
+            slug,
+            label=self.label,
+            callback=self.dispatch,
+            icon=self.icon,
+            dangerous=self.dangerous,
+            method=self.method,
+            confirmation=self.confirmation,
+        )
+
+    @abc.abstractmethod
+    async def apply(self, request: Request, object_id: str) -> Response:
+        ...
+
+    async def dispatch(self, request: Request) -> Response:
+        object_id = request.query_params.get('_ids', '')
+        if not object_id:
+            return ActionResponse().show_toast(_('No object selected', domain='ohmyadmin'), 'error')
+        return await self.apply(request, object_id)
+
+    async def __call__(self, request: Request) -> Response:
+        return await self.dispatch(request)
+
+
+class BaseFormObjectAction(BaseObjectAction):
+    form_class: type[wtforms.Form] = wtforms.Form
+    actions: list[Submit | Link] | None = None
+    form_template: str = 'ohmyadmin/actions/form_action.html'
+
+    async def get_form_object(self, request: Request, object_id: str) -> typing.Any:
+        return None
+
+    def get_form_actions(self, request: Request, model: typing.Any) -> list[Submit | Link]:
+        return self.actions or [
+            Submit(label=_('Submit', domain='ohmyadmin'), variant='accent', type='submit'),
+            Submit(
+                label=_('Cancel', domain='ohmyadmin'),
+                variant='text',
+                type='button',
+                html_attrs={
+                    '@click': 'closeModal;',
+                },
+            ),
+        ]
+
+    async def apply(self, request: Request, object_id: str) -> Response:
+        model = await self.get_form_object(request, object_id)
+        form = await create_form(request, self.form_class, model)
+        if await validate_on_submit(request, form):
+            return await self.handle(request, form, model)
+
+        return render_to_response(
+            request,
+            self.form_template,
+            {'action': self, 'form': form, 'actions': self.get_form_actions(request, model)},
+        )
+
+    @abc.abstractmethod
+    async def handle(self, request: Request, form: wtforms.Form, model: typing.Any) -> Response:
+        ...
+
+
+class BatchAction(ObjectCallback, abc.ABC):
+    @abc.abstractmethod
+    async def apply(self, request: Request, object_ids: list[str], form: wtforms.Form) -> Response:
+        ...
+
+
+class BaseBatchAction(BatchAction):
     label: str = '<unlabeled>'
     dangerous: bool = False
     message: str = _('Do you really want to appy this action on selected rows?', domain='ohmyadmin')
     form_class: type[wtforms.Form] = wtforms.Form
     template = 'ohmyadmin/actions/batch_action_modal.html'
+
+    def __init__(self, slug: str = '') -> None:
+        slug = slug or slugify(self.__class__.__name__.removesuffix('BatchAction'))
+        super().__init__(slug=slug, label=self.label, callback=self.dispatch, dangerous=self.dangerous, method='get')
 
     async def dispatch(self, request: Request) -> Response:
         object_ids = request.query_params.getlist('_ids')
@@ -238,17 +385,3 @@ class BaseBatchAction(abc.ABC):
         if await validate_on_submit(request, form):
             return await self.apply(request, object_ids, form)
         return render_to_response(request, self.template, {'object_ids': object_ids, 'action': self, 'form': form})
-
-    @abc.abstractmethod
-    async def apply(self, request: Request, object_ids: list[str], form: wtforms.Form) -> Response:
-        ...
-
-
-class BatchAction(ObjectCallback):
-    def __init__(self, action: BaseBatchAction, slug: str = '') -> None:
-        slug = slug or slugify(action.__class__.__name__.removesuffix('Action'))
-        super().__init__(slug=slug, label=action.label, callback=self.dispatch)
-        self.action = action
-
-    async def dispatch(self, request: Request) -> Response:
-        return await self.action.dispatch(request)

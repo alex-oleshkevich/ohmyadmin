@@ -3,6 +3,8 @@
         hx-{{ action.method }}="{{ menu_link }}"
         hx-target="{{ action.hx_target }}"
 >
+    {% if action.icon %}
     <span class="h-5 w-5">{{ tabler_icon(action.icon) if action.icon else '' }}</span>
+    {% endif %}
     <span>{{ action.label }}</span>
 </button>

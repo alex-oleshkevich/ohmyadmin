@@ -6,7 +6,15 @@ from starlette.responses import Response
 
 from examples.models import User
 from ohmyadmin import display
-from ohmyadmin.actions import Action, BatchAction, LinkRowAction, ModalAction, ModalRowAction, RowAction, RowActionGroup
+from ohmyadmin.actions import (
+    BatchAction,
+    LinkRowAction,
+    ModalAction,
+    ModalRowAction,
+    PageAction,
+    RowAction,
+    RowActionGroup,
+)
 from ohmyadmin.display import DisplayField
 from ohmyadmin.ext.sqla import BatchDeleteAction, SQLAlchemyResource
 from ohmyadmin.forms import AsyncForm, AvatarField, ImageType, Uploader
@@ -102,7 +110,7 @@ class UserResource(SQLAlchemyResource):
         yield BatchDeleteAction(self.entity_class, pk_column=User.id)
         yield DuplicateAction()
 
-    def get_page_actions(self, request: Request) -> typing.Iterable[Action]:
+    def get_page_actions(self, request: Request) -> typing.Iterable[PageAction]:
         yield ExportAction()
 
     def get_projections(self, request: Request) -> typing.Iterable[Projection]:

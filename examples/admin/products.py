@@ -1,4 +1,5 @@
 import sqlalchemy as sa
+import typing
 import wtforms
 from starlette.requests import Request
 from starlette.responses import Response
@@ -6,8 +7,8 @@ from starlette.responses import Response
 from examples.config import async_session
 from examples.models import Product
 from ohmyadmin import actions
-from ohmyadmin.actions import ActionResponse, BaseBatchAction
-from ohmyadmin.datasource.sqla import SQLADataSource
+from ohmyadmin.actions import ActionResponse, BaseBatchAction, BaseObjectAction, BasePageAction
+from ohmyadmin.contrib.sqlalchemy import SQLADataSource
 from ohmyadmin.filters import (
     ChoiceFilter,
     DateFilter,
@@ -71,22 +72,34 @@ class EditProductForm(wtforms.Form):
     visible = wtforms.BooleanField(default=False)
 
 
-class EditProductAction(actions.Modal):
-    title = 'Edit product'
+class CreateProductAction(actions.BaseFormPageAction):
+    label = 'Create product'
+    form_class = EditProductForm
 
-    async def dispatch(self, request: Request) -> Response:
+    async def get_form_object(self, request: Request) -> typing.Any:
+        return Product()
+
+    async def handle(self, request: Request, form: wtforms.Form, model: typing.Any) -> Response:
         async with async_session() as session:
-            object_id = request.query_params.get('_ids')
-            model = None
-            if object_id:
-                result = await session.scalars(sa.select(Product).where(Product.id == int(object_id)))
-                model = result.one()
-            form = EditProductForm(await request.form(), obj=model)
-            if request.method == 'POST' and form.validate():
-                form.populate_obj(model)
-                await session.commit()
-                return ActionResponse().show_toast('Product has been updated.').refresh_datatable().close_modal()
-            return self.render(request, {'form': form})
+            form.populate_obj(model)
+            await session.commit()
+            return ActionResponse().show_toast('Product has been updated.').refresh_datatable().close_modal()
+
+
+class EditProductObjectAction(actions.BaseFormObjectAction):
+    label = 'Edit product'
+    icon = 'pencil'
+    form_class = EditProductForm
+
+    async def get_form_object(self, request: Request, object_id: str) -> typing.Any:
+        stmt = sa.select(Product).where(Product.id == int(object_id))
+        result = await request.state.dbsession.scalars(stmt)
+        return result.one()
+
+    async def handle(self, request: Request, form: wtforms.Form, model: typing.Any) -> Response:
+        form.populate_obj(model)
+        await request.state.dbsession.commit()
+        return ActionResponse().show_toast('Updated').refresh_datatable().close_modal()
 
 
 async def update_product(request: Request, form: wtforms.Form, object_ids: list[str]) -> Response:
@@ -97,7 +110,7 @@ async def update_product(request: Request, form: wtforms.Form, object_ids: list[
     return ActionResponse().show_toast('Product has been updated.').refresh_datatable().close_modal()
 
 
-class MassDeleteAction(BaseBatchAction):
+class MassDeleteBatchAction(BaseBatchAction):
     dangerous = True
     label = 'Mass delete'
     message = 'Do you really want to apply mass delete action?'
@@ -106,7 +119,7 @@ class MassDeleteAction(BaseBatchAction):
         return ActionResponse().show_toast(f'Mass deleted {len(object_ids)} objects.').close_modal()
 
 
-class MassMailAction(BaseBatchAction):
+class MassMailBatchAction(BaseBatchAction):
     class MassDeleteForm(wtforms.Form):
         subject = wtforms.StringField()
         message = wtforms.TextAreaField()
@@ -117,6 +130,26 @@ class MassMailAction(BaseBatchAction):
 
     async def apply(self, request: Request, object_ids: list[str], form: wtforms.Form) -> Response:
         return ActionResponse().show_toast(f'Mass mailed {len(object_ids)} objects. Data: {form.data}.').close_modal()
+
+
+class ToggleVisibilityObjectAction(BaseObjectAction):
+    label = 'Toggle visibility (class)'
+    icon = 'eye'
+
+    async def apply(self, request: Request, object_id: str) -> Response:
+        async with async_session() as session:
+            await session.execute(
+                sa.update(Product).where(Product.id == int(object_id)).values(visible=~Product.visible)
+            )
+            await session.commit()
+        return ActionResponse().show_toast('Visibility has been changed.').refresh_datatable()
+
+
+class ShowToastPageAction(BasePageAction):
+    label = 'Show toast'
+
+    async def apply(self, request: Request) -> Response:
+        return ActionResponse().show_toast(f'Clicked! Method: {request.method}')
 
 
 class CreateProductPage(FormPage):
@@ -130,12 +163,14 @@ class ProductPage(TablePage):
     label = 'Product'
     datasource = SQLADataSource(Product, async_session, sa.select(Product).order_by(Product.created_at.desc()))
     page_actions = [
-        actions.Callback('modal', 'New product', EditProductAction(), icon='window-maximize'),
+        ShowToastPageAction(),
+        CreateProductAction(),
         actions.Callback('refresh', 'Refresh page', refresh_page_action, 'refresh'),
         actions.Callback('click', 'Show toast', echo_action, 'hand-finger', color='success'),
         actions.Link('Add new', '/admin/product', icon='plus', variant='accent'),
     ]
     object_actions = [
+        ToggleVisibilityObjectAction(),
         actions.ObjectLink(label='No icon', url='/'),
         actions.ObjectLink(label='Go to homepage', url='/', icon='link'),
         actions.ObjectLink(label='Go to homepage (route)', url=LazyURL(path_name='ohmyadmin.welcome'), icon='home'),
@@ -143,14 +178,14 @@ class ProductPage(TablePage):
             label='For object', url=lambda r, o: r.url.include_query_params(obj=o.id), icon='accessible'
         ),
         actions.ObjectCallback('visibility', 'Toggle visibility', toggle_visibility, 'eye', method='post'),
-        actions.ObjectCallback('edit', 'Edit', EditProductAction(), icon='pencil'),
+        EditProductObjectAction(),
         actions.ObjectCallback(
             'delete', 'Delete', delete_product_action, 'trash', method='delete', confirmation='Delete?', dangerous=True
         ),
     ]
     batch_actions = [
-        actions.BatchAction(MassDeleteAction()),
-        actions.BatchAction(MassMailAction()),
+        MassDeleteBatchAction(),
+        MassMailBatchAction(),
     ]
     columns = [
         TableColumn('name'),

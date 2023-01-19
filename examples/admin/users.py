@@ -1,6 +1,6 @@
 from examples.config import async_session
 from examples.models import User
-from ohmyadmin.datasource.sqla import SQLADataSource
+from ohmyadmin.contrib.sqlalchemy import SQLADataSource
 from ohmyadmin.filters import StringFilter
 from ohmyadmin.formatters import AvatarFormatter, BoolFormatter, DateFormatter
 from ohmyadmin.pages.table import TablePage

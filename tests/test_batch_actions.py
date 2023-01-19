@@ -10,7 +10,6 @@ from starlette.routing import Mount
 from starlette.testclient import TestClient
 
 from examples.models import User
-from ohmyadmin import actions
 from ohmyadmin.actions import ActionResponse, BaseBatchAction
 from ohmyadmin.app import OhMyAdmin
 from ohmyadmin.datasource.memory import InMemoryDataSource
@@ -27,7 +26,7 @@ class _ExampleBatchAction(BaseBatchAction):
 class _DemoPageActions(TablePage):
     slug = 'demo'
     datasource = InMemoryDataSource([User(id='1')])
-    batch_actions = [actions.BatchAction(_ExampleBatchAction(), slug='example')]
+    batch_actions = [_ExampleBatchAction(slug='example')]
 
 
 app = Starlette(
