@@ -8,7 +8,7 @@ from starlette.routing import Mount, Route
 
 from examples import config
 from examples.admin.auth import AuthPolicy
-from examples.admin.products import CreateProductPage, ProductPage
+from examples.admin.products import ProductPage
 from examples.admin.profile import ProfilePage
 from examples.admin.settings import SettingsPage
 from examples.admin.users import UserPage
@@ -44,7 +44,6 @@ admin = OhMyAdmin(
         UsersResource(),
         UserPage(),
         ProductPage(),
-        CreateProductPage(),
         SettingsPage(),
         ProfilePage(),
     ],

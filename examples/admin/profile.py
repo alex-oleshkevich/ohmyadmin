@@ -14,6 +14,7 @@ class ProfileForm(wtforms.Form):
 
 class ProfilePage(FormPage):
     icon = 'user'
+    group = 'Settings'
     form_class = ProfileForm
 
     async def get_form_object(self, request: Request) -> typing.Any:

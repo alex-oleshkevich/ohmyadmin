@@ -8,6 +8,7 @@ from ohmyadmin.pages.page import Page
 class SettingsPage(Page):
     icon = 'settings'
     label_plural = 'Settings'
+    group = 'Settings'
     template = 'settings_page.html'
 
     def post(self, request: Request) -> Response:

@@ -21,7 +21,6 @@ from ohmyadmin.filters import (
 )
 from ohmyadmin.formatters import BoolFormatter, DateFormatter, NumberFormatter
 from ohmyadmin.helpers import LazyURL
-from ohmyadmin.pages.form import FormPage
 from ohmyadmin.pages.table import TablePage
 from ohmyadmin.views.table import TableColumn
 
@@ -150,13 +149,6 @@ class ShowToastPageAction(BasePageAction):
 
     async def apply(self, request: Request) -> Response:
         return ActionResponse().show_toast(f'Clicked! Method: {request.method}')
-
-
-class CreateProductPage(FormPage):
-    label = 'Create Product'
-    form_class = EditProductForm
-    datasource = SQLADataSource(Product, async_session)
-    form_actions = [actions.Submit('Submit', variant='primary'), actions.Link('Back', '/')]
 
 
 class ProductPage(TablePage):
