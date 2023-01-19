@@ -23,10 +23,9 @@
         <tr x-data="{selected: false}" :class="{selected: selected}">
             {% if table.show_row_selector %}
                 <td>
-                    <!-- FIXME: unhardcode .id -->
-                    <x-batch-toggle object-id="{{ object.id }}"
-                                    @input="selected = event.target.checked"
-                    ></x-batch-toggle>
+                    <x-batch-toggle object-id="{{ object|pk }}" @input="selected = event.target.checked">
+
+                    </x-batch-toggle>
                 </td>
             {% endif %}
             {% for columm in table.columns %}
