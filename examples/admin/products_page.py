@@ -2,6 +2,7 @@ import sqlalchemy as sa
 from sqlalchemy.orm import joinedload, selectinload
 
 from examples.admin.brands import Brands
+from examples.admin.products import AveragePrice, Invisible, TotalProducts
 from examples.models import Brand, Product
 from ohmyadmin import formatters
 from ohmyadmin.contrib.sqlalchemy import SQLADataSource
@@ -14,6 +15,7 @@ class ProductsPage(TablePage):
     icon = 'assembly'
     group = 'Pages'
     label_plural = 'Products'
+    metrics = [TotalProducts, AveragePrice, Invisible]
     datasource = SQLADataSource(
         Product,
         query=(
