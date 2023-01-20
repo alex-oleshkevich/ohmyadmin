@@ -1,6 +1,6 @@
 <!-- search form -->
 <div class="w-96">
-    {% if page.searchable %}
+    {% if page.is_searchable(request) %}
         <form method="get" role="search"
               action="{{ request.url }}"
               hx-get="{{ request.url.remove_query_params(page.search_param) }}"
@@ -10,7 +10,7 @@
                    name="{{ page.search_param }}"
                    hx-get="{{ request.url.remove_query_params(page.search_param) }}"
                    hx-trigger="keyup changed delay:300ms, search delay:300ms"
-                   placeholder="{{ page.search_placeholder }}"
+                   placeholder="{{ page.get_search_placeholder(request) }}"
             >
         </form>
     {% endif %}

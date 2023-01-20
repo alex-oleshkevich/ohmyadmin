@@ -11,9 +11,10 @@ from starlette_flash import flash
 from ohmyadmin import actions
 from ohmyadmin.actions import ActionResponse, BatchDelete, DeleteObjectAction
 from ohmyadmin.forms import create_form, populate_object, validate_on_submit
-from ohmyadmin.helpers import LazyURL
+from ohmyadmin.helpers import LazyObjectURL, LazyURL
 from ohmyadmin.pages.base import BasePage
 from ohmyadmin.pages.pagemixins import IndexViewMixin
+from ohmyadmin.views.table import TableColumn
 
 
 class Resource(BasePage, Router, IndexViewMixin):
@@ -22,6 +23,16 @@ class Resource(BasePage, Router, IndexViewMixin):
 
     def __init__(self) -> None:
         super().__init__(routes=self.get_routes())
+
+    def get_table_columns(self, request: Request) -> typing.Sequence[TableColumn]:
+        columns = list(self.columns or [])
+        for column in columns:
+            if column.link is True:
+                column.link = LazyObjectURL(
+                    lambda r, o: URL(request.url_for(self.get_path_name() + '.edit', pk=self.datasource.get_pk(o)))
+                )
+
+        return columns
 
     def get_page_actions(self, request: Request) -> list[actions.PageAction]:
         create_route_name = self.get_path_name() + '.create'

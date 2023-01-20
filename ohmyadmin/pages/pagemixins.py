@@ -115,25 +115,21 @@ class IndexViewMixin(HasPageActions, HasFilters, HasObjectActions, HasBatchActio
     def __init__(self) -> None:
         self.columns = self.columns or []
 
-    @property
-    def sortable_fields(self) -> list[str]:
-        return [column.sort_by for column in self.get_table_columns() if column.sortable]
+    def get_sortable_fields(self, request: Request) -> list[str]:
+        return [column.sort_by for column in self.get_table_columns(request) if column.sortable]
 
-    @property
-    def searchable_fields(self) -> list[str]:
-        return [column.search_in for column in self.get_table_columns() if column.searchable]
+    def get_searchable_fields(self, request: Request) -> list[str]:
+        return [column.search_in for column in self.get_table_columns(request) if column.searchable]
 
-    @property
-    def searchable(self) -> bool:
-        return bool(self.searchable_fields)
+    def is_searchable(self, request: Request) -> bool:
+        return bool(self.get_searchable_fields(request))
 
-    @property
-    def search_placeholder(self) -> str:
+    def get_search_placeholder(self, request: Request) -> str:
         template = _('Search in {fields}.')
-        fields = ', '.join([str(column.label) for column in self.get_table_columns() if column.searchable])
+        fields = ', '.join([str(column.label) for column in self.get_table_columns(request) if column.searchable])
         return template.format(fields=fields)
 
-    def get_table_columns(self) -> typing.Sequence[TableColumn]:
+    def get_table_columns(self, request: Request) -> typing.Sequence[TableColumn]:
         return self.columns or []
 
     async def get_objects(self, request: Request, filters: list[BaseFilter]) -> Pagination:
@@ -144,10 +140,10 @@ class IndexViewMixin(HasPageActions, HasFilters, HasObjectActions, HasBatchActio
 
         query = self.datasource.get_for_index()
         if search_term:
-            query = query.apply_search(search_term, self.searchable_fields)
+            query = query.apply_search(search_term, self.get_searchable_fields(request))
 
         if ordering:
-            query = query.apply_ordering(ordering, self.sortable_fields)
+            query = query.apply_ordering(ordering, self.get_sortable_fields(request))
 
         for _filter in filters:
             query = _filter.apply(request, query)
@@ -155,7 +151,7 @@ class IndexViewMixin(HasPageActions, HasFilters, HasObjectActions, HasBatchActio
         return await query.paginate(request, page=page_number, page_size=page_size)
 
     def get_view(self, request: Request) -> IndexView:
-        return TableView(columns=self.get_table_columns())
+        return TableView(columns=self.get_table_columns(request))
 
     async def dispatch_index_view(self, request: Request) -> Response:
         filters = await self.create_filters(request)
