@@ -1,6 +1,6 @@
-import functools
 import typing
 import wtforms
+from starlette.datastructures import FormData
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
 from starlette.routing import BaseRoute, Mount, Route, Router
@@ -8,9 +8,9 @@ from starlette_babel import gettext_lazy as _
 from starlette_flash import flash
 
 from ohmyadmin import actions
-from ohmyadmin.actions import BatchDelete, DeleteObjectAction
+from ohmyadmin.actions import ActionResponse, BatchDelete, DeleteObjectAction
 from ohmyadmin.datasource.base import DataSource
-from ohmyadmin.forms import create_form
+from ohmyadmin.forms import create_form, populate_object, validate_on_submit
 from ohmyadmin.helpers import LazyURL
 from ohmyadmin.pages.base import BasePage
 from ohmyadmin.pages.page import Page
@@ -94,30 +94,110 @@ class Resource(BasePage, Router, HasPageActions, HasFilters, HasObjectActions, H
 
         return IndexPage
 
+    def create_empty_model(self, request: Request) -> typing.Any:
+        return self.datasource.new()
+
     async def index_view(self, request: Request) -> Response:
         page_class = self.get_index_page_class(request)
         page_instance = page_class()
         return await page_instance.handler(request)
 
-    async def edit_view(self, request: Request) -> Response:
-        pk = request.path_params.get('pk')
-        if request.method == 'POST':
-            flash(request).success('Submitted')
-            return self.redirect_to_action(request, 'edit' if pk else 'create', pk=pk)
+    def get_create_form_actions(self, request: Request) -> typing.Sequence[actions.Submit | actions.Link]:
+        return [
+            actions.Submit(label=_('Create and return to list', domain='ohmyadmin'), variant='accent', name='_return'),
+            actions.Submit(label=_('Create and edit', domain='ohmyadmin'), name='_edit'),
+            actions.Submit(label=_('Create and add new', domain='ohmyadmin'), name='_add_new'),
+        ]
 
-        context = {'resource': self, 'page_url': functools.partial(self.page_url, request)}
-        if pk:
-            return self.render_to_response(request, 'ohmyadmin/resources/edit.html', context)
-        return self.render_to_response(request, 'ohmyadmin/resources/create.html', context)
+    def get_create_view_response(self, request: Request, form_data: FormData, model: typing.Any) -> Response:
+        flash(request).success(_('{object} has been created.', domain='ohmyadmin').format(object=model))
+        if '_edit' in form_data:
+            return ActionResponse().redirect(
+                request,
+                request.url_for(
+                    name=self.get_path_name() + '.edit',
+                    pk=self.datasource.get_pk(model),
+                ),
+            )
+        if '_add_new' in form_data:
+            return ActionResponse().redirect(request, request.url_for(name=self.get_path_name() + '.create'))
+        return ActionResponse().redirect(request, self.generate_url(request))
+
+    async def create_view(self, request: Request) -> Response:
+        model = self.create_empty_model(request)
+        form = await create_form(request, self.form_class)
+        if await validate_on_submit(request, form):
+            await populate_object(request, form, model)
+            await self.datasource.create(request, model)
+            return self.get_create_view_response(request, await request.form(), model)
+
+        form_actions = self.get_create_form_actions(request)
+        return self.render_to_response(
+            request,
+            'ohmyadmin/resources/create.html',
+            {
+                'page_title': _('Create {label}', domain='ohmyadmin').format(label=self.label),
+                'resource': self,
+                'form': form,
+                'object': model,
+                'form_actions': form_actions,
+            },
+        )
+
+    def get_update_form_actions(self, request: Request) -> typing.Sequence[actions.Submit | actions.Link]:
+        return [
+            actions.Submit(label=_('Update and return to list', domain='ohmyadmin'), variant='accent', name='_return'),
+            actions.Link(label=_('Return to list', domain='ohmyadmin'), url=self.generate_url(request)),
+        ]
+
+    def get_update_view_response(self, request: Request, form_data: FormData, model: typing.Any) -> Response:
+        flash(request).success(_('{object} has been updated.', domain='ohmyadmin').format(object=model))
+        return ActionResponse().redirect(request, self.generate_url(request))
+
+    async def update_view(self, request: Request) -> Response:
+        pk = request.path_params['pk']
+        model = await self.datasource.get(request, pk)
+        form = await create_form(request, self.form_class, model)
+        if await validate_on_submit(request, form):
+            await populate_object(request, form, model)
+            await self.datasource.update(request, model)
+            return self.get_update_view_response(request, await request.form(), model)
+
+        form_actions = self.get_update_form_actions(request)
+        return self.render_to_response(
+            request,
+            'ohmyadmin/resources/edit.html',
+            {
+                'page_title': _('Update {label}', domain='ohmyadmin').format(label=self.label),
+                'resource': self,
+                'form': form,
+                'object': model,
+                'form_actions': form_actions,
+            },
+        )
 
     async def delete_view(self, request: Request) -> Response:
-        request.path_params.get('pk')
-        if request.method == 'POST':
-            flash(request).success('Submitted')
-            return self.redirect_to_action(request, 'index')
+        pk = request.path_params['pk']
+        model = await self.datasource.get(request, pk)
+        if request.method in ['POST', 'DELETE']:
+            await self.datasource.delete(request, pk)
+            flash(request).success(_('{object} has been deleted.', domain='ohmyadmin'))
 
-        context = {'page_url': functools.partial(self.page_url, request)}
-        return self.render_to_response(request, 'ohmyadmin/resources/delete.html', context)
+            redirect_to = self.generate_url(request)
+            if 'hx-request' in request.headers:
+                return ActionResponse().redirect(request, redirect_to)
+            return RedirectResponse(redirect_to, 302)
+
+        cancel_url = self.generate_url(request)
+        return self.render_to_response(
+            request,
+            'ohmyadmin/resources/delete.html',
+            {
+                'page_title': _('Delete {object}', domain='ohmyadmin').format(object=model),
+                'object': model,
+                'cancel_url': cancel_url,
+            },
+        )
 
     def get_routes(self) -> list[BaseRoute]:
         return [
@@ -127,9 +207,14 @@ class Resource(BasePage, Router, HasPageActions, HasFilters, HasObjectActions, H
                 name=f'{self.get_path_name()}.index',
                 methods=['get', 'post', 'put', 'patch', 'delete'],
             ),
-            Route('/new', self.edit_view, name=f'{self.get_path_name()}.create', methods=['get', 'post']),
-            Route('/{pk}/edit', self.edit_view, name=f'{self.get_path_name()}.edit', methods=['get', 'post']),
-            Route('/{pk}/delete', self.delete_view, name=f'{self.get_path_name()}.delete', methods=['get', 'post']),
+            Route('/new', self.create_view, name=f'{self.get_path_name()}.create', methods=['get', 'post']),
+            Route('/{pk}/edit', self.update_view, name=f'{self.get_path_name()}.edit', methods=['get', 'post']),
+            Route(
+                '/{pk}/delete',
+                self.delete_view,
+                name=f'{self.get_path_name()}.delete',
+                methods=['get', 'post', 'delete'],
+            ),
         ]
 
     def as_route(self) -> Mount:

@@ -100,7 +100,7 @@ class Submit(PageAction):
     def __init__(
         self,
         label: str,
-        variant: ButtonType,
+        variant: ButtonType = 'default',
         name: str = '',
         html_attrs: typing.Mapping[str, typing.Any] | None = None,
         type: typing.Literal['button', 'submit'] = 'submit',
@@ -396,7 +396,7 @@ class BatchDelete(BaseBatchAction):
 
     async def apply(self, request: Request, object_ids: list[str], form: wtforms.Form) -> Response:
         datasource: DataSource = request.state.datasource
-        await datasource.delete(*object_ids)
+        await datasource.delete(request, *object_ids)
         return ActionResponse().show_toast(self.success_message.format(count=len(object_ids))).close_modal()
 
 
@@ -404,12 +404,12 @@ class DeleteObjectAction(BaseObjectAction):
     icon = 'trash'
     dangerous = True
     label = _('Delete', domain='ohmyadmin')
-    success_message = _('{count} has been deleted', domain='ohmyadmin')
+    success_message = _('{object} has been deleted', domain='ohmyadmin')
     confirmation = _('Are you sure you want to delete this record?', domain='ohmyadmin')
     method = 'delete'
 
     async def apply(self, request: Request, object_id: str) -> Response:
         datasource: DataSource = request.state.datasource
-        model = await datasource.get(object_id)
-        await datasource.delete(object_id)
-        return ActionResponse().show_toast(self.success_message.format(object=model)).close_modal()
+        model = await datasource.get(request, object_id)
+        await datasource.delete(request, object_id)
+        return ActionResponse().show_toast(self.success_message.format(object=model)).refresh_datatable()

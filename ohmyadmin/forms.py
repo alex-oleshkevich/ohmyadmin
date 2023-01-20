@@ -18,3 +18,7 @@ async def validate_on_submit(request: Request, form: wtforms.Form) -> bool:
     if request.method in ['POST', 'PUT', 'PATCH', 'DELETE']:
         return await validate_form(form)
     return False
+
+
+async def populate_object(request: Request, form: wtforms.Form, obj: typing.Any) -> None:
+    form.populate_obj(obj)

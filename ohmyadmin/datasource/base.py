@@ -46,6 +46,10 @@ class DataSource(abc.ABC):
         ...
 
     @abc.abstractmethod
+    def new(self) -> typing.Any:
+        ...
+
+    @abc.abstractmethod
     def apply_search(self, search_term: str, searchable_fields: typing.Sequence[str]) -> DataSource:
         ...
 
@@ -90,7 +94,11 @@ class DataSource(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def create(self, request: Request, **attributes: typing.Any) -> typing.Any:
+    async def create(self, request: Request, model: typing.Any) -> None:
+        ...
+
+    @abc.abstractmethod
+    async def update(self, request: Request, model: typing.Any) -> None:
         ...
 
     @abc.abstractmethod

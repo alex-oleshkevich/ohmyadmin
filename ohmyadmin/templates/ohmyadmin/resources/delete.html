@@ -1,11 +1,14 @@
 {% extends 'ohmyadmin/app.html' %}
 
 {% block content %}
-    Resource create
-    <br>
-    <a href="{{ page_url('index') }}">Index</a>
-
     <form method="post">
-        <button>Submit</button>
+        {% trans %}
+            You are about to delete "{{ object }}" and related objects.<br>
+            Are you sure you want to continue?
+        {% endtrans %}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-danger">{{ _('Yes, delete it', domain='ohmyadmin') }}</button>
+            <a href="{{ cancel_url }}" class="btn btn-text">{{ _('Cancel', domain='ohmyadmin') }}</a>
+        </div>
     </form>
 {% endblock %}

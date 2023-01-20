@@ -108,6 +108,9 @@ class SQLADataSource(DataSource):
     def get_pk(self, obj: typing.Any) -> str:
         return getattr(obj, self.pk_column)
 
+    def new(self) -> typing.Any:
+        return self.model_class()
+
     def apply_search(self, search_term: str, searchable_fields: typing.Sequence[str]) -> DataSource:
         if not search_term:
             return self._clone(self._stmt)
@@ -201,7 +204,7 @@ class SQLADataSource(DataSource):
 
     async def get(self, request: Request, pk: str) -> typing.Any:
         column = getattr(self.model_class, self.pk_column)
-        stmt = sa.select(self.model_class, column == self.pk_cast(column))
+        stmt = sa.select(self.model_class).where(column == self.pk_cast(pk))
         result = await request.state.dbsession.scalars(stmt)
         return result.one()
 
@@ -214,17 +217,19 @@ class SQLADataSource(DataSource):
         rows = result.all()
         return Pagination(rows=list(rows), total_rows=row_count, page=page, page_size=page_size)
 
-    async def create(self, request: Request, **attributes: typing.Any) -> typing.Any:
-        entity = self.model_class(**attributes)
-        await request.state.dbsession.add(entity)
+    async def create(self, request: Request, model: typing.Any) -> None:
+        request.state.dbsession.add(model)
         await request.state.dbsession.commit()
-        return entity
+
+    async def update(self, request: Request, model: typing.Any) -> None:
+        await request.state.dbsession.commit()
 
     async def delete(self, request: Request, *object_ids: str) -> None:
         typed_ids = list(map(self.pk_cast, object_ids))
         stmt = sa.delete(self.model_class).where(sa.column(self.pk_column).in_(typed_ids))
         async for instance in await request.state.dbsession.stream(stmt):
             await request.state.dbsession.delete(instance)
+        await request.state.dbsession.commit()
 
     def _clone(self, stmt: sa.Select | None = None) -> SQLADataSource:
         return self.__class__(

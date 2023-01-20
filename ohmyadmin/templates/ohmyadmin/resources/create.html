@@ -1,11 +1,16 @@
 {% extends 'ohmyadmin/app.html' %}
+{% import 'ohmyadmin/lib/forms.html' as forms %}
 
 {% block content %}
-    Resource create
-    <br>
-    <a href="{{ page_url('index') }}">Index</a>
+    <form method="post" enctype="multipart/form-data" hx-boost="true">
+        {% for field in form %}
+            {{ forms.form_field(field) }}
+        {% endfor %}
 
-    <form method="post">
-        <button>Submit</button>
+        <div class="form-actions">
+            {% for action in form_actions %}
+                {{ action.render(request) }}
+            {% endfor %}
+        </div>
     </form>
 {% endblock %}

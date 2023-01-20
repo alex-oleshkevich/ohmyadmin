@@ -9,6 +9,7 @@ from ohmyadmin.views.table import TableColumn
 
 class CategoryForm(wtforms.Form):
     name = wtforms.StringField(validators=[wtforms.validators.data_required()])
+    slug = wtforms.StringField(validators=[wtforms.validators.data_required()])
 
 
 class CategoryResource(Resource):
