@@ -1,0 +1,8 @@
+<div class="shadow py-3 px-4 rounded-lg col-span-4 border border-gray-200">
+    <header class="flex items-start justify-between">
+        <div class="font-medium text-gray-600">{{ metric.label }}</div>
+    </header>
+    <main class="py-3">
+        {% block content %}{% endblock %}
+    </main>
+</div>

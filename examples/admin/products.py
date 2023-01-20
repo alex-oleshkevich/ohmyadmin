@@ -1,12 +1,14 @@
 import sqlalchemy as sa
 import wtforms
 from sqlalchemy.orm import joinedload, selectinload
+from starlette.requests import Request
 
 from examples.admin.brands import Brands
 from examples.models import Brand, Product
 from ohmyadmin import filters, formatters
 from ohmyadmin.contrib.sqlalchemy import SQLADataSource
 from ohmyadmin.helpers import LazyObjectURL
+from ohmyadmin.metrics import ProgressMetric, ValueMetric
 from ohmyadmin.resources import Resource
 from ohmyadmin.views.table import TableColumn
 
@@ -37,9 +39,37 @@ class ProductForm(wtforms.Form):
     availability = wtforms.BooleanField()
 
 
+class TotalProducts(ValueMetric):
+    suffix = 'products'
+
+    async def calculate(self, request: Request) -> str:
+        stmt = sa.select(sa.func.count()).select_from(sa.select(Product).subquery())
+        return await request.state.dbsession.scalar(stmt)
+
+
+class AveragePrice(ValueMetric):
+    async def calculate(self, request: Request) -> str:
+        stmt = sa.select(sa.func.avg(Product.price)).select_from(Product)
+        value = await request.state.dbsession.scalar(stmt)
+        return f'${value:.2f} per item'
+
+
+class Invisible(ProgressMetric):
+    target = 100
+
+    async def get_target(self, request: Request) -> int:
+        stmt = sa.select(sa.func.count()).select_from(sa.select(Product).subquery())
+        return await request.state.dbsession.scalar(stmt)
+
+    async def current_value(self, request: Request) -> int | float:
+        stmt = sa.select(sa.func.count()).select_from(sa.select(Product).where(Product.visible == False).subquery())
+        return await request.state.dbsession.scalar(stmt)
+
+
 class Products(Resource):
     icon = 'assembly'
     form_class = ProductForm
+    metrics = [TotalProducts, AveragePrice, Invisible]
     datasource = SQLADataSource(
         Product,
         query=(

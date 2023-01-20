@@ -8,6 +8,7 @@ from unittest import mock
 from ohmyadmin import actions
 from ohmyadmin.datasource.base import DataSource
 from ohmyadmin.filters import BaseFilter, UnboundFilter
+from ohmyadmin.metrics import Metric
 from ohmyadmin.ordering import get_ordering_value
 from ohmyadmin.pagination import Pagination, get_page_size_value, get_page_value
 from ohmyadmin.views.base import IndexView
@@ -84,7 +85,22 @@ class HasFilters:
         return [await _filter.create(request) for _filter in self.get_filters(request)]
 
 
-class IndexViewMixin(HasPageActions, HasFilters, HasObjectActions, HasBatchActions):
+class HasMetrics:
+    metrics: typing.Sequence[type[Metric]] | None = None
+
+    def get_metrics(self, request: Request) -> typing.Sequence[Metric]:
+        return [metric() for metric in self.metrics or []]
+
+    async def dispatch_metric(self, request: Request, metric_slug: str) -> Response:
+        metrics = {metric.slug: metric for metric in self.get_metrics(request)}
+        try:
+            metric = metrics[metric_slug]
+        except KeyError:
+            raise ValueError(f'Metric "{metric_slug}" is not defined.')
+        return await metric.dispatch(request)
+
+
+class IndexViewMixin(HasPageActions, HasFilters, HasObjectActions, HasBatchActions, HasMetrics):
     datasource: typing.ClassVar[DataSource]
     page_param: typing.ClassVar[str] = 'page'
     page_size_param: typing.ClassVar[str] = 'page_size'
@@ -144,6 +160,8 @@ class IndexViewMixin(HasPageActions, HasFilters, HasObjectActions, HasBatchActio
             return await self.dispatch_object_action(request, request.query_params['_object_action'])
         if '_batch_action' in request.query_params:
             return await self.dispatch_batch_action(request, request.query_params['_batch_action'])
+        if '_metric' in request.query_params:
+            return await self.dispatch_metric(request, request.query_params['_metric'])
 
         filters = await self.create_filters(request)
         objects = await self.get_objects(request, filters)

@@ -7,6 +7,8 @@
 {% endblock %}
 
 {% block content %}
+    {% include 'ohmyadmin/pages/table/_metrics_row.html' %}
+
     <div class="space-y-6"
          hx-target="#data"
          hx-indicator="#load-indicator"
