@@ -25,7 +25,7 @@ class OrderForm(wtforms.Form):
     city = wtforms.SelectField()
     zip = wtforms.SelectField()
     notes = wtforms.TextAreaField()
-    items = wtforms.FieldList(wtforms.FormField(OrderItemForm, default=OrderItem), default=[])
+    items = wtforms.FieldList(wtforms.FormField(OrderItemForm, default=OrderItem), default=[], min_entries=1)
 
 
 class Orders(Resource):

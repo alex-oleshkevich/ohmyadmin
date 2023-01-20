@@ -1,3 +1,4 @@
+import abc
 import typing
 import wtforms
 from starlette.requests import Request
@@ -22,3 +23,15 @@ async def validate_on_submit(request: Request, form: wtforms.Form) -> bool:
 
 async def populate_object(request: Request, form: wtforms.Form, obj: typing.Any) -> None:
     form.populate_obj(obj)
+
+
+class Preparable(abc.ABC):
+    @abc.abstractmethod
+    async def prepare(self, request: Request) -> None:
+        ...
+
+
+class Processable(abc.ABC):
+    @abc.abstractmethod
+    async def process(self, request: Request) -> None:
+        ...

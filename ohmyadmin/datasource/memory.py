@@ -12,7 +12,7 @@ class InMemoryDataSource(DataSource):
     def __init__(self, objects: typing.Sequence[typing.Any]) -> None:
         self.objects = objects
 
-    def get_for_index(self) -> DataSource:
+    def get_query_for_index(self) -> DataSource:
         return self
 
     def get_pk(self, obj: typing.Any) -> str:
@@ -46,16 +46,16 @@ class InMemoryDataSource(DataSource):
     def apply_boolean_filter(self, field: str, value: bool) -> DataSource:
         return self
 
-    async def get(request: Request, self, pk: str) -> typing.Any:
+    async def get(self, request: Request, pk: str) -> typing.Any:
         return self.objects[0]
 
     async def paginate(self, request: Request, page: int, page_size: int) -> Pagination[typing.Any]:
         return Pagination(rows=self.objects, total_rows=len(self.objects), page=page, page_size=page_size)
 
-    async def create(self, **attributes: typing.Any) -> typing.Any:
+    async def create(self, request: Request, model: typing.Any) -> typing.Any:
         return None
 
-    async def delete(self, *object_ids: str) -> None:
+    async def delete(self, request: Request, *object_ids: str) -> None:
         pass
 
     def new(self) -> typing.Any:

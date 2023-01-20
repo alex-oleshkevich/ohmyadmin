@@ -102,7 +102,10 @@ class SQLADataSource(DataSource):
         self.query_for_list = query_for_list if query_for_list is not None else self.query
         self._stmt = _stmt if _stmt is not None else self.query
 
-    def get_for_index(self) -> DataSource:
+    def get_query(self) -> DataSource:
+        return self._clone(self.query)
+
+    def get_query_for_index(self) -> DataSource:
         return self._clone(self.query_for_list)
 
     def get_pk(self, obj: typing.Any) -> str:
@@ -204,7 +207,7 @@ class SQLADataSource(DataSource):
 
     async def get(self, request: Request, pk: str) -> typing.Any:
         column = getattr(self.model_class, self.pk_column)
-        stmt = sa.select(self.model_class).where(column == self.pk_cast(pk))
+        stmt = self.get_query()._stmt.where(column == self.pk_cast(pk))
         result = await request.state.dbsession.scalars(stmt)
         return result.one()
 

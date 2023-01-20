@@ -34,10 +34,10 @@
         {{ file_field(field) }}
     {% elif field.type == 'MultipleFileField' %}
         {{ multiple_file_field(field) }}
-    {% elif field.type == 'FieldList' %}
-        {{ list_field(field) }}
-    {% elif field.type == 'FormField' %}
-        {{ form_form_field(field) }}
+{#    {% elif field.type == 'FieldList' %}#}
+{#        {{ list_field(field) }}#}
+{#    {% elif field.type == 'FormField' %}#}
+{#        {{ form_form_field(field) }}#}
     {% else %}
         <div class="form-group">
             {{ form_label(field) }}

@@ -120,7 +120,7 @@ class IndexViewMixin(HasPageActions, HasFilters, HasObjectActions, HasBatchActio
         search_term = get_search_value(request, self.search_param)
         ordering = get_ordering_value(request, self.ordering_param)
 
-        query = self.datasource.get_for_index()
+        query = self.datasource.get_query_for_index()
         if search_term:
             query = query.apply_search(search_term, self.get_searchable_fields(request))
 
@@ -136,6 +136,8 @@ class IndexViewMixin(HasPageActions, HasFilters, HasObjectActions, HasBatchActio
         return TableView(columns=self.get_table_columns(request))
 
     async def dispatch_index_view(self, request: Request) -> Response:
+        request.state.datasource = self.datasource
+
         if '_action' in request.query_params:
             return await self.dispatch_action(request, request.query_params['_action'])
         if '_object_action' in request.query_params:

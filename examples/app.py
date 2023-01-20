@@ -17,6 +17,7 @@ from examples.admin.currencies import Currencies
 from examples.admin.customers import Customers
 from examples.admin.orders import Orders
 from examples.admin.products import Products
+from examples.admin.products_page import ProductsPage
 from examples.admin.profile import ProfilePage
 from examples.admin.settings import SettingsPage
 from examples.admin.users import Users
@@ -55,6 +56,7 @@ admin = OhMyAdmin(
         ProfilePage(),
         Actions(),
         Components(),
+        ProductsPage(),
     ],
 )
 

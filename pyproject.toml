@@ -33,8 +33,6 @@ python-multipart = "^0.0.5"
 starlette-babel = "*"
 starlette-flash = "*"
 async-storages = "^0.4.1"
-ba = "^0.0.4"
-actions = "^1.0.3"
 
 [tool.poetry.group.dev.dependencies]
 SQLAlchemy = "^2.0.0b4"

@@ -38,7 +38,7 @@ class NumberOperation(enum.Enum):
 
 class DataSource(abc.ABC):
     @abc.abstractmethod
-    def get_for_index(self) -> DataSource:
+    def get_query_for_index(self) -> DataSource:
         ...
 
     @abc.abstractmethod
