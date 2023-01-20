@@ -10,6 +10,7 @@ from examples import config
 from examples.admin.auth import AuthPolicy
 from examples.admin.brands import Brands
 from examples.admin.categories import Categories
+from examples.admin.components import Components
 from examples.admin.countries import Countries
 from examples.admin.currencies import Currencies
 from examples.admin.customers import Customers
@@ -51,6 +52,7 @@ admin = OhMyAdmin(
         ProductPage(),
         SettingsPage(),
         ProfilePage(),
+        Components(),
     ],
 )
 
