@@ -22,7 +22,7 @@
 {% endmacro %}
 
 {% if column.sortable %}
-    {% set control = sorting.get_control(column.name) %}
+    {% set control = sorting.get_control(column.sort_by) %}
     {{ sortable_cell(column, control) }}
 {% else %}
     {{ simple_cell(column) }}
