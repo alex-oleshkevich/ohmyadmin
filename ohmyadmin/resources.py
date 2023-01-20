@@ -4,6 +4,7 @@ from starlette.datastructures import FormData
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
 from starlette.routing import BaseRoute, Mount, Route, Router
+from starlette.types import Receive, Scope, Send
 from starlette_babel import gettext_lazy as _
 from starlette_flash import flash
 
@@ -236,3 +237,7 @@ class Resource(BasePage, Router, HasPageActions, HasFilters, HasObjectActions, H
     @classmethod
     def get_path_name(cls) -> str:
         return f'ohmyadmin.resources.{cls.slug}'
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        scope['state']['page'] = self
+        return await super().__call__(scope, receive, send)

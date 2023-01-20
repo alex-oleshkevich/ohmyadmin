@@ -73,11 +73,7 @@ class TablePage(HasPageActions, HasFilters, HasObjectActions, HasBatchActions, P
         return await query.paginate(request, page=page_number, page_size=page_size)
 
     def get_view(self, request: Request) -> IndexView:
-        return TableView(
-            columns=self.get_columns(),
-            object_actions_factory=self.get_object_actions,
-            show_row_selector=bool(self.get_batch_actions(request)),
-        )
+        return TableView(columns=self.get_columns())
 
     async def get(self, request: Request) -> Response:
         filters = await self.create_filters(request)

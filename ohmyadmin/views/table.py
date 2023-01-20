@@ -1,6 +1,7 @@
 import typing
 from markupsafe import Markup
 from starlette.requests import Request
+from unittest import mock
 
 from ohmyadmin import actions
 from ohmyadmin.formatters import DataFormatter, ToStringFormatter
@@ -59,27 +60,17 @@ class TableColumn:
         )
 
 
-ObjectActionsFactory: typing.TypeAlias = typing.Callable[[Request, typing.Any], typing.Sequence[actions.ObjectAction]]
-
-
 class TableView(IndexView):
-    def __init__(
-        self,
-        columns: typing.Sequence[TableColumn],
-        query_param: str = 'ordering',
-        object_actions_factory: ObjectActionsFactory | None = None,
-        show_row_selector: bool = False,
-    ) -> None:
+    def __init__(self, columns: typing.Sequence[TableColumn]) -> None:
         self.columns = columns
-        self.query_param = query_param
-        self.object_actions_factory = object_actions_factory
-        self.show_row_selector = show_row_selector
 
-    def get_object_actions(self, request: Request, object_id: str) -> typing.Sequence[actions.ObjectAction]:
-        return self.object_actions_factory(request, object_id) if self.object_actions_factory else []
+    def get_object_actions(self, request: Request, obj: typing.Any) -> typing.Sequence[actions.ObjectAction]:
+        return request.state.page.get_object_actions(request, obj)
 
     def render(self, request: Request, objects: Pagination[typing.Any]) -> str:
-        request.state.table_sorting = SortingHelper(request, self.query_param)
+        request.state.table_sorting = SortingHelper(request, request.state.page.ordering_param)
+        has_object_actions = self.get_object_actions(request, mock.MagicMock())
+        has_batch_actions = bool(request.state.page.get_batch_actions(request))
         return Markup(
             render_to_string(
                 request,
@@ -87,6 +78,8 @@ class TableView(IndexView):
                 {
                     'table': self,
                     'objects': objects,
+                    'has_batch_actions': has_batch_actions,
+                    'has_object_actions': has_object_actions,
                 },
             )
         )

@@ -1,7 +1,7 @@
 <table>
     <thead>
     <tr>
-        {% if table.show_row_selector %}
+        {% if has_batch_actions %}
             <th style="width: 1px">
                 <x-batch-select-all></x-batch-select-all>
             </th>
@@ -11,7 +11,7 @@
                 {{ column.render_head_cell(request) }}
             </th>
         {% endfor %}
-        {% if table.object_actions_factory %}
+        {% if has_object_actions %}
             <th class="text-right"></th>
         {% endif %}
     </tr>
@@ -21,7 +21,7 @@
         {% set object_actions = table.get_object_actions(request, object) %}
 
         <tr x-data="{selected: false}" :class="{selected: selected}">
-            {% if table.show_row_selector %}
+            {% if has_batch_actions %}
                 <td>
                     <x-batch-toggle object-id="{{ object|pk }}" @input="selected = event.target.checked">
 
@@ -31,7 +31,7 @@
             {% for columm in table.columns %}
                 <td>{{ columm.render(request, object) }}</td>
             {% endfor %}
-            {% if object_actions %}
+            {% if has_object_actions %}
                 <td>
                     <div class="flex gap-1 justify-end items-center relative"
                          x-data="{menuOpen: false}"
