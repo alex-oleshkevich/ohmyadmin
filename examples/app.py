@@ -7,6 +7,7 @@ from starlette.responses import Response
 from starlette.routing import Mount, Route
 
 from examples import config
+from examples.admin.actions_demo import Actions
 from examples.admin.auth import AuthPolicy
 from examples.admin.brands import Brands
 from examples.admin.categories import Categories
@@ -15,7 +16,7 @@ from examples.admin.countries import Countries
 from examples.admin.currencies import Currencies
 from examples.admin.customers import Customers
 from examples.admin.orders import Orders
-from examples.admin.products import ProductPage
+from examples.admin.products import Products
 from examples.admin.profile import ProfilePage
 from examples.admin.settings import SettingsPage
 from examples.admin.users import Users
@@ -49,9 +50,10 @@ admin = OhMyAdmin(
         Countries(),
         Currencies(),
         Users(),
-        ProductPage(),
+        Products(),
         SettingsPage(),
         ProfilePage(),
+        Actions(),
         Components(),
     ],
 )

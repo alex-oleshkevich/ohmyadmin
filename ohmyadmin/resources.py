@@ -228,8 +228,9 @@ class Resource(BasePage, Router, HasPageActions, HasFilters, HasObjectActions, H
     def as_route(self) -> Mount:
         return Mount(f'/resources/{self.slug}', self)
 
-    def page_url(self, request: Request, method: str, **path_params: typing.Any) -> str:
-        return request.url_for(f'{self.get_path_name()}.{method}', **path_params)
+    @classmethod
+    def page_url(cls, request: Request, method: str, **path_params: typing.Any) -> URL:
+        return URL(request.url_for(f'{cls.get_path_name()}.{method}', **path_params))
 
     def redirect_to_action(self, request: Request, action: str, pk: typing.Any | None = None) -> RedirectResponse:
         path_params: dict[str, typing.Any] = {}

@@ -46,7 +46,7 @@ class InMemoryDataSource(DataSource):
     def apply_boolean_filter(self, field: str, value: bool) -> DataSource:
         return self
 
-    async def get(self, pk: str) -> typing.Any:
+    async def get(request: Request, self, pk: str) -> typing.Any:
         return self.objects[0]
 
     async def paginate(self, request: Request, page: int, page_size: int) -> Pagination[typing.Any]:
@@ -56,4 +56,10 @@ class InMemoryDataSource(DataSource):
         return None
 
     async def delete(self, *object_ids: str) -> None:
+        pass
+
+    def new(self) -> typing.Any:
+        pass
+
+    async def update(self, request: Request, model: typing.Any) -> None:
         pass
