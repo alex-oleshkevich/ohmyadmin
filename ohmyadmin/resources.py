@@ -10,46 +10,18 @@ from starlette_flash import flash
 
 from ohmyadmin import actions
 from ohmyadmin.actions import ActionResponse, BatchDelete, DeleteObjectAction
-from ohmyadmin.datasource.base import DataSource
 from ohmyadmin.forms import create_form, populate_object, validate_on_submit
-from ohmyadmin.helpers import LazyObjectURL, LazyURL
+from ohmyadmin.helpers import LazyURL
 from ohmyadmin.pages.base import BasePage
-from ohmyadmin.pages.page import Page
-from ohmyadmin.pages.pagemixins import HasBatchActions, HasFilters, HasObjectActions, HasPageActions
-from ohmyadmin.pages.table import TablePage
-from ohmyadmin.views.table import TableColumn
+from ohmyadmin.pages.pagemixins import IndexViewMixin
 
 
-class Resource(BasePage, Router, HasPageActions, HasFilters, HasObjectActions, HasBatchActions):
+class Resource(BasePage, Router, IndexViewMixin):
     group = _('Resources', domain='ohmyadmin')
-    datasource: DataSource
     form_class: type[wtforms.Form] = wtforms.Form
-
-    # object list specific
-    page_param: typing.ClassVar[str] = 'page'
-    page_size_param: typing.ClassVar[str] = 'page_size'
-    search_param: typing.ClassVar[str] = 'search'
-    ordering_param: typing.ClassVar[str] = 'ordering'
-    page_size: typing.ClassVar[int] = 25
-    max_page_size: typing.ClassVar[int] = 100
-    object_actions: typing.Sequence[actions.ObjectAction] | None = None
-    batch_actions: typing.Sequence[actions.BatchAction] | None = None
-
-    # table specific
-    columns: typing.Sequence[TableColumn] | None = None
 
     def __init__(self) -> None:
         super().__init__(routes=self.get_routes())
-
-    def get_table_columns(self, request: Request) -> typing.Sequence[TableColumn]:
-        columns = list(self.columns or [])
-        for column in columns:
-            if column.link is True:
-                column.link = LazyObjectURL(
-                    lambda r, o: URL(request.url_for(self.get_path_name() + '.edit', pk=self.datasource.get_pk(o)))
-                )
-
-        return columns
 
     def get_page_actions(self, request: Request) -> list[actions.PageAction]:
         create_route_name = self.get_path_name() + '.create'
@@ -81,34 +53,11 @@ class Resource(BasePage, Router, HasPageActions, HasFilters, HasObjectActions, H
     async def create_form(self, request: Request, model: typing.Any = None) -> wtforms.Form:
         return await create_form(request, self.form_class, model)
 
-    def get_index_page_class(self, request: Request) -> type[Page]:
-        class IndexPage(TablePage):
-            icon = self.icon
-            label = self.label
-            label_plural = self.label_plural
-            datasource = self.datasource
-            page_param = self.page_param
-            page_size_param = self.page_size_param
-            search_param = self.search_param
-            ordering_param = self.ordering_param
-            page_size = self.page_size
-            max_page_size = self.max_page_size
-            columns = self.get_table_columns(request)
-
-            get_filters = self.get_filters
-            get_page_actions = self.get_page_actions
-            get_object_actions = self.get_object_actions
-            get_batch_actions = self.get_batch_actions
-
-        return IndexPage
-
     def create_empty_model(self, request: Request) -> typing.Any:
         return self.datasource.new()
 
     async def index_view(self, request: Request) -> Response:
-        page_class = self.get_index_page_class(request)
-        page_instance = page_class()
-        return await page_instance.handler(request)
+        return await self.dispatch_index_view(request)
 
     def get_create_form_actions(self, request: Request) -> typing.Sequence[actions.Submit | actions.Link]:
         return [
@@ -248,4 +197,5 @@ class Resource(BasePage, Router, HasPageActions, HasFilters, HasObjectActions, H
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         scope['state']['page'] = self
+        scope['state']['datasource'] = self.datasource
         return await super().__call__(scope, receive, send)

@@ -72,6 +72,5 @@ class BasePage(metaclass=PageMeta):
         raise NotImplementedError()
 
     @classmethod
-    @abc.abstractmethod
     def generate_url(cls, request: Request) -> str:
         return request.url_for(cls.get_path_name())
