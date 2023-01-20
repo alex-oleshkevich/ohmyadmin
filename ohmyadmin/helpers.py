@@ -43,6 +43,14 @@ class LazyURL:
         return URL(request.url_for(self.path_name, **self.path_params))
 
 
+class LazyObjectURL:
+    def __init__(self, factory: typing.Callable[[Request, typing.Any], URL]) -> None:
+        self.factory = factory
+
+    def resolve(self, request: Request, obj: typing.Any) -> URL:
+        return self.factory(request, obj)
+
+
 def resolve_url(request: Request, url: str | URL | LazyURL) -> URL:
     if isinstance(url, LazyURL):
         return url.resolve(request)

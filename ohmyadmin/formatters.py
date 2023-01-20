@@ -1,4 +1,3 @@
-import datetime
 import typing
 from starlette.requests import Request
 from starlette_babel import gettext_lazy as _
@@ -16,7 +15,7 @@ class DataFormatter(typing.Protocol):
 class BaseFormatter:
     template: str = 'ohmyadmin/formatters/string.html'
 
-    def format(self, request: Request, value: datetime.date) -> str:
+    def format(self, request: Request, value: typing.Any) -> str:
         return render_to_string(request, self.template, {'formatter': self, 'value': value})
 
     def __call__(self, request: Request, value: typing.Any) -> str:
@@ -73,3 +72,17 @@ class NumberFormatter(BaseFormatter):
         self.prefix = prefix
         self.suffix = suffix
         self.align = align
+
+
+BadgeColor: typing.TypeAlias = typing.Literal['gray', 'red', 'yellow', 'green', 'blue', 'indigo', 'purple', 'pink']
+
+
+class BadgeFormatter(BaseFormatter):
+    template: str = 'ohmyadmin/formatters/badge.html'
+
+    def __init__(self, *, color_map: dict[str, BadgeColor]) -> None:
+        self.color_map = color_map or {}
+
+    def format(self, request: Request, value: str) -> str:
+        color = self.color_map.get(value, 'gray')
+        return render_to_string(request, self.template, {'formatter': self, 'value': value, 'color': color})

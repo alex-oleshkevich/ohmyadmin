@@ -1,6 +1,6 @@
 import typing
 import wtforms
-from starlette.datastructures import FormData
+from starlette.datastructures import URL, FormData
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
 from starlette.routing import BaseRoute, Mount, Route, Router
@@ -12,7 +12,7 @@ from ohmyadmin import actions
 from ohmyadmin.actions import ActionResponse, BatchDelete, DeleteObjectAction
 from ohmyadmin.datasource.base import DataSource
 from ohmyadmin.forms import create_form, populate_object, validate_on_submit
-from ohmyadmin.helpers import LazyURL
+from ohmyadmin.helpers import LazyObjectURL, LazyURL
 from ohmyadmin.pages.base import BasePage
 from ohmyadmin.pages.page import Page
 from ohmyadmin.pages.pagemixins import HasBatchActions, HasFilters, HasObjectActions, HasPageActions
@@ -41,8 +41,15 @@ class Resource(BasePage, Router, HasPageActions, HasFilters, HasObjectActions, H
     def __init__(self) -> None:
         super().__init__(routes=self.get_routes())
 
-    def get_table_columns(self) -> typing.Sequence[TableColumn]:
-        return self.columns or []
+    def get_table_columns(self, request: Request) -> typing.Sequence[TableColumn]:
+        columns = list(self.columns or [])
+        for column in columns:
+            if column.link is True:
+                column.link = LazyObjectURL(
+                    lambda r, o: URL(request.url_for(self.get_path_name() + '.edit', pk=self.datasource.get_pk(o)))
+                )
+
+        return columns
 
     def get_page_actions(self, request: Request) -> list[actions.PageAction]:
         create_route_name = self.get_path_name() + '.create'
@@ -86,7 +93,7 @@ class Resource(BasePage, Router, HasPageActions, HasFilters, HasObjectActions, H
             ordering_param = self.ordering_param
             page_size = self.page_size
             max_page_size = self.max_page_size
-            columns = self.get_table_columns()
+            columns = self.get_table_columns(request)
 
             get_filters = self.get_filters
             get_page_actions = self.get_page_actions

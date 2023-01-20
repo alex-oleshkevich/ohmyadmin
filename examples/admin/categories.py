@@ -12,7 +12,7 @@ class CategoryForm(wtforms.Form):
     slug = wtforms.StringField(validators=[wtforms.validators.data_required()])
 
 
-class CategoryResource(Resource):
+class Categories(Resource):
     icon = 'category'
     label_plural = 'Categories'
     datasource = SQLADataSource(Category, query=sa.select(Category).order_by(Category.name))

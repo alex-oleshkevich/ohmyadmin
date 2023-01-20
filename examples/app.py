@@ -8,7 +8,12 @@ from starlette.routing import Mount, Route
 
 from examples import config
 from examples.admin.auth import AuthPolicy
-from examples.admin.categories import CategoryResource
+from examples.admin.brands import Brands
+from examples.admin.categories import Categories
+from examples.admin.countries import Countries
+from examples.admin.currencies import Currencies
+from examples.admin.customers import Customers
+from examples.admin.orders import Orders
 from examples.admin.products import ProductPage
 from examples.admin.profile import ProfilePage
 from examples.admin.settings import SettingsPage
@@ -36,7 +41,12 @@ admin = OhMyAdmin(
         menu.MenuLink('Settings', url=LazyURL(SettingsPage.get_path_name()), icon='address-book'),
     ],
     pages=[
-        CategoryResource(),
+        Categories(),
+        Brands(),
+        Customers(),
+        Orders(),
+        Countries(),
+        Currencies(),
         Users(),
         ProductPage(),
         SettingsPage(),

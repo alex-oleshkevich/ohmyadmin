@@ -62,7 +62,7 @@ class Users(Resource):
     form_class = UserForm
     columns = [
         TableColumn('photo', formatter=AvatarFormatter()),
-        TableColumn('first_name'),
+        TableColumn('first_name', link=True),
         TableColumn('last_name', searchable=True, sortable=True),
         TableColumn('email', searchable=True),
         TableColumn('is_active', sortable=True, formatter=BoolFormatter(as_text=True)),

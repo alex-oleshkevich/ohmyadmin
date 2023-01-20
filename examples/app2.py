@@ -13,7 +13,7 @@ from starlette.routing import Mount, Route
 
 from examples.admin.blog_posts import BlogPostResource
 from examples.admin.brands import BrandResource
-from examples.admin.categories import CategoryResource
+from examples.admin.categories import Categories
 from examples.admin.countries import CountryResource
 from examples.admin.currencies import CurrencyResource
 from examples.admin.customers import CustomerResource
@@ -100,7 +100,7 @@ admin = OhMyAdmin(
         ProductResource(),
         CustomerResource(),
         OrderResource(),
-        CategoryResource(),
+        Categories(),
         CurrencyResource(),
         CountryResource(),
         UserResource(),

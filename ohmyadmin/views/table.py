@@ -5,6 +5,7 @@ from unittest import mock
 
 from ohmyadmin import actions
 from ohmyadmin.formatters import DataFormatter, ToStringFormatter
+from ohmyadmin.helpers import LazyObjectURL, LazyURL
 from ohmyadmin.ordering import SortingHelper
 from ohmyadmin.pagination import Pagination
 from ohmyadmin.shortcuts import render_to_string
@@ -21,7 +22,9 @@ class TableColumn:
         formatter: DataFormatter | None = None,
         search_in: str | None = None,
         sort_by: str | None = None,
+        link: bool | str | LazyURL | LazyObjectURL | None = None,
     ) -> None:
+        self.link = link
         self.name = name
         self.sortable = sortable
         self.searchable = searchable
@@ -39,10 +42,22 @@ class TableColumn:
     def render(self, request: Request, obj: typing.Any) -> str:
         value = self.get_value(obj)
         display_value = self.format_value(request, value)
+        link: str = ''
+        match self.link:
+            case str():
+                link = self.link
+            case bool():
+                link = request.state.page.generate_url(request)
+            case LazyURL():
+                link = str(self.link.resolve(request))
+            case LazyObjectURL():
+                link = str(self.link.resolve(request, obj))
+
         return request.state.admin.render_to_string(
             request,
             'ohmyadmin/views/table/table_cell.html',
             {
+                'link': link,
                 'column': self,
                 'value': display_value,
             },
