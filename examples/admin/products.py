@@ -153,7 +153,7 @@ class ShowToastPageAction(BasePageAction):
 
 class ProductPage(TablePage):
     label = 'Product'
-    datasource = SQLADataSource(Product, async_session, sa.select(Product).order_by(Product.created_at.desc()))
+    datasource = SQLADataSource(Product, sa.select(Product).order_by(Product.created_at.desc()))
     page_actions = [
         ShowToastPageAction(),
         CreateProductAction(),

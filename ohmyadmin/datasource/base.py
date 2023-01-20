@@ -82,7 +82,7 @@ class DataSource(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def get(self, pk: str) -> typing.Any:
+    async def get(self, request: Request, pk: str) -> typing.Any:
         ...
 
     @abc.abstractmethod
@@ -90,9 +90,9 @@ class DataSource(abc.ABC):
         ...
 
     @abc.abstractmethod
-    async def create(self, **attributes: typing.Any) -> typing.Any:
+    async def create(self, request: Request, **attributes: typing.Any) -> typing.Any:
         ...
 
     @abc.abstractmethod
-    async def delete(self, *object_ids: str) -> None:
+    async def delete(self, request: Request, *object_ids: str) -> None:
         ...

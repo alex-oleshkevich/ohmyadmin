@@ -6,7 +6,6 @@ import sqlalchemy as sa
 import typing
 import uuid
 from sqlalchemy import orm
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from sqlalchemy.sql.elements import NamedColumn
 from starlette.requests import Request
 
@@ -59,7 +58,9 @@ def create_search_token(column: NamedColumn, search_query: str) -> sa.sql.Column
 
 def guess_pk_field(model_class: type) -> str:
     mapper: orm.Mapper = orm.class_mapper(model_class)
-    pk_columns = [c.name for c in mapper.all_orm_descriptors if hasattr(c, 'primary_key') and c.primary_key]
+    pk_columns = [
+        c.name for c in mapper.all_orm_descriptors if hasattr(c, 'primary_key') and c.primary_key  # type: ignore
+    ]
     if len(pk_columns) == 0:
         raise ValueError(f'Model class {model_class} does not contain any primary key.')
     if len(pk_columns) > 1:
@@ -88,7 +89,6 @@ class SQLADataSource(DataSource):
     def __init__(
         self,
         model_class: typing.Any,
-        async_session: async_sessionmaker,
         query: sa.Select | None = None,
         query_for_list: sa.Select | None = None,
         pk_column: str | None = None,
@@ -98,7 +98,6 @@ class SQLADataSource(DataSource):
         self.pk_column = pk_column or guess_pk_field(model_class)
         self.pk_cast = pk_cast or guess_pk_type(model_class, self.pk_column)
         self.model_class = model_class
-        self.async_session = async_session
         self.query = query if query is not None else sa.select(model_class)
         self.query_for_list = query_for_list if query_for_list is not None else self.query
         self._stmt = _stmt if _stmt is not None else self.query
@@ -195,47 +194,42 @@ class SQLADataSource(DataSource):
         column = getattr(self.model_class, field)
         return self._clone(self._stmt.where(column.is_(value)))
 
-    async def count(self, session: AsyncSession) -> int:
+    async def count(self, request: Request) -> int:
         stmt = sa.select(sa.func.count('*')).select_from(self._stmt)  # type: ignore[arg-type]
-        result = await session.scalars(stmt)
+        result = await request.state.dbsession.scalars(stmt)
         return result.one()
 
-    async def get(self, pk: str) -> typing.Any:
-        async with self.async_session() as session:
-            column = getattr(self.model_class, self.pk_column)
-            stmt = sa.select(self.model_class, column == self.pk_cast(column))
-            result = await session.scalars(stmt)
-            return result.one()
+    async def get(self, request: Request, pk: str) -> typing.Any:
+        column = getattr(self.model_class, self.pk_column)
+        stmt = sa.select(self.model_class, column == self.pk_cast(column))
+        result = await request.state.dbsession.scalars(stmt)
+        return result.one()
 
     async def paginate(self, request: Request, page: int, page_size: int) -> Pagination[typing.Any]:
-        async with self.async_session() as session:
-            row_count = await self.count(session)
+        row_count = await self.count(request)
 
-            offset = (page - 1) * page_size
-            stmt = self._stmt.limit(page_size).offset(offset)
-            result = await session.scalars(stmt)
-            rows = result.all()
-            return Pagination(rows=list(rows), total_rows=row_count, page=page, page_size=page_size)
+        offset = (page - 1) * page_size
+        stmt = self._stmt.limit(page_size).offset(offset)
+        result = await request.state.dbsession.scalars(stmt)
+        rows = result.all()
+        return Pagination(rows=list(rows), total_rows=row_count, page=page, page_size=page_size)
 
-    async def create(self, **attributes: typing.Any) -> typing.Any:
-        async with self.async_session() as session:
-            entity = self.model_class(**attributes)
-            session.add(entity)
-            await session.commit()
-            return entity
+    async def create(self, request: Request, **attributes: typing.Any) -> typing.Any:
+        entity = self.model_class(**attributes)
+        await request.state.dbsession.add(entity)
+        await request.state.dbsession.commit()
+        return entity
 
-    async def delete(self, *object_ids: str) -> None:
+    async def delete(self, request: Request, *object_ids: str) -> None:
         typed_ids = list(map(self.pk_cast, object_ids))
         stmt = sa.delete(self.model_class).where(sa.column(self.pk_column).in_(typed_ids))
-        async with self.async_session() as session:
-            async for instance in await session.stream(stmt):
-                await session.delete(instance)
+        async for instance in await request.state.dbsession.stream(stmt):
+            await request.state.dbsession.delete(instance)
 
     def _clone(self, stmt: sa.Select | None = None) -> SQLADataSource:
         return self.__class__(
-            model_class=self.model_class,
-            async_session=self.async_session,
             query=self.query,
+            model_class=self.model_class,
             query_for_list=self.query_for_list,
             _stmt=stmt if stmt is not None else self._stmt,
         )
