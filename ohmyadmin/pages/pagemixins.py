@@ -36,12 +36,6 @@ class HasPageActions:
 
         return await action.dispatch(request)
 
-    async def handler(self, request: Request) -> Response:
-        if '_action' in request.query_params:
-            return await self.dispatch_action(request, request.query_params['_action'])
-
-        return await super().handler(request)
-
 
 class HasObjectActions:
     object_actions: typing.Sequence[actions.ObjectAction] | None = None
@@ -63,12 +57,6 @@ class HasObjectActions:
 
         return await action.dispatch(request)
 
-    async def handler(self, request: Request) -> Response:
-        if '_object_action' in request.query_params:
-            return await self.dispatch_object_action(request, request.query_params['_object_action'])
-
-        return await super().handler(request)
-
 
 class HasBatchActions:
     batch_actions: typing.Sequence[actions.BatchAction] | None = None
@@ -84,12 +72,6 @@ class HasBatchActions:
             raise ValueError(f'Batch action "{action_slug}" is not defined.')
 
         return await action.dispatch(request)
-
-    async def handler(self, request: Request) -> Response:
-        if '_batch_action' in request.query_params:
-            return await self.dispatch_batch_action(request, request.query_params['_batch_action'])
-
-        return await super().handler(request)
 
 
 class HasFilters:
@@ -154,6 +136,13 @@ class IndexViewMixin(HasPageActions, HasFilters, HasObjectActions, HasBatchActio
         return TableView(columns=self.get_table_columns(request))
 
     async def dispatch_index_view(self, request: Request) -> Response:
+        if '_action' in request.query_params:
+            return await self.dispatch_action(request, request.query_params['_action'])
+        if '_object_action' in request.query_params:
+            return await self.dispatch_object_action(request, request.query_params['_object_action'])
+        if '_batch_action' in request.query_params:
+            return await self.dispatch_batch_action(request, request.query_params['_batch_action'])
+
         filters = await self.create_filters(request)
         objects = await self.get_objects(request, filters)
         view = self.get_view(request)
