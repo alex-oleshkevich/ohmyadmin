@@ -12,7 +12,7 @@ from examples.admin.categories import CategoryResource
 from examples.admin.products import ProductPage
 from examples.admin.profile import ProfilePage
 from examples.admin.settings import SettingsPage
-from examples.admin.users import UserPage
+from examples.admin.users import Users
 from examples.config import async_session, file_storage
 from ohmyadmin import menu
 from ohmyadmin.app import OhMyAdmin
@@ -37,7 +37,7 @@ admin = OhMyAdmin(
     ],
     pages=[
         CategoryResource(),
-        UserPage(),
+        Users(),
         ProductPage(),
         SettingsPage(),
         ProfilePage(),

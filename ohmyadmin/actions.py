@@ -57,6 +57,8 @@ class ActionResponse(Response):
         return self
 
 
+response = ActionResponse
+
 ActionCallback = typing.Callable[[Request], typing.Awaitable[Response]]
 
 
