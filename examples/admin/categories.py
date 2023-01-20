@@ -18,5 +18,5 @@ class Categories(Resource):
     datasource = SQLADataSource(Category, query=sa.select(Category).order_by(Category.name))
     form_class = CategoryForm
     columns = [
-        TableColumn(name='name', searchable=True, sortable=True),
+        TableColumn(name='name', searchable=True, sortable=True, link=True),
     ]
