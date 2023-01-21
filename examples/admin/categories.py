@@ -2,7 +2,9 @@ import sqlalchemy as sa
 import wtforms
 
 from examples.models import Category
+from ohmyadmin import formatters
 from ohmyadmin.contrib.sqlalchemy import SQLADataSource
+from ohmyadmin.forms import AsyncSelectField
 from ohmyadmin.resources import Resource
 from ohmyadmin.views.table import TableColumn
 
@@ -10,6 +12,9 @@ from ohmyadmin.views.table import TableColumn
 class CategoryForm(wtforms.Form):
     name = wtforms.StringField(validators=[wtforms.validators.data_required()])
     slug = wtforms.StringField(validators=[wtforms.validators.data_required()])
+    slug = AsyncSelectField()
+    visible_to_customers = wtforms.BooleanField()
+    description = wtforms.TextAreaField()
 
 
 class Categories(Resource):
@@ -19,4 +24,6 @@ class Categories(Resource):
     form_class = CategoryForm
     columns = [
         TableColumn(name='name', searchable=True, sortable=True, link=True),
+        TableColumn(name='visible_to_customers', formatter=formatters.BoolFormatter()),
+        TableColumn(name='updated_at', formatter=formatters.DateTimeFormatter()),
     ]

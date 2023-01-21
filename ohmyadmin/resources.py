@@ -8,7 +8,7 @@ from starlette.types import Receive, Scope, Send
 from starlette_babel import gettext_lazy as _
 from starlette_flash import flash
 
-from ohmyadmin import actions
+from ohmyadmin import actions, layouts
 from ohmyadmin.actions import ActionResponse, BatchDelete, DeleteObjectAction
 from ohmyadmin.forms import create_form, populate_object, validate_on_submit
 from ohmyadmin.helpers import LazyObjectURL, LazyURL
@@ -64,6 +64,9 @@ class Resource(BasePage, Router, IndexViewMixin):
     async def create_form(self, request: Request, model: typing.Any = None) -> wtforms.Form:
         return await create_form(request, self.form_class, model)
 
+    def build_form_layout(self, request: Request, form: wtforms.Form) -> layouts.Layout:
+        return layouts.Card([layouts.StackedForm([layouts.Input(field) for field in form])])
+
     def create_empty_model(self, request: Request) -> typing.Any:
         return self.datasource.new()
 
@@ -100,6 +103,7 @@ class Resource(BasePage, Router, IndexViewMixin):
             return self.get_create_view_response(request, await request.form(), model)
 
         form_actions = self.get_create_form_actions(request)
+        form_layout = self.build_form_layout(request, form)
         return self.render_to_response(
             request,
             'ohmyadmin/resources/create.html',
@@ -108,6 +112,7 @@ class Resource(BasePage, Router, IndexViewMixin):
                 'resource': self,
                 'form': form,
                 'object': model,
+                'form_layout': form_layout,
                 'form_actions': form_actions,
             },
         )
@@ -132,6 +137,7 @@ class Resource(BasePage, Router, IndexViewMixin):
             return self.get_update_view_response(request, await request.form(), model)
 
         form_actions = self.get_update_form_actions(request)
+        form_layout = self.build_form_layout(request, form)
         return self.render_to_response(
             request,
             'ohmyadmin/resources/edit.html',
@@ -140,6 +146,7 @@ class Resource(BasePage, Router, IndexViewMixin):
                 'resource': self,
                 'form': form,
                 'object': model,
+                'form_layout': form_layout,
                 'form_actions': form_actions,
             },
         )

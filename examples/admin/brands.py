@@ -1,8 +1,9 @@
 import sqlalchemy as sa
 import wtforms
+from starlette.requests import Request
 
 from examples.models import Brand
-from ohmyadmin import formatters
+from ohmyadmin import formatters, layouts
 from ohmyadmin.contrib.sqlalchemy import SQLADataSource
 from ohmyadmin.filters import ChoiceFilter
 from ohmyadmin.resources import Resource
@@ -36,3 +37,33 @@ class Brands(Resource):
         TableColumn('visible_to_customers', label='Visibility', formatter=formatters.BoolFormatter(as_text=True)),
         TableColumn('updated_at', formatter=formatters.DateTimeFormatter()),
     ]
+
+    def build_form_layout(self, request: Request, form: BrandForm) -> layouts.Layout:
+        return layouts.Grid(
+            [
+                layouts.Column(
+                    [
+                        layouts.Card(
+                            [
+                                layouts.Input(form.name),
+                                layouts.Input(form.slug),
+                                layouts.Input(form.website),
+                                layouts.Input(form.description, colspan='full'),
+                            ],
+                            columns=2,
+                        ),
+                    ],
+                    colspan=2,
+                ),
+                layouts.Column(
+                    [
+                        layouts.Card(
+                            [
+                                layouts.Input(form.visible_to_customers),
+                            ]
+                        )
+                    ]
+                ),
+            ],
+            columns=3,
+        )

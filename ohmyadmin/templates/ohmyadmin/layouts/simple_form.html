@@ -1,0 +1,28 @@
+<div class="space-y-6 sm:space-y-5">
+    {% if layout.label or layout.description %}
+        <div>
+            <h3 class="text-lg font-medium leading-6 text-gray-900">
+                {{ layout.label }}
+            </h3>
+            {% if layout.description %}
+                <p class="mt-1 max-w-2xl text-sm text-gray-500">{{ layout.description }}</p>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <div class="divide-y divide-gray-200">
+        {% for child in layout.children %}
+            <div class="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:py-5">
+                <label for="{{ child.field.label.field_id }}"
+                       class="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">
+                    {{ child.field.label.text }}
+                </label>
+                <div class="mt-1 sm:col-span-2 sm:mt-0">
+                    <div class="max-w-{{ child.max_width }}">
+                        {{ child.field }}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>

@@ -5,7 +5,7 @@ from starlette.requests import Request
 
 from examples.admin.brands import Brands
 from examples.models import Brand, Product
-from ohmyadmin import filters, formatters
+from ohmyadmin import filters, formatters, layouts
 from ohmyadmin.contrib.sqlalchemy import SQLADataSource
 from ohmyadmin.helpers import LazyObjectURL
 from ohmyadmin.metrics import ProgressMetric, TrendMetric, TrendResult, ValueMetric
@@ -24,6 +24,7 @@ class ProductForm(wtforms.Form):
         description="Customers won't see this price.", validators=[wtforms.validators.data_required()]
     )
     images = wtforms.FieldList(wtforms.FileField())
+    quantity = wtforms.IntegerField(default=0)
     sku = wtforms.IntegerField(default=0)
     security_stock = wtforms.IntegerField(
         default=0,
@@ -132,3 +133,56 @@ class Products(Resource):
         TableColumn('quantity', label='Qty.', sortable=True, formatter=formatters.NumberFormatter()),
         TableColumn('visible', formatter=formatters.BoolFormatter()),
     ]
+
+    def build_form_layout(self, request: Request, form: ProductForm) -> layouts.Layout:
+        return layouts.Grid(
+            [
+                layouts.Column(
+                    [
+                        layouts.Card(
+                            [
+                                layouts.Input(form.name),
+                                layouts.Input(form.slug),
+                                layouts.Input(form.description, colspan='full'),
+                            ],
+                            'Product info',
+                            columns=2,
+                        ),
+                        layouts.Card([layouts.Input(form.images)], label='Images'),
+                        layouts.Card(
+                            [
+                                layouts.Input(form.price),
+                                layouts.Input(form.compare_at_price),
+                                layouts.Input(form.cost_per_item),
+                            ],
+                            label='Pricing',
+                            columns=2,
+                            description='This information will be displayed publicly so be careful what you share.',
+                        ),
+                        layouts.FieldSet(
+                            [
+                                layouts.Input(form.sku),
+                                layouts.Input(form.barcode),
+                                layouts.Input(form.quantity),
+                                layouts.Input(form.security_stock),
+                            ],
+                            label='Inventory',
+                            description="Decide which communications you'd like to receive and how.",
+                        ),
+                    ],
+                    colspan=2,
+                ),
+                layouts.Column(
+                    [
+                        layouts.Card([layouts.Input(form.brand_id)], label='Brand'),
+                        layouts.Card(
+                            [
+                                layouts.Input(form.can_be_shipped),
+                                layouts.Input(form.can_be_shipped),
+                            ]
+                        ),
+                    ]
+                ),
+            ],
+            columns=3,
+        )

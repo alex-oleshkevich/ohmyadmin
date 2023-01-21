@@ -1,0 +1,15 @@
+<section class="flex items-start">
+    <div class="w-2/5">
+        <div class="text-lg font-medium leading-6 text-gray-900">{{ layout.label }}</div>
+        {% if layout.description %}
+            <p class="mt-1 text-sm text-gray-500">{{ layout.description }}</p>
+        {% endif %}
+    </div>
+    <div class="w-3/5 bg-white rounded-md px-4 py-5 sm:p-6 shadow">
+        <fieldset>
+            {% for child in layout.children %}
+                {{ child.render(request) }}
+            {% endfor %}
+        </fieldset>
+    </div>
+</section>

@@ -63,3 +63,7 @@ class Processable(abc.ABC):
     @abc.abstractmethod
     async def process(self, request: Request) -> None:
         ...
+
+
+class AsyncSelectField(wtforms.SelectField):
+    ...
