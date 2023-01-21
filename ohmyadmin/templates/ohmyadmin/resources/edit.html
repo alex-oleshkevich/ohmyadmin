@@ -1,18 +1,1 @@
-{% extends 'ohmyadmin/app.html' %}
-{% import 'ohmyadmin/lib/forms.html' as forms %}
-
-{% block content %}
-    <form method="post" enctype="multipart/form-data" hx-boost="true">
-        <div class="bg-white shadow p-4">
-            {% for field in form %}
-                {{ forms.form_field(field) }}
-            {% endfor %}
-        </div>
-
-        <div class="form-actions">
-            {% for action in form_actions %}
-                {{ action.render(request) }}
-            {% endfor %}
-        </div>
-    </form>
-{% endblock %}
+{% extends 'ohmyadmin/resources/create.html' %}
