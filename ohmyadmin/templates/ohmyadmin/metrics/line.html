@@ -6,7 +6,7 @@
             {{ current_value }}
         </div>
     {% endif %}
-    <div class="-mx-4 mt-auto -mb-4">
+    <div class="-mx-4 h-full -mb-4">
         <script type="application/json" id="{{ metric.slug }}">{{ series|tojson }}</script>
         <x-line-chart label="{{ metric.series_label }}"
                       color="{{ metric.series_color }}"
