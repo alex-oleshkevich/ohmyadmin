@@ -1,4 +1,5 @@
 import sqlalchemy as sa
+import typing
 import wtforms
 from sqlalchemy.orm import joinedload, selectinload
 from starlette.requests import Request
@@ -8,7 +9,7 @@ from examples.models import Brand, Product
 from ohmyadmin import filters, formatters
 from ohmyadmin.contrib.sqlalchemy import SQLADataSource
 from ohmyadmin.helpers import LazyObjectURL
-from ohmyadmin.metrics import ProgressMetric, ValueMetric
+from ohmyadmin.metrics import LineMetric, ProgressMetric, ValueMetric
 from ohmyadmin.resources import Resource
 from ohmyadmin.views.table import TableColumn
 
@@ -66,10 +67,30 @@ class Invisible(ProgressMetric):
         return await request.state.dbsession.scalar(stmt)
 
 
+class ProductsByYear(LineMetric):
+    series_label = 'per year'
+    size = 6
+
+    async def calculate_current_value(self, request: Request) -> int | None:
+        return 42
+
+    async def calculate_series(self, request: Request) -> typing.Sequence[tuple[str, float]]:
+        stmt = (
+            sa.select(
+                sa.func.date_trunc('year', Product.created_at).label('year'),
+                sa.func.count().label('total'),
+            )
+            .order_by(sa.text('1'))
+            .group_by(sa.text('1'))
+        )
+        result = await request.state.dbsession.execute(stmt)
+        return [(row.year.year, row.total) for row in result.all()]
+
+
 class Products(Resource):
     icon = 'assembly'
     form_class = ProductForm
-    metrics = [TotalProducts, AveragePrice, Invisible]
+    metrics = [TotalProducts, AveragePrice, Invisible, ProductsByYear, Invisible]
     datasource = SQLADataSource(
         Product,
         query=(

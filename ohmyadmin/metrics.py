@@ -1,4 +1,5 @@
 import abc
+import typing
 from slugify import slugify
 from starlette.datastructures import URL
 from starlette.requests import Request
@@ -11,7 +12,7 @@ from ohmyadmin.shortcuts import render_to_response
 class Metric(abc.ABC):
     slug: str = ''
     label: str = ''
-    size: int = 3
+    size: int = 4
 
     def __init__(self) -> None:
         self.slug = self.slug or slugify(self.__class__.__name__)
@@ -38,6 +39,32 @@ class ValueMetric(Metric):
     async def dispatch(self, request: Request) -> Response:
         value = await self.calculate(request)
         return render_to_response(request, self.template, {'value': value, 'metric': self})
+
+
+class LineMetric(Metric):
+    series_label: str = ''
+    series_color: str = '#3b82f6'
+    template: str = 'ohmyadmin/metrics/line.html'
+
+    async def calculate_current_value(self, request: Request) -> int | None:
+        return None
+
+    @abc.abstractmethod
+    async def calculate_series(self, request: Request) -> typing.Sequence[tuple[str, float]]:
+        ...
+
+    async def dispatch(self, request: Request) -> Response:
+        current_value = await self.calculate_current_value(request)
+        series = await self.calculate_series(request)
+        return render_to_response(
+            request,
+            self.template,
+            {
+                'series': series,
+                'current_value': current_value,
+                'metric': self,
+            },
+        )
 
 
 class ProgressMetric(Metric):
