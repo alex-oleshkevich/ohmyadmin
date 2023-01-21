@@ -1,0 +1,27 @@
+{% extends 'ohmyadmin/base.html' %}
+{% import 'ohmyadmin/lib/forms.html' as forms %}
+
+{% block main %}
+    <div class="h-full flex items-center justify-center bg-slate-100 px-4">
+        <div class="max-w-md w-full mx-auto">
+            <div class="text-slate-900 mb-5 flex items-center gap-3 justify-center">
+                {% if admin.logo_url %}
+                    <img src="{{ admin.logo_url }}" class="h-6 md:h-8">
+                {% else %}
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 md:h-8"
+                         viewBox="0 0 24 24" stroke-width="1" stroke="currentColor"
+                         fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                        <rect x="4" y="4" width="6" height="6" rx="1"></rect>
+                        <rect x="14" y="4" width="6" height="6" rx="1"></rect>
+                        <rect x="4" y="14" width="6" height="6" rx="1"></rect>
+                        <rect x="14" y="14" width="6" height="6" rx="1"></rect>
+                    </svg>
+                {% endif %}
+                <span class="text-lg">{{ admin.title }}</span>
+            </div>
+
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+{% endblock %}

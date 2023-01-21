@@ -1,5 +1,5 @@
 <div class="mt-5">
-    <div class="text-slate-600 uppercase mb-2 text-sm">{{ group.text }}</div>
+    <div class="text-slate-300 uppercase mb-2 text-sm">{{ group.text }}</div>
     {% for subitem in group.items %}
         {{ subitem.render(request)|safe }}
     {% endfor %}

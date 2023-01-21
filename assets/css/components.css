@@ -136,7 +136,7 @@
     }
 
     .form-actions {
-        @apply flex items-center gap-2 mt-6;
+        @apply flex flex-col md:flex-row items-start md:items-center gap-2 mt-6;
     }
 
     .btn {
@@ -185,7 +185,7 @@
     }
 
     .btn.btn-text {
-        @apply border-transparent bg-transparent;
+        @apply border-transparent bg-transparent shadow-none;
         @apply hover:bg-gray-100 active:bg-gray-200;
     }
 
@@ -320,7 +320,7 @@
     }
 
     .modal {
-        @apply fixed inset-0 z-10 overflow-y-auto md:items-center items-end justify-center flex p-2 md:p-0;
+        @apply fixed inset-0 z-10 overflow-y-auto md:items-center items-center justify-center flex p-2 md:p-0;
     }
 
     .modal::after {
@@ -386,24 +386,32 @@
     }
 
     .pagination {
-        @apply flex flex-col justify-between md:flex-row md:items-center font-medium;
+        @apply flex flex-col justify-between md:flex-row md:items-center font-medium gap-3;
     }
 
     .pagination-controls {
         @apply flex items-center gap-1;
     }
 
-    .pagination-controls a,
-    .pagination-controls span {
+    .pagination-controls > a,
+    .pagination-controls > span {
         @apply px-4 py-2 rounded-md inline-flex items-center justify-center gap-2;
         @apply hover:bg-slate-100 active:bg-slate-200;
     }
 
-    .pagination-controls span {
+
+    .pagination-controls > a:first-child:has(svg) span,
+    .pagination-controls > a:last-child:has(svg) span {
+        /* hide Previous/Next labels on mobiles */
+        @apply hidden md:inline;
+    }
+
+
+    .pagination-controls > span {
         @apply text-gray-600 hover:bg-inherit active:bg-inherit;
     }
 
-    .pagination-controls a.active {
+    .pagination-controls > a.active {
         @apply text-blue-700 bg-blue-100 active:bg-blue-200;
     }
 
@@ -458,10 +466,11 @@
 
     .tabs {
         @apply border-b border-b-gray-300 flex items-center gap-4;
+        overflow-x: auto;
     }
 
     .tabs .tab {
-        @apply -mb-px inline-flex cursor-pointer items-center gap-2 px-1 py-3 text-gray-800;
+        @apply -mb-px inline-flex cursor-pointer items-center gap-2 px-1 py-3 text-gray-800 whitespace-nowrap;
         @apply hover:text-blue-700;
     }
 
@@ -522,7 +531,6 @@
     }
 
     .list-menu {
-        @apply divide-y divide-gray-100;
     }
 
     .list-menu-item {

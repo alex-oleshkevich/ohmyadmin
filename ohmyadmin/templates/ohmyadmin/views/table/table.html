@@ -1,64 +1,66 @@
-<table>
-    <thead>
-    <tr>
-        {% if has_batch_actions %}
-            <th style="width: 1px">
-                <x-batch-select-all></x-batch-select-all>
-            </th>
-        {% endif %}
-        {% for column in table.columns %}
-            <th class="whitespace-nowrap">
-                {{ column.render_head_cell(request) }}
-            </th>
-        {% endfor %}
-        {% if has_object_actions %}
-            <th class="text-right"></th>
-        {% endif %}
-    </tr>
-    </thead>
-    <tbody>
-    {% for object in objects %}
-        {% set object_actions = table.get_object_actions(request, object) %}
-
-        <tr x-data="{selected: false}" :class="{selected: selected}">
+<div class="overflow-x-auto">
+    <table>
+        <thead>
+        <tr>
             {% if has_batch_actions %}
-                <td>
-                    <x-batch-toggle object-id="{{ object|pk }}" @input="selected = event.target.checked">
-
-                    </x-batch-toggle>
-                </td>
+                <th style="width: 1px">
+                    <x-batch-select-all></x-batch-select-all>
+                </th>
             {% endif %}
-            {% for columm in table.columns %}
-                <td>{{ columm.render(request, object) }}</td>
+            {% for column in table.columns %}
+                <th class="whitespace-nowrap">
+                    {{ column.render_head_cell(request) }}
+                </th>
             {% endfor %}
             {% if has_object_actions %}
-                <td>
-                    <div class="flex gap-1 justify-end items-center relative"
-                         x-data="{menuOpen: false}"
-                         @click.outside="menuOpen = false"
-                    >
-                        <button class="btn btn-icon" @click="menuOpen = !menuOpen">
-                            {{ tabler_icon('dots-vertical') }}
-                        </button>
-                        <div class="dropdown absolute top-10 z-10"
-                             x-show="menuOpen"
-                             x-transition:enter="transition ease-out duration-100"
-                             x-transition:enter-start="transform opacity-0 scale-95"
-                             x-transition:enter-end="transform opacity-100 scale-100"
-                             x-transition:leave="transition ease-in duration-75"
-                             x-transition:leave-start="transform opacity-100 scale-100"
-                             x-transition:leave-end="transform opacity-0 scale-95"
-                        >
-                            <div class="list-menu">
-                                {% for action in object_actions %}
-                                    {{ action.render(request, object) }}
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
-                </td>
+                <th class="text-right"></th>
             {% endif %}
         </tr>
-    {% endfor %}
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+        {% for object in objects %}
+            {% set object_actions = table.get_object_actions(request, object) %}
+
+            <tr x-data="{selected: false}" :class="{selected: selected}">
+                {% if has_batch_actions %}
+                    <td>
+                        <x-batch-toggle object-id="{{ object|pk }}" @input="selected = event.target.checked">
+
+                        </x-batch-toggle>
+                    </td>
+                {% endif %}
+                {% for columm in table.columns %}
+                    <td>{{ columm.render(request, object) }}</td>
+                {% endfor %}
+                {% if has_object_actions %}
+                    <td>
+                        <div class="flex gap-1 justify-end items-center relative"
+                             x-data="{menuOpen: false}"
+                             @click.outside="menuOpen = false"
+                        >
+                            <button class="btn btn-icon" @click="menuOpen = !menuOpen">
+                                {{ tabler_icon('dots-vertical') }}
+                            </button>
+                            <div class="dropdown absolute top-10 z-10"
+                                 x-show="menuOpen"
+                                 x-transition:enter="transition ease-out duration-100"
+                                 x-transition:enter-start="transform opacity-0 scale-95"
+                                 x-transition:enter-end="transform opacity-100 scale-100"
+                                 x-transition:leave="transition ease-in duration-75"
+                                 x-transition:leave-start="transform opacity-100 scale-100"
+                                 x-transition:leave-end="transform opacity-0 scale-95"
+                            >
+                                <div class="list-menu">
+                                    {% for action in object_actions %}
+                                        {{ action.render(request, object) }}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                {% endif %}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>

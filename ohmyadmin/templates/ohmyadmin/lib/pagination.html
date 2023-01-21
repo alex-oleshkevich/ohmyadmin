@@ -1,7 +1,7 @@
 {% macro pagination(request, page) %}
     {% with start_index = page.start_index, end_index = page.end_index, total_rows = page.total_rows %}
         <div class="pagination">
-            <div>
+            <div class="pagination-info">
                 {% trans %}Showing {{ start_index }} - {{ end_index }} of {{ total_rows }} results.{% endtrans %}
             </div>
 

@@ -35,7 +35,7 @@ def index_view(request: Request) -> Response:
 
 admin = OhMyAdmin(
     title='Admin Demo',
-    logo_url='https://haj.aliashkevich.com/static/logo.svg',
+    # logo_url='https://haj.aliashkevich.com/static/logo_square.svg',
     auth_policy=AuthPolicy(),
     template_dir=config.this_dir / 'templates',
     file_storage=file_storage,

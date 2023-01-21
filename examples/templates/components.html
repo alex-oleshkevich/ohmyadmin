@@ -40,7 +40,7 @@
                 <span
                     class="badge badge-red badge-green badge-blue badge-yellow badge-indigo badge-purple badge-pink"></span>
             </template>
-            <div class="space-x-3 flex items-end">
+            <div class="space-x-2 space-y-2 flex items-end flex-wrap">
                 {% for type in ['', 'red', 'yellow', 'green', 'blue', 'indigo', 'purple', 'pink'] %}
                     <div class="badge badge-{{ type }}">Badge</div>
                 {% endfor %}
@@ -52,21 +52,21 @@
             <template>
                 <span class="dot dot-red dot-green dot-blue dot-yellow dot-indigo dot-purple dot-pink"></span>
             </template>
-            <div>Small</div>
+            <div class="mb-1">Small</div>
             <div class="space-x-3 flex items-end mb-4">
                 {% for type in ['', 'red', 'yellow', 'green', 'blue', 'indigo', 'purple', 'pink'] %}
                     <div class="dot dot-sm dot-{{ type }}"></div>
                 {% endfor %}
             </div>
 
-            <div>Medium</div>
+            <div class="mb-1">Medium</div>
             <div class="space-x-3 flex items-end mb-4">
                 {% for type in ['', 'red', 'yellow', 'green', 'blue', 'indigo', 'purple', 'pink'] %}
                     <div class="dot dot-{{ type }}"></div>
                 {% endfor %}
             </div>
 
-            <div>Large</div>
+            <div class="mb-1">Large</div>
             <div class="space-x-3 flex items-end">
                 {% for type in ['', 'red', 'yellow', 'green', 'blue', 'indigo', 'purple', 'pink'] %}
                     <div class="dot dot-lg dot-{{ type }}"></div>
@@ -76,8 +76,8 @@
 
         <div>
             <h3>Buttons</h3>
-            <div class="space-x-3 flex items-end">
-                {% for type in ['', 'accent', 'primary', 'danger', 'warning', 'text'] %}
+            <div class="space-x-2 space-y-2 flex-wrap flex items-end">
+                {% for type in ['', 'accent', 'primary', 'danger', 'warning', 'text', 'link'] %}
                     <button type="button" class="btn btn-{{ type }}">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4">
                             <path
@@ -97,7 +97,7 @@
                     </svg>
                 </button>
             </div>
-            <div class="space-x-3 flex items-end mt-5">
+            <div class="space-x-2 space-y-2 flex-wrap flex items-end mt-5">
                 <button class="btn btn-block btn-accent">Block button</button>
             </div>
         </div>
@@ -131,14 +131,19 @@
                 <div class="pagination">
                     <div class="pagination-info">Showing 1-10 of 100 results.</div>
                     <div class="pagination-controls">
-                        <a href="#">{{ tabler_icon('arrow-left') }} Previous</a>
+                        <a href="#">
+                            {{ tabler_icon('arrow-left') }}
+                            <span class="hidden md:inline">Previous</span>
+                        </a>
                         <a href="#" class="active">1</a>
                         <span disabled>2</span>
                         <a href="#">3</a>
                         <span disabled>...</span>
-                        <a href="#">8</a>
                         <a href="#">9</a>
-                        <a href="#">Next {{ tabler_icon('arrow-right') }}</a>
+                        <a href="#">
+                            <span class="hidden md:inline">Next</span>
+                            {{ tabler_icon('arrow-right') }}
+                        </a>
                     </div>
                 </div>
             </div>
@@ -198,7 +203,6 @@
             </div>
         </div>
 
-
         <div>
             <h3>Tabs</h3>
             <div class="space-y-4 relative">
@@ -244,42 +248,37 @@
         <div>
             <h3>Table</h3>
             <div class="space-y-3 relative">
-                <table>
-                    <thead>
-                    <tr>
-                        <th>Email</th>
-                        <th>Name</th>
-                        <th>Date</th>
-                        <th></th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <td>me@example.com</td>
-                        <td>Root</td>
-                        <td>1 Jan</td>
-                        <td>
-                            <a href="#">Edit</a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>me@example.com</td>
-                        <td>Root</td>
-                        <td>1 Jan</td>
-                        <td>
-                            <a href="#">Edit</a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>me@example.com</td>
-                        <td>Root</td>
-                        <td>1 Jan</td>
-                        <td>
-                            <a href="#">Edit</a>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
+                <div class="overflow-x-scroll">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>First Name</th>
+                            <th>Last Name</th>
+                            <th>Active</th>
+                            <th>Date</th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for x in range(5) %}
+                            <tr>
+                                <td>me@example.com</td>
+                                <td>Root</td>
+                                <td>User</td>
+                                <td>1 Jan</td>
+                                <td><span class="badge badge-green">yes</span></td>
+                                <td>
+                                    <div class="whitespace-nowrap">
+                                        <a href="#" class="link">Edit</a>
+                                        <a href="#" class="link">Delete</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -315,7 +314,7 @@
             <h3>Toggles</h3>
             <div class="space-y-3 relative">
                 <label for="example1" class="relative inline-flex cursor-pointer items-center">
-                    <input type="checkbox" id="example1" class="peer sr-only"/>
+                    <input type="checkbox" id="example1" class="peer sr-only" checked/>
                     <div
                         class="h-6 w-11 rounded-full bg-gray-100 after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:shadow after:transition-all after:content-[''] hover:bg-gray-200 peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:ring-4 peer-focus:ring-blue-200 peer-disabled:cursor-not-allowed peer-disabled:bg-gray-100 peer-disabled:after:bg-gray-50"></div>
                 </label>
@@ -480,7 +479,7 @@
 
         <div>
             <h3>Dropdown menu</h3>
-            <div class="space-y-3 relative">
+            <div class="space-y-3 relative bg-slate-200 p-5">
                 <div class="dropdown">
                     <div class="list-menu">
                         <a href="#" class="list-menu-item">A link</a>

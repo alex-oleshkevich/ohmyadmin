@@ -144,6 +144,9 @@ class OhMyAdmin(Router):
         ]
 
     def index_view(self, request: Request) -> Response:
+        if not request.user.is_authenticated:
+            return RedirectResponse(request.url_for('ohmyadmin.login'))
+
         return self.render_to_response(
             request, 'ohmyadmin/index.html', {'page_title': _('Welcome', domain='ohmyadmin')}
         )
