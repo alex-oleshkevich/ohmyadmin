@@ -2,11 +2,11 @@
 <!-- col-span-3 -->
 <!-- col-span-4 -->
 <!-- col-span-6 -->
-<div class="shadow p-4 rounded-lg col-span-{{ metric.size }} border border-gray-200 overflow-y-hidden h-40">
+<div class="shadow p-4 rounded-lg col-span-{{ metric.size }} border border-gray-200 overflow-y-hidden min-h-40">
     <header class="flex items-start justify-between mb-3">
-        <div class="font-medium text-gray-600">{{ metric.label }}</div>
+        <div class="font-semibold text-gray-600">{{ metric.label }}</div>
     </header>
-    <main class="flex flex-col h-full">
+    <main class="flex flex-col">
         {% block content %}{% endblock %}
     </main>
 </div>

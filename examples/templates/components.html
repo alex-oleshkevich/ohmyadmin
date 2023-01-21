@@ -48,6 +48,33 @@
         </div>
 
         <div>
+            <h3>Dots</h3>
+            <template>
+                <span class="dot dot-red dot-green dot-blue dot-yellow dot-indigo dot-purple dot-pink"></span>
+            </template>
+            <div>Small</div>
+            <div class="space-x-3 flex items-end mb-4">
+                {% for type in ['', 'red', 'yellow', 'green', 'blue', 'indigo', 'purple', 'pink'] %}
+                    <div class="dot dot-sm dot-{{ type }}"></div>
+                {% endfor %}
+            </div>
+
+            <div>Medium</div>
+            <div class="space-x-3 flex items-end mb-4">
+                {% for type in ['', 'red', 'yellow', 'green', 'blue', 'indigo', 'purple', 'pink'] %}
+                    <div class="dot dot-{{ type }}"></div>
+                {% endfor %}
+            </div>
+
+            <div>Large</div>
+            <div class="space-x-3 flex items-end">
+                {% for type in ['', 'red', 'yellow', 'green', 'blue', 'indigo', 'purple', 'pink'] %}
+                    <div class="dot dot-lg dot-{{ type }}"></div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div>
             <h3>Buttons</h3>
             <div class="space-x-3 flex items-end">
                 {% for type in ['', 'accent', 'primary', 'danger', 'warning', 'text'] %}

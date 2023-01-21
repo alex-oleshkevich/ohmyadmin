@@ -2,7 +2,9 @@ import { html, LitElement, PropertyValues } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import Chart from 'chart.js/auto';
 
-@customElement('x-line-chart')
+type ChartSeries = [string, number][];
+
+@customElement('x-trend-metric-chart')
 export class LineChart extends LitElement {
     @property() series: string = '';
     @property() label: string = '';
@@ -12,7 +14,7 @@ export class LineChart extends LitElement {
     @property({ type: Boolean }) legend: boolean = false;
     @property({ attribute: 'backgroundColor' }) backgroundColor: string = 'rgb(239 246 255)';
 
-    getDataSet() {
+    getDataSet(): ChartSeries {
         const template = document.querySelector<HTMLScriptElement>(`#${ this.series }`);
         return JSON.parse(template!.innerText);
     }
@@ -24,14 +26,16 @@ export class LineChart extends LitElement {
             type: 'line',
             data: {
                 labels: series.map((v: [string, number]) => v[0]),
-                datasets: [{
-                    label: this.label,
-                    tension: 0.1,
-                    fill: true,
-                    borderColor: this.color,
-                    backgroundColor: this.backgroundColor,
-                    data: series.map((v: [string, number]) => v[1]),
-                }]
+                datasets: [
+                    {
+                        label: this.label,
+                        tension: 0.1,
+                        fill: true,
+                        borderColor: this.color,
+                        backgroundColor: this.backgroundColor,
+                        data: series.map((v: [string, number]) => v[1]),
+                    }
+                ]
             },
             options: {
                 maintainAspectRatio: false,

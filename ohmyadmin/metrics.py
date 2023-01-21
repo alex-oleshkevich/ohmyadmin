@@ -1,3 +1,5 @@
+import dataclasses
+
 import abc
 import typing
 from slugify import slugify
@@ -41,29 +43,25 @@ class ValueMetric(Metric):
         return render_to_response(request, self.template, {'value': value, 'metric': self})
 
 
-class LineMetric(Metric):
-    series_label: str = ''
-    series_color: str = '#3b82f6'
-    template: str = 'ohmyadmin/metrics/line.html'
+@dataclasses.dataclass
+class TrendResult:
+    current_value: int | float | None = None
+    series: list[tuple[str, float]] = dataclasses.field(default_factory=list)
 
-    async def calculate_current_value(self, request: Request) -> int | None:
-        return None
+
+class TrendMetric(Metric):
+    template: str = 'ohmyadmin/metrics/trend.html'
 
     @abc.abstractmethod
-    async def calculate_series(self, request: Request) -> typing.Sequence[tuple[str, float]]:
+    async def calculate(self, request: Request) -> TrendResult:
         ...
 
     async def dispatch(self, request: Request) -> Response:
-        current_value = await self.calculate_current_value(request)
-        series = await self.calculate_series(request)
+        value = await self.calculate(request)
         return render_to_response(
             request,
             self.template,
-            {
-                'series': series,
-                'current_value': current_value,
-                'metric': self,
-            },
+            {'value': value, 'metric': self},
         )
 
 
@@ -90,6 +88,41 @@ class ProgressMetric(Metric):
                 'value': value,
                 'target': target,
                 'percent': percent,
+                'metric': self,
+            },
+        )
+
+
+class PartitionItem(typing.TypedDict):
+    color: str
+    value: float
+
+
+@dataclasses.dataclass
+class PartitionResult:
+    groups: dict[str, PartitionItem] = dataclasses.field(default_factory=dict)
+
+    def add_group(self, label: str, value: float | int, color: str = '') -> None:
+        self.groups[label] = {'value': value, 'color': color}
+
+    def __iter__(self) -> typing.Iterator[tuple[str, PartitionItem]]:
+        return iter(self.groups.items())
+
+
+class PartitionMetric(Metric):
+    template: str = 'ohmyadmin/metrics/partition.html'
+
+    @abc.abstractmethod
+    async def calculate(self, request: Request) -> PartitionResult:
+        ...
+
+    async def dispatch(self, request: Request) -> Response:
+        partitions = await self.calculate(request)
+        return render_to_response(
+            request,
+            self.template,
+            {
+                'partitions': partitions,
                 'metric': self,
             },
         )

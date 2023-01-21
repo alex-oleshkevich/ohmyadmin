@@ -1,12 +1,22 @@
 import sqlalchemy as sa
 import wtforms
 from sqlalchemy.orm import joinedload, selectinload, with_expression
+from starlette.requests import Request
 
 from examples.models import Order, OrderItem
 from ohmyadmin import filters, formatters
 from ohmyadmin.contrib.sqlalchemy import SQLADataSource
+from ohmyadmin.metrics import PartitionMetric, PartitionResult
 from ohmyadmin.resources import Resource
 from ohmyadmin.views.table import TableColumn
+
+STATUS_COLORS: dict[str, str] = {
+    Order.Status.NEW: 'rgb(59 130 246)',
+    Order.Status.SHIPPED: 'rgb(99 102 241)',
+    Order.Status.PROCESSING: 'rgb(234 179 8)',
+    Order.Status.DELIVERED: 'rgb(34 197 94)',
+    Order.Status.CANCELLED: 'rgb(239 68 68)',
+}
 
 
 class OrderItemForm(wtforms.Form):
@@ -28,9 +38,25 @@ class OrderForm(wtforms.Form):
     items = wtforms.FieldList(wtforms.FormField(OrderItemForm, default=OrderItem), default=[], min_entries=1)
 
 
+class ByStatusMetric(PartitionMetric):
+    label = 'By status'
+
+    async def calculate(self, request: Request) -> PartitionResult:
+        stmt = sa.select(
+            sa.func.count().label('total'),
+            Order.status,
+        ).group_by(sa.text('2'))
+        result = await request.state.dbsession.execute(stmt)
+        metric = PartitionResult()
+        for row in result.all():
+            metric.add_group(row.status, row.total, STATUS_COLORS[row.status])
+        return metric
+
+
 class Orders(Resource):
     icon = 'shopping-cart'
     form_class = OrderForm
+    metrics = [ByStatusMetric]
     datasource = SQLADataSource(
         Order,
         query=(
