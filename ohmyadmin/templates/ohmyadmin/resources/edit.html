@@ -3,9 +3,11 @@
 
 {% block content %}
     <form method="post" enctype="multipart/form-data" hx-boost="true">
-        {% for field in form %}
-            {{ forms.form_field(field) }}
-        {% endfor %}
+        <div class="bg-white shadow p-4">
+            {% for field in form %}
+                {{ forms.form_field(field) }}
+            {% endfor %}
+        </div>
 
         <div class="form-actions">
             {% for action in form_actions %}

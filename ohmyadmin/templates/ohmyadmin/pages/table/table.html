@@ -9,7 +9,7 @@
 {% block content %}
     {% include 'ohmyadmin/pages/table/_metrics_row.html' %}
 
-    <div class="space-y-6"
+    <div class="bg-white shadow p-4"
          hx-target="#data"
          hx-indicator="#load-indicator"
          data-active-filters="{{ active_filter_count }}"
@@ -41,7 +41,7 @@
             </div>
         {% endif %}
 
-        <div>
+        <div class="mt-5">
             <div class="-mb-[1px] htmx-indicator" id="load-indicator">
                 <div class="progress progress-indeterminate progress-square progress-xs">
                     <div class="progress-bar"></div>
