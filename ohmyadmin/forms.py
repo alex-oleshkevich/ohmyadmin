@@ -10,13 +10,17 @@ _F = typing.TypeVar('_F', bound=wtforms.Form)
 
 async def create_form(request: Request, form_class: type[_F], obj: typing.Any | None = None) -> _F:
     form_data = None if request.method in ['GET', 'HEAD', 'OPTIONS'] else await request.form()
-    return form_class(form_data, obj=obj)
+    form = form_class(form_data, obj=obj)
+    for field in iterate_form_fields(form):
+        if isinstance(field, Initable):
+            await field.init(request)
+    return form
 
 
 def iterate_form_fields(form: typing.Iterable[wtforms.Field]) -> typing.Generator[wtforms.Field, None, None]:
     for field in form:
         if isinstance(field, (wtforms.FieldList, wtforms.FormField)):
-            yield from iterate_form_fields(form)
+            yield from iterate_form_fields(field)
         else:
             yield field
 
@@ -53,9 +57,9 @@ async def populate_object(request: Request, form: wtforms.Form, obj: typing.Any)
     form.populate_obj(obj)
 
 
-class Preparable(abc.ABC):
+class Initable(abc.ABC):
     @abc.abstractmethod
-    async def prepare(self, request: Request) -> None:
+    async def init(self, request: Request) -> None:
         ...
 
 
@@ -65,5 +69,41 @@ class Processable(abc.ABC):
         ...
 
 
-class AsyncSelectField(wtforms.SelectField):
-    ...
+Choices = typing.Union[
+    typing.Sequence[tuple[typing.Any, str]],
+]
+
+
+class AsyncChoicesLoader(typing.Protocol):
+    async def __call__(self, request: Request) -> Choices:
+        ...
+
+
+class AsyncSelectField(wtforms.SelectField, Initable):
+    def __init__(self, choices_loader: AsyncChoicesLoader, **kwargs: typing.Any) -> None:
+        self.choices_loader = choices_loader
+        super().__init__(**kwargs)
+
+    async def init(self, request: Request) -> None:
+        self.choices = list(await self.choices_loader(request))
+
+
+_SCPS = typing.ParamSpec('_SCPS')
+_SCRT = typing.TypeVar('_SCRT')
+
+
+def safe_coerce(callback: typing.Callable[[typing.Any], _SCRT]) -> typing.Callable[[typing.Any], _SCRT | None]:
+    def coerce(value: float | typing.AnyStr) -> _SCRT | None:
+        if value is None:
+            return None
+
+        try:
+            return callback(value)
+        except ValueError:
+            return None
+
+    return coerce
+
+
+def coerce_bool(value: str) -> bool:
+    return value in ['1', 1, True, 'true', 'True', 'on']

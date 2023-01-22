@@ -7,6 +7,8 @@ from examples.admin.brands import Brands
 from examples.models import Brand, Product
 from ohmyadmin import filters, formatters, layouts
 from ohmyadmin.contrib.sqlalchemy import SQLADataSource
+from ohmyadmin.contrib.sqlalchemy.utils import choices_from
+from ohmyadmin.forms import AsyncSelectField
 from ohmyadmin.helpers import LazyObjectURL
 from ohmyadmin.metrics import ProgressMetric, TrendMetric, TrendResult, ValueMetric
 from ohmyadmin.resources import Resource
@@ -16,7 +18,7 @@ from ohmyadmin.views.table import TableColumn
 class ProductForm(wtforms.Form):
     name = wtforms.StringField(validators=[wtforms.validators.data_required()])
     slug = wtforms.StringField(validators=[wtforms.validators.data_required()])
-    brand_id = wtforms.SelectField()
+    brand_id = AsyncSelectField(choices_loader=choices_from(Brand))
     description = wtforms.TextAreaField()
     price = wtforms.DecimalField(validators=[wtforms.validators.data_required()])
     compare_at_price = wtforms.DecimalField(validators=[wtforms.validators.data_required()])
@@ -159,7 +161,7 @@ class Products(Resource):
                             columns=2,
                             description='This information will be displayed publicly so be careful what you share.',
                         ),
-                        layouts.FieldSet(
+                        layouts.Card(
                             [
                                 layouts.Input(form.sku),
                                 layouts.Input(form.barcode),
