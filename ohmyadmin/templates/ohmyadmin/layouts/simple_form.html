@@ -1,3 +1,5 @@
+{% import 'ohmyadmin/lib/forms.html' as forms %}
+
 <div class="space-y-6 sm:space-y-5">
     {% if layout.label or layout.description %}
         <div>
@@ -10,19 +12,23 @@
         </div>
     {% endif %}
 
-    <div class="divide-y divide-gray-200">
+    <div>
         {% for child in layout.children %}
-            <div class="sm:grid sm:grid-cols-3 sm:items-start sm:gap-4 sm:py-5">
+            <div class="md:grid md:grid-cols-3 md:items-start md:gap-4">
                 <label for="{{ child.field.label.field_id }}"
                        class="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">
                     {{ child.field.label.text }}
+                    {% if child.field.flags.required %}
+                        {{ forms.required_asterisk() }}
+                    {% endif %}
                 </label>
-                <div class="mt-1 sm:col-span-2 sm:mt-0">
-                    <div class="max-w-{{ child.max_width }}">
-                        {{ child.field }}
-                    </div>
+                <div class="max-w-{{ child.max_width }} md:col-span-2">
+                    {{ forms.form_input(child.field) }}
+                    {{ forms.form_help(child.field) if child.field.description else '' }}
+                    {{ forms.form_errors(child.field) if child.field.errors else '' }}
                 </div>
             </div>
+            <div class="mb-4 md:my-5 md:border-t md:border-gray-200"></div>
         {% endfor %}
     </div>
 </div>

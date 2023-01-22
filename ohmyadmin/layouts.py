@@ -66,7 +66,7 @@ class FieldSet(Layout):
 
 
 class Input(Layout):
-    def __init__(self, field: wtforms.Field, max_width: str = 'sm', colspan: str | int = '') -> None:
+    def __init__(self, field: wtforms.Field, max_width: str = 'full', colspan: str | int = '') -> None:
         self.field = field
         self.colspan = colspan
         self.max_width = max_width

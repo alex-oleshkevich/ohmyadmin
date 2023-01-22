@@ -15,6 +15,10 @@ from examples.admin.components import Components
 from examples.admin.countries import Countries
 from examples.admin.currencies import Currencies
 from examples.admin.customers import Customers
+from examples.admin.form_layouts.card_layout import CardLayout
+from examples.admin.form_layouts.fieldset_layout import FieldSetLayout
+from examples.admin.form_layouts.simple_layout import SimpleLayout
+from examples.admin.form_layouts.stacked_layout import StackedLayout
 from examples.admin.orders import Orders
 from examples.admin.products import Products
 from examples.admin.products_page import ProductsPage
@@ -57,6 +61,10 @@ admin = OhMyAdmin(
         Actions(),
         Components(),
         ProductsPage(),
+        CardLayout(),
+        FieldSetLayout(),
+        SimpleLayout(),
+        StackedLayout(),
     ],
 )
 

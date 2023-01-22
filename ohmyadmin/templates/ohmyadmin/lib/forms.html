@@ -1,3 +1,7 @@
+{% macro required_asterisk() %}
+    <span class="text-red-500">*</span>
+{% endmacro %}
+
 {% macro form_help(field) %}
     {% if field.description %}
         <div class="form-help">{{ field.description }}</div>
@@ -8,7 +12,7 @@
     <label for="{{ field.label.field_id }}">
         {{ field.label.text }}
         {% if field.flags.required %}
-            <span class="text-red-500">*</span>
+            {{ required_asterisk() }}
         {% endif %}
     </label>
 {% endmacro %}
@@ -34,10 +38,6 @@
         {{ file_field(field) }}
     {% elif field.type == 'MultipleFileField' %}
         {{ multiple_file_field(field) }}
-{#    {% elif field.type == 'FieldList' %}#}
-{#        {{ list_field(field) }}#}
-{#    {% elif field.type == 'FormField' %}#}
-{#        {{ form_form_field(field) }}#}
     {% else %}
         <div class="form-group">
             {{ form_label(field) }}

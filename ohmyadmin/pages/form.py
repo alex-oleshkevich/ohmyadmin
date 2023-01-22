@@ -6,7 +6,7 @@ from starlette.responses import Response
 from starlette.routing import BaseRoute, Route
 from starlette_babel import gettext_lazy as _
 
-from ohmyadmin import actions
+from ohmyadmin import actions, layouts
 from ohmyadmin.forms import create_form, validate_on_submit
 from ohmyadmin.pages.page import Page
 
@@ -32,15 +32,21 @@ class FormPage(Page):
     async def create_form(self, request: Request, model: typing.Any) -> wtforms.Form:
         return await create_form(request, self.form_class, obj=model)
 
+    def build_form_layout(self, request: Request, form: wtforms.Form) -> layouts.Layout:
+        return layouts.Card([layouts.StackedForm([layouts.Input(field) for field in form])])
+
     async def handler(self, request: Request) -> Response:
         model = await self.get_form_object(request)
         form = await self.create_form(request, model)
         if await validate_on_submit(request, form):
             return await self.handle_submit(request, form, model)
 
+        form_layout = self.build_form_layout(request, form)
         form_actions = self.get_form_actions(request)
         return self.render_to_response(
-            request, self.template, {'form': form, 'page_title': self.page_title, 'form_actions': form_actions}
+            request,
+            self.template,
+            {'form': form, 'page_title': self.page_title, 'form_layout': form_layout, 'form_actions': form_actions},
         )
 
     @abc.abstractmethod

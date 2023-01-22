@@ -3,10 +3,8 @@
 
 {% block content %}
     <form method="post" enctype="multipart/form-data" hx-boost="true">
-        <div class="max-w-lg">
-            {% for field in form %}
-                {{ forms.form_field(field) }}
-            {% endfor %}
+        <div>
+            {{ form_layout.render(request) }}
         </div>
         <div class="form-actions">
             {% block form_actions %}
