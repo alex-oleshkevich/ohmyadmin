@@ -86,7 +86,7 @@ class Pagination(typing.Generic[M]):
         return min(self.start_index + self.page_size - 1, self.total_rows)
 
     def iter_pages(
-        self, left_edge: int = 3, left_current: int = 3, right_current: int = 3, right_edge: int = 3
+        self, left_edge: int = 1, left_current: int = 1, right_current: int = 2, right_edge: int = 1
     ) -> typing.Generator[int | None, None, None]:
         last = 0
         for number in range(1, self.total_pages + 1):

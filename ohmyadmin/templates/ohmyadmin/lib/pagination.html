@@ -9,7 +9,8 @@
                 <div class="pagination-controls">
                     {% if page.has_previous %}
                         <a href="{{ request.url.include_query_params(page=page.previous_page) }}">
-                            {{ tabler_icon('arrow-left') }} {{ _('Previous', domain='ohmyadmin') }}
+                            {{ tabler_icon('arrow-left') }}
+                            <span class="hidden md:inline">{{ _('Previous', domain='ohmyadmin') }}</span>
                         </a>
                     {% endif %}
 
@@ -27,7 +28,8 @@
 
                     {% if page.has_next %}
                         <a href="{{ request.url.include_query_params(page=page.next_page) }}">
-                            {{ _('Next', domain='ohmyadmin') }} {{ tabler_icon('arrow-right') }}
+                            <span class="hidden md:inline">{{ _('Next', domain='ohmyadmin') }}</span>
+                            {{ tabler_icon('arrow-right') }}
                         </a>
                     {% endif %}
                 </div>
