@@ -40,11 +40,11 @@ class BaseAuthPolicy(abc.ABC):
     login_form_class: type[LoginForm] = LoginForm
 
     @abc.abstractmethod
-    async def authenticate(self, request: Request, identity: str, password: str) -> BaseUser | None:
+    async def authenticate(self, request: Request, identity: str, password: str) -> BaseUser | None:  # pragma: nocover
         ...
 
     @abc.abstractmethod
-    async def load_user(self, conn: HTTPConnection, user_id: str) -> BaseUser | None:
+    async def load_user(self, conn: HTTPConnection, user_id: str) -> BaseUser | None:  # pragma: nocover
         ...
 
     def login(self, request: Request, user: BaseUser) -> None:
@@ -53,9 +53,6 @@ class BaseAuthPolicy(abc.ABC):
     def logout(self, request: Request) -> None:
         if SESSION_KEY in request.session:
             del request.session[SESSION_KEY]
-
-    def is_authenticated(self, request: Request) -> bool:
-        return request.user.is_authenticated
 
     def get_login_form_class(self) -> type[LoginForm]:
         return self.login_form_class

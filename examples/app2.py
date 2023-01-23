@@ -53,7 +53,7 @@ class AuthPolicy(BaseAuthPolicy):
         return result.one_or_none()
 
     def get_user_menu(self, conn: HTTPConnection) -> UserMenu:
-        if conn.user.is_authenticated:
+        if conn.state.admin.auth_policy.is_authenticated:
             return UserMenu(
                 user_name=str(conn.user),
                 avatar=media_url_or_redirect(conn.user.avatar),
