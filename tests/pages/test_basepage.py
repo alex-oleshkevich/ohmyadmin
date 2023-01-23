@@ -11,8 +11,7 @@ def test_automatically_generates_slug(create_test_app: CreateTestAppFactory) -> 
     """BasePage should automatically generate slug attribute based on label."""
 
     class DummyPage(BasePage):
-        async def dispatch(self, request: Request) -> Response:
-            return Response('ok')
+        pass
 
     page = DummyPage()
     assert page.slug == 'dummy'

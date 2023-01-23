@@ -65,6 +65,7 @@ class BasePage(metaclass=PageMeta):
 
         Subclasses must implement this.
         """
+        raise NotImplementedError()
 
     def as_route(self) -> BaseRoute:
         """Create a route instance for this page."""
