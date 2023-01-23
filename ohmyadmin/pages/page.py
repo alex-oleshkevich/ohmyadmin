@@ -11,6 +11,12 @@ from ohmyadmin.pages.base import BasePage
 
 
 class Page(BasePage):
+    """
+    A simple page that renders a template with context.
+
+    Much like Starlette's HTTPEndpoint class.
+    """
+
     template: typing.ClassVar[str] = 'ohmyadmin/pages/blank.html'
 
     async def get(self, request: Request) -> Response:

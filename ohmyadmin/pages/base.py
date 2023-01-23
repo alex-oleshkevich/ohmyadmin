@@ -4,9 +4,10 @@ from slugify import slugify
 from starlette.datastructures import URL
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
-from starlette.routing import BaseRoute
+from starlette.routing import BaseRoute, Route
+from starlette.types import Receive, Scope, Send
 
-from ohmyadmin.helpers import camel_to_sentence
+from ohmyadmin.helpers import camel_to_sentence, pluralize
 
 
 class PageMeta(type):
@@ -16,7 +17,7 @@ class PageMeta(type):
                 clean_label = name.removesuffix('Page').removesuffix('Resource')
                 attrs['label'] = camel_to_sentence(clean_label)
             if not attrs.get('label_plural'):
-                attrs['label_plural'] = attrs.get('label_plural', attrs['label'])
+                attrs['label_plural'] = attrs.get('label_plural', pluralize(attrs['label']))
             if not attrs.get('slug'):
                 attrs['slug'] = slugify(attrs['label'])
             if not attrs.get('page_title'):
@@ -54,14 +55,28 @@ class BasePage(metaclass=PageMeta):
         return RedirectResponse(url, status_code=302)
 
     @abc.abstractmethod
-    def as_route(cls) -> BaseRoute:
-        raise NotImplementedError()
+    async def dispatch(self, request: Request) -> Response:  # pragma: nocover
+        """
+        Endpoint handler.
+
+        Subclasses must implement this.
+        """
+
+    def as_route(self) -> BaseRoute:
+        """Create a route instance for this page."""
+        return Route(f'/{self.slug}', self, methods=['get'], name=self.get_path_name())
 
     @classmethod
-    @abc.abstractmethod
     def get_path_name(cls) -> str:
-        raise NotImplementedError()
+        """Generate a path name for this page."""
+        return f'app.pages.{cls.slug}'
 
     @classmethod
     def generate_url(cls, request: Request) -> str:
+        """Generate absolute URL to this page."""
         return request.url_for(cls.get_path_name())
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        request = Request(scope, receive, send)
+        response = await self.dispatch(request)
+        await response(scope, receive, send)
