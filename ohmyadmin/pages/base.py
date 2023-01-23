@@ -41,16 +41,20 @@ class BasePage(metaclass=PageMeta):
         context: typing.Mapping[str, typing.Any] | None = None,
         headers: typing.Mapping[str, typing.Any] | None = None,
     ) -> Response:
+        """Render template into HTTP response."""
         return request.state.admin.render_to_response(request, template_name, context, headers=headers)
 
     def redirect_to_path(self, request: Request, path_name: str, **path_params: typing.Any) -> RedirectResponse:
+        """A shortcut to create RedirectResponse for path name and params."""
         url = request.url_for(path_name, **path_params)
         return RedirectResponse(url, status_code=302)
 
     def redirect_to(self, url: str | URL) -> RedirectResponse:
+        """A shortcut to create RedirectResponse for given URL."""
         return RedirectResponse(url, status_code=302)
 
     def redirect_to_self(self, request: Request) -> RedirectResponse:
+        """A shortcut to create RedirectResponse back to this page."""
         url = request.url_for(self.get_path_name())
         return RedirectResponse(url, status_code=302)
 
@@ -77,6 +81,7 @@ class BasePage(metaclass=PageMeta):
         return request.url_for(cls.get_path_name())
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        """ASGI integration point."""
         request = Request(scope, receive, send)
         response = await self.dispatch(request)
         await response(scope, receive, send)
