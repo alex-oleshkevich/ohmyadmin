@@ -33,15 +33,6 @@ class BasePage(metaclass=PageMeta):
     group: str = ''
     icon: str = ''
 
-    def render_macro(
-        self,
-        request: Request,
-        template_name: str,
-        macro_name: str,
-        macro_args: dict[str, typing.Any] | None = None,
-    ) -> Response:
-        return request.state.admin.render_macro(template_name, macro_name, macro_args)
-
     def render_to_response(
         self,
         request: Request,

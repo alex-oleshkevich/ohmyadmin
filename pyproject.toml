@@ -51,6 +51,13 @@ uvicorn = "^0.18.3"
 starception = "^1.0"
 httpx = "^0.23.3"
 
+
+[tool.poetry.group.docs.dependencies]
+mkdocs = "^1.4.2"
+mkdocstrings = {extras = ["css", "html", "javascript", "python", "typescript"], version = "^0.20.0"}
+mkdocs-material = "^9.0.6"
+mkautodoc = "^0.2.0"
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
@@ -111,6 +118,7 @@ plugins = ["sqlalchemy.ext.mypy.plugin"]
 
 [tool.pytest.ini_options]
 minversion = "7.2"
+asyncio_mode = 'auto'
 python_files = ["tests.py", "test_*.py", "*_tests.py"]
 norecursedirs = [
     "node_modules", "frontend", "storage", "dist", ".git",

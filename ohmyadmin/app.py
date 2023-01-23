@@ -50,6 +50,7 @@ class OhMyAdmin(Router):
         self.file_storage = file_storage or FileStorage(LocalStorage('/tmp/ohmyadmin', mkdirs=True))
         self.middleware: list[Middleware] = [
             Middleware(AuthenticationMiddleware, backend=auth_policy.get_authentication_backend()),
+            Middleware(LoginRequiredMiddleware, exclude_paths=['/login', '/static']),
         ]
 
         self.jinja_env = jinja2.Environment(
@@ -78,13 +79,28 @@ class OhMyAdmin(Router):
         super().__init__(self.get_routes())
 
     def url_for(self, request: Request, path_name: str, **path_params: typing.Any) -> str:
+        """
+        Generate URL to a named route.
+
+        This function generates a correct URL when used in a mounted application
+        (e. g. Mount()).
+        """
         return request.url_for(path_name, **path_params)
 
     def static_url(self, request: Request, path: str) -> str:
+        """Generate URL to a static asset managed by the admin application."""
         _suffix = time.time() if request.app.debug else START_TIME
         return request.url_for('ohmyadmin.static', path=path) + f'?{_suffix}'
 
     def media_url(self, request: Request, path: str) -> str:
+        """
+        Generate URL to a media (uploaded) file.
+
+        If `path` starts with `http` or `https` then the value used as is.
+        Otherwise, generates URL to a media server which internally calls
+        `file_storage` to generate the URL. The actual URL generation logic
+        delegated to `file_storage`.
+        """
         if path.startswith('http://') or path.startswith('https://'):
             return path
         return request.url_for('ohmyadmin.media', path=path)
@@ -107,12 +123,6 @@ class OhMyAdmin(Router):
         )
         return Markup(self.templates.get_template(template_name).render(context))
 
-    def render_macro(self, template_name: str, macro_name: str, macro_args: dict[str, typing.Any] | None = None) -> str:
-        macro_args = macro_args or {}
-        template = self.templates.get_template(template_name)
-        macros = getattr(template.module, macro_name)
-        return macros(**macro_args)
-
     def render_to_response(
         self,
         request: Request,
@@ -133,20 +143,16 @@ class OhMyAdmin(Router):
         return self.templates.TemplateResponse(template_name, context, headers=headers)
 
     def get_routes(self) -> typing.Sequence[BaseRoute]:
-        middleware = [Middleware(LoginRequiredMiddleware)]
         return [
             Route('/', self.index_view, name='ohmyadmin.welcome'),
             Route('/login', self.login_view, name='ohmyadmin.login', methods=['GET', 'POST']),
             Route('/logout', self.logout_view, name='ohmyadmin.logout', methods=['POST']),
             Mount('/static', StaticFiles(packages=['ohmyadmin']), name='ohmyadmin.static'),
-            Mount('/media', FileServer(self.file_storage), name='ohmyadmin.media', middleware=middleware),
-            Mount('/', routes=[page.as_route() for page in self.pages], middleware=middleware),
+            Mount('/media', FileServer(self.file_storage), name='ohmyadmin.media'),
+            Mount('/', routes=[page.as_route() for page in self.pages]),
         ]
 
     def index_view(self, request: Request) -> Response:
-        if not request.user.is_authenticated:
-            return RedirectResponse(request.url_for('ohmyadmin.login'))
-
         return self.render_to_response(
             request, 'ohmyadmin/index.html', {'page_title': _('Welcome', domain='ohmyadmin')}
         )

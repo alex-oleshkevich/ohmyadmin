@@ -1,15 +1,20 @@
 import json
 import pytest
 import typing
+from starlette.applications import Starlette
+from starlette.middleware import Middleware
+from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
+from starlette.routing import Mount
 from starlette.testclient import TestClient
 
 from ohmyadmin import actions
 from ohmyadmin.actions import ActionResponse
+from ohmyadmin.app import OhMyAdmin
 from ohmyadmin.datasource.memory import InMemoryDataSource
 from ohmyadmin.pages.table import TablePage
-from tests.utils import create_test_app
+from tests.utils import AuthTestPolicy
 
 
 async def example_callback_action(request: Request) -> ActionResponse:
@@ -35,7 +40,10 @@ class _DemoPageActions(TablePage):
     ]
 
 
-app = create_test_app([_DemoPageActions()])
+app = Starlette(
+    routes=[Mount('/admin', OhMyAdmin(pages=[_DemoPageActions()], auth_policy=AuthTestPolicy()))],
+    middleware=[Middleware(SessionMiddleware, secret_key='key!')],
+)
 
 
 def test_renders_link_page_action() -> None:
