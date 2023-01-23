@@ -17,6 +17,6 @@ class TablePage(IndexViewMixin, Page):
         return Mount(
             f'/{self.slug}',
             routes=[
-                Route('/', self, methods=methods, name=self.get_path_name()),
+                Route('/', self.dispatch_index_view, methods=methods, name=self.get_path_name()),
             ],
         )

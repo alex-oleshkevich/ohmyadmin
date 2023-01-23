@@ -35,7 +35,7 @@
         <!-- end search and actions -->
 
         {% if filters %}
-            <div id="filter-bar" hx-get hx-trigger="filters-reload" hx-target="this" class="flex items-center gap-2"
+            <div id="filter-bar" hx-get hx-trigger="filters-reload" hx-target="this" class="flex items-center gap-2 rounded mt-2 py-1"
                  x-show="showFilterBar">
                 {% include 'ohmyadmin/pages/table/_filters.html' %}
             </div>

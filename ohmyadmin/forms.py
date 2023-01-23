@@ -11,9 +11,7 @@ _F = typing.TypeVar('_F', bound=wtforms.Form)
 async def create_form(request: Request, form_class: type[_F], obj: typing.Any | None = None) -> _F:
     form_data = None if request.method in ['GET', 'HEAD', 'OPTIONS'] else await request.form()
     form = form_class(form_data, obj=obj)
-    for field in iterate_form_fields(form):
-        if isinstance(field, Initable):
-            await field.init(request)
+    await init_form(request, form)
     return form
 
 
@@ -23,6 +21,12 @@ def iterate_form_fields(form: typing.Iterable[wtforms.Field]) -> typing.Generato
             yield from iterate_form_fields(field)
         else:
             yield field
+
+
+async def init_form(request: Request, form: wtforms.Form) -> None:
+    for field in iterate_form_fields(form):
+        if isinstance(field, Initable):
+            await field.init(request)
 
 
 async def validate_form(form: wtforms.Form) -> bool:
@@ -69,23 +73,30 @@ class Processable(abc.ABC):
         ...
 
 
-Choices = typing.Union[
-    typing.Sequence[tuple[typing.Any, str]],
-]
-
-
 class AsyncChoicesLoader(typing.Protocol):
-    async def __call__(self, request: Request) -> Choices:
+    async def __call__(self, request: Request) -> typing.Sequence[tuple[typing.Any, str]]:
         ...
 
 
+Choices = typing.Union[
+    AsyncChoicesLoader,
+    typing.Sequence[tuple[typing.Any, str]],
+    typing.Callable[[], typing.Sequence[tuple[typing.Any, str]]],
+]
+
+
 class AsyncSelectField(wtforms.SelectField, Initable):
-    def __init__(self, choices_loader: AsyncChoicesLoader, **kwargs: typing.Any) -> None:
-        self.choices_loader = choices_loader
+    def __init__(self, choices: Choices, **kwargs: typing.Any) -> None:
+        self.choices_loader = None
+        if inspect.iscoroutinefunction(choices):
+            self.choices_loader = choices
+        else:
+            self.choices = choices
         super().__init__(**kwargs)
 
     async def init(self, request: Request) -> None:
-        self.choices = list(await self.choices_loader(request))
+        if self.choices_loader:
+            self.choices = list(await self.choices_loader(request))
 
 
 _SCPS = typing.ParamSpec('_SCPS')

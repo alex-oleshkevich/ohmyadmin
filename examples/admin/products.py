@@ -18,7 +18,7 @@ from ohmyadmin.views.table import TableColumn
 class ProductForm(wtforms.Form):
     name = wtforms.StringField(validators=[wtforms.validators.data_required()])
     slug = wtforms.StringField(validators=[wtforms.validators.data_required()])
-    brand_id = AsyncSelectField(choices_loader=choices_from(Brand))
+    brand_id = AsyncSelectField(choices=choices_from(Brand))
     description = wtforms.TextAreaField()
     price = wtforms.DecimalField(validators=[wtforms.validators.data_required()])
     compare_at_price = wtforms.DecimalField(validators=[wtforms.validators.data_required()])
@@ -107,7 +107,7 @@ class Products(Resource):
     )
     filters = [
         filters.StringFilter('name'),
-        filters.ChoiceFilter('brand_id', label='Brand', coerce=int, choices=[]),
+        filters.ChoiceFilter('brand_id', label='Brand', coerce=int, choices=choices_from(Brand)),
         filters.IntegerFilter('sku'),
         filters.DecimalFilter('price'),
         filters.DecimalFilter('cost_per_item'),

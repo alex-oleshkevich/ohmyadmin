@@ -152,6 +152,7 @@ class IndexViewMixin(HasPageActions, HasFilters, HasObjectActions, HasBatchActio
         return TableView(columns=self.get_table_columns(request))
 
     async def dispatch_index_view(self, request: Request) -> Response:
+        request.state.page = self
         request.state.datasource = self.datasource
 
         if '_action' in request.query_params:

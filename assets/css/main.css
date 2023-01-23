@@ -13,3 +13,7 @@
 .main-menu-item.active {
     @apply bg-sky-600 text-sky-100 hover:bg-sky-700 active:bg-sky-800;
 }
+
+[x-cloak] {
+    display: none;
+}

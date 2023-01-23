@@ -9,7 +9,10 @@ module.exports = {
         {pattern: /flex-/},
         {pattern: /gap-/},
         {pattern: /col-span/},
+        {pattern: /grid-cols/},
         {pattern: /max-w/},
+        {pattern: /transform/},
+        {pattern: /rotate-/},
     ],
     plugins: [
         require('@tailwindcss/forms'),

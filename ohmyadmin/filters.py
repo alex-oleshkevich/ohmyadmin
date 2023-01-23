@@ -13,6 +13,7 @@ from starlette.requests import Request
 from starlette_babel import gettext_lazy as _
 
 from ohmyadmin.datasource.base import DataSource, NumberOperation, StringOperation
+from ohmyadmin.forms import AsyncSelectField, init_form
 from ohmyadmin.helpers import snake_to_sentence
 from ohmyadmin.shortcuts import render_to_string
 
@@ -209,8 +210,10 @@ class DateRangeFilter(BaseFilter[DateRangeFilterForm]):
 
 
 class ChoiceFilterForm(wtforms.Form):
-    choice = wtforms.SelectField(
-        label=_('Choices', domain='ohmyadmin'), validators=[wtforms.validators.data_required()]
+    choice = AsyncSelectField(
+        label=_('Choices', domain='ohmyadmin'),
+        validators=[wtforms.validators.data_required()],
+        choices=[],
     )
 
 
@@ -233,12 +236,7 @@ class ChoiceFilter(BaseFilter[ChoiceFilterForm]):
         self.form.choice.coerce = self.coerce
 
     async def initialize(self, request: Request) -> None:
-        if inspect.iscoroutinefunction(self.choices):
-            self.form.choice.choices = await self.choices()
-        elif callable(self.choices):
-            self.form.choice.choices = self.choices()
-        else:
-            self.form.choice.choices = self.choices
+        await init_form(request, self.form)
 
     def apply(self, request: Request, query: DataSource) -> DataSource:
         choice = self.form.data['choice']

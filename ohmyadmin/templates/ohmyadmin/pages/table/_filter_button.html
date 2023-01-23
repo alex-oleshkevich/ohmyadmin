@@ -3,4 +3,7 @@
     <template x-if="selectedFiltersCount">
         <span class="badge badge-blue" x-text="selectedFiltersCount"></span>
     </template>
+    <span class="transition duration-140 ease transform" :class="{'rotate-90': showFilterBar}">
+        {{ tabler_icon('chevron-right') }}
+    </span>
 </button>

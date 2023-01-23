@@ -13,7 +13,7 @@ from ohmyadmin.views.table import TableColumn
 class CategoryForm(wtforms.Form):
     name = wtforms.StringField(validators=[wtforms.validators.data_required()])
     slug = wtforms.StringField(validators=[wtforms.validators.data_required()])
-    parent_id = AsyncSelectField(choices_loader=choices_from(Category), coerce=int)
+    parent_id = AsyncSelectField(choices=choices_from(Category), coerce=int)
     visible_to_customers = wtforms.BooleanField()
     description = wtforms.TextAreaField()
 
