@@ -20,8 +20,9 @@ from examples.admin.form_layouts.fieldset_layout import FieldSetLayout
 from examples.admin.form_layouts.simple_layout import SimpleLayout
 from examples.admin.form_layouts.stacked_layout import StackedLayout
 from examples.admin.orders import Orders
+from examples.admin.pages_demo.blank_page import BlankPage
+from examples.admin.pages_demo.table_page import ProductsPage
 from examples.admin.products import Products
-from examples.admin.products_page import ProductsPage
 from examples.admin.profile import ProfilePage
 from examples.admin.settings import SettingsPage
 from examples.admin.users import Users
@@ -60,11 +61,12 @@ admin = OhMyAdmin(
         ProfilePage(),
         Actions(),
         Components(),
-        ProductsPage(),
         CardLayout(),
         FieldSetLayout(),
         SimpleLayout(),
         StackedLayout(),
+        ProductsPage(),
+        BlankPage(),
     ],
 )
 

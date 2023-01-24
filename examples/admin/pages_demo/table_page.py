@@ -15,7 +15,7 @@ from ohmyadmin.views.table import TableColumn
 class ProductsPage(TablePage):
     icon = 'assembly'
     group = 'Pages'
-    label_plural = 'Products (Table demo)'
+    label_plural = 'Table'
     metrics = [TotalProducts, AveragePrice, Invisible]
     datasource = SQLADataSource(
         Product,

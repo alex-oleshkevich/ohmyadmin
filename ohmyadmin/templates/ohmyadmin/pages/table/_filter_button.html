@@ -1,4 +1,4 @@
-<button class="btn" @click="showFilterBar = !showFilterBar">
+<button class="btn" @click="showFilterBar = !showFilterBar" data-test="filters-trigger">
     {{ tabler_icon('filter') }}
     <template x-if="selectedFiltersCount">
         <span class="badge badge-blue" x-text="selectedFiltersCount"></span>

@@ -1,14 +1,16 @@
 {% macro pagination(request, page) %}
     {% with start_index = page.start_index, end_index = page.end_index, total_rows = page.total_rows %}
-        <div class="pagination">
+        <div class="pagination" data-test="pagination">
             <div class="pagination-info">
                 {% trans %}Showing {{ start_index }} - {{ end_index }} of {{ total_rows }} results.{% endtrans %}
             </div>
 
             {% if page.total_pages > 1 %}
-                <div class="pagination-controls">
+                <div class="pagination-controls" data-test="pagination-controls">
                     {% if page.has_previous %}
-                        <a href="{{ request.url.include_query_params(page=page.previous_page) }}">
+                        <a href="{{ request.url.include_query_params(page=page.previous_page) }}"
+                           data-test="pagination-control"
+                        >
                             {{ tabler_icon('arrow-left') }}
                             <span class="hidden md:inline">{{ _('Previous', domain='ohmyadmin') }}</span>
                         </a>
@@ -16,9 +18,10 @@
 
                     {% for page_number in page.iter_pages() %}
                         {% if page_number %}
-                            <a
-                                href="{{ request.url.include_query_params(page=page_number) }}"
-                                class="{{ 'active' if page_number == page.page else '' }}">
+                            <a href="{{ request.url.include_query_params(page=page_number) }}"
+                               class="{{ 'active' if page_number == page.page else '' }}"
+                               data-test="pagination-control"
+                            >
                                 {{ page_number }}
                             </a>
                         {% else %}
@@ -27,7 +30,9 @@
                     {% endfor %}
 
                     {% if page.has_next %}
-                        <a href="{{ request.url.include_query_params(page=page.next_page) }}">
+                        <a href="{{ request.url.include_query_params(page=page.next_page) }}"
+                           data-test="pagination-control"
+                        >
                             <span class="hidden md:inline">{{ _('Next', domain='ohmyadmin') }}</span>
                             {{ tabler_icon('arrow-right') }}
                         </a>

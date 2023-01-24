@@ -7,6 +7,9 @@ from ohmyadmin.pages.pagemixins import IndexViewMixin
 
 
 class TablePage(IndexViewMixin, Page):
+    """Table pages display lists of objects with option to sort, search, and
+    filter."""
+
     __abstract__ = True
 
     async def get(self, request: Request) -> Response:

@@ -50,7 +50,10 @@ class InMemoryDataSource(DataSource):
         return self.objects[0]
 
     async def paginate(self, request: Request, page: int, page_size: int) -> Pagination[typing.Any]:
-        return Pagination(rows=self.objects, total_rows=len(self.objects), page=page, page_size=page_size)
+        start_offset = min(0, page - 1) * page_size
+        end_offset = start_offset + page_size
+        result = self.objects[start_offset:end_offset]
+        return Pagination(rows=result, total_rows=len(self.objects), page=page, page_size=page_size)
 
     async def create(self, request: Request, model: typing.Any) -> typing.Any:
         return None

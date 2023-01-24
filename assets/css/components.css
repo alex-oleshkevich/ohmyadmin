@@ -147,7 +147,7 @@
     }
 
     .btn:focus:not(:active) {
-        @apply focus:outline-none focus:ring-2 focus:ring-blue-300 focus:ring-offset-2;
+        @apply focus:border-blue-400 focus:ring focus:ring-blue-200 focus:ring-opacity-50;
     }
 
     .btn.btn-accent:not(:disabled) {
