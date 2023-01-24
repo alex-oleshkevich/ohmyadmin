@@ -53,7 +53,7 @@ class Page(Dispatchable, BasePage):
                 if inspect.iscoroutinefunction(handler)
                 else await run_in_threadpool(handler, request)
             )
-        raise HTTPException(405, 'Method Not Allowed')
+        raise HTTPException(405, 'Method Not Allowed')  # pragma: nocover
 
     def as_route(self) -> BaseRoute:
         """
