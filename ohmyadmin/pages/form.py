@@ -8,12 +8,12 @@ from starlette_babel import gettext_lazy as _
 
 from ohmyadmin import actions, layouts
 from ohmyadmin.forms import create_form, validate_on_submit
-from ohmyadmin.pages.page import Page
+from ohmyadmin.pages.page import TemplatePage
 
 _F = typing.TypeVar('_F', bound=wtforms.Form)
 
 
-class FormPage(Page):
+class FormPage(TemplatePage):
     __abstract__ = True
 
     form_class: type[wtforms.Form]

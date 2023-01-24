@@ -91,6 +91,7 @@ class AsyncSelectField(wtforms.SelectField, Initable):
         if inspect.iscoroutinefunction(choices):
             self.choices_loader = choices
         else:
+            assert isinstance(choices, typing.Sequence)
             self.choices = choices
         super().__init__(**kwargs)
 

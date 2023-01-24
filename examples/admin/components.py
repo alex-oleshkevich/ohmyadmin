@@ -1,7 +1,7 @@
-from ohmyadmin.pages.page import Page
+from ohmyadmin.pages.page import TemplatePage
 
 
-class Components(Page):
+class Components(TemplatePage):
     group = 'Misc'
     label = 'Components'
     template = 'components.html'

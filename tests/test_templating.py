@@ -3,7 +3,7 @@ from starlette.requests import Request
 from starlette.responses import PlainTextResponse, Response
 from starlette.testclient import TestClient
 
-from ohmyadmin.pages.page import Page
+from ohmyadmin.pages.page import TemplatePage
 from tests.conftest import CreateTestAppFactory
 
 
@@ -16,7 +16,7 @@ def test_loads_templates_from_user_directory(
     (extra_template_dir / 'ohmyadmin').mkdir()
     (extra_template_dir / 'ohmyadmin/index.html').write_text('from custom index')
 
-    class ExamplePage(Page):
+    class ExamplePage(TemplatePage):
         async def get(self, request: Request) -> Response:
             template = request.state.admin.jinja_env.get_template('ohmyadmin/index.html')
             return PlainTextResponse(template.render())
@@ -33,7 +33,7 @@ def test_renders_template_to_string(create_test_app: CreateTestAppFactory, extra
 
     (extra_template_dir / 'sample.txt').write_text('hello {{ value }}')
 
-    class ExamplePage(Page):
+    class ExamplePage(TemplatePage):
         async def get(self, request: Request) -> Response:
             return PlainTextResponse(request.state.admin.render_to_string(request, 'sample.txt', {'value': 'world'}))
 
@@ -55,7 +55,7 @@ def test_renders_to_string_has_context(create_test_app: CreateTestAppFactory, ex
         "'flash_messages' if flash_messages is not none else '' \n"
     )
 
-    class ExamplePage(Page):
+    class ExamplePage(TemplatePage):
         async def get(self, request: Request) -> Response:
             return PlainTextResponse(request.state.admin.render_to_string(request, 'sample.txt'))
 
@@ -84,7 +84,7 @@ def test_renders_to_response_has_context(
         "'flash_messages' if flash_messages is not none else '' \n"
     )
 
-    class ExamplePage(Page):
+    class ExamplePage(TemplatePage):
         async def get(self, request: Request) -> Response:
             return request.state.admin.render_to_response(request, 'sample.txt')
 
@@ -105,7 +105,7 @@ def test_renders_template_to_response(create_test_app: CreateTestAppFactory, ext
 
     (extra_template_dir / 'sample.txt').write_text('hello {{ value }}')
 
-    class ExamplePage(Page):
+    class ExamplePage(TemplatePage):
         async def get(self, request: Request) -> Response:
             return request.state.admin.render_to_response(request, 'sample.txt', {'value': 'world'})
 
@@ -120,7 +120,7 @@ def test_jinja_automatically_escapes(create_test_app: CreateTestAppFactory, extr
 
     (extra_template_dir / 'sample.txt').write_text('hello {{ value }}')
 
-    class ExamplePage(Page):
+    class ExamplePage(TemplatePage):
         async def get(self, request: Request) -> Response:
             return request.state.admin.render_to_response(request, 'sample.txt', {'value': '<b>world</b>'})
 
@@ -137,7 +137,7 @@ def test_admin_exposes_self_to_templates(
 
     (extra_template_dir / 'sample.txt').write_text('hello {{ admin.title }}')
 
-    class ExamplePage(Page):
+    class ExamplePage(TemplatePage):
         async def get(self, request: Request) -> Response:
             return request.state.admin.render_to_response(request, 'sample.txt')
 
@@ -154,7 +154,7 @@ def test_admin_exposes_tabler_icons_to_templates(
 
     (extra_template_dir / 'sample.txt').write_text('{{tabler_icon("plus")}}')
 
-    class ExamplePage(Page):
+    class ExamplePage(TemplatePage):
         async def get(self, request: Request) -> Response:
             return request.state.admin.render_to_response(request, 'sample.txt')
 

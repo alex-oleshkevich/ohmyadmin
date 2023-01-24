@@ -4,8 +4,7 @@ from slugify import slugify
 from starlette.datastructures import URL
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
-from starlette.routing import BaseRoute, Route
-from starlette.types import Receive, Scope, Send
+from starlette.routing import BaseRoute
 
 from ohmyadmin.helpers import camel_to_sentence, pluralize
 
@@ -59,17 +58,9 @@ class BasePage(metaclass=PageMeta):
         return RedirectResponse(url, status_code=302)
 
     @abc.abstractmethod
-    async def dispatch(self, request: Request) -> Response:  # pragma: nocover
-        """
-        Endpoint handler.
-
-        Subclasses must implement this.
-        """
-        raise NotImplementedError()
-
-    def as_route(self) -> BaseRoute:
+    def as_route(self) -> BaseRoute:  # pragma: no cover
         """Create a route instance for this page."""
-        return Route(f'/{self.slug}', self, methods=['get'], name=self.get_path_name())
+        raise NotImplementedError()
 
     @classmethod
     def get_path_name(cls) -> str:
@@ -80,9 +71,3 @@ class BasePage(metaclass=PageMeta):
     def generate_url(cls, request: Request) -> str:
         """Generate absolute URL to this page."""
         return request.url_for(cls.get_path_name())
-
-    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        """ASGI integration point."""
-        request = Request(scope, receive, send)
-        response = await self.dispatch(request)
-        await response(scope, receive, send)

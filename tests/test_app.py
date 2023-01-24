@@ -5,7 +5,7 @@ from starlette.testclient import TestClient
 
 from ohmyadmin.app import OhMyAdmin
 from ohmyadmin.menu import MenuLink
-from ohmyadmin.pages.page import Page
+from ohmyadmin.pages.page import TemplatePage
 from tests.conftest import CreateTestAppFactory
 
 
@@ -15,7 +15,7 @@ def app() -> OhMyAdmin:
 
 
 def test_url_for(create_test_app: CreateTestAppFactory) -> None:
-    class ExamplePage(Page):
+    class ExamplePage(TemplatePage):
         async def get(self, request: Request) -> Response:
             return PlainTextResponse(request.state.admin.url_for(request, 'ohmyadmin.login'))
 
@@ -26,7 +26,7 @@ def test_url_for(create_test_app: CreateTestAppFactory) -> None:
 
 
 def test_static_url(create_test_app: CreateTestAppFactory) -> None:
-    class ExamplePage(Page):
+    class ExamplePage(TemplatePage):
         async def get(self, request: Request) -> Response:
             return PlainTextResponse(request.state.admin.static_url(request, 'js/asset.js'))
 
@@ -39,7 +39,7 @@ def test_static_url(create_test_app: CreateTestAppFactory) -> None:
 
 
 def test_media_url_for_upload(create_test_app: CreateTestAppFactory) -> None:
-    class ExamplePage(Page):
+    class ExamplePage(TemplatePage):
         async def get(self, request: Request) -> Response:
             return PlainTextResponse(request.state.admin.media_url(request, 'uploads/file.txt'))
 
@@ -55,7 +55,7 @@ def test_media_url_for_http_url(create_test_app: CreateTestAppFactory) -> None:
     """When media file is a URL then admin must redirect to FileServer app
     that."""
 
-    class ExamplePage(Page):
+    class ExamplePage(TemplatePage):
         async def get(self, request: Request) -> Response:
             return PlainTextResponse(request.state.admin.media_url(request, 'http://example.com/image.gif'))
 
@@ -69,7 +69,7 @@ def test_media_url_for_https_url(create_test_app: CreateTestAppFactory) -> None:
     """When media file is a URL then admin must redirect to FileServer app
     that."""
 
-    class ExamplePage(Page):
+    class ExamplePage(TemplatePage):
         async def get(self, request: Request) -> Response:
             return PlainTextResponse(request.state.admin.media_url(request, 'https://example.com/image.gif'))
 
@@ -82,10 +82,10 @@ def test_media_url_for_https_url(create_test_app: CreateTestAppFactory) -> None:
 def test_generates_routes_to_pages(create_test_app: CreateTestAppFactory) -> None:
     """Admin should generate routes to pages."""
 
-    class ExamplePage(Page):
+    class ExamplePage(TemplatePage):
         pass
 
-    class Example2Page(Page):
+    class Example2Page(TemplatePage):
         slug = 'other-example'
 
         async def get(self, request: Request) -> Response:
@@ -123,7 +123,7 @@ def test_renders_user_menu(create_test_app: CreateTestAppFactory) -> None:
 def test_renders_main_menu(create_test_app: CreateTestAppFactory) -> None:
     """Admin should render main navigation."""
 
-    class ExamplePage(Page):
+    class ExamplePage(TemplatePage):
         slug = 'example'
         label = 'Main Menu Item'
 
@@ -136,7 +136,7 @@ def test_renders_main_menu(create_test_app: CreateTestAppFactory) -> None:
 def test_exposes_self_to_state(create_test_app: CreateTestAppFactory) -> None:
     """Admin should add self instance to request.state."""
 
-    class ExamplePage(Page):
+    class ExamplePage(TemplatePage):
         async def get(self, request: Request) -> Response:
             return PlainTextResponse(str(isinstance(request.state.admin, OhMyAdmin)))
 

@@ -2,10 +2,10 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette_flash import flash
 
-from ohmyadmin.pages.page import Page
+from ohmyadmin.pages.page import TemplatePage
 
 
-class SettingsPage(Page):
+class SettingsPage(TemplatePage):
     icon = 'settings'
     label_plural = 'Settings'
     group = 'Settings'

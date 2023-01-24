@@ -2,6 +2,8 @@ import json
 import typing
 from starlette.requests import Request
 from starlette.responses import Response
+from starlette.routing import BaseRoute, Route
+from starlette.types import Receive, Scope, Send
 from starlette_babel import gettext_lazy as _
 from unittest import mock
 
@@ -10,6 +12,7 @@ from ohmyadmin.datasource.base import DataSource
 from ohmyadmin.filters import BaseFilter, UnboundFilter
 from ohmyadmin.metrics import Metric
 from ohmyadmin.ordering import get_ordering_value
+from ohmyadmin.pages.base import BasePage
 from ohmyadmin.pagination import Pagination, get_page_size_value, get_page_value
 from ohmyadmin.views.base import IndexView
 from ohmyadmin.views.table import TableColumn, TableView
@@ -212,3 +215,26 @@ class IndexViewMixin(HasPageActions, HasFilters, HasObjectActions, HasBatchActio
                 'search_term': get_search_value(request, self.search_param),
             },
         )
+
+
+_P = typing.TypeVar('_P', bound=BasePage)
+
+
+class Dispatchable:
+    async def dispatch(self, request: Request) -> Response:  # pragma: nocover
+        """
+        Endpoint handler.
+
+        Subclasses must implement this.
+        """
+        raise NotImplementedError()
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        """ASGI integration point."""
+        request = Request(scope, receive, send)
+        response = await self.dispatch(request)
+        await response(scope, receive, send)
+
+    def as_route(self) -> BaseRoute:
+        assert isinstance(self, BasePage) and isinstance(self, Dispatchable)
+        return Route('/' + self.slug, self, name=self.get_path_name())
