@@ -1,22 +1,30 @@
+import abc
 import datetime
 import decimal
+import functools
 import typing
 from starlette.requests import Request
 
-from ohmyadmin.datasource.base import DataSource, NumberOperation, StringOperation
+from ohmyadmin.datasource.base import DataSource, DoesNotExists, NumberOperation, StringOperation
 from ohmyadmin.ordering import SortingType
 from ohmyadmin.pagination import Pagination
 
+T = typing.TypeVar('T')
 
-class InMemoryDataSource(DataSource):
-    def __init__(self, objects: typing.Sequence[typing.Any]) -> None:
-        self.objects = objects
+
+class InMemoryDataSource(DataSource[T]):
+    def __init__(self, model_class: type[T], objects: typing.Sequence[T]) -> None:
+        self.objects = list(objects)
+        self._filters: list = []
+        self._ordering = {}
+        self.model_class = model_class
+        self._by_pk: dict[str, T] = {self.get_pk(obj): obj for obj in self.objects}
 
     def get_query_for_index(self) -> DataSource:
         return self
 
     def get_pk(self, obj: typing.Any) -> str:
-        return obj.id
+        return str(obj.id)
 
     def apply_search(self, search_term: str, searchable_fields: typing.Sequence[str]) -> DataSource:
         return self
@@ -46,8 +54,11 @@ class InMemoryDataSource(DataSource):
     def apply_boolean_filter(self, field: str, value: bool) -> DataSource:
         return self
 
-    async def get(self, request: Request, pk: str) -> typing.Any:
-        return self.objects[0]
+    async def get(self, request: Request, pk: str) -> T:
+        try:
+            return self._by_pk[pk]
+        except KeyError:
+            raise DoesNotExists(f'Object pk={pk} does not exists.')
 
     async def paginate(self, request: Request, page: int, page_size: int) -> Pagination[typing.Any]:
         start_offset = min(0, page - 1) * page_size
@@ -56,13 +67,14 @@ class InMemoryDataSource(DataSource):
         return Pagination(rows=result, total_rows=len(self.objects), page=page, page_size=page_size)
 
     async def create(self, request: Request, model: typing.Any) -> typing.Any:
-        return None
+        return self.objects.append(model)
 
     async def delete(self, request: Request, *object_ids: str) -> None:
-        pass
+        for object_id in object_ids:
+            self.objects.remove(self._by_pk[object_id])
 
     def new(self) -> typing.Any:
-        pass
+        return self.model_class()
 
     async def update(self, request: Request, model: typing.Any) -> None:
         pass

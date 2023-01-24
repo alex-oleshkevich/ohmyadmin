@@ -12,6 +12,12 @@ from ohmyadmin.ordering import SortingType
 from ohmyadmin.pagination import Pagination
 
 
+class DataSourceError(Exception): ...
+
+
+class DoesNotExists(DataSourceError): ...
+
+
 class StringOperation(enum.Enum):
     exact = _('same as', domain='ohmyadmin')
     startswith = _('starts with', domain='ohmyadmin')
@@ -36,7 +42,10 @@ class NumberOperation(enum.Enum):
         return [(choice.name, choice.value) for choice in cls]
 
 
-class DataSource(abc.ABC):
+T = typing.TypeVar('T')
+
+
+class DataSource(abc.ABC, typing.Generic[T]):
     @abc.abstractmethod
     def get_query_for_index(self) -> DataSource:
         ...
@@ -47,10 +56,6 @@ class DataSource(abc.ABC):
 
     @abc.abstractmethod
     def new(self) -> typing.Any:
-        ...
-
-    @abc.abstractmethod
-    def apply_search(self, search_term: str, searchable_fields: typing.Sequence[str]) -> DataSource:
         ...
 
     @abc.abstractmethod
@@ -86,11 +91,11 @@ class DataSource(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def get(self, request: Request, pk: str) -> typing.Any:
+    async def get(self, request: Request, pk: str) -> T:
         ...
 
     @abc.abstractmethod
-    async def paginate(self, request: Request, page: int, page_size: int) -> Pagination[typing.Any]:
+    async def paginate(self, request: Request, page: int, page_size: int) -> Pagination[T]:
         ...
 
     @abc.abstractmethod
@@ -104,3 +109,7 @@ class DataSource(abc.ABC):
     @abc.abstractmethod
     async def delete(self, request: Request, *object_ids: str) -> None:
         ...
+
+    def filter(self, **criteria: typing.Any) -> DataSource[T]:
+        for key, value in criteria.values():
+            parts = key.split('__')
