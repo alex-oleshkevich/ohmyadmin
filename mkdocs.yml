@@ -7,6 +7,10 @@ site_dir: "site"
 nav:
     - Introduction: 'index.md'
     - Demo: 'demo.md'
+    - Pages:
+        "Simple pages": pages/index.md
+    - API:
+        "Simple page": api/simple_page_api.md
 theme:
     name: "material"
     logo: logo.svg

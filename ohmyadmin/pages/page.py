@@ -10,11 +10,28 @@ from ohmyadmin.pages.base import BasePage
 from ohmyadmin.pages.pagemixins import Dispatchable
 
 
-class TemplatePage(Dispatchable, BasePage):
+class Page(Dispatchable, BasePage):
     """
-    A simple page that renders a template with context.
+    A simple page that renders a template with context. Much like Starlette's
+    HTTPEndpoint class.
 
-    Much like Starlette's HTTPEndpoint class.
+    By default, it generates `get` method that returns template defined by `template` class attribute.
+
+    ## Example:
+
+    The typical usage is like this:
+    ```python title="myapp/demo_page.py"
+    from ohmyadmin.pages.page import Page
+
+    class MyPage(Page):
+        template = 'myproject/page.html
+
+        async def handle(self, request: Request) -> dict[str, typing.Any]:
+            # return dict of variables for the template
+            return {
+                'hello': 'world',
+            }
+    ```
     """
 
     template: typing.ClassVar[str] = 'ohmyadmin/pages/blank.html'

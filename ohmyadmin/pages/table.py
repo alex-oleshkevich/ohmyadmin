@@ -2,11 +2,11 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import BaseRoute, Mount, Route
 
-from ohmyadmin.pages.page import TemplatePage
+from ohmyadmin.pages.page import Page
 from ohmyadmin.pages.pagemixins import IndexViewMixin
 
 
-class TablePage(IndexViewMixin, TemplatePage):
+class TablePage(IndexViewMixin, Page):
     __abstract__ = True
 
     async def get(self, request: Request) -> Response:

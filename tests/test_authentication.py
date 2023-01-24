@@ -8,7 +8,7 @@ from unittest import mock
 
 from ohmyadmin.authentication import AnonymousAuthPolicy, AnonymousUser, BaseAuthPolicy, SessionAuthBackend
 from ohmyadmin.middleware import LoginRequiredMiddleware
-from ohmyadmin.pages.page import TemplatePage
+from ohmyadmin.pages.page import Page
 from tests.conftest import CreateTestAppFactory
 from tests.models import User
 
@@ -31,7 +31,7 @@ def test_session_backend(create_test_app: CreateTestAppFactory) -> None:
         def get_authentication_backend(self) -> AuthenticationBackend:
             return SessionAuthBackend()
 
-    class ExamplePage(TemplatePage):
+    class ExamplePage(Page):
         ...
 
     app = create_test_app(pages=[ExamplePage()], auth_policy=TestPolicy())
@@ -42,7 +42,7 @@ def test_session_backend(create_test_app: CreateTestAppFactory) -> None:
 def test_pages_not_accessible_for_unauthenticated(create_test_app: CreateTestAppFactory) -> None:
     """Unauthenticated users should not be able to access pages."""
 
-    class ExamplePage(TemplatePage):
+    class ExamplePage(Page):
         slug = 'example'
 
     app = create_test_app(pages=[ExamplePage()], auth_policy=AnonymousAuthPolicy())
