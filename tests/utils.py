@@ -5,13 +5,13 @@ from examples.models import User
 from ohmyadmin.authentication import BaseAuthPolicy
 
 
-class SimpleBackend(AuthenticationBackend):
+class SimpleBackend(AuthenticationBackend):  # pragma: no cover
     async def authenticate(self, conn: HTTPConnection) -> tuple[AuthCredentials, BaseUser] | None:
         user = await conn.state.admin.auth_policy.load_user(conn, 1)
         return AuthCredentials([]), user
 
 
-class AuthTestPolicy(BaseAuthPolicy):
+class AuthTestPolicy(BaseAuthPolicy):  # pragma: no cover
     async def authenticate(self, request: Request, identity: str, password: str) -> BaseUser | None:
         return User(id='1')
 

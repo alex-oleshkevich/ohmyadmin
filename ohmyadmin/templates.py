@@ -12,9 +12,9 @@ def as_html_attrs(value: typing.Mapping) -> str:
     parts: list[str] = []
     for attr_name, attr_value in value.items():
         attr_name = resolve_attr_name(attr_name)
-        if not value:
+        if not attr_value:
             continue
-        if value is True:
+        if attr_value is True:
             parts.append(attr_name)
             continue
         parts.append(f'{attr_name}="{attr_value}"')

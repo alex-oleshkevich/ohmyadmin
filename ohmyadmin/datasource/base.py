@@ -12,10 +12,8 @@ from ohmyadmin.ordering import SortingType
 from ohmyadmin.pagination import Pagination
 
 
-class DataSourceError(Exception): ...
-
-
-class DoesNotExists(DataSourceError): ...
+class DataSourceError(Exception):
+    """Common exception class for data source related errors."""
 
 
 class StringOperation(enum.Enum):
@@ -47,69 +45,77 @@ T = typing.TypeVar('T')
 
 class DataSource(abc.ABC, typing.Generic[T]):
     @abc.abstractmethod
-    def get_query_for_index(self) -> DataSource:
+    def get_query_for_index(self) -> DataSource:  # pragma: no cover
         ...
 
     @abc.abstractmethod
-    def get_pk(self, obj: typing.Any) -> str:
+    def get_pk(self, obj: typing.Any) -> str:  # pragma: no cover
         ...
 
     @abc.abstractmethod
-    def new(self) -> typing.Any:
+    def new(self) -> typing.Any:  # pragma: no cover
         ...
 
     @abc.abstractmethod
-    def apply_ordering(self, ordering: dict[str, SortingType], sortable_fields: typing.Sequence[str]) -> DataSource:
+    def apply_search(
+        self, search_term: str, searchable_fields: typing.Sequence[str]
+    ) -> DataSource[T]:  # pragma: no cover
         ...
 
     @abc.abstractmethod
-    def apply_string_filter(self, field: str, operation: StringOperation, value: str) -> DataSource:
+    def apply_ordering(
+        self, ordering: dict[str, SortingType], sortable_fields: typing.Sequence[str]
+    ) -> DataSource[T]:  # pragma: no cover
+        ...
+
+    @abc.abstractmethod
+    def apply_string_filter(
+        self, field: str, operation: StringOperation, value: str
+    ) -> DataSource[T]:  # pragma: no cover
         ...
 
     @abc.abstractmethod
     def apply_number_filter(
         self, field: str, operation: NumberOperation, value: int | float | decimal.Decimal
-    ) -> DataSource:
+    ) -> DataSource[T]:  # pragma: no cover
         ...
 
     @abc.abstractmethod
-    def apply_date_filter(self, field: str, value: datetime.date) -> DataSource:
+    def apply_date_filter(self, field: str, value: datetime.date) -> DataSource[T]:  # pragma: no cover
         ...
 
     @abc.abstractmethod
     def apply_date_range_filter(
         self, field: str, before: datetime.date | None, after: datetime.date | None
-    ) -> DataSource:
+    ) -> DataSource[T]:  # pragma: no cover
         ...
 
     @abc.abstractmethod
-    def apply_choice_filter(self, field: str, choices: list[typing.Any], coerce: typing.Callable) -> DataSource:
+    def apply_choice_filter(
+        self, field: str, choices: list[typing.Any], coerce: typing.Callable
+    ) -> DataSource[T]:  # pragma: no cover
         ...
 
     @abc.abstractmethod
-    def apply_boolean_filter(self, field: str, value: bool) -> DataSource:
+    def apply_boolean_filter(self, field: str, value: bool) -> DataSource[T]:  # pragma: no cover
         pass
 
     @abc.abstractmethod
-    async def get(self, request: Request, pk: str) -> T:
+    async def get(self, request: Request, pk: str) -> T | None:  # pragma: no cover
         ...
 
     @abc.abstractmethod
-    async def paginate(self, request: Request, page: int, page_size: int) -> Pagination[T]:
+    async def paginate(self, request: Request, page: int, page_size: int) -> Pagination[T]:  # pragma: no cover
         ...
 
     @abc.abstractmethod
-    async def create(self, request: Request, model: typing.Any) -> None:
+    async def create(self, request: Request, model: typing.Any) -> None:  # pragma: no cover
         ...
 
     @abc.abstractmethod
-    async def update(self, request: Request, model: typing.Any) -> None:
+    async def update(self, request: Request, model: typing.Any) -> None:  # pragma: no cover
         ...
 
     @abc.abstractmethod
-    async def delete(self, request: Request, *object_ids: str) -> None:
+    async def delete(self, request: Request, *object_ids: str) -> None:  # pragma: no cover
         ...
-
-    def filter(self, **criteria: typing.Any) -> DataSource[T]:
-        for key, value in criteria.values():
-            parts = key.split('__')

@@ -4,6 +4,7 @@ from starlette.responses import PlainTextResponse, Response
 from starlette.testclient import TestClient
 
 from ohmyadmin.pages.page import Page
+from ohmyadmin.templates import as_html_attrs
 from tests.conftest import CreateTestAppFactory
 
 
@@ -162,3 +163,13 @@ def test_admin_exposes_tabler_icons_to_templates(
     client = TestClient(app)
 
     assert 'svg' in client.get('/admin/example').text
+
+
+def test_as_html_attrs_helper() -> None:
+    assert as_html_attrs({'id': 'ok'}) == 'id="ok"'
+    assert as_html_attrs({'id': 'ok', 'name': 'email'}) == 'id="ok" name="email"'
+    assert as_html_attrs({'data_value': 'ok'}) == 'data-value="ok"'
+    assert as_html_attrs({'aria_label': 'ok'}) == 'aria-label="ok"'
+    assert as_html_attrs({'required': True}) == 'required'
+    assert as_html_attrs({'required': None}) == ''
+    assert as_html_attrs({'required': False}) == ''
