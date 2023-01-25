@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import typing
-
 from starlette.requests import HTTPConnection, Request
 from starlette.responses import Response
 
-if typing.TYPE_CHECKING:
+if typing.TYPE_CHECKING:  # pragma:no cover
     from ohmyadmin.app import OhMyAdmin
 
 
