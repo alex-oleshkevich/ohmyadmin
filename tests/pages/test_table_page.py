@@ -1,5 +1,3 @@
-import dataclasses
-
 import datetime
 from starlette.testclient import TestClient
 from unittest import mock
@@ -10,15 +8,7 @@ from ohmyadmin.pages.table import TablePage
 from ohmyadmin.testing import MarkupSelector
 from ohmyadmin.views.table import TableColumn
 from tests.conftest import CreateTestAppFactory
-
-
-@dataclasses.dataclass
-class Post:
-    id: int = 1
-    title: str = 'Title'
-    published: bool = False
-    date_published: datetime.date = dataclasses.field(default_factory=lambda: datetime.datetime.today().date())
-    updated_at: datetime.date = dataclasses.field(default_factory=lambda: datetime.datetime.today())
+from tests.models import Post
 
 
 class DummyTablePage(TablePage):

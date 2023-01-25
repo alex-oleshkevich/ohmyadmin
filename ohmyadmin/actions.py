@@ -236,7 +236,7 @@ class BasePageAction(Callback):
     method: RequestMethod = 'get'
 
     def __init__(self, slug: str = '') -> None:
-        slug = slug or slugify(self.__class__.__name__.removesuffix('PageAction'))
+        slug = slug or self.slug or slugify(self.__class__.__name__.removesuffix('PageAction'))
         super().__init__(
             slug,
             label=self.label,
@@ -302,7 +302,7 @@ class BaseObjectAction(ObjectCallback):
     method: RequestMethod = 'get'
 
     def __init__(self, slug: str = '') -> None:
-        slug = slug or slugify(self.__class__.__name__.removesuffix('ObjectAction'))
+        slug = slug or self.slug or slugify(self.__class__.__name__.removesuffix('ObjectAction'))
         super().__init__(
             slug,
             label=self.label,
@@ -314,17 +314,14 @@ class BaseObjectAction(ObjectCallback):
         )
 
     @abc.abstractmethod
-    async def apply(self, request: Request, object_id: str) -> Response:
+    async def apply(self, request: Request, object_id: str) -> Response:  # pragma: no cover
         ...
 
     async def dispatch(self, request: Request) -> Response:
         object_id = request.query_params.get('_ids', '')
         if not object_id:
-            return ActionResponse().show_toast(_('No object selected', domain='ohmyadmin'), 'error')
+            return ActionResponse().show_toast(_('No object selected.', domain='ohmyadmin'), 'error')
         return await self.apply(request, object_id)
-
-    async def __call__(self, request: Request) -> Response:
-        return await self.dispatch(request)
 
 
 class BaseFormObjectAction(BaseObjectAction):
@@ -379,7 +376,7 @@ class BaseBatchAction(BatchAction):
     template = 'ohmyadmin/actions/batch_action_modal.html'
 
     def __init__(self, slug: str = '') -> None:
-        slug = slug or slugify(self.__class__.__name__.removesuffix('BatchAction'))
+        slug = slug or self.slug or slugify(self.__class__.__name__.removesuffix('BatchAction'))
         super().__init__(slug=slug, label=self.label, callback=self.dispatch, dangerous=self.dangerous, method='get')
 
     async def dispatch(self, request: Request) -> Response:

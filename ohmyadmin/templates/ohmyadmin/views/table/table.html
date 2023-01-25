@@ -33,7 +33,7 @@
                     <td>{{ columm.render(request, object) }}</td>
                 {% endfor %}
                 {% if has_object_actions %}
-                    <td>
+                    <td data-test="table-object-actions">
                         <div class="flex gap-1 justify-end items-center relative"
                              x-data="{menuOpen: false}"
                              @click.outside="menuOpen = false"

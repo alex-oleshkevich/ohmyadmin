@@ -14,7 +14,9 @@
         <x-batch-selected-rows
             @change="objectIds.length=0; objectIds=objectIds.concat($event.detail)"></x-batch-selected-rows>
         <div class="btn-group">
-            <select name="_batch_action" class="w-full md:w-64" x-model="action" :disabled="!objectIds.length">
+            <select data-test="batch-action-selector"
+                    name="_batch_action"
+                    class="w-full md:w-64" x-model="action" :disabled="!objectIds.length">
                 <option value="">{{ _('Select action', domain='ohmyadmin') }}</option>
                 {% for action in batch_actions %}
                     <option value="{{ action.slug }}">{{ action.label }}</option>

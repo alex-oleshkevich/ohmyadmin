@@ -106,7 +106,9 @@
                 <header class="mb-8">
                     <div class="flex items-center justify-between">
                         <div class="text-3xl font-medium">{{ page_title }}</div>
-                        <div class="flex items-center gap-2">{% block page_actions %}{% endblock %}</div>
+                        <div class="flex items-center gap-2" data-test="page-actions">
+                            {% block page_actions %}{% endblock %}
+                        </div>
                     </div>
                 </header>
                 {% block content %}Page content goes here...{% endblock %}
