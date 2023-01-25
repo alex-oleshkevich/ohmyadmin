@@ -1,7 +1,9 @@
-{% for filter in filters %}
-    {% if filter.is_active(request) %}
-        {{ filter.render_indicator(request) }}
-    {% else %}
-        {{ filter.render_form(request) }}
-    {% endif %}
-{% endfor %}
+<div data-test="filters-bar" class="flex items-center gap-2 rounded mt-2 py-1">
+    {% for filter in filters %}
+        {% if filter.is_active(request) %}
+            {{ filter.render_indicator(request) }}
+        {% else %}
+            {{ filter.render_form(request) }}
+        {% endif %}
+    {% endfor %}
+</div>

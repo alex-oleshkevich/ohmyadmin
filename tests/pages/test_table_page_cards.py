@@ -1,8 +1,9 @@
+import pytest
 from starlette.requests import Request
 from starlette.testclient import TestClient
 
 from ohmyadmin.datasource.memory import InMemoryDataSource
-from ohmyadmin.metrics import ValueMetric
+from ohmyadmin.metrics import UndefinedCardError, ValueMetric
 from ohmyadmin.pages.table import TablePage
 from ohmyadmin.views.table import TableColumn
 from tests.conftest import CreateTestAppFactory
@@ -38,3 +39,14 @@ def test_dispatches_cards(create_test_app: CreateTestAppFactory) -> None:
     client = TestClient(create_test_app(pages=[DummyTable()]))
     response = client.get('/admin/dummy?_metric=example')
     assert 'CARD DATA' in response.text
+
+
+def test_undefined_card(create_test_app: CreateTestAppFactory) -> None:
+    class DummyTable(TablePage):
+        slug = 'dummy'
+        datasource = InMemoryDataSource(Post, [Post(title='Title 1'), Post(title='Title 2'), Post(title='Title 3')])
+        columns = [TableColumn(name='title')]
+
+    with pytest.raises(UndefinedCardError, match='Metric "example" is not defined.'):
+        client = TestClient(create_test_app(pages=[DummyTable()]))
+        client.get('/admin/dummy?_metric=example')

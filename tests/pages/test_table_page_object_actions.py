@@ -105,3 +105,14 @@ def test_dispatches_form_action(create_test_app: CreateTestAppFactory) -> None:
 
     response = client.post('/admin/dummy?_object_action=form&_ids=1')
     assert 'FORM SUBMIT' in response.text
+
+
+def test_undefined_action(create_test_app: CreateTestAppFactory) -> None:
+    class DummyTable(TablePage):
+        slug = 'dummy'
+        datasource = datasource
+        columns = [TableColumn(name='title')]
+
+    with pytest.raises(actions.UndefinedActionError, match='Object action "undefined" is not defined.'):
+        client = TestClient(create_test_app(pages=[DummyTable()]))
+        client.get('/admin/dummy?_object_action=undefined')

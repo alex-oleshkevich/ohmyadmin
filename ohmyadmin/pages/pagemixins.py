@@ -10,7 +10,7 @@ from unittest import mock
 from ohmyadmin import actions
 from ohmyadmin.datasource.base import DataSource
 from ohmyadmin.filters import BaseFilter, UnboundFilter
-from ohmyadmin.metrics import Metric
+from ohmyadmin.metrics import Card, UndefinedCardError
 from ohmyadmin.ordering import get_ordering_value
 from ohmyadmin.pages.base import BasePage
 from ohmyadmin.pagination import Pagination, get_page_size_value, get_page_value
@@ -36,7 +36,7 @@ class HasPageActions:
         try:
             action = actions_[action_slug]
         except KeyError:
-            raise ValueError(f'Action "{action_slug}" is not defined.')
+            raise actions.UndefinedActionError(f'Action "{action_slug}" is not defined.')
 
         return await action.dispatch(request)
 
@@ -57,7 +57,7 @@ class HasObjectActions:
         try:
             action = actions_[action_slug]
         except KeyError:
-            raise ValueError(f'Object action "{action_slug}" is not defined.')
+            raise actions.UndefinedActionError(f'Object action "{action_slug}" is not defined.')
 
         return await action.dispatch(request)
 
@@ -73,7 +73,7 @@ class HasBatchActions:
         try:
             action = actions_[action_slug]
         except KeyError:
-            raise ValueError(f'Batch action "{action_slug}" is not defined.')
+            raise actions.UndefinedActionError(f'Batch action "{action_slug}" is not defined.')
 
         return await action.dispatch(request)
 
@@ -89,9 +89,9 @@ class HasFilters:
 
 
 class HasMetrics:
-    metrics: typing.Sequence[type[Metric]] | None = None
+    metrics: typing.Sequence[type[Card]] | None = None
 
-    def get_metrics(self, request: Request) -> typing.Sequence[Metric]:
+    def get_metrics(self, request: Request) -> typing.Sequence[Card]:
         return [metric() for metric in self.metrics or []]
 
     async def dispatch_metric(self, request: Request, metric_slug: str) -> Response:
@@ -99,7 +99,7 @@ class HasMetrics:
         try:
             metric = metrics[metric_slug]
         except KeyError:
-            raise ValueError(f'Metric "{metric_slug}" is not defined.')
+            raise UndefinedCardError(f'Metric "{metric_slug}" is not defined.')
         return await metric.dispatch(request)
 
 

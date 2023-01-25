@@ -11,7 +11,7 @@ from ohmyadmin.ext.sqla import ChoiceFilter, DateRangeFilter, DecimalFilter, SQL
 from ohmyadmin.filters import BaseFilter
 from ohmyadmin.forms import AsyncForm, AsyncSelectField, FieldList, FormField, GridWidget
 from ohmyadmin.layout import Card, Date, FormElement, FormText, Grid, Group, LayoutComponent
-from ohmyadmin.metrics import Metric, ValueMetric
+from ohmyadmin.metrics import ValueMetric
 
 
 class TotalOrders(ValueMetric):
@@ -72,7 +72,7 @@ class OrderResource(SQLAlchemyResource):
         yield DecimalFilter(Order.total_price)
         yield DateRangeFilter(Order.created_at)
 
-    def get_metrics(self, request: Request) -> typing.Iterable[Metric]:
+    def get_metrics(self, request: Request) -> typing.Iterable[Card]:
         yield TotalOrders()
         yield OpenOrders()
         yield AveragePrice()

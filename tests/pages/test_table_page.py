@@ -319,3 +319,43 @@ def test_applies_multichoice_filter(create_test_app: CreateTestAppFactory) -> No
     assert page.count('[data-test="datatable"] tbody tr') == 2
     assert page.get_node_text('[data-test="datatable"] tbody tr:first-child td:nth-child(1)') == 'Title 1'
     assert page.get_node_text('[data-test="datatable"] tbody tr:nth-child(2) td:nth-child(1)') == 'Title 2'
+
+
+def test_request_content_rendering(create_test_app: CreateTestAppFactory) -> None:
+    class DummyTable(TablePage):
+        slug = 'dummy'
+        datasource = InMemoryDataSource(Post, [Post(title='Title 1'), Post(title='Title 2'), Post(title='Title 3')])
+        columns = [TableColumn(name='title')]
+
+    client = TestClient(create_test_app(pages=[DummyTable()]))
+    response = client.get('/admin/dummy', headers={'hx-target': 'data'})
+    assert response.headers['hx-push-url'] == 'http://testserver/admin/dummy/'
+    assert response.headers['hx-trigger-after-settle'] == '{"filters-reload": ""}'
+    page = MarkupSelector(response.text)
+    assert page.has_node('[data-test="datatable"]')
+
+
+def test_request_filterbar_rendering(create_test_app: CreateTestAppFactory) -> None:
+    class DummyTable(TablePage):
+        slug = 'dummy'
+        datasource = InMemoryDataSource(Post, [Post(title='Title 1'), Post(title='Title 2'), Post(title='Title 3')])
+        columns = [TableColumn(name='title')]
+
+    client = TestClient(create_test_app(pages=[DummyTable()]))
+    response = client.get('/admin/dummy', headers={'hx-target': 'filter-bar'})
+    page = MarkupSelector(response.text)
+    assert page.has_node('[data-test="filters-bar"]')
+
+
+def test_clears_filter_bar(create_test_app: CreateTestAppFactory) -> None:
+    class DummyTable(TablePage):
+        slug = 'dummy'
+        datasource = InMemoryDataSource(Post, [Post(title='Title 1'), Post(title='Title 2'), Post(title='Title 3')])
+        columns = [TableColumn(name='title')]
+
+    client = TestClient(create_test_app(pages=[DummyTable()]))
+    response = client.get('/admin/dummy?clear', headers={'hx-target': 'filter-bar'})
+    assert response.headers['hx-push-url'] == 'http://testserver/admin/dummy/'
+    assert response.headers['hx-trigger-after-settle'] == '{"refresh-datatable": ""}'
+    page = MarkupSelector(response.text)
+    assert page.has_node('[data-test="filters-bar"]')

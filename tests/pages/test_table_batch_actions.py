@@ -1,3 +1,4 @@
+import pytest
 import wtforms
 from starlette.requests import Request
 from starlette.responses import Response
@@ -76,3 +77,14 @@ def test_calls_batch_action(create_test_app: CreateTestAppFactory) -> None:
     client = TestClient(create_test_app(pages=[DummyTable()]))
     response = client.post('/admin/dummy?_batch_action=example&_ids=1&_ids=2')
     assert response.text == "ACTION POST object_ids=['1', '2']"
+
+
+def test_undefined_action(create_test_app: CreateTestAppFactory) -> None:
+    class DummyTable(TablePage):
+        slug = 'dummy'
+        datasource = datasource
+        columns = [TableColumn(name='title')]
+
+    with pytest.raises(actions.UndefinedActionError, match='Batch action "undefined" is not defined.'):
+        client = TestClient(create_test_app(pages=[DummyTable()]))
+        client.get('/admin/dummy?_batch_action=undefined')

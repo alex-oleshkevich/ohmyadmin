@@ -21,7 +21,7 @@ from ohmyadmin.ext.sqla import (
 from ohmyadmin.filters import BaseFilter
 from ohmyadmin.forms import AsyncFileField, AsyncForm, AsyncSelectField, FieldList, Uploader
 from ohmyadmin.layout import Card, FormElement, Grid, Group, LayoutComponent
-from ohmyadmin.metrics import Metric, ValueMetric
+from ohmyadmin.metrics import ValueMetric
 
 
 class TotalProducts(ValueMetric):
@@ -89,7 +89,7 @@ class ProductResource(SQLAlchemyResource):
             Product.barcode, choices=[('5255323299388', '5255323299388'), ('5851908203322', '5851908203322')]
         )
 
-    def get_metrics(self, request: Request) -> typing.Iterable[Metric]:
+    def get_metrics(self, request: Request) -> typing.Iterable[Card]:
         yield TotalProducts()
         yield ProductInventory()
         yield AveragePrice()

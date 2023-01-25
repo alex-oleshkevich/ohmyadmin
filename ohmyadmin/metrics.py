@@ -11,7 +11,15 @@ from ohmyadmin.helpers import camel_to_sentence
 from ohmyadmin.shortcuts import render_to_response
 
 
-class Metric(abc.ABC):
+class CardError(Exception):
+    ...
+
+
+class UndefinedCardError(CardError):
+    ...
+
+
+class Card(abc.ABC):
     slug: str = ''
     label: str = ''
     size: int = 4
@@ -21,21 +29,18 @@ class Metric(abc.ABC):
         self.label = self.label or camel_to_sentence(self.__class__.__name__)
 
     @abc.abstractmethod
-    async def dispatch(self, request: Request) -> Response:
+    async def dispatch(self, request: Request) -> Response:  # pragma: no cover
         ...
 
     def resolve_url(self, request: Request) -> URL:
         return request.url.include_query_params(_metric=self.slug)
 
-    async def __call__(self, request: Request) -> Response:
-        return await self.dispatch(request)
 
-
-class ValueMetric(Metric):
+class ValueMetric(Card):
     template: str = 'ohmyadmin/metrics/value.html'
 
     @abc.abstractmethod
-    async def calculate(self, request: Request) -> str:
+    async def calculate(self, request: Request) -> str:  # pragma: no cover
         ...
 
     async def dispatch(self, request: Request) -> Response:
@@ -49,11 +54,11 @@ class TrendResult:
     series: list[tuple[str, float]] = dataclasses.field(default_factory=list)
 
 
-class TrendMetric(Metric):
+class TrendMetric(Card):
     template: str = 'ohmyadmin/metrics/trend.html'
 
     @abc.abstractmethod
-    async def calculate(self, request: Request) -> TrendResult:
+    async def calculate(self, request: Request) -> TrendResult:  # pragma: no cover
         ...
 
     async def dispatch(self, request: Request) -> Response:
@@ -65,7 +70,7 @@ class TrendMetric(Metric):
         )
 
 
-class ProgressMetric(Metric):
+class ProgressMetric(Card):
     target: int = 100
     progress_color: str = 'green'
     template: str = 'ohmyadmin/metrics/progress.html'
@@ -74,7 +79,7 @@ class ProgressMetric(Metric):
         return self.target
 
     @abc.abstractmethod
-    async def current_value(self, request: Request) -> float | int:
+    async def current_value(self, request: Request) -> float | int:  # pragma: no cover
         ...
 
     async def dispatch(self, request: Request) -> Response:
@@ -109,11 +114,11 @@ class PartitionResult:
         return iter(self.groups.items())
 
 
-class PartitionMetric(Metric):
+class PartitionMetric(Card):
     template: str = 'ohmyadmin/metrics/partition.html'
 
     @abc.abstractmethod
-    async def calculate(self, request: Request) -> PartitionResult:
+    async def calculate(self, request: Request) -> PartitionResult:  # pragma: no cover
         ...
 
     async def dispatch(self, request: Request) -> Response:

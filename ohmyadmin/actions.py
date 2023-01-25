@@ -22,6 +22,14 @@ RequestMethod = typing.Literal['get', 'post', 'patch', 'put', 'delete']
 ObjectURLFactory = typing.Callable[[Request, typing.Any], URL | str]
 
 
+class ActionError(Exception):
+    ...
+
+
+class UndefinedActionError(ActionError):
+    ...
+
+
 class ActionResponse(Response):
     def __init__(
         self,
@@ -198,6 +206,7 @@ class ObjectLink(ObjectAction):
 
 
 class ObjectCallback(Dispatch, ObjectAction):
+    slug: str = ''
     template = 'ohmyadmin/actions/object_callback.html'
 
     def __init__(
@@ -234,6 +243,7 @@ class BasePageAction(Callback):
     label: str = '<unlabeled>'
     confirmation: str = ''
     method: RequestMethod = 'get'
+    slug: str = ''
 
     def __init__(self, slug: str = '') -> None:
         slug = slug or self.slug or slugify(self.__class__.__name__.removesuffix('PageAction'))
@@ -363,6 +373,8 @@ class BaseFormObjectAction(BaseObjectAction):
 
 
 class BatchAction(ObjectCallback, abc.ABC):
+    slug: str = ''
+
     @abc.abstractmethod
     async def apply(self, request: Request, object_ids: list[str], form: wtforms.Form) -> Response:
         ...

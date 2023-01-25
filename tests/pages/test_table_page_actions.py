@@ -92,3 +92,14 @@ def test_dispatches_form_actions(create_test_app: CreateTestAppFactory) -> None:
     response = client.post('/admin/dummy?_action=form', data={'name': 'test'})
     assert response.status_code == 200
     assert response.text == 'FORM SUBMIT'
+
+
+def test_undefined_action(create_test_app: CreateTestAppFactory) -> None:
+    class DummyTable(TablePage):
+        slug = 'dummy'
+        datasource = datasource
+        columns = [TableColumn(name='title')]
+
+    with pytest.raises(actions.UndefinedActionError, match='Action "undefined" is not defined.'):
+        client = TestClient(create_test_app(pages=[DummyTable()]))
+        client.get('/admin/dummy?_action=undefined')
