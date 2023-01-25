@@ -26,7 +26,7 @@ class _ExampleBatchAction(BaseBatchAction):
 
 class _DemoPageActions(TablePage):
     slug = 'demo'
-    datasource = InMemoryDataSource([User(id='1')])
+    datasource = InMemoryDataSource(User, [User(id='1')])
     batch_actions = [_ExampleBatchAction(slug='example')]
 
 

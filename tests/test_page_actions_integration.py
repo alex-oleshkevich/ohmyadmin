@@ -32,7 +32,7 @@ class _FormModal(actions.Modal):
 
 class _DemoPageActions(TablePage):
     slug = 'demo'
-    datasource = InMemoryDataSource([])
+    datasource = InMemoryDataSource(object, [])
     page_actions = [
         actions.Link('Link action', url='http://example.com'),
         actions.Callback('refresh', 'Refresh page', example_callback_action),

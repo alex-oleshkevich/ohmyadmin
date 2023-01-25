@@ -20,7 +20,9 @@ class Post:
 class DummyTablePage(TablePage):
     slug = 'dummy'
     page_size = 5
-    datasource = InMemoryDataSource([Post(id=str(index), title=f'Post {index}', published=True) for index in range(20)])
+    datasource = InMemoryDataSource(
+        Post, [Post(id=str(index), title=f'Post {index}', published=True) for index in range(20)]
+    )
     columns = [
         TableColumn(name='id'),
         TableColumn(name='title'),
@@ -30,7 +32,9 @@ class DummyTablePage(TablePage):
 
 class DummyTablePageWithSortableColumns(TablePage):
     slug = 'dummy'
-    datasource = InMemoryDataSource([Post(id=str(index), title=f'Post {index}', published=True) for index in range(20)])
+    datasource = InMemoryDataSource(
+        Post, [Post(id=str(index), title=f'Post {index}', published=True) for index in range(20)]
+    )
     columns = [
         TableColumn(name='id', sortable=True),
         TableColumn(name='title', searchable=True),
@@ -40,7 +44,9 @@ class DummyTablePageWithSortableColumns(TablePage):
 
 class DummyTablePageWithSearchableColumns(TablePage):
     slug = 'dummy'
-    datasource = InMemoryDataSource([Post(id=str(index), title=f'Post {index}', published=True) for index in range(20)])
+    datasource = InMemoryDataSource(
+        Post, [Post(id=str(index), title=f'Post {index}', published=True) for index in range(20)]
+    )
     columns = [
         TableColumn(name='id'),
         TableColumn(name='title', searchable=True),
@@ -50,7 +56,9 @@ class DummyTablePageWithSearchableColumns(TablePage):
 
 class DummyTablePageWithFilters(TablePage):
     slug = 'dummy'
-    datasource = InMemoryDataSource([Post(id=str(index), title=f'Post {index}', published=True) for index in range(20)])
+    datasource = InMemoryDataSource(
+        Post, [Post(id=str(index), title=f'Post {index}', published=True) for index in range(20)]
+    )
     columns = [
         TableColumn(name='id'),
         TableColumn(name='title'),

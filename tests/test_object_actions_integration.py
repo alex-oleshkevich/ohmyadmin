@@ -33,7 +33,7 @@ class _FormModal(actions.Modal):
 
 class _DemoPageActions(TablePage):
     slug = 'demo'
-    datasource = InMemoryDataSource([User(id='1')])
+    datasource = InMemoryDataSource(User, [User(id='1')])
     object_actions = [
         actions.ObjectLink('Link action', url='http://example.com'),
         actions.ObjectCallback('refresh', 'Refresh page', example_callback_action),
