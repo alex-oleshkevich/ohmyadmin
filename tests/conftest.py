@@ -5,6 +5,7 @@ from async_storages import FileStorage, MemoryStorage
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.middleware.sessions import SessionMiddleware
+from starlette.requests import Request
 from starlette.routing import Mount
 
 from ohmyadmin.app import OhMyAdmin
@@ -12,6 +13,11 @@ from ohmyadmin.authentication import BaseAuthPolicy
 from ohmyadmin.menu import NavItem
 from ohmyadmin.pages.base import BasePage
 from tests.utils import AuthTestPolicy
+
+
+@pytest.fixture
+def admin() -> OhMyAdmin:
+    return OhMyAdmin(title='test', logo_url='http://example.com')
 
 
 class CreateTestAppFactory(typing.Protocol):
@@ -65,3 +71,29 @@ def create_test_app(
         )
 
     return factory
+
+
+class RequestFactory(typing.Protocol):
+    def __call__(self, https: bool = False, path: str = '/admin', host: str = 'testserver') -> Request:
+        ...  # pragma: no cover
+
+
+@pytest.fixture
+def request_f(admin: OhMyAdmin) -> typing.Callable[[], Request]:
+    def http_request(https: bool = False, path: str = '/admin', host: str = 'testserver') -> Request:
+        return Request(
+            {
+                'type': 'http',
+                'path': path,
+                'scheme': 'https' if https else 'http',
+                'headers': [
+                    (b'host', host.encode()),
+                ],
+                'session': {},
+                'state': {
+                    'admin': admin,
+                },
+            }
+        )
+
+    return http_request

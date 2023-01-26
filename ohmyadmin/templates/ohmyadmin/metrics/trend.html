@@ -2,7 +2,7 @@
 
 {% block content %}
     {% if value.current_value is not none %}
-        <div class="text-2xl font-medium mb-2">
+        <div class="text-2xl font-medium mb-2" data-test="trend-current">
             {{ value.current_value }}
         </div>
     {% endif %}

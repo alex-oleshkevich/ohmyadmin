@@ -1,4 +1,3 @@
-import pytest
 from starlette.requests import Request
 from starlette.responses import PlainTextResponse, Response
 from starlette.testclient import TestClient
@@ -7,11 +6,6 @@ from ohmyadmin.app import OhMyAdmin
 from ohmyadmin.menu import MenuLink
 from ohmyadmin.pages.page import Page
 from tests.conftest import CreateTestAppFactory
-
-
-@pytest.fixture
-def app() -> OhMyAdmin:
-    return OhMyAdmin(title='test', logo_url='http://example.com')
 
 
 def test_url_for(create_test_app: CreateTestAppFactory) -> None:

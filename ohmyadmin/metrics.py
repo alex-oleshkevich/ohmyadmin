@@ -71,19 +71,34 @@ class TrendMetric(Card):
 
 
 class ProgressMetric(Card):
+    """
+    Renders progress bar metric.
+
+    Useful for displaying the progresses.
+    """
+
     target: int = 100
     progress_color: str = 'green'
     template: str = 'ohmyadmin/metrics/progress.html'
 
     async def get_target(self, request: Request) -> int:
+        """
+        The value you attempt to reach.
+
+        Examples: 100 percents, or 1000 users
+        """
         return self.target
 
     @abc.abstractmethod
-    async def current_value(self, request: Request) -> float | int:  # pragma: no cover
-        ...
+    async def calculate(self, request: Request) -> float | int:  # pragma: no cover
+        """
+        Calculate the current value.
+
+        This value is used against the target to calculate percentage.
+        """
 
     async def dispatch(self, request: Request) -> Response:
-        value = await self.current_value(request)
+        value = await self.calculate(request)
         target = await self.get_target(request)
         percent = f'{value * 100 / target:.0f}'
         return render_to_response(
@@ -107,14 +122,13 @@ class PartitionItem(typing.TypedDict):
 class PartitionResult:
     groups: dict[str, PartitionItem] = dataclasses.field(default_factory=dict)
 
-    def add_group(self, label: str, value: float | int, color: str = '') -> None:
-        self.groups[label] = {'value': value, 'color': color}
-
     def __iter__(self) -> typing.Iterator[tuple[str, PartitionItem]]:
         return iter(self.groups.items())
 
 
 class PartitionMetric(Card):
+    """Renders a pie chart."""
+
     template: str = 'ohmyadmin/metrics/partition.html'
 
     @abc.abstractmethod

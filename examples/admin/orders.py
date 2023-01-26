@@ -47,10 +47,15 @@ class ByStatusMetric(PartitionMetric):
             Order.status,
         ).group_by(sa.text('2'))
         result = await request.state.dbsession.execute(stmt)
-        metric = PartitionResult()
-        for row in result.all():
-            metric.add_group(row.status, row.total, STATUS_COLORS[row.status])
-        return metric
+        return PartitionResult(
+            {
+                row.status: {
+                    'color': STATUS_COLORS[row.status],
+                    'value': row.total,
+                }
+                for row in result.all()
+            }
+        )
 
 
 class Orders(Resource):
