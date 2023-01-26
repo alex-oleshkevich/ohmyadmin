@@ -9,7 +9,7 @@ from starlette.middleware import Middleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
-from starlette.routing import BaseRoute, Mount, Router
+from starlette.routing import BaseRoute, Mount, Route, Router
 
 from ohmyadmin.app import OhMyAdmin
 from ohmyadmin.authentication import BaseAuthPolicy
@@ -151,7 +151,13 @@ def request_f(admin: OhMyAdmin) -> typing.Callable[[], Request]:
 
 @pytest.fixture
 def http_request(request_f: RequestFactory) -> Request:
-    return request_f()
+    return request_f(
+        routes=[
+            Route('/users', Response('ok'), name='users'),
+            Route('/posts/{id}', Response('ok'), name='posts'),
+            Mount('/media', Response('ok'), name='ohmyadmin.media'),
+        ]
+    )
 
 
 @pytest.fixture

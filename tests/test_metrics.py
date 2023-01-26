@@ -26,7 +26,7 @@ def test_autogenerates_slug() -> None:
 
 def test_autogenerates_label() -> None:
     card = ExampleCard()
-    assert card.label == 'Example Card'
+    assert card.label == 'Example card'
 
 
 def test_generates_url(request_f: RequestFactory) -> None:

@@ -33,8 +33,8 @@ async def validate_form(form: wtforms.Form) -> bool:
     """
     Perform form validation.
 
-    This function does not call Form.validate or Field.validate, instead it
-    implements own logic that supports async validators.
+    This function does not call Form.validate or Field.validate, instead it implements own logic that supports async
+    validators.
     """
     is_valid = True
     for field in iterate_form_fields(form):
@@ -61,19 +61,19 @@ async def populate_object(request: Request, form: wtforms.Form, obj: typing.Any)
     form.populate_obj(obj)
 
 
-class Initable(abc.ABC):
+class Initable(abc.ABC):  # pragma: no cover
     @abc.abstractmethod
     async def init(self, request: Request) -> None:
         ...
 
 
-class Processable(abc.ABC):
+class Processable(abc.ABC):  # pragma: no cover
     @abc.abstractmethod
     async def process(self, request: Request) -> None:
         ...
 
 
-class AsyncChoicesLoader(typing.Protocol):
+class AsyncChoicesLoader(typing.Protocol):  # pragma: no cover
     async def __call__(self, request: Request) -> typing.Sequence[tuple[typing.Any, str]]:
         ...
 
