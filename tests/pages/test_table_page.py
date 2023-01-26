@@ -311,7 +311,7 @@ def test_applies_multichoice_filter(create_test_app: CreateTestAppFactory) -> No
         slug = 'dummy'
         datasource = InMemoryDataSource(Post, [Post(title='Title 1'), Post(title='Title 2'), Post(title='Title 3')])
         columns = [TableColumn(name='title')]
-        filters = [filters.MultiChoiceFilter('title', choices=['Title 1'])]
+        filters = [filters.MultiChoiceFilter('title', choices=['Title 1', 'Title 2'])]
 
     client = TestClient(create_test_app(pages=[DummyTable()]))
     response = client.get('/admin/dummy?title-choice=Title 1&title-choice=Title 2')

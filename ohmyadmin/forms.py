@@ -100,6 +100,21 @@ class AsyncSelectField(wtforms.SelectField, Initable):
             self.choices = list(await self.choices_loader(request))
 
 
+class AsyncSelectMultipleField(wtforms.SelectMultipleField, Initable):
+    def __init__(self, choices: Choices, **kwargs: typing.Any) -> None:
+        self.choices_loader = None
+        if inspect.iscoroutinefunction(choices):
+            self.choices_loader = choices
+        else:
+            assert isinstance(choices, typing.Sequence)
+            self.choices = choices
+        super().__init__(**kwargs)
+
+    async def init(self, request: Request) -> None:
+        if self.choices_loader:
+            self.choices = list(await self.choices_loader(request))
+
+
 _SCPS = typing.ParamSpec('_SCPS')
 _SCRT = typing.TypeVar('_SCRT')
 

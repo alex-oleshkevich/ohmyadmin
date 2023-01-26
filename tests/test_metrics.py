@@ -32,7 +32,7 @@ def test_autogenerates_label() -> None:
 def test_generates_url(request_f: RequestFactory) -> None:
     card = ExampleCard()
     request = request_f()
-    assert str(card.resolve_url(request)) == 'http://testserver/admin?_metric=examplecard'
+    assert str(card.resolve_url(request)) == 'http://testserver/admin/?_metric=examplecard'
 
 
 async def test_renders_title(request_f: RequestFactory) -> None:
