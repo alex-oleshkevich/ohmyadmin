@@ -1,5 +1,3 @@
-from starlette.requests import Request
-from starlette.responses import Response
 from starlette.routing import BaseRoute, Mount, Route
 
 from ohmyadmin.pages.page import Page
@@ -7,13 +5,9 @@ from ohmyadmin.pages.pagemixins import IndexViewMixin
 
 
 class TablePage(IndexViewMixin, Page):
-    """Table pages display lists of objects with option to sort, search, and
-    filter."""
+    """Table pages display lists of objects with option to sort, search, and filter."""
 
     __abstract__ = True
-
-    async def get(self, request: Request) -> Response:
-        return await self.dispatch_index_view(request)
 
     def as_route(self) -> BaseRoute:
         methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']

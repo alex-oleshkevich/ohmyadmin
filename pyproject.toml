@@ -101,7 +101,7 @@ use_parentheses = true
 
 [tool.coverage.run]
 source = ["ohmyadmin"]
-omit = ["tests/*", ".venv/*", ".git/*", "*/__main__.py", "examples"]
+omit = [".venv/*", ".git/*", "*/__main__.py", "examples"]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -114,6 +114,7 @@ exclude_lines = [
     "raise NotImplementedError",
     '@(abc\.)?abstractmethod',
 ]
+omit = [".venv/*", ".git/*", "*/__main__.py", "examples"]
 
 [tool.mypy]
 disallow_untyped_defs = true
