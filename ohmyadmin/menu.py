@@ -9,7 +9,7 @@ from ohmyadmin.helpers import LazyURL, resolve_url
 from ohmyadmin.shortcuts import render_to_string
 
 
-class NavItem(abc.ABC):
+class NavItem(abc.ABC):  # pragma: no cover
     @abc.abstractmethod
     def is_active(self, request: Request) -> bool:
         ...

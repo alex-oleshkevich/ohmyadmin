@@ -8,7 +8,7 @@ from starlette.authentication import AuthCredentials, BaseUser
 from starlette.middleware import Middleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
-from starlette.routing import Mount
+from starlette.routing import BaseRoute, Mount, Router
 
 from ohmyadmin.app import OhMyAdmin
 from ohmyadmin.authentication import BaseAuthPolicy
@@ -92,6 +92,7 @@ class RequestFactory(typing.Protocol):
         method: str = 'GET',
         auth: AuthCredentials | None = None,
         user: BaseUser | None = None,
+        routes: typing.Sequence[BaseRoute] | None = None,
     ) -> Request:
         ...  # pragma: no cover
 
@@ -107,7 +108,13 @@ def request_f(admin: OhMyAdmin) -> typing.Callable[[], Request]:
         method: str = 'GET',
         auth: AuthCredentials | None = None,
         user: BaseUser | None = None,
+        routes: typing.Sequence[BaseRoute] | None = None,
     ) -> Request:
+        """
+        Create a fake request class.
+
+        Note, `root_path` is set to `/admin` to simulate a case when admin app is mounted using Mount().
+        """
         scope = {
             'type': 'http',
             'version': '3.0',
@@ -131,6 +138,7 @@ def request_f(admin: OhMyAdmin) -> typing.Callable[[], Request]:
             },
             'auth': auth,
             'user': user,
+            'router': Router(routes or []),
         }
         return Request(scope)
 
