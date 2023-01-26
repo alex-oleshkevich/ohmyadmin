@@ -38,7 +38,7 @@ def test_renders_batch_action_selector(create_test_app: CreateTestAppFactory) ->
     client = TestClient(create_test_app(pages=[DummyTable()]))
     response = client.get('/admin/dummy')
     page = MarkupSelector(response.text)
-    assert page.get_node_text('[data-test="batch-action-selector"] option:nth-child(2)') == 'Example Action'
+    assert page.get_text('[data-test="batch-action-selector"] option:nth-child(2)') == 'Example Action'
 
 
 def test_renders_row_selection_checkboxes(create_test_app: CreateTestAppFactory) -> None:
@@ -64,7 +64,7 @@ def test_shows_confirmation_modal_on_action_run(create_test_app: CreateTestAppFa
     client = TestClient(create_test_app(pages=[DummyTable()]))
     response = client.get('/admin/dummy?_batch_action=example&_ids=1&_ids=2')
     page = MarkupSelector(response.text)
-    assert page.get_node_text('form.modal-dialog header') == 'Example Action'
+    assert page.get_text('form.modal-dialog header') == 'Example Action'
 
 
 def test_calls_batch_action(create_test_app: CreateTestAppFactory) -> None:

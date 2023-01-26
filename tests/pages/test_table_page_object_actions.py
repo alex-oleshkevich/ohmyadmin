@@ -48,7 +48,7 @@ def test_renders_link_object_actions(create_test_app: CreateTestAppFactory) -> N
     client = TestClient(create_test_app(pages=[DummyTable()]))
     response = client.get('/admin/dummy')
     page = MarkupSelector(response.text)
-    assert page.get_node_text('td[data-test="table-object-actions"]') == 'Link Action'
+    assert page.get_text('td[data-test="table-object-actions"]') == 'Link Action'
 
 
 def test_renders_object_actions(create_test_app: CreateTestAppFactory) -> None:
@@ -61,7 +61,7 @@ def test_renders_object_actions(create_test_app: CreateTestAppFactory) -> None:
     client = TestClient(create_test_app(pages=[DummyTable()]))
     response = client.get('/admin/dummy')
     page = MarkupSelector(response.text)
-    assert page.get_node_text('td[data-test="table-object-actions"]') == 'Example Object Action'
+    assert page.get_text('td[data-test="table-object-actions"]') == 'Example Object Action'
 
 
 @pytest.mark.parametrize('http_method', ['get', 'post', 'put', 'patch', 'delete'])

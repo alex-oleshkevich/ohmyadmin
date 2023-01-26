@@ -103,16 +103,16 @@ async def test_renders_indicator(request_f: RequestFactory) -> None:
     instance = await unbound.create(request)
     content = instance.render_indicator(request)
     page = MarkupSelector(content)
-    assert page.get_node_text('[data-test="indicator"]') == 'Example:\nbefore Jan 2, 2023'
+    assert page.get_text('[data-test="indicator"]') == 'Example:\nbefore Jan 2, 2023'
 
     request = request_f(query_string='example-after=2023-01-02')
     instance = await unbound.create(request)
     content = instance.render_indicator(request)
     page = MarkupSelector(content)
-    assert page.get_node_text('[data-test="indicator"]') == 'Example:\nafter Jan 2, 2023'
+    assert page.get_text('[data-test="indicator"]') == 'Example:\nafter Jan 2, 2023'
 
     request = request_f(query_string='example-after=2023-01-02&example-before=2023-01-02')
     instance = await unbound.create(request)
     content = instance.render_indicator(request)
     page = MarkupSelector(content)
-    assert page.get_node_text('[data-test="indicator"]') == 'Example:\nbetween Jan 2, 2023\n and Jan 2, 2023'
+    assert page.get_text('[data-test="indicator"]') == 'Example:\nbetween Jan 2, 2023\n and Jan 2, 2023'

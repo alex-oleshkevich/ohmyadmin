@@ -65,4 +65,4 @@ async def test_renders_indicator(request_f: RequestFactory) -> None:
     instance = await unbound.create(request)
     content = instance.render_indicator(request)
     page = MarkupSelector(content)
-    assert page.get_node_text('[data-test="indicator"]') == 'Example:\n\nJan 2, 2023'
+    assert page.get_text('[data-test="indicator"]') == 'Example:\n\nJan 2, 2023'

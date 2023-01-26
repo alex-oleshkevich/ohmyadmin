@@ -1,3 +1,5 @@
+const defaultColors = require('tailwindcss/colors');
+
 module.exports = {
     content: [
         '../ohmyadmin/**/*.html',
@@ -14,6 +16,13 @@ module.exports = {
         {pattern: /transform/},
         {pattern: /rotate-/},
     ],
+    theme: {
+        extend: {
+            colors: {
+                accent: defaultColors.blue
+            }
+        }
+    },
     plugins: [
         require('@tailwindcss/forms'),
         require('tailwindcss/nesting'),

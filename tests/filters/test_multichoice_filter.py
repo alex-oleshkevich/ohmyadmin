@@ -92,4 +92,4 @@ async def test_renders_indicator(request_f: RequestFactory) -> None:
     instance = await unbound.create(request)
     content = instance.render_indicator(request)
     page = MarkupSelector(content)
-    assert page.get_node_text('[data-test="indicator"]') == 'Example:\n\nis in One, Two'
+    assert page.get_text('[data-test="indicator"]') == 'Example:\n\nis in One, Two'

@@ -130,5 +130,5 @@ async def test_renders_form(request_f: RequestFactory, extra_template_dir: pathl
     instance = await unbound.create(request)
     page = MarkupSelector(instance.render_form(request))
     assert page.has_node('input[type="text"]')
-    assert page.get_node_text('button.btn-accent') == 'Apply'
-    assert page.get_node_text('button.btn-text') == 'Cancel'
+    assert page.get_text('button.btn-accent') == 'Apply'
+    assert page.get_text('button.btn-text') == 'Cancel'

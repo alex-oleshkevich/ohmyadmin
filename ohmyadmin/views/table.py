@@ -4,7 +4,7 @@ from starlette.requests import Request
 from unittest import mock
 
 from ohmyadmin import actions
-from ohmyadmin.formatters import DataFormatter, ToStringFormatter
+from ohmyadmin.formatters import DataFormatter, StringFormatter
 from ohmyadmin.helpers import LazyObjectURL, LazyURL
 from ohmyadmin.ordering import SortingHelper
 from ohmyadmin.pagination import Pagination
@@ -30,7 +30,7 @@ class TableColumn:
         self.searchable = searchable
         self.search_in = search_in or name
         self.sort_by = sort_by or name
-        self.formatter = formatter or ToStringFormatter()
+        self.formatter = formatter or StringFormatter()
         self.label = label or name.title().replace('_', ' ')
 
     def get_value(self, obj: typing.Any) -> typing.Any:

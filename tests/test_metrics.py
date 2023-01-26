@@ -46,7 +46,7 @@ async def test_renders_title(request_f: RequestFactory) -> None:
     request = request_f()
     response = await card.dispatch(request)
     page = MarkupSelector(response.body)
-    assert page.get_node_text('[data-test="metric"] header') == 'Example Metric'
+    assert page.get_text('[data-test="metric"] header') == 'Example Metric'
 
 
 async def test_value_metric(request_f: RequestFactory) -> None:
@@ -58,7 +58,7 @@ async def test_value_metric(request_f: RequestFactory) -> None:
     request = request_f()
     response = await card.dispatch(request)
     page = MarkupSelector(response.body)
-    assert page.get_node_text('[data-test="metric"] main') == 'HUNDRED'
+    assert page.get_text('[data-test="metric"] main') == 'HUNDRED'
 
 
 async def test_trend_metric(request_f: RequestFactory) -> None:
@@ -72,10 +72,10 @@ async def test_trend_metric(request_f: RequestFactory) -> None:
     page = MarkupSelector(response.body)
 
     # current value rendered
-    assert page.get_node_text('[data-test="metric"] main [data-test="trend-current"]') == '100'
+    assert page.get_text('[data-test="metric"] main [data-test="trend-current"]') == '100'
 
     # renders script data
-    assert page.get_node_text('[data-test="metric"] main script') == '[["zero", 10], ["one", 20]]'
+    assert page.get_text('[data-test="metric"] main script') == '[["zero", 10], ["one", 20]]'
 
     # renders chart tag
     assert page.has_node('[data-test="metric"] main x-trend-metric-chart')
@@ -94,7 +94,7 @@ async def test_progress_metric(request_f: RequestFactory) -> None:
     page = MarkupSelector(response.body)
 
     # current value rendered
-    assert page.get_node_text('[data-test="metric"] main [data-test="progress-current"]') == '20%'
+    assert page.get_text('[data-test="metric"] main [data-test="progress-current"]') == '20%'
 
     # renders chart tag
     assert (
@@ -118,13 +118,13 @@ async def test_partition_metric(request_f: RequestFactory) -> None:
     page = MarkupSelector(response.body)
 
     # renders table
-    table_text = page.get_node_text('[data-test="metric"] main [data-test="partition-table"]')
+    table_text = page.get_text('[data-test="metric"] main [data-test="partition-table"]')
     assert 'red' in table_text
     assert 'blue' in table_text
 
     # renders script data
     assert (
-        page.get_node_text('[data-test="metric"] main script')
+        page.get_text('[data-test="metric"] main script')
         == '{"blue": {"color": "blue", "value": 70}, "red": {"color": "red", "value": 30}}'
     )
 

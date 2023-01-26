@@ -454,6 +454,62 @@
         @apply h-4;
     }
 
+    .progress-accent .progress-bar {
+        @apply bg-accent-500;
+    }
+
+    .progress-gray .progress-bar {
+        @apply bg-gray-500;
+    }
+
+    .progress-blue .progress-bar {
+        @apply bg-blue-500;
+    }
+
+    .progress-red .progress-bar {
+        @apply bg-red-500;
+    }
+
+    .progress-red .progress-bar {
+        @apply bg-red-500;
+    }
+
+    .progress-yellow .progress-bar {
+        @apply bg-yellow-500;
+    }
+
+    .progress-green .progress-bar {
+        @apply bg-green-500;
+    }
+
+    .progress-indigo .progress-bar {
+        @apply bg-indigo-500;
+    }
+
+    .progress-purple .progress-bar {
+        @apply bg-purple-500;
+    }
+
+    .progress-pink .progress-bar {
+        @apply bg-pink-500;
+    }
+
+    .progress-label {
+        @apply flex items-center justify-between mb-1 text-xs;
+    }
+
+    .progress-label-md, .progress-label-lg {
+        @apply text-sm;
+    }
+
+    .progress-label dt {
+        @apply font-medium text-gray-700;
+    }
+
+    .progress-label dd {
+        @apply text-gray-500;
+    }
+
     @keyframes indeterminate-progress {
         0% {
             transform: translateX(0);

@@ -47,7 +47,7 @@ def test_renders_link_page_actions(create_test_app: CreateTestAppFactory) -> Non
     client = TestClient(create_test_app(pages=[DummyTable()]))
     response = client.get('/admin/dummy')
     page = MarkupSelector(response.text)
-    assert page.get_node_text('[data-test="page-actions"]') == 'Link Action'
+    assert page.get_text('[data-test="page-actions"]') == 'Link Action'
 
 
 def test_renders_dispatchable_page_actions(create_test_app: CreateTestAppFactory) -> None:
@@ -60,7 +60,7 @@ def test_renders_dispatchable_page_actions(create_test_app: CreateTestAppFactory
     client = TestClient(create_test_app(pages=[DummyTable()]))
     response = client.get('/admin/dummy')
     page = MarkupSelector(response.text)
-    assert page.get_node_text('[data-test="page-actions"]') == 'Example Action'
+    assert page.get_text('[data-test="page-actions"]') == 'Example Action'
 
 
 @pytest.mark.parametrize('http_method', ['get', 'post', 'put', 'patch', 'delete'])

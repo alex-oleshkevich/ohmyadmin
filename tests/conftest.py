@@ -8,6 +8,7 @@ from starlette.authentication import AuthCredentials, BaseUser
 from starlette.middleware import Middleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
+from starlette.responses import Response
 from starlette.routing import BaseRoute, Mount, Router
 
 from ohmyadmin.app import OhMyAdmin
@@ -19,7 +20,7 @@ from tests.models import Post
 from tests.utils import AuthTestPolicy
 
 
-class CreateTestAppFactory(typing.Protocol):
+class CreateTestAppFactory(typing.Protocol):  # pragma: no cover
     def __call__(
         self,
         pages: typing.Sequence[BasePage] | None = None,
@@ -115,6 +116,9 @@ def request_f(admin: OhMyAdmin) -> typing.Callable[[], Request]:
 
         Note, `root_path` is set to `/admin` to simulate a case when admin app is mounted using Mount().
         """
+        routes = routes or [
+            Mount('/media', Response('ok'), name='ohmyadmin.media'),
+        ]
         scope = {
             'type': 'http',
             'version': '3.0',
@@ -138,11 +142,16 @@ def request_f(admin: OhMyAdmin) -> typing.Callable[[], Request]:
             },
             'auth': auth,
             'user': user,
-            'router': Router(routes or []),
+            'router': Router(routes),
         }
         return Request(scope)
 
     return http_request
+
+
+@pytest.fixture
+def http_request(request_f: RequestFactory) -> Request:
+    return request_f()
 
 
 @pytest.fixture
