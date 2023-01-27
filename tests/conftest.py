@@ -94,7 +94,10 @@ class RequestFactory(typing.Protocol):
         auth: AuthCredentials | None = None,
         user: BaseUser | None = None,
         routes: typing.Sequence[BaseRoute] | None = None,
+        state: dict[str, typing.Any] | None = None,
+        session: dict[str, typing.Any] | None = None,
     ) -> Request:
+
         ...  # pragma: no cover
 
 
@@ -110,6 +113,8 @@ def request_f(admin: OhMyAdmin) -> typing.Callable[[], Request]:
         auth: AuthCredentials | None = None,
         user: BaseUser | None = None,
         routes: typing.Sequence[BaseRoute] | None = None,
+        state: dict[str, typing.Any] | None = None,
+        session: dict[str, typing.Any] | None = None,
     ) -> Request:
         """
         Create a fake request class.
@@ -119,6 +124,7 @@ def request_f(admin: OhMyAdmin) -> typing.Callable[[], Request]:
         routes = routes or [
             Mount('/media', Response('ok'), name='ohmyadmin.media'),
         ]
+        state = state or {'admin': admin}
         scope = {
             'type': 'http',
             'version': '3.0',
@@ -134,12 +140,10 @@ def request_f(admin: OhMyAdmin) -> typing.Callable[[], Request]:
                 (b'host', host.encode()),
             ],
             'method': method,
-            'session': {},
+            'session': session or {},
             'path_params': {},
             'query_string': query_string.encode(),
-            'state': {
-                'admin': admin,
-            },
+            'state': state,
             'auth': auth,
             'user': user,
             'router': Router(routes),

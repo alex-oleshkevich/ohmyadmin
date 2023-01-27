@@ -6,10 +6,11 @@ from starlette.testclient import TestClient
 from starlette.types import Message
 from unittest import mock
 
-from ohmyadmin.authentication import AnonymousAuthPolicy, AnonymousUser, BaseAuthPolicy, SessionAuthBackend
+from ohmyadmin.app import OhMyAdmin
+from ohmyadmin.authentication import SESSION_KEY, AnonymousAuthPolicy, AnonymousUser, BaseAuthPolicy, SessionAuthBackend
 from ohmyadmin.middleware import LoginRequiredMiddleware
 from ohmyadmin.pages.page import Page
-from tests.conftest import CreateTestAppFactory
+from tests.conftest import CreateTestAppFactory, RequestFactory
 from tests.models import User
 
 
@@ -20,23 +21,31 @@ async def test_anonymous_auth_policy() -> None:
     assert isinstance(await policy.load_user(request, '1'), AnonymousUser)
 
 
-def test_session_backend(create_test_app: CreateTestAppFactory) -> None:
+async def test_session_backend(admin: OhMyAdmin, request_f: RequestFactory) -> None:
     class TestPolicy(BaseAuthPolicy):
-        async def authenticate(self, request: Request, identity: str, password: str) -> BaseUser | None:
+        async def authenticate(
+            self, request: Request, identity: str, password: str
+        ) -> BaseUser | None:  # pragma: no cover
             return None
 
-        async def load_user(self, conn: HTTPConnection, user_id: str) -> BaseUser | None:
-            return User(id='1')
+        async def load_user(self, conn: HTTPConnection, user_id: str) -> BaseUser | None:  # pragma: no cover
+            if user_id == '1':
+                return User(id='1')
+            return None
 
-        def get_authentication_backend(self) -> AuthenticationBackend:
+        def get_authentication_backend(self) -> AuthenticationBackend:  # pragma: no cover
             return SessionAuthBackend()
 
-    class ExamplePage(Page):
-        ...
+    admin.auth_policy = TestPolicy()
+    request = request_f(state={'admin': admin}, session={SESSION_KEY: '2'})
+    backend = SessionAuthBackend()
+    creds, user = await backend.authenticate(request)
+    assert not user.is_authenticated
 
-    app = create_test_app(pages=[ExamplePage()], auth_policy=TestPolicy())
-    client = TestClient(app)
-    assert client.get('/admin/example').is_success
+    request = request_f(state={'admin': admin}, session={SESSION_KEY: '1'})
+    backend = SessionAuthBackend()
+    creds, user = await backend.authenticate(request)
+    assert user.is_authenticated
 
 
 def test_pages_not_accessible_for_unauthenticated(create_test_app: CreateTestAppFactory) -> None:
@@ -84,7 +93,7 @@ def test_login_is_accessible_for_unauthenticated(create_test_app: CreateTestAppF
 def test_successful_login_logout(create_test_app: CreateTestAppFactory) -> None:
     """Test login logout flow (successful case)."""
 
-    class UserPolicy(BaseAuthPolicy):
+    class UserPolicy(BaseAuthPolicy):  # pragma: no cover
         async def authenticate(self, request: Request, identity: str, password: str) -> BaseUser | None:
             if identity == 'valid@localhost.tld':
                 return User(id='1')
@@ -121,7 +130,7 @@ def test_successful_login_logout(create_test_app: CreateTestAppFactory) -> None:
 def test_failed_login_logout(create_test_app: CreateTestAppFactory) -> None:
     """Test login logout flow (failing case)."""
 
-    class UserPolicy(BaseAuthPolicy):
+    class UserPolicy(BaseAuthPolicy):  # pragma: no cover
         async def authenticate(self, request: Request, identity: str, password: str) -> BaseUser | None:
             if identity == 'valid@localhost.tld':
                 return User(id='1')
@@ -146,10 +155,10 @@ def test_failed_login_logout(create_test_app: CreateTestAppFactory) -> None:
 
 
 async def test_login_required_middleware_checks_request_types() -> None:
-    async def receive() -> Message:
+    async def receive() -> Message:  # pragma: no cover
         ...
 
-    async def send(message: Message) -> None:
+    async def send(message: Message) -> None:  # pragma: no cover
         ...
 
     class DummyBackend(AuthenticationBackend):

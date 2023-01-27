@@ -14,7 +14,7 @@ from ohmyadmin.testing import MarkupSelector
 from tests.conftest import RequestFactory
 
 
-class ExampleCard(Card):
+class ExampleCard(Card):  # pragma: no cover
     async def dispatch(self, request: Request) -> Response:
         return Response('CARD CONTENT')
 

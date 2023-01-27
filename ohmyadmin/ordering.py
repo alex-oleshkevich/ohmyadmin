@@ -16,6 +16,11 @@ class Ordering:
 
 
 def get_ordering_value(request: Request, param_name: str) -> dict[str, SortingType]:
+    """
+    Extract ordering value from query params.
+
+    Returns a dictionary where keys are parameter names and values either 'asc' or 'desc' literals.
+    """
     return {
         value[1:] if value.startswith('-') else value: 'desc' if value.startswith('-') else 'asc'
         for value in request.query_params.getlist(param_name)
@@ -32,6 +37,8 @@ class SortControl:
 
 
 class SortingHelper:
+    """API interface for managing ordering values from query parameters."""
+
     def __init__(self, request: Request, query_param: str) -> None:
         self.request = request
         self.query_param_name = query_param
@@ -53,6 +60,11 @@ class SortingHelper:
         return None
 
     def get_url(self, field: str) -> URL:
+        """
+        Generate a URL with inverted ordering params.
+
+        For example, if current page has `ordering=title` then the function generates `ordering=-title`.
+        """
         ordering = self.ordering.copy()
         if field in ordering:
             index = ordering.index(field)
@@ -68,11 +80,16 @@ class SortingHelper:
         return url
 
     def should_show_index(self) -> bool:
+        """
+        Test if current ordering index should be displayed next to column label.
+
+        Typically used to highlight in what order the data source has been sorted.
+        """
         return len(self.ordering) > 1
 
-    def get_control(self, column: str) -> SortControl:
-        url = self.get_url(column)
-        ordering = self.get_current_ordering(column)
-        index = self.get_current_ordering_index(column)
+    def get_control(self, field: str) -> SortControl:
+        url = self.get_url(field)
+        ordering = self.get_current_ordering(field)
+        index = self.get_current_ordering_index(field)
         show_index = self.should_show_index()
         return SortControl(index=index, ordering=ordering, url=url, show_index=show_index)

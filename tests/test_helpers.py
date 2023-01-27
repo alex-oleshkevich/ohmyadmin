@@ -51,11 +51,11 @@ def test_resolve_url(http_request: Request) -> None:
     assert str(resolve_url(http_request, LazyURL('posts', {'id': 100}))) == 'http://testserver/admin/posts/100'
 
 
-def _example_function() -> None:
+def _example_function() -> None:  # pragma: no cover
     ...
 
 
-class SomeClass:
+class SomeClass:  # pragma: no cover
     def some_method(self) -> None:
         ...
 
