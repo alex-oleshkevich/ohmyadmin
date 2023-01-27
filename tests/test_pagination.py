@@ -43,7 +43,7 @@ def test_page_no_other_pages() -> None:
 def test_stops_iteration_when_all_left_controls_equal_page_count() -> None:
     page: Pagination = Pagination([], total_rows=4, page=1, page_size=2)
     with pytest.raises(StopIteration):
-        iterator = page.iter_pages()
+        iterator = page.iter_pages(left_edge=2)
         assert [x for x in iterator] == [1, 2]
         assert next(iterator)
 
