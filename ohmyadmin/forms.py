@@ -39,12 +39,13 @@ async def validate_form(form: wtforms.Form) -> bool:
     is_valid = True
     for field in iterate_form_fields(form):
         for validator in field.validators:
+            field.errors = list(field.errors) if field.errors is not None else []
             try:
                 if inspect.iscoroutinefunction(validator):
                     await validator(form, field)
                 else:
                     await run_in_threadpool(validator, form, field)
-            except wtforms.ValidationError as ex:
+            except (wtforms.ValidationError, wtforms.validators.StopValidation) as ex:
                 field.errors = list(field.errors)
                 field.errors.extend(ex.args)
                 is_valid = False

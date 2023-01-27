@@ -22,3 +22,6 @@ class Post:
     published: bool = False
     date_published: datetime.date = dataclasses.field(default_factory=lambda: datetime.datetime.today().date())
     updated_at: datetime.date = dataclasses.field(default_factory=lambda: datetime.datetime.today())
+
+    def __str__(self) -> str:
+        return self.title

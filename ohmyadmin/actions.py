@@ -122,7 +122,7 @@ class Submit(PageAction):
         self.html_attrs = html_attrs or {}
 
 
-class Dispatch(abc.ABC):
+class Dispatch(abc.ABC):  # pragma: no cover
     slug: str
 
     @abc.abstractmethod
@@ -141,22 +141,19 @@ class Callback(Dispatch, PageAction):
         label: str,
         callback: ActionCallback,
         icon: str = '',
-        color: ButtonType = 'default',
+        variant: ButtonType = 'default',
         confirmation: str = '',
-        method: RequestMethod = 'get',
+        http_method: RequestMethod = 'get',
         hx_target: str = '',
     ) -> None:
         self.icon = icon
         self.label = label
-        self.method = method
+        self.http_method = http_method
         self.callback = callback
         self.hx_target = hx_target
-        self.color = color
+        self.variant = variant
         self.confirmation = confirmation
         self.slug = slug
-
-        if isinstance(callback, Modal):
-            self.hx_target = '#modals'
 
     def render(self, request: Request) -> str:
         menu_link = request.url.include_query_params(_action=self.slug)
@@ -166,32 +163,17 @@ class Callback(Dispatch, PageAction):
         return await self.callback(request)
 
 
-class Modal(abc.ABC):
-    title: str = ''
-    template: str = 'ohmyadmin/actions/modal.html'
-
-    @abc.abstractmethod
-    async def dispatch(self, request: Request) -> Response:
-        ...
-
-    def render(self, request: Request, context: typing.Mapping[str, typing.Any] | None = None) -> Response:
-        context = dict(context or {})
-        context.setdefault('modal', self)
-        return render_to_response(request, self.template, context)
-
-    async def __call__(self, request: Request) -> Response:
-        return await self.dispatch(request)
-
-
 class ObjectAction(abc.ABC):
     template: str = ''
 
-    def render(self, request: Request, object: typing.Any) -> str:
-        assert self.template
-        return render_to_string(request, self.template, {'action': self, 'object': object})
+    def render(self, request: Request, obj: typing.Any) -> str:
+        assert self.template, f'template is not defined on class {self.__class__.__name__}'
+        return render_to_string(request, self.template, {'action': self, 'object': obj})
 
 
 class ObjectLink(ObjectAction):
+    """Renders as a dropdown menu item."""
+
     template = 'ohmyadmin/actions/object_link.html'
 
     def __init__(self, label: str, url: str | LazyURL | ObjectURLFactory, icon: str = '') -> None:
@@ -199,13 +181,19 @@ class ObjectLink(ObjectAction):
         self.icon = icon
         self.label = label
 
-    def resolve(self, request: Request, object: typing.Any) -> URL:
+    def resolve(self, request: Request, obj: typing.Any) -> URL:
         if isinstance(self.url, (str, LazyURL)):
             return resolve_url(request, self.url)
-        return URL(str(self.url(request, object)))
+        return URL(str(self.url(request, obj)))
 
 
 class ObjectCallback(Dispatch, ObjectAction):
+    """
+    Renders as dropdown menu item.
+
+    When clicked, dispatches AJAX call to API.
+    """
+
     slug: str = ''
     template = 'ohmyadmin/actions/object_callback.html'
 
@@ -216,13 +204,13 @@ class ObjectCallback(Dispatch, ObjectAction):
         callback: ActionCallback,
         icon: str = '',
         dangerous: bool = False,
-        method: RequestMethod = 'get',
+        http_method: RequestMethod = 'get',
         confirmation: str = '',
     ) -> None:
         self.slug = slug
         self.icon = icon
         self.label = label
-        self.method = method
+        self.http_method = http_method
         self.callback = callback
         self.dangerous = dangerous
         self.confirmation = confirmation
@@ -252,14 +240,14 @@ class BasePageAction(Callback):
             label=self.label,
             callback=self.dispatch,
             icon=self.icon,
-            color=self.button_color,
+            variant=self.button_color,
             confirmation=self.confirmation,
-            method=self.method,
+            http_method=self.method,
             hx_target='#modals',
         )
 
     @abc.abstractmethod
-    async def apply(self, request: Request) -> Response:
+    async def apply(self, request: Request) -> Response:  # pragma: no cover
         ...
 
     async def dispatch(self, request: Request) -> Response:
@@ -300,7 +288,7 @@ class BaseFormPageAction(BasePageAction):
         )
 
     @abc.abstractmethod
-    async def handle(self, request: Request, form: wtforms.Form, model: typing.Any) -> Response:
+    async def handle(self, request: Request, form: wtforms.Form, model: typing.Any) -> Response:  # pragma: no cover
         ...
 
 
@@ -309,7 +297,7 @@ class BaseObjectAction(ObjectCallback):
     label: str = '<unlabeled>'
     dangerous: bool = False
     confirmation: str = ''
-    method: RequestMethod = 'get'
+    http_method: RequestMethod = 'get'
 
     def __init__(self, slug: str = '') -> None:
         slug = slug or self.slug or slugify(self.__class__.__name__.removesuffix('ObjectAction'))
@@ -319,7 +307,7 @@ class BaseObjectAction(ObjectCallback):
             callback=self.dispatch,
             icon=self.icon,
             dangerous=self.dangerous,
-            method=self.method,
+            http_method=self.http_method,
             confirmation=self.confirmation,
         )
 
@@ -368,7 +356,7 @@ class BaseFormObjectAction(BaseObjectAction):
         )
 
     @abc.abstractmethod
-    async def handle(self, request: Request, form: wtforms.Form, model: typing.Any) -> Response:
+    async def handle(self, request: Request, form: wtforms.Form, model: typing.Any) -> Response:  # pragma: no cover
         ...
 
 
@@ -376,7 +364,7 @@ class BatchAction(ObjectCallback, abc.ABC):
     slug: str = ''
 
     @abc.abstractmethod
-    async def apply(self, request: Request, object_ids: list[str], form: wtforms.Form) -> Response:
+    async def apply(self, request: Request, object_ids: list[str], form: wtforms.Form) -> Response:  # pragma: no cover
         ...
 
 
@@ -389,7 +377,9 @@ class BaseBatchAction(BatchAction):
 
     def __init__(self, slug: str = '') -> None:
         slug = slug or self.slug or slugify(self.__class__.__name__.removesuffix('BatchAction'))
-        super().__init__(slug=slug, label=self.label, callback=self.dispatch, dangerous=self.dangerous, method='get')
+        super().__init__(
+            slug=slug, label=self.label, callback=self.dispatch, dangerous=self.dangerous, http_method='get'
+        )
 
     async def dispatch(self, request: Request) -> Response:
         object_ids = request.query_params.getlist('_ids')
@@ -401,7 +391,7 @@ class BaseBatchAction(BatchAction):
 
 class BatchDelete(BaseBatchAction):
     dangerous = True
-    success_message = _('{count} records has been deleted', domain='ohmyadmin')
+    success_message = _('{count} records has been deleted.', domain='ohmyadmin')
     message = _('Are you sure you want to delete selected objects?', domain='ohmyadmin')
     label = _('Mass delete', domain='ohmyadmin')
 
@@ -415,12 +405,14 @@ class DeleteObjectAction(BaseObjectAction):
     icon = 'trash'
     dangerous = True
     label = _('Delete', domain='ohmyadmin')
-    success_message = _('{object} has been deleted', domain='ohmyadmin')
+    success_message = _('{object} has been deleted.', domain='ohmyadmin')
     confirmation = _('Are you sure you want to delete this record?', domain='ohmyadmin')
-    method = 'delete'
+    http_method = 'delete'
 
     async def apply(self, request: Request, object_id: str) -> Response:
-        datasource: DataSource = request.state.datasource
-        model = await datasource.get(request, object_id)
-        await datasource.delete(request, object_id)
-        return ActionResponse().show_toast(self.success_message.format(object=model)).refresh_datatable()
+        if request.method in ['POST', 'DELETE']:
+            datasource: DataSource = request.state.datasource
+            model = await datasource.get(request, object_id)
+            await datasource.delete(request, object_id)
+            return ActionResponse().show_toast(self.success_message.format(object=model)).refresh_datatable()
+        return ActionResponse().show_toast(_('Unsupported HTTP method.'), 'error')

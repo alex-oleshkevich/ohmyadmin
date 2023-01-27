@@ -5,6 +5,7 @@ import typing
 from async_storages import FileStorage, MemoryStorage
 from starlette.applications import Starlette
 from starlette.authentication import AuthCredentials, BaseUser
+from starlette.datastructures import FormData
 from starlette.middleware import Middleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
@@ -96,8 +97,8 @@ class RequestFactory(typing.Protocol):
         routes: typing.Sequence[BaseRoute] | None = None,
         state: dict[str, typing.Any] | None = None,
         session: dict[str, typing.Any] | None = None,
+        form_data: dict[str, typing.Any] | FormData | None = None,
     ) -> Request:
-
         ...  # pragma: no cover
 
 
@@ -115,16 +116,22 @@ def request_f(admin: OhMyAdmin) -> typing.Callable[[], Request]:
         routes: typing.Sequence[BaseRoute] | None = None,
         state: dict[str, typing.Any] | None = None,
         session: dict[str, typing.Any] | None = None,
+        form_data: dict[str, typing.Any] | FormData | None = None,
     ) -> Request:
         """
         Create a fake request class.
 
         Note, `root_path` is set to `/admin` to simulate a case when admin app is mounted using Mount().
         """
+
+        if isinstance(form_data, dict):
+            form_data = FormData(form_data)
+
         routes = routes or [
             Mount('/media', Response('ok'), name='ohmyadmin.media'),
         ]
-        state = state or {'admin': admin}
+        state = state or {}
+        state.setdefault('admin', admin)
         scope = {
             'type': 'http',
             'version': '3.0',
@@ -148,19 +155,25 @@ def request_f(admin: OhMyAdmin) -> typing.Callable[[], Request]:
             'user': user,
             'router': Router(routes),
         }
-        return Request(scope)
+        request = Request(scope)
+        if form_data:
+            setattr(request, '_form', form_data)
+        return request
 
     return http_request
 
 
 @pytest.fixture
-def http_request(request_f: RequestFactory) -> Request:
+def http_request(request_f: RequestFactory, datasource: InMemoryDataSource) -> Request:
     return request_f(
         routes=[
             Route('/users', Response('ok'), name='users'),
             Route('/posts/{id}', Response('ok'), name='posts'),
             Mount('/media', Response('ok'), name='ohmyadmin.media'),
-        ]
+        ],
+        state={
+            'datasource': datasource,
+        },
     )
 
 

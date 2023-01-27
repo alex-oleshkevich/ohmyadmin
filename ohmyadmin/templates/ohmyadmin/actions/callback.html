@@ -1,7 +1,8 @@
-<button class="btn btn-{{ action.color }}"
+<button class="btn btn-{{ action.variant }}"
         hx-confirm="{{ action.confirmation }}"
-        hx-{{ action.method }}="{{ menu_link }}"
+        hx-{{ action.http_method }}="{{ menu_link }}"
         hx-target="{{ action.hx_target }}"
+        type="button"
 >
     {% if action.icon %}
     <span class="h-5 w-5">{{ tabler_icon(action.icon) if action.icon else '' }}</span>

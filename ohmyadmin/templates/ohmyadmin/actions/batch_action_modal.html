@@ -13,7 +13,7 @@
             </header>
             <main>
                 {% if action.message %}
-                    <div>{{ action.message }}</div>
+                    <div data-test="confirmation">{{ action.message }}</div>
                     {% if form.data|length %}
                         <br/>
                     {% endif %}
