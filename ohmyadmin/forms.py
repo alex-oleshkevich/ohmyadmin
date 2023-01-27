@@ -91,10 +91,8 @@ class AsyncSelectField(wtforms.SelectField, Initable):
         self.choices_loader = None
         if inspect.iscoroutinefunction(choices):
             self.choices_loader = choices
-        else:
-            assert isinstance(choices, typing.Sequence)
-            self.choices = choices
-        super().__init__(**kwargs)
+            choices = []
+        super().__init__(choices=choices, **kwargs)
 
     async def init(self, request: Request) -> None:
         if self.choices_loader:
@@ -106,10 +104,8 @@ class AsyncSelectMultipleField(wtforms.SelectMultipleField, Initable):
         self.choices_loader = None
         if inspect.iscoroutinefunction(choices):
             self.choices_loader = choices
-        else:
-            assert isinstance(choices, typing.Sequence)
-            self.choices = choices
-        super().__init__(**kwargs)
+            choices = []
+        super().__init__(choices=choices, **kwargs)
 
     async def init(self, request: Request) -> None:
         if self.choices_loader:
@@ -131,7 +127,3 @@ def safe_coerce(callback: typing.Callable[[typing.Any], _SCRT]) -> typing.Callab
             return None
 
     return coerce
-
-
-def coerce_bool(value: str) -> bool:
-    return value in ['1', 1, True, 'true', 'True', 'on']
