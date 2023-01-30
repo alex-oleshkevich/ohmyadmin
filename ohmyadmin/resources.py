@@ -20,6 +20,7 @@ from ohmyadmin.views.table import TableColumn
 class Resource(BasePage, Router, IndexViewMixin):
     group = _('Resources', domain='ohmyadmin')
     form_class: type[wtforms.Form] = wtforms.Form
+    create_form_actions: typing.Sequence[actions.Submit | actions.Link] | None = None
 
     def __init__(self) -> None:
         super().__init__(routes=self.get_routes())
@@ -74,7 +75,7 @@ class Resource(BasePage, Router, IndexViewMixin):
         return await self.dispatch_index_view(request)
 
     def get_create_form_actions(self, request: Request) -> typing.Sequence[actions.Submit | actions.Link]:
-        return [
+        return self.create_form_actions or [
             actions.Submit(label=_('Create and return to list', domain='ohmyadmin'), variant='accent', name='_return'),
             actions.Submit(label=_('Create and edit', domain='ohmyadmin'), name='_edit'),
             actions.Submit(label=_('Create and add new', domain='ohmyadmin'), name='_add_new'),
@@ -96,7 +97,7 @@ class Resource(BasePage, Router, IndexViewMixin):
 
     async def create_view(self, request: Request) -> Response:
         model = self.create_empty_model(request)
-        form = await create_form(request, self.form_class)
+        form = await self.create_form(request)
         if await validate_on_submit(request, form):
             await populate_object(request, form, model)
             await self.datasource.create(request, model)

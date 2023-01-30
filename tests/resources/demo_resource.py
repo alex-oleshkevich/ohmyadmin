@@ -11,6 +11,10 @@ from tests.models import Post
 datasource = InMemoryDataSource(Post, [Post(id=x, title=f'Title {x}') for x in range(1, 100)])
 
 
+class ExampleForm(wtforms.Form):
+    title = wtforms.StringField(validators=[wtforms.validators.data_required()])
+
+
 class ExamplePageAction(actions.BasePageAction):
     slug = 'example'
     label = 'Toast'
@@ -38,6 +42,7 @@ class ExampleBatchAction(actions.BaseBatchAction):
 class DemoResource(Resource):
     slug = 'demo'
     datasource = datasource
+    form_class = ExampleForm
     columns = [
         TableColumn('title', searchable=True, sortable=True, link=True),
     ]
