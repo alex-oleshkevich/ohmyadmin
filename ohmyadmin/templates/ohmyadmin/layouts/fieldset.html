@@ -1,15 +1,13 @@
-<section class="flex flex-col md:flex-row items-start">
-    <div class="w-full md:w-2/5">
-        <div class="text-lg font-medium leading-6 text-gray-900">{{ layout.label }}</div>
+<section class="side-section">
+    <aside>
+        <h3>{{ layout.label }}</h3>
         {% if layout.description %}
-            <p class="mt-1 text-sm text-gray-500">{{ layout.description }}</p>
+            <p>{{ layout.description }}</p>
         {% endif %}
-    </div>
-    <div class="w-full md:w-3/5 bg-white rounded-md px-4 py-5 sm:p-6 shadow">
-        <fieldset>
-            {% for child in layout.children %}
-                {{ child.render(request) }}
-            {% endfor %}
-        </fieldset>
-    </div>
+    </aside>
+    <main>
+        {% for child in layout.children %}
+            {{ child.render(request) }}
+        {% endfor %}
+    </main>
 </section>

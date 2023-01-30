@@ -143,12 +143,16 @@ class Products(Resource):
                     [
                         layouts.Card(
                             [
-                                layouts.Input(form.name),
-                                layouts.Input(form.slug),
-                                layouts.Input(form.description, colspan='full'),
+                                layouts.Grid(
+                                    [
+                                        layouts.Input(form.name),
+                                        layouts.Input(form.slug),
+                                        layouts.Input(form.description, colspan='full'),
+                                    ],
+                                    columns=2,
+                                ),
                             ],
                             'Product info',
-                            columns=2,
                         ),
                         layouts.Card([layouts.Input(form.images)], label='Images'),
                         layouts.Card(
@@ -158,7 +162,6 @@ class Products(Resource):
                                 layouts.Input(form.cost_per_item),
                             ],
                             label='Pricing',
-                            columns=2,
                             description='This information will be displayed publicly so be careful what you share.',
                         ),
                         layouts.Card(

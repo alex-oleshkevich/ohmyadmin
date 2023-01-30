@@ -15,7 +15,7 @@ class SimpleLayout(FormPage):
     def build_form_layout(self, request: Request, form: wtforms.Form) -> layouts.Layout:
         return layouts.Card(
             [
-                layouts.SimpleForm(
+                layouts.RowFormLayout(
                     label='Vertical layout',
                     description='Form fields are in horizontal layout where labels at left side.',
                     children=[layouts.Input(field) for field in form],

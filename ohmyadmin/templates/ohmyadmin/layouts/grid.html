@@ -1,4 +1,4 @@
-<div class="flex flex-col md:grid grid-cols-1 md:grid-cols-{{ layout.columns }} gap-{{ layout.gap }}">
+<div class="grid-layout md:grid-cols-{{ layout.columns }} gap-{{ layout.gap }}">
     {% for child in layout.children %}
         {{ child.render(request) }}
     {% endfor %}

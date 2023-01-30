@@ -4,11 +4,11 @@ from starlette.types import Message, Receive, Scope, Send
 from ohmyadmin.contrib.sqlalchemy import DatabaseSessionMiddleware
 
 
-async def receive() -> Message:
+async def receive() -> Message:  # pragma: no cover
     ...
 
 
-async def send(message: Message) -> None:
+async def send(message: Message) -> None:  # pragma: no cover
     ...
 
 

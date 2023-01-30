@@ -14,7 +14,7 @@ class FieldSetLayout(FormPage):
     def build_form_layout(self, request: Request, form: ProductForm) -> layouts.Layout:
         return layouts.Column(
             [
-                layouts.FieldSet(
+                layouts.SideSection(
                     label='Field set layout',
                     description='Form fields grouped in a field set',
                     children=[
@@ -23,7 +23,7 @@ class FieldSetLayout(FormPage):
                         layouts.Input(form.description),
                     ],
                 ),
-                layouts.FieldSet(
+                layouts.SideSection(
                     label='Field set layout',
                     description='Form fields grouped in a field set',
                     children=[
