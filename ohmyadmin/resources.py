@@ -199,12 +199,6 @@ class Resource(BasePage, Router, IndexViewMixin):
     def page_url(cls, request: Request, method: str, **path_params: typing.Any) -> URL:
         return URL(request.url_for(f'{cls.get_path_name()}.{method}', **path_params))
 
-    def redirect_to_action(self, request: Request, action: str, pk: typing.Any | None = None) -> RedirectResponse:
-        path_params: dict[str, typing.Any] = {}
-        if pk:
-            path_params['pk'] = pk
-        return self.redirect_to_path(request, f'{self.get_path_name()}.{action}', **path_params)
-
     @classmethod
     def generate_url(cls, request: Request) -> str:
         return request.url_for(f'{cls.get_path_name()}.index')
