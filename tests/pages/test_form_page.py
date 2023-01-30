@@ -16,7 +16,7 @@ class MyForm(wtforms.Form):
     name = wtforms.StringField(validators=[wtforms.validators.data_required()])
 
 
-class MyPage(FormPage):
+class MyPage(FormPage):  # pragma: no cover
     slug = 'myform'
     form_class = MyForm
 
@@ -54,7 +54,9 @@ async def test_renders_custom_form_actions(create_test_app: CreateTestAppFactory
         form_class = MyForm
         form_actions = [actions.Submit('CUSTOM')]
 
-        async def handle_submit(self, request: Request, form: wtforms.Form, model: typing.Any) -> Response:
+        async def handle_submit(
+            self, request: Request, form: wtforms.Form, model: typing.Any
+        ) -> Response:  # pragma: no cover
             return Response('SUBMITTED')
 
     app = create_test_app(pages=[MyPage()])
@@ -74,10 +76,12 @@ async def test_populates_form_object(create_test_app: CreateTestAppFactory) -> N
         form_class = MyForm
         form_actions = [actions.Submit('CUSTOM')]
 
-        async def get_form_object(self, request: Request) -> typing.Any:
+        async def get_form_object(self, request: Request) -> typing.Any:  # pragma: no cover
             return Model(name='TEST')
 
-        async def handle_submit(self, request: Request, form: wtforms.Form, model: typing.Any) -> Response:
+        async def handle_submit(
+            self, request: Request, form: wtforms.Form, model: typing.Any
+        ) -> Response:  # pragma: no cover
             return Response('SUBMITTED')
 
     app = create_test_app(pages=[MyPage()])

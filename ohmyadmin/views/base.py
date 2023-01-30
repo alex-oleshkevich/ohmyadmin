@@ -7,5 +7,5 @@ from ohmyadmin.pagination import Pagination
 
 class IndexView:
     @abc.abstractmethod
-    def render(self, request: Request, objects: Pagination[typing.Any]) -> str:
+    def render(self, request: Request, objects: Pagination[typing.Any]) -> str:  # pragma: no cover
         ...

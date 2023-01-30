@@ -1,4 +1,4 @@
-{% macro sortable_cell(column, control) %}
+{% macro sortable_cell(column, control) -%}
     <a href="{{ control.url }}" class="flex items-center gap-2 whitespace-nowrap" hx-boost="true">
         <span>{{ column.label }}</span>
         <span class="text-gray-400 flex items-center">
@@ -15,15 +15,15 @@
             {% endif %}
     </span>
     </a>
-{% endmacro %}
+{%- endmacro -%}
 
-{% macro simple_cell(column) %}
+{%- macro simple_cell(column) -%}
     {{ column.label }}
-{% endmacro %}
+{%- endmacro -%}
 
-{% if column.sortable %}
+{% if column.sortable -%}
     {% set control = sorting.get_control(column.sort_by) %}
     {{ sortable_cell(column, control) }}
-{% else %}
+{%- else -%}
     {{ simple_cell(column) }}
-{% endif %}
+{%- endif %}

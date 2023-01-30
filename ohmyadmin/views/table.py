@@ -1,3 +1,4 @@
+import functools
 import typing
 from markupsafe import Markup
 from starlette.requests import Request
@@ -5,11 +6,15 @@ from unittest import mock
 
 from ohmyadmin import actions
 from ohmyadmin.formatters import DataFormatter, StringFormatter
-from ohmyadmin.helpers import LazyObjectURL, LazyURL
+from ohmyadmin.helpers import LazyObjectURL, LazyURL, snake_to_sentence
 from ohmyadmin.ordering import SortingHelper
 from ohmyadmin.pagination import Pagination
 from ohmyadmin.shortcuts import render_to_string
 from ohmyadmin.views.base import IndexView
+
+
+def default_value_getter(obj: typing.Any, attr: str) -> typing.Any:
+    return getattr(obj, attr, 'undefined!')
 
 
 class TableColumn:
@@ -23,6 +28,7 @@ class TableColumn:
         search_in: str | None = None,
         sort_by: str | None = None,
         link: bool | str | LazyURL | LazyObjectURL | None = None,
+        value_getter: typing.Callable[[typing.Any], typing.Any] | None = None,
     ) -> None:
         self.link = link
         self.name = name
@@ -31,10 +37,11 @@ class TableColumn:
         self.search_in = search_in or name
         self.sort_by = sort_by or name
         self.formatter = formatter or StringFormatter()
-        self.label = label or name.title().replace('_', ' ')
+        self.label = label or snake_to_sentence(name)
+        self.value_getter = value_getter or functools.partial(default_value_getter, attr=self.name)
 
     def get_value(self, obj: typing.Any) -> typing.Any:
-        return getattr(obj, self.name, 'undefined')
+        return self.value_getter(obj)
 
     def format_value(self, request: Request, value: typing.Any) -> str:
         return self.formatter(request, value)

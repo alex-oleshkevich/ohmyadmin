@@ -74,7 +74,11 @@ def create_test_app(
             user_menu=user_menu,
         )
         return Starlette(
-            routes=[Mount('/admin', admin)],
+            routes=[
+                Mount('/admin', admin),
+                Route('/users', Response('ok'), name='users'),
+                Route('/posts/{id}', Response('ok'), name='posts'),
+            ],
             middleware=[
                 Middleware(SessionMiddleware, secret_key='key!'),
             ],
