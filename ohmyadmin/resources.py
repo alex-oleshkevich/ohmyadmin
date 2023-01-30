@@ -21,6 +21,7 @@ class Resource(BasePage, Router, IndexViewMixin):
     group = _('Resources', domain='ohmyadmin')
     form_class: type[wtforms.Form] = wtforms.Form
     create_form_actions: typing.Sequence[actions.Submit | actions.Link] | None = None
+    update_form_actions: typing.Sequence[actions.Submit | actions.Link] | None = None
 
     def __init__(self) -> None:
         super().__init__(routes=self.get_routes())
@@ -119,14 +120,18 @@ class Resource(BasePage, Router, IndexViewMixin):
         )
 
     def get_update_form_actions(self, request: Request) -> typing.Sequence[actions.Submit | actions.Link]:
-        return [
+        return self.update_form_actions or [
             actions.Submit(label=_('Update and return to list', domain='ohmyadmin'), variant='accent', name='_return'),
+            actions.Submit(label=_('Update and continue editing', domain='ohmyadmin'), name='_continue'),
             actions.Link(label=_('Return to list', domain='ohmyadmin'), url=self.generate_url(request)),
         ]
 
     def get_update_view_response(self, request: Request, form_data: FormData, model: typing.Any) -> Response:
-        flash(request).success(_('{object} has been updated.', domain='ohmyadmin').format(object=model))
-        return ActionResponse().redirect(request, self.generate_url(request))
+        message = _('{object} has been updated.', domain='ohmyadmin').format(object=model)
+        if '_continue' not in form_data:
+            flash(request).success(_('{object} has been updated.', domain='ohmyadmin').format(object=model))
+            return ActionResponse().redirect(request, self.generate_url(request))
+        return ActionResponse().show_toast(message)
 
     async def update_view(self, request: Request) -> Response:
         pk = request.path_params['pk']

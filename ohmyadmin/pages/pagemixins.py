@@ -104,7 +104,7 @@ class HasMetrics:
 
 
 class IndexViewMixin(HasPageActions, HasFilters, HasObjectActions, HasBatchActions, HasMetrics):
-    datasource: typing.ClassVar[DataSource]
+    datasource: DataSource
     page_param: typing.ClassVar[str] = 'page'
     page_size_param: typing.ClassVar[str] = 'page_size'
     search_param: typing.ClassVar[str] = 'search'

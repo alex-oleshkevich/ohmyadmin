@@ -4,6 +4,7 @@ from starlette.responses import Response
 
 from ohmyadmin import actions, filters
 from ohmyadmin.datasource.memory import InMemoryDataSource
+from ohmyadmin.metrics import ValueMetric
 from ohmyadmin.resources import Resource
 from ohmyadmin.views.table import TableColumn
 from tests.models import Post
@@ -39,6 +40,14 @@ class ExampleBatchAction(actions.BaseBatchAction):
         return Response('ok')
 
 
+class ExampleMetric(ValueMetric):
+    label = 'Example'
+    slug = 'example'
+
+    async def calculate(self, request: Request) -> str:
+        return 'CALLED'
+
+
 class DemoResource(Resource):
     slug = 'demo'
     datasource = datasource
@@ -58,4 +67,7 @@ class DemoResource(Resource):
     ]
     filters = [
         filters.StringFilter('title'),
+    ]
+    metrics = [
+        ExampleMetric,
     ]
