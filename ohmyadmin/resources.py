@@ -202,10 +202,6 @@ class Resource(BasePage, Router, IndexViewMixin):
         return Mount(f'/resources/{self.slug}', self)
 
     @classmethod
-    def page_url(cls, request: Request, method: str, **path_params: typing.Any) -> URL:
-        return URL(request.url_for(f'{cls.get_path_name()}.{method}', **path_params))
-
-    @classmethod
     def generate_url(cls, request: Request) -> str:
         return request.url_for(f'{cls.get_path_name()}.index')
 
