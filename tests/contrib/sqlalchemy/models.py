@@ -3,9 +3,11 @@ import decimal
 import sqlalchemy as sa
 import typing
 import uuid
-from sqlalchemy.orm import Mapped, declarative_base, mapped_column, relationship
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-Base = declarative_base()
+
+class Base(DeclarativeBase):
+    ...
 
 
 class User(Base):

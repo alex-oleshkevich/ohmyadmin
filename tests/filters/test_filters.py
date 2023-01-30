@@ -26,7 +26,7 @@ class MyFilter(BaseFilter):
 
 
 def test_creates_unbound_filter() -> None:
-    unbound = MyFilter()
+    unbound = MyFilter('name')
     assert isinstance(unbound, UnboundFilter)
 
 

@@ -1,3 +1,4 @@
+import typing
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from starlette.types import Message, Receive, Scope, Send
 
@@ -5,7 +6,7 @@ from ohmyadmin.contrib.sqlalchemy import DatabaseSessionMiddleware
 
 
 async def receive() -> Message:  # pragma: no cover
-    ...
+    return {}
 
 
 async def send(message: Message) -> None:  # pragma: no cover
@@ -20,6 +21,6 @@ async def test_middleware_attaches_session() -> None:
     async_session = async_sessionmaker(engine)
 
     app = DatabaseSessionMiddleware(app, async_session=async_session)
-    scope = {}
+    scope: dict[str, typing.Any] = {}
     await app(scope, receive, send)
     assert scope['state']['dbsession']

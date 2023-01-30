@@ -14,6 +14,7 @@ from ohmyadmin.metrics import Card, UndefinedCardError
 from ohmyadmin.ordering import get_ordering_value
 from ohmyadmin.pages.base import BasePage
 from ohmyadmin.pagination import Pagination, get_page_size_value, get_page_value
+from ohmyadmin.shortcuts import render_to_response
 from ohmyadmin.views.base import IndexView
 from ohmyadmin.views.table import TableColumn, TableView
 
@@ -79,10 +80,10 @@ class HasBatchActions:
 
 
 class HasFilters:
-    filters: typing.Sequence[UnboundFilter] | None = None
+    filters: typing.Sequence[UnboundFilter | BaseFilter] | None = None
 
     def get_filters(self, request: Request) -> typing.Sequence[UnboundFilter]:
-        return self.filters or []
+        return self.filters or []  # type: ignore[return-value]
 
     async def create_filters(self, request: Request) -> list[BaseFilter]:
         return [await _filter.create(request) for _filter in self.get_filters(request)]
@@ -179,7 +180,7 @@ class IndexViewMixin(HasPageActions, HasFilters, HasObjectActions, HasBatchActio
                     'hx-push-url': str(request.url.remove_query_params('clear')),
                     'hx-trigger-after-settle': json.dumps({'refresh-datatable': ''}),
                 }
-            return self.render_to_response(
+            return render_to_response(
                 request,
                 'ohmyadmin/pages/table/_filters.html',
                 {'filters': filters},
@@ -187,7 +188,7 @@ class IndexViewMixin(HasPageActions, HasFilters, HasObjectActions, HasBatchActio
             )
 
         if request.headers.get('hx-target', '') == 'data':
-            return self.render_to_response(
+            return render_to_response(
                 request,
                 'ohmyadmin/pages/table/_content.html',
                 {
@@ -202,7 +203,7 @@ class IndexViewMixin(HasPageActions, HasFilters, HasObjectActions, HasBatchActio
             )
 
         active_filter_count = sum([1 for filter in filters if filter.is_active(request)])
-        return self.render_to_response(
+        return render_to_response(
             request,
             'ohmyadmin/pages/table/table.html',
             {
@@ -210,7 +211,7 @@ class IndexViewMixin(HasPageActions, HasFilters, HasObjectActions, HasBatchActio
                 'objects': objects,
                 'filters': filters,
                 'view_content': view_content,
-                'page_title': self.label_plural,
+                'page_title': self.label_plural,  # type: ignore[attr-defined]
                 'active_filter_count': active_filter_count,
                 'search_term': get_search_value(request, self.search_param),
             },

@@ -50,6 +50,7 @@ def test_get_pk(datasource: InMemoryDataSource) -> None:
 
 async def test_get(datasource: InMemoryDataSource[Post], http_request: Request) -> None:
     obj = await datasource.get(http_request, '2')
+    assert obj
     assert obj.id == 2
 
 
@@ -69,9 +70,13 @@ async def test_create(datasource: InMemoryDataSource[Post], http_request: Reques
 
 async def test_update(datasource: InMemoryDataSource[Post], http_request: Request) -> None:
     obj = await datasource.get(http_request, '1')
+    assert obj
     obj.title = 'updated'
     await datasource.update(http_request, obj)
-    assert (await datasource.get(http_request, '1')).title == 'updated'
+
+    model = await datasource.get(http_request, '1')
+    assert model
+    assert model.title == 'updated'
 
 
 async def test_delete(datasource: InMemoryDataSource[Post], http_request: Request) -> None:

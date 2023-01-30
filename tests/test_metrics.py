@@ -97,9 +97,7 @@ async def test_progress_metric(request_f: RequestFactory) -> None:
     assert page.get_text('[data-test="metric"] main [data-test="progress-current"]') == '20%'
 
     # renders chart tag
-    assert (
-        page.find_node('[data-test="metric"] main [data-test="progress-value"] .progress-bar')['style'] == 'width: 20%'
-    )
+    assert page.get_style('[data-test="metric"] main [data-test="progress-value"] .progress-bar', 'width') == '20%'
 
 
 async def test_partition_metric(request_f: RequestFactory) -> None:

@@ -101,7 +101,7 @@ def test_renders_sortable_columns(create_test_app: CreateTestAppFactory) -> None
     client = TestClient(create_test_app(pages=[DummyTablePageWithSortableColumns()]))
     response = client.get('/admin/dummy')
     page = MarkupSelector(response.text)
-    assert 'ordering' in page.find_node('table thead tr th:first-child a')['href']
+    assert 'ordering' in page.get_attribute('table thead tr th:first-child a', 'href')
 
 
 def test_not_renders_sortable_columns(create_test_app: CreateTestAppFactory) -> None:

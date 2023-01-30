@@ -83,15 +83,15 @@ def guess_pk_type(model_class: type, pk_field: str) -> typing.Callable:
     raise ValueError(f'Failed to guess primary key column caster for {column} (type={column.type}).')
 
 
-T = typing.TypeVar('T', bound=tuple[typing.Any, ...])
+T = typing.TypeVar('T', bound=typing.Any)
 
 
 class SQLADataSource(DataSource[T]):
     def __init__(
         self,
         model_class: type[T],
-        query: sa.Select[T] | None = None,
-        query_for_list: sa.Select[T] | None = None,
+        query: sa.Select | None = None,
+        query_for_list: sa.Select | None = None,
         pk_column: str | None = None,
         pk_cast: typing.Callable | None = None,
         _stmt: sa.Select | None = None,

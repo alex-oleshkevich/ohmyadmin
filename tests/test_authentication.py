@@ -39,12 +39,16 @@ async def test_session_backend(admin: OhMyAdmin, request_f: RequestFactory) -> N
     admin.auth_policy = TestPolicy()
     request = request_f(state={'admin': admin}, session={SESSION_KEY: '2'})
     backend = SessionAuthBackend()
-    creds, user = await backend.authenticate(request)
+    result = await backend.authenticate(request)
+    assert result
+    creds, user = result
     assert not user.is_authenticated
 
     request = request_f(state={'admin': admin}, session={SESSION_KEY: '1'})
     backend = SessionAuthBackend()
-    creds, user = await backend.authenticate(request)
+    result = await backend.authenticate(request)
+    assert result
+    creds, user = result
     assert user.is_authenticated
 
 
@@ -156,7 +160,7 @@ def test_failed_login_logout(create_test_app: CreateTestAppFactory) -> None:
 
 async def test_login_required_middleware_checks_request_types() -> None:
     async def receive() -> Message:  # pragma: no cover
-        ...
+        return {}
 
     async def send(message: Message) -> None:  # pragma: no cover
         ...

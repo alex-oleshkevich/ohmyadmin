@@ -9,7 +9,7 @@ metadata = sa.MetaData()
 Base = declarative_base(metadata=metadata)
 
 
-class User(Base, BaseUser):
+class User(BaseUser, Base):
     __tablename__ = 'users'
     is_authenticated = True
 

@@ -30,5 +30,5 @@ def test_render_to_response() -> None:
     with mock.patch('ohmyadmin.app.OhMyAdmin.render_to_response') as fn:
         admin = OhMyAdmin()
         request = Request({'type': 'http', 'state': {'admin': admin}})
-        render_to_response(request, template, context)
-    fn.assert_called_once_with(request, template, context)
+        render_to_response(request, template, context, {'x-key': 'value'})
+    fn.assert_called_once_with(request, template, context, headers={'x-key': 'value'})

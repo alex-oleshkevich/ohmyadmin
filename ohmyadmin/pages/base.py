@@ -1,4 +1,3 @@
-import abc
 import typing
 from slugify import slugify
 from starlette.datastructures import URL
@@ -57,7 +56,6 @@ class BasePage(metaclass=PageMeta):
         url = request.url_for(self.get_path_name())
         return RedirectResponse(url, status_code=302)
 
-    @abc.abstractmethod
     def as_route(self) -> BaseRoute:  # pragma: no cover
         """Create a route instance for this page."""
         raise NotImplementedError()

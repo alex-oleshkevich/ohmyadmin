@@ -32,7 +32,7 @@ class CreateTestAppFactory(typing.Protocol):  # pragma: no cover
 
 
 @pytest.fixture()
-def extra_template_dir(tmp_path: pathlib.Path) -> pathlib.Path:
+def extra_template_dir(tmp_path: pathlib.Path) -> typing.Generator[pathlib.Path, None, None]:
     yield tmp_path
 
 

@@ -2,7 +2,7 @@ import sqlalchemy as sa
 import typing
 from starlette.requests import Request
 
-from ohmyadmin.forms import AsyncChoicesLoader, Choices
+from ohmyadmin.forms import AsyncChoicesLoader
 
 
 def choices_from(
@@ -13,7 +13,7 @@ def choices_from(
 ) -> AsyncChoicesLoader:
     query = query or sa.select(model_class)
 
-    async def loader(request: Request) -> Choices:
+    async def loader(request: Request) -> typing.Sequence[tuple[typing.Any, str]]:
         result = await request.state.dbsession.scalars(query)
         choices: list[tuple[typing.Any, str]] = []
         for row in result:

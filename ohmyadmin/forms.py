@@ -74,20 +74,23 @@ class Processable(abc.ABC):  # pragma: no cover
         ...
 
 
+Choices = typing.Sequence[tuple[typing.Any, str]]
+
+
 class AsyncChoicesLoader(typing.Protocol):  # pragma: no cover
-    async def __call__(self, request: Request) -> typing.Sequence[tuple[typing.Any, str]]:
+    async def __call__(self, request: Request) -> Choices:
         ...
 
 
-Choices = typing.Union[
+ChoicesType = typing.Union[
+    Choices,
     AsyncChoicesLoader,
-    typing.Sequence[tuple[typing.Any, str]],
-    typing.Callable[[], typing.Sequence[tuple[typing.Any, str]]],
+    typing.Callable[[], Choices],
 ]
 
 
 class AsyncSelectField(wtforms.SelectField, Initable):
-    def __init__(self, choices: Choices, **kwargs: typing.Any) -> None:
+    def __init__(self, choices: ChoicesType, **kwargs: typing.Any) -> None:
         self.choices_loader = None
         if inspect.iscoroutinefunction(choices):
             self.choices_loader = choices
@@ -100,7 +103,7 @@ class AsyncSelectField(wtforms.SelectField, Initable):
 
 
 class AsyncSelectMultipleField(wtforms.SelectMultipleField, Initable):
-    def __init__(self, choices: Choices, **kwargs: typing.Any) -> None:
+    def __init__(self, choices: ChoicesType, **kwargs: typing.Any) -> None:
         self.choices_loader = None
         if inspect.iscoroutinefunction(choices):
             self.choices_loader = choices

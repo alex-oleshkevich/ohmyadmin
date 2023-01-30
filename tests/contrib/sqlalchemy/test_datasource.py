@@ -35,13 +35,17 @@ def test_generates_default_query(datasource: SQLADataSource[Post]) -> None:
 
 
 def test_custom_query() -> None:
-    sql = SQLADataSource(Post, query=sa.select(Post.id)).get_query().raw
+    sql = SQLADataSource[Post](Post, query=sa.select(Post.id)).get_query().raw
     assert str(sql) == 'SELECT posts.id \nFROM posts'
 
 
 def test_custom_query_for_list() -> None:
-    sql = SQLADataSource(Post, query_for_list=sa.select(Post.id))
-    assert str(sql.get_query_for_index().raw) == 'SELECT posts.id \nFROM posts'
+    sql = SQLADataSource[Post](Post, query_for_list=sa.select(Post).join(Post.author))
+    assert str(sql.get_query_for_index().raw) == (
+        'SELECT posts.id, posts.title, posts.date_published, posts.updated_at, '
+        'posts.published, posts.author_id \n'
+        'FROM posts JOIN users ON users.id = posts.author_id'
+    )
 
 
 def test_detects_pk_column(datasource: SQLADataSource[Post]) -> None:
@@ -304,7 +308,7 @@ async def test_paginate(datasource: SQLADataSource[Post], http_request: Request)
 async def test_create(datasource: SQLADataSource[Post], http_request: Request) -> None:
     model = Post()
     dbsession = mock.AsyncMock()
-    dbsession.add = mock.AsyncMock()
+    dbsession.add = mock.MagicMock()
     dbsession.commit = mock.AsyncMock()
     http_request.state.dbsession = dbsession
 
