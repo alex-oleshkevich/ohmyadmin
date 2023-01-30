@@ -8,17 +8,18 @@ from starlette_babel import gettext_lazy as _
 
 from ohmyadmin import actions, layouts
 from ohmyadmin.forms import create_form, validate_on_submit
-from ohmyadmin.pages.page import Page
+from ohmyadmin.pages.base import BasePage
 
 _F = typing.TypeVar('_F', bound=wtforms.Form)
 
 
-class FormPage(Page):
+class FormPage(BasePage):
+    """This page renders HTML form."""
+
     __abstract__ = True
 
     form_class: type[wtforms.Form]
     form_actions: list[actions.Submit | actions.Link] | None = None
-    success_message: str = _('{object} has been submitted.', domain='ohmyadmin')
     template: typing.ClassVar[str] = 'ohmyadmin/pages/form.html'
 
     def get_form_actions(self, request: Request) -> list[actions.Submit | actions.Link]:
@@ -35,7 +36,7 @@ class FormPage(Page):
     def build_form_layout(self, request: Request, form: wtforms.Form) -> layouts.Layout:
         return layouts.Card([layouts.StackedForm([layouts.Input(field) for field in form])])
 
-    async def handler(self, request: Request) -> Response:
+    async def dispatch(self, request: Request) -> Response:
         model = await self.get_form_object(request)
         form = await self.create_form(request, model)
         if await validate_on_submit(request, form):
@@ -50,8 +51,10 @@ class FormPage(Page):
         )
 
     @abc.abstractmethod
-    async def handle_submit(self, request: Request, form: wtforms.Form, model: typing.Any) -> Response:
+    async def handle_submit(
+        self, request: Request, form: wtforms.Form, model: typing.Any
+    ) -> Response:  # pragma: no cover
         ...
 
     def as_route(self) -> BaseRoute:
-        return Route(f'/{self.slug}', self, methods=['GET', 'POST'], name=self.get_path_name())
+        return Route(f'/{self.slug}', self.dispatch, methods=['GET', 'POST'], name=self.get_path_name())

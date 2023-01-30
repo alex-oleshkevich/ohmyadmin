@@ -10,7 +10,7 @@ from starlette.middleware import Middleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
-from starlette.routing import BaseRoute, Mount, Route, Router
+from starlette.routing import BaseRoute, Mount, Route
 
 from ohmyadmin.app import OhMyAdmin
 from ohmyadmin.authentication import BaseAuthPolicy
@@ -127,11 +127,17 @@ def request_f(admin: OhMyAdmin) -> typing.Callable[[], Request]:
         if isinstance(form_data, dict):
             form_data = FormData(form_data)
 
-        routes = routes or [
-            Mount('/media', Response('ok'), name='ohmyadmin.media'),
-        ]
+        app = Starlette(
+            routes=routes
+            or [
+                Mount('/', Response('ok'), name='ohmyadmin.welcome'),
+                Mount('/static', Response('ok'), name='ohmyadmin.static'),
+                Mount('/media', Response('ok'), name='ohmyadmin.media'),
+            ]
+        )
         state = state or {}
         state.setdefault('admin', admin)
+        state.setdefault('app', app)
         scope = {
             'type': 'http',
             'version': '3.0',
@@ -153,7 +159,8 @@ def request_f(admin: OhMyAdmin) -> typing.Callable[[], Request]:
             'state': state,
             'auth': auth,
             'user': user,
-            'router': Router(routes),
+            'app': app,
+            'router': app.router,
         }
         request = Request(scope)
         if form_data:
