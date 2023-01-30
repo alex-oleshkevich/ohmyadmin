@@ -42,7 +42,7 @@ def create_search_token(column: NamedColumn, search_query: str) -> sa.sql.Column
 
     if search_query.startswith('='):
         search_token = f'{search_query[1:].lower()}'
-        return sa.func.lower(string_column) == search_token
+        return string_column == search_token
 
     if search_query.startswith('@'):
         search_token = f'{search_query[1:].lower()}'
@@ -61,10 +61,8 @@ def guess_pk_field(model_class: type) -> str:
     pk_columns = [
         c.name for c in mapper.all_orm_descriptors if hasattr(c, 'primary_key') and c.primary_key  # type: ignore
     ]
-    if len(pk_columns) == 0:
-        raise ValueError(f'Model class {model_class} does not contain any primary key.')
-    if len(pk_columns) > 1:
-        raise ValueError(f'Model class {model_class} defines composite primary key which are not supported.')
+    assert len(pk_columns), f'Model class {model_class} does not contain any primary key.'
+    assert len(pk_columns) == 1, f'Model class {model_class} defines composite primary key which are not supported.'
     return pk_columns[0]
 
 
@@ -80,17 +78,20 @@ def guess_pk_type(model_class: type, pk_field: str) -> typing.Callable:
             return float
         case sa.Numeric():
             return decimal.Decimal
-        case sa.UUID():
+        case sa.Uuid():
             return uuid.UUID
     raise ValueError(f'Failed to guess primary key column caster for {column} (type={column.type}).')
 
 
-class SQLADataSource(DataSource):
+T = typing.TypeVar('T', bound=tuple[typing.Any, ...])
+
+
+class SQLADataSource(DataSource[T]):
     def __init__(
         self,
-        model_class: typing.Any,
-        query: sa.Select | None = None,
-        query_for_list: sa.Select | None = None,
+        model_class: type[T],
+        query: sa.Select[T] | None = None,
+        query_for_list: sa.Select[T] | None = None,
         pk_column: str | None = None,
         pk_cast: typing.Callable | None = None,
         _stmt: sa.Select | None = None,
@@ -102,38 +103,46 @@ class SQLADataSource(DataSource):
         self.query_for_list = query_for_list if query_for_list is not None else self.query
         self._stmt = _stmt if _stmt is not None else self.query
 
-    def get_query(self) -> DataSource:
+    @property
+    def raw(self) -> sa.Select[T]:
+        return self._stmt
+
+    def get_query(self) -> SQLADataSource[T]:
         return self._clone(self.query)
 
-    def get_query_for_index(self) -> DataSource:
+    def get_query_for_index(self) -> SQLADataSource[T]:
         return self._clone(self.query_for_list)
 
-    def get_pk(self, obj: typing.Any) -> str:
-        return getattr(obj, self.pk_column)
+    def get_pk(self, obj: T) -> str:
+        return str(getattr(obj, self.pk_column))
 
-    def new(self) -> typing.Any:
+    def new(self) -> T:
         return self.model_class()
 
-    def apply_search(self, search_term: str, searchable_fields: typing.Sequence[str]) -> DataSource:
+    def apply_search(self, search_term: str, searchable_fields: typing.Sequence[str]) -> SQLADataSource[T]:
         if not search_term:
             return self._clone(self._stmt)
 
         clauses = []
         props = get_column_properties(self.model_class, searchable_fields)
         for prop in props.values():
-            if len(prop.columns) > 1:
+            if len(prop.columns) > 1:  # pragma: no cover, no idea
                 continue
             clauses.append(create_search_token(prop.columns[0], search_term))
         return self._clone(self._stmt.where(sa.or_(*clauses)))
 
-    def apply_ordering(self, ordering: dict[str, SortingType], sortable_fields: typing.Sequence[str]) -> DataSource:
+    def apply_ordering(
+        self,
+        ordering: dict[str, SortingType],
+        sortable_fields: typing.Sequence[str],
+    ) -> SQLADataSource[T]:
         stmt = self._stmt.order_by(None)
         props = get_column_properties(self.model_class, sortable_fields)
 
         for ordering_field, ordering_dir in ordering.items():
             try:
                 prop = props[ordering_field]
-                if len(prop.columns) > 1:
+                if len(prop.columns) > 1:  # pragma: no cover
                     continue
                 column = prop.columns[0]
                 stmt = stmt.order_by(column.desc() if ordering_dir == 'desc' else column.asc())
@@ -142,7 +151,7 @@ class SQLADataSource(DataSource):
                 continue
         return self._clone(stmt)
 
-    def apply_string_filter(self, field: str, operation: StringOperation, value: str) -> DataSource:
+    def apply_string_filter(self, field: str, operation: StringOperation, value: str) -> SQLADataSource[T]:
         column = getattr(self.model_class, field)
         expr: sa.sql.ColumnElement = sa.func.lower(column)
 
@@ -150,18 +159,15 @@ class SQLADataSource(DataSource):
             StringOperation.exact: lambda stmt: stmt.where(expr == value),
             StringOperation.startswith: lambda stmt: stmt.where(expr.startswith(value)),
             StringOperation.endswith: lambda stmt: stmt.where(expr.endswith(value)),
-            StringOperation.contains: lambda stmt: stmt.where(expr.ilike(f'%{value}%')),
+            StringOperation.contains: lambda stmt: stmt.where(expr.like(f'%{value}%')),
             StringOperation.pattern: lambda stmt: stmt.where(expr.regexp_match(value)),
         }
-        if operation not in mapping:
-            return self._clone()
-
         filter_ = mapping[operation]
         return self._clone(filter_(self._stmt))
 
     def apply_number_filter(
         self, field: str, operation: NumberOperation, value: int | float | decimal.Decimal
-    ) -> DataSource:
+    ) -> SQLADataSource[T]:
         column = getattr(self.model_class, field)
         number_column = sa.sql.cast(column, sa.Integer)
         mapping = {
@@ -171,19 +177,16 @@ class SQLADataSource(DataSource):
             NumberOperation.lt: lambda stmt: stmt.where(number_column < value),
             NumberOperation.lte: lambda stmt: stmt.where(number_column <= value),
         }
-        if operation not in mapping:
-            return self._clone()
-
         filter_ = mapping[operation]
         return self._clone(filter_(self._stmt))
 
-    def apply_date_filter(self, field: str, value: datetime.date) -> DataSource:
+    def apply_date_filter(self, field: str, value: datetime.date) -> SQLADataSource[T]:
         column = getattr(self.model_class, field)
         return self._clone(self._stmt.where(column == value))
 
     def apply_date_range_filter(
         self, field: str, before: datetime.date | None, after: datetime.date | None
-    ) -> DataSource:
+    ) -> SQLADataSource[T]:
         column = getattr(self.model_class, field)
         query = self
         if before:
@@ -192,11 +195,11 @@ class SQLADataSource(DataSource):
             query = query._clone(query._stmt.where(column >= after))
         return query
 
-    def apply_choice_filter(self, field: str, choices: list[typing.Any], coerce: typing.Callable) -> DataSource:
+    def apply_choice_filter(self, field: str, choices: list[typing.Any], coerce: typing.Callable) -> SQLADataSource[T]:
         column = getattr(self.model_class, field)
         return self._clone(self._stmt.where(column.in_(choices)))
 
-    def apply_boolean_filter(self, field: str, value: bool) -> DataSource:
+    def apply_boolean_filter(self, field: str, value: bool) -> SQLADataSource[T]:
         column = getattr(self.model_class, field)
         return self._clone(self._stmt.where(column.is_(value)))
 
@@ -242,5 +245,5 @@ class SQLADataSource(DataSource):
             _stmt=stmt if stmt is not None else self._stmt,
         )
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str:  # pragma: no cover
         return repr(self._stmt)

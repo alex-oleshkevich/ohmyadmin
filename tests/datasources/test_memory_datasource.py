@@ -118,14 +118,14 @@ async def test_search_pattern(datasource: InMemoryDataSource[Post], http_request
     assert [obj.title for obj in obj.rows] == ['Title 11', 'Title 12']
 
 
-async def test_sorts_asc(datasource: InMemoryDataSource[Post], http_request: Request) -> None:
+async def test_sorts_desc(datasource: InMemoryDataSource[Post], http_request: Request) -> None:
     qs = datasource.apply_ordering({'title': 'desc'}, sortable_fields=['title'])
     obj = await qs.paginate(http_request, 1, 20)
     assert obj[0].title == 'Title 9'
     assert obj[1].title == 'Title 8'
 
 
-async def test_sorts_desc(datasource: InMemoryDataSource[Post], http_request: Request) -> None:
+async def test_sorts_asc(datasource: InMemoryDataSource[Post], http_request: Request) -> None:
     qs = datasource.apply_ordering({'title': 'asc'}, sortable_fields=['title'])
     obj = await qs.paginate(http_request, 1, 20)
     assert obj[0].title == 'Title 0'

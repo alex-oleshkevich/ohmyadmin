@@ -8,7 +8,7 @@ from ohmyadmin.shortcuts import render_to_string
 
 class Layout(abc.ABC):
     @abc.abstractmethod
-    def render(self, request: Request) -> str:
+    def render(self, request: Request) -> str:  # pragma: no cover
         ...
 
 
