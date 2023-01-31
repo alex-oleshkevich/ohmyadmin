@@ -94,8 +94,7 @@ async def test_sync_validation() -> None:
 
     form = Form(data={"name": "fail"})
     assert not await validate_form(form)
-    print(form.name.errors)
-    assert form.name.errors == ["Error."]
+    assert form.name.errors == ["Error."]  # pragma: no cover - wtf?? py3.11 only
 
 
 async def test_async_validation() -> None:
