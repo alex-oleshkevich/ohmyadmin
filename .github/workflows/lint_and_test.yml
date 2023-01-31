@@ -39,7 +39,14 @@ jobs:
                 uses: actions/setup-python@v4
                 with:
                     python-version: ${{ matrix.python-version }}
-                    cache: poetry
+
+            -   name: Cache poetry
+                uses: actions/cache@v3
+                with:
+                    path: |
+                        ~/.cache/pypoetry
+                        ~/.cache/pip
+                    key: ${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
 
             -   name: Install dependencies
                 run: |
