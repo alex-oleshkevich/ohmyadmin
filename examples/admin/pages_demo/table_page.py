@@ -55,7 +55,7 @@ class ProductsPage(TablePage):
             search_in='brand.name',
             sortable=True,
             sort_by='brand.name',
-            link=LazyObjectURL(lambda r, o: Brands.page_url(r, 'edit', pk=o.brand_id)),
+            link=LazyObjectURL(lambda r, o: r.url_for(Brands.get_path_name() + '.edit', pk=o.brand_id)),
         ),
         TableColumn('price', sortable=True, formatter=formatters.NumberFormatter(suffix='USD')),
         TableColumn('sku', sortable=True, formatter=formatters.NumberFormatter()),
