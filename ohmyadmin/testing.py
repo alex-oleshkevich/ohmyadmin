@@ -11,9 +11,6 @@ class NodeNotFoundError(SelectorError):
     ...
 
 
-MultiValueAttr = typing.Literal['class', 'rel', 'accept-charset', 'headers', 'accesskey']
-
-
 class MarkupSelector:
     def __init__(self, markup: str | bytes) -> None:
         if isinstance(markup, bytes):
