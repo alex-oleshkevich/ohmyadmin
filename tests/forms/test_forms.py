@@ -94,6 +94,7 @@ async def test_sync_validation() -> None:
 
     form = Form(data={"name": "fail"})
     assert not await validate_form(form)
+    print(form.name.errors)
     assert form.name.errors == ["Error."]
 
 
@@ -106,7 +107,6 @@ async def test_async_validation() -> None:
 
     form = Form(data={"name": "fail"})
     assert not await validate_form(form)
-    print(form.name.errors)
     assert form.name.errors == ["Error."]
 
 
