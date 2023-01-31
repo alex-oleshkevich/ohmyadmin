@@ -67,7 +67,6 @@ def test_pages_not_accessible_for_unauthenticated(create_test_app: CreateTestApp
 
 def test_welcome_not_accessible_for_unauthenticated(create_test_app: CreateTestAppFactory) -> None:
     """Unauthenticated users should not be able to access welcome page."""
-
     app = create_test_app(pages=[], auth_policy=AnonymousAuthPolicy())
     client = TestClient(app)
     response = client.get('/admin/', allow_redirects=False)
@@ -77,7 +76,6 @@ def test_welcome_not_accessible_for_unauthenticated(create_test_app: CreateTestA
 
 def test_media_not_accessible_for_unauthenticated(create_test_app: CreateTestAppFactory) -> None:
     """Unauthenticated users should not be able to access uploaded files."""
-
     app = create_test_app(pages=[], auth_policy=AnonymousAuthPolicy())
     client = TestClient(app)
     response = client.get('/admin/media/file.txt', allow_redirects=False)
@@ -87,7 +85,6 @@ def test_media_not_accessible_for_unauthenticated(create_test_app: CreateTestApp
 
 def test_login_is_accessible_for_unauthenticated(create_test_app: CreateTestAppFactory) -> None:
     """Unauthenticated users should not be able to access login page."""
-
     app = create_test_app(pages=[], auth_policy=AnonymousAuthPolicy())
     client = TestClient(app)
     response = client.get('/admin/login', allow_redirects=False)

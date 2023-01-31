@@ -44,13 +44,7 @@ class ModalPageAction(actions.BaseFormPageAction):
 class Actions(TablePage):
     group = 'Misc'
     label = 'Actions demo'
-    datasource = InMemoryDataSource(
-        Entity,
-        [
-            Entity(id=1, name='One'),
-            Entity(id=2, name='Two')
-        ]
-    )
+    datasource = InMemoryDataSource(Entity, [Entity(id=1, name='One'), Entity(id=2, name='Two')])
     page_actions = [
         actions.Link(label='Link', url='/admin', icon='plus'),
         ToastPageAction(),

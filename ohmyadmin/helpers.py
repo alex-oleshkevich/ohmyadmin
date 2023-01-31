@@ -73,7 +73,6 @@ def pluralize(text: str) -> str:
     It adds -ies suffix to any noun that ends with -y, it adds -es suffix to any noun that ends with -s. For all other
     cases it appends -s.
     """
-
     if text in uncountable:
         return text
 

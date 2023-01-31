@@ -46,8 +46,7 @@ def test_media_url_for_upload(create_test_app: CreateTestAppFactory) -> None:
 
 
 def test_media_url_for_http_url(create_test_app: CreateTestAppFactory) -> None:
-    """When media file is a URL then admin must redirect to FileServer app
-    that."""
+    """When media file is a URL then admin must redirect to FileServer app that."""
 
     class ExamplePage(Page):
         async def get(self, request: Request) -> Response:
@@ -60,8 +59,7 @@ def test_media_url_for_http_url(create_test_app: CreateTestAppFactory) -> None:
 
 
 def test_media_url_for_https_url(create_test_app: CreateTestAppFactory) -> None:
-    """When media file is a URL then admin must redirect to FileServer app
-    that."""
+    """When media file is a URL then admin must redirect to FileServer app that."""
 
     class ExamplePage(Page):
         async def get(self, request: Request) -> Response:
@@ -94,7 +92,6 @@ def test_generates_routes_to_pages(create_test_app: CreateTestAppFactory) -> Non
 
 def test_provides_index_view(create_test_app: CreateTestAppFactory) -> None:
     """Admin should display index page stub."""
-
     app = create_test_app([])
     client = TestClient(app)
 
@@ -107,7 +104,6 @@ def test_renders_user_menu(create_test_app: CreateTestAppFactory) -> None:
 
     These menu items later rendered in a dropdown.
     """
-
     app = create_test_app(user_menu=[MenuLink(text='User Menu Item', url='/')])
     client = TestClient(app)
 

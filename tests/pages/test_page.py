@@ -14,8 +14,7 @@ def test_generates_routes(create_test_app: CreateTestAppFactory, method: str) ->
     """
     Page class should generate routes for HTTP verbs.
 
-    For example, when DummyPage defines `get` and `post` then the Route instance
-    must support them too.
+    For example, when DummyPage defines `get` and `post` then the Route instance must support them too.
     """
 
     class DummyPage(Page):
@@ -43,8 +42,7 @@ def test_generates_routes(create_test_app: CreateTestAppFactory, method: str) ->
 
 
 def test_not_generates_routes(create_test_app: CreateTestAppFactory) -> None:
-    """Page class should NOT generate routes for HTTP verbs that a not defined
-    on class."""
+    """Page class should NOT generate routes for HTTP verbs that a not defined on class."""
 
     class DummyPage(Page):
         slug = 'dummy'
@@ -56,7 +54,6 @@ def test_not_generates_routes(create_test_app: CreateTestAppFactory) -> None:
 
 def test_default_handler(create_test_app: CreateTestAppFactory, extra_template_dir: pathlib.Path) -> None:
     """Page should provide a default handler when none provided."""
-
     (extra_template_dir / 'sample.html').write_text('hello')
 
     class DummyPage(Page):
@@ -70,9 +67,7 @@ def test_default_handler(create_test_app: CreateTestAppFactory, extra_template_d
 
 
 def test_default_handler_with_context(create_test_app: CreateTestAppFactory, extra_template_dir: pathlib.Path) -> None:
-    """When `handle` implemented, then it's context must be available in the
-    template."""
-
+    """When `handle` implemented, then it's context must be available in the template."""
     (extra_template_dir / 'sample.html').write_text('hello {{name}}')
 
     class DummyPage(Page):

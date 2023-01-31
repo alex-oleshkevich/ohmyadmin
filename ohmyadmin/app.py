@@ -82,8 +82,7 @@ class OhMyAdmin(Router):
         """
         Generate URL to a named route.
 
-        This function generates a correct URL when used in a mounted application
-        (e. g. Mount()).
+        This function generates a correct URL when used in a mounted application (e. g. Mount()).
         """
         return request.url_for(path_name, **path_params)
 
@@ -96,10 +95,9 @@ class OhMyAdmin(Router):
         """
         Generate URL to a media (uploaded) file.
 
-        If `path` starts with `http` or `https` then the value used as is.
-        Otherwise, generates URL to a media server which internally calls
-        `file_storage` to generate the URL. The actual URL generation logic
-        delegated to `file_storage`.
+        If `path` starts with `http` or `https` then the value used as is. Otherwise, generates URL to a media server
+        which internally calls `file_storage` to generate the URL. The actual URL generation logic delegated to
+        `file_storage`.
         """
         if path.startswith('http://') or path.startswith('https://'):
             return path

@@ -12,8 +12,7 @@ from ohmyadmin.pages.pagemixins import Dispatchable
 
 class Page(Dispatchable, BasePage):
     """
-    A simple page that renders a template with context. Much like Starlette's
-    HTTPEndpoint class.
+    A simple page that renders a template with context. Much like Starlette's HTTPEndpoint class.
 
     By default, it generates `get` method that returns template defined by `template` class attribute.
 
@@ -59,9 +58,8 @@ class Page(Dispatchable, BasePage):
         """
         Create route for this page.
 
-        It will automatically detect used HTTP methods using defined methods.
-        For example, if page has `def get` and `def post` methods then route
-        will serve GET, HEAD, and POST verbs.
+        It will automatically detect used HTTP methods using defined methods. For example, if page has `def get` and
+        `def post` methods then route will serve GET, HEAD, and POST verbs.
         """
         methods: list[str] = []
         for method in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']:

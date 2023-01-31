@@ -34,13 +34,11 @@ class BaseFilter(abc.ABC, typing.Generic[_FT]):
         **kwargs: typing.Any,
     ) -> UnboundFilter[_T] | BaseFilter[_FT]:
         """
-        We attach filters as instances to let users customize it via constructor
-        arguments.
+        We attach filters as instances to let users customize it via constructor arguments.
 
-        However, this creates mutable singletons. To workaround, we create
-        unbound filters which are like factories and create actual instances
-        when called. There may be a better idea but the current one is good
-        enough for this purpose.
+        However, this creates mutable singletons. To workaround, we create unbound filters which are like factories and
+        create actual instances when called. There may be a better idea but the current one is good enough for this
+        purpose.
         """
         if '_create' in kwargs:
             return super().__new__(cls)
@@ -56,15 +54,13 @@ class BaseFilter(abc.ABC, typing.Generic[_FT]):
         """
         Creation hook to execute async operations when page creates the filter.
 
-        As a user you have to override `BaseFilter.initialize` instead of this
-        method.
+        As a user you have to override `BaseFilter.initialize` instead of this method.
         """
         self.form.process(request.query_params)
         await self.initialize(request)
 
     async def initialize(self, request: Request) -> None:
-        """Override this method if you want to call async code when page
-        instantiates the filter."""
+        """Override this method if you want to call async code when page instantiates the filter."""
 
     @abc.abstractmethod
     def apply(self, request: Request, query: DataSource) -> DataSource:
@@ -80,9 +76,8 @@ class BaseFilter(abc.ABC, typing.Generic[_FT]):
 
     def get_indicator_context(self, value: dict[str, typing.Any]) -> dict[str, typing.Any]:
         """
-        Various filters render different data in the indicators. This method
-        returns template context for indicators. The context available in the
-        indicator template via `indicator` template variable.
+        Various filters render different data in the indicators. This method returns template context for indicators.
+        The context available in the indicator template via `indicator` template variable.
 
         :param value: current form data.
         """
@@ -146,8 +141,7 @@ class StringFilter(BaseFilter[StringFilterForm]):
     """
     String filters let users query data that matches text and rule.
 
-    Rules defined by StringOperation and are like `starts with`, `ends with`,
-    etc.
+    Rules defined by StringOperation and are like `starts with`, `ends with`, etc.
     """
 
     form_class = StringFilterForm

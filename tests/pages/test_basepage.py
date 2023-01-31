@@ -19,8 +19,7 @@ def test_automatically_generates_slug(create_test_app: CreateTestAppFactory) -> 
 
 
 def test_automatically_generates_label(create_test_app: CreateTestAppFactory) -> None:
-    """BasePage should automatically generate label attribute based on class
-    name."""
+    """BasePage should automatically generate label attribute based on class name."""
 
     class DummyPage(BasePage):
         ...
@@ -30,8 +29,7 @@ def test_automatically_generates_label(create_test_app: CreateTestAppFactory) ->
 
 
 def test_automatically_generates_plural_label(create_test_app: CreateTestAppFactory) -> None:
-    """BasePage should automatically generate plural label form based on
-    label."""
+    """BasePage should automatically generate plural label form based on label."""
 
     class DummyPage(BasePage):
         ...
@@ -114,8 +112,7 @@ def test_redirect_to_url(create_test_app: CreateTestAppFactory) -> None:
 
 
 def test_redirect_to_self(create_test_app: CreateTestAppFactory) -> None:
-    """BasePage should provide redirect_to_self shortcut that redirects back to
-    this page."""
+    """BasePage should provide redirect_to_self shortcut that redirects back to this page."""
 
     class DummyPage(Dispatchable, BasePage):
         async def dispatch(self, request: Request) -> Response:

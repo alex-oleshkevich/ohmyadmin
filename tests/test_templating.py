@@ -11,8 +11,8 @@ from tests.conftest import CreateTestAppFactory
 def test_loads_templates_from_user_directory(
     create_test_app: CreateTestAppFactory, extra_template_dir: pathlib.Path
 ) -> None:
-    """Users can provide their own template directory and that directory must
-    have the highest precedence to make template override possible."""
+    """Users can provide their own template directory and that directory must have the highest precedence to make
+    template override possible."""
 
     (extra_template_dir / 'ohmyadmin').mkdir()
     (extra_template_dir / 'ohmyadmin/index.html').write_text('from custom index')
@@ -29,9 +29,7 @@ def test_loads_templates_from_user_directory(
 
 
 def test_renders_template_to_string(create_test_app: CreateTestAppFactory, extra_template_dir: pathlib.Path) -> None:
-    """Admin should render a template to string using .render_to_string
-    method."""
-
+    """Admin should render a template to string using .render_to_string method."""
     (extra_template_dir / 'sample.txt').write_text('hello {{ value }}')
 
     class ExamplePage(Page):
@@ -45,9 +43,7 @@ def test_renders_template_to_string(create_test_app: CreateTestAppFactory, extra
 
 
 def test_renders_to_string_has_context(create_test_app: CreateTestAppFactory, extra_template_dir: pathlib.Path) -> None:
-    """Admin should expose global request-aware template variables when
-    rendering templates using render_to_string."""
-
+    """Admin should expose global request-aware template variables when rendering templates using render_to_string."""
     (extra_template_dir / 'sample.txt').write_text(
         "'request' if request is not none else '' \n"
         "'url' if url is not none else '' \n"
@@ -74,8 +70,7 @@ def test_renders_to_string_has_context(create_test_app: CreateTestAppFactory, ex
 def test_renders_to_response_has_context(
     create_test_app: CreateTestAppFactory, extra_template_dir: pathlib.Path
 ) -> None:
-    """Admin should expose global request-aware template variables when
-    rendering templates using render_to_response."""
+    """Admin should expose global request-aware template variables when rendering templates using render_to_response."""
 
     (extra_template_dir / 'sample.txt').write_text(
         "'request' if request is not none else '' \n"
@@ -101,9 +96,7 @@ def test_renders_to_response_has_context(
 
 
 def test_renders_template_to_response(create_test_app: CreateTestAppFactory, extra_template_dir: pathlib.Path) -> None:
-    """Admin should render a template to HTTP response using .render_to_response
-    method."""
-
+    """Admin should render a template to HTTP response using .render_to_response method."""
     (extra_template_dir / 'sample.txt').write_text('hello {{ value }}')
 
     class ExamplePage(Page):
@@ -118,7 +111,6 @@ def test_renders_template_to_response(create_test_app: CreateTestAppFactory, ext
 
 def test_jinja_automatically_escapes(create_test_app: CreateTestAppFactory, extra_template_dir: pathlib.Path) -> None:
     """Jinja engine must escape values by default for security reasons."""
-
     (extra_template_dir / 'sample.txt').write_text('hello {{ value }}')
 
     class ExamplePage(Page):
