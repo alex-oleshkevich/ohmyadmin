@@ -125,35 +125,30 @@ class Resource(BasePage, Router):
         return ActionResponse().show_toast(message)
 
     async def index_view(self, request: Request) -> Response:
-        resource = self
+        page_class = type(
+            'IndexPage',
+            (TablePage,),
+            dict(
+                page_title=self.page_title,
+                label=self.label,
+                label_plural=self.label_plural,
+                datasource=self.datasource,
+                page_param=self.page_param,
+                page_size=self.page_size,
+                page_size_param=self.page_size_param,
+                search_param=self.search_param,
+                ordering_param=self.ordering_param,
+                max_page_size=self.max_page_size,
+                filters=self.get_filters(request),
+                get_metrics=self.get_metrics,
+                get_page_actions=self.get_page_actions,
+                get_object_actions=self.get_object_actions,
+                get_batch_actions=self.get_batch_actions,
+                get_table_columns=self.get_table_columns,
+            ),
+        )
 
-        class IndexPage(TablePage):
-            page_title = self.page_title
-            label = self.label
-            label_plural = self.label_plural
-            datasource = self.datasource
-            page_param = self.page_param
-            page_size = self.page_size
-            page_size_param = self.page_size_param
-            search_param = self.search_param
-            ordering_param = self.ordering_param
-            max_page_size = self.max_page_size
-            filters = self.get_filters(request)
-            columns = self.get_table_columns(request)
-
-            def get_metrics(self, request: Request) -> typing.Sequence[Card]:
-                return resource.get_metrics(request)
-
-            def get_page_actions(self, request: Request) -> list[actions.PageAction]:
-                return resource.get_page_actions(request)
-
-            def get_object_actions(self, request: Request, obj: typing.Any) -> list[actions.ObjectAction]:
-                return resource.get_object_actions(request, obj)
-
-            def get_batch_actions(self, request: Request) -> list[actions.BatchAction]:
-                return resource.get_batch_actions(request)
-
-        page = IndexPage()
+        page = page_class()
         return await page.dispatch(request)
 
     async def create_view(self, request: Request) -> Response:
