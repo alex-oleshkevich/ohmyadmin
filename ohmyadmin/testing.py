@@ -18,6 +18,7 @@ class MarkupSelector:
     def __init__(self, markup: str | bytes) -> None:
         if isinstance(markup, bytes):
             markup = markup.decode()
+        print(markup)
         self.root = BeautifulSoup(markup, multi_valued_attributes=False)
 
     def find_node(self, selector: str) -> bs4.Tag | None:

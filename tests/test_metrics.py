@@ -69,7 +69,6 @@ async def test_trend_metric(request_f: RequestFactory) -> None:
     card = ExampleMetric()
     request = request_f()
     response = await card.dispatch(request)
-    print(response.body)
     page = MarkupSelector(response.body)
 
     # current value rendered
