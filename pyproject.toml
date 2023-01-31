@@ -33,9 +33,9 @@ python-multipart = "^0.0.5"
 starlette-babel = "*"
 starlette-flash = "*"
 async-storages = "^0.4.1"
-beautifulsoup4 = "^4.11.1"
 
 [tool.poetry.group.dev.dependencies]
+beautifulsoup4 = "^4.11.1"
 SQLAlchemy = "^2.0.0"
 asyncpg = "^0.26"
 pytest = "^7.2"
