@@ -151,51 +151,57 @@ class Resource(BasePage, Router):
         page = page_class()
         return await page.dispatch(request)
 
+    async def create_empty_model(self, request: Request) -> typing.Any:
+        return self.datasource.new()
+
+    async def get_object(self, request: Request) -> typing.Any:
+        pk = request.path_params['pk']
+        return await self.datasource.get(request, pk)
+
+    async def perform_create(self, request: Request, form: wtforms.Form, model: typing.Any) -> Response:
+        await populate_object(request, form, model)
+        await self.datasource.create(request, model)
+        form_data = await request.form()
+        return self.get_create_view_response(request, form_data, model)
+
+    async def perform_update(self, request: Request, form: wtforms.Form, model: typing.Any) -> Response:
+        await populate_object(request, form, model)
+        await self.datasource.update(request, model)
+        form_data = await request.form()
+        return self.get_update_view_response(request, form_data, model)
+
     async def create_view(self, request: Request) -> Response:
-        resource = self
+        page_class = type(
+            'CreateFormPage',
+            (FormPage,),
+            dict(
+                label='Create {label_singular}'.format(label_singular=self.label),
+                form_class=self.form_class,
+                form_actions=self.get_create_form_actions(request),
+                build_form_layout=self.build_form_layout,
+                get_form_object=self.create_empty_model,
+                handle_submit=self.perform_create,
+            ),
+        )
 
-        class CreateFormPage(FormPage):
-            label = 'Create {label_singular}'.format(label_singular=self.label)
-            form_class = self.form_class
-            form_actions = self.get_create_form_actions(request)
-
-            def build_form_layout(self, request: Request, form: wtforms.Form) -> layouts.Layout:
-                return resource.build_form_layout(request, form)
-
-            async def get_form_object(self, request: Request) -> typing.Any:
-                return resource.datasource.new()
-
-            async def handle_submit(self, request: Request, form: wtforms.Form, model: typing.Any) -> Response:
-                await populate_object(request, form, model)
-                await resource.datasource.create(request, model)
-                form_data = await request.form()
-                return resource.get_create_view_response(request, form_data, model)
-
-        page = CreateFormPage()
+        page = page_class()
         return await page.dispatch(request)
 
     async def update_view(self, request: Request) -> Response:
-        resource = self
+        page_class = type(
+            'UpdateFormPage',
+            (FormPage,),
+            dict(
+                label='Update {label_singular}'.format(label_singular=self.label),
+                form_class=self.form_class,
+                form_actions=self.get_update_form_actions(request),
+                build_form_layout=self.build_form_layout,
+                get_form_object=self.get_object,
+                handle_submit=self.perform_update,
+            ),
+        )
 
-        class UpdateFormPage(FormPage):
-            label = 'Update {label_singular}'.format(label_singular=self.label)
-            form_class = self.form_class
-            form_actions = self.get_update_form_actions(request)
-
-            def build_form_layout(self, request: Request, form: wtforms.Form) -> layouts.Layout:
-                return resource.build_form_layout(request, form)
-
-            async def get_form_object(self, request: Request) -> typing.Any:
-                pk = request.path_params['pk']
-                return await resource.datasource.get(request, pk)
-
-            async def handle_submit(self, request: Request, form: wtforms.Form, model: typing.Any) -> Response:
-                await populate_object(request, form, model)
-                await resource.datasource.update(request, model)
-                form_data = await request.form()
-                return resource.get_update_view_response(request, form_data, model)
-
-        page = UpdateFormPage()
+        page = page_class()
         return await page.dispatch(request)
 
     async def delete_view(self, request: Request) -> Response:
