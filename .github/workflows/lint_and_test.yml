@@ -65,4 +65,4 @@ jobs:
 
             -   name: Generate coverage
                 run: |
-                  python -m coverage report --fail-under=100
+                  python -m coverage report --fail-under=100 --format term-missing -m
