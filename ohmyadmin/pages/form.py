@@ -19,10 +19,10 @@ class FormPage(BasePage):
     __abstract__ = True
 
     form_class: type[wtforms.Form]
-    form_actions: list[actions.Submit | actions.Link] | None = None
+    form_actions: typing.Sequence[actions.Submit | actions.Link] | None = None
     template: typing.ClassVar[str] = 'ohmyadmin/pages/form.html'
 
-    def get_form_actions(self, request: Request) -> list[actions.Submit | actions.Link]:
+    def get_form_actions(self, request: Request) -> typing.Sequence[actions.Submit | actions.Link]:
         return self.form_actions or [
             actions.Submit(label=_('Submit', domain='ohmyadmin'), variant='accent'),
         ]

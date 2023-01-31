@@ -10,16 +10,33 @@ from starlette_flash import flash
 
 from ohmyadmin import actions, layouts
 from ohmyadmin.actions import ActionResponse, BatchDelete, DeleteObjectAction
-from ohmyadmin.forms import create_form, populate_object, validate_on_submit
+from ohmyadmin.datasource.base import DataSource
+from ohmyadmin.filters import BaseFilter, UnboundFilter
+from ohmyadmin.forms import populate_object
 from ohmyadmin.helpers import LazyObjectURL, LazyURL
+from ohmyadmin.metrics import Card
 from ohmyadmin.pages.base import BasePage
-from ohmyadmin.pages.pagemixins import IndexViewMixin
+from ohmyadmin.pages.form import FormPage
+from ohmyadmin.pages.table import TablePage
 from ohmyadmin.views.table import TableColumn
 
 
-class Resource(BasePage, Router, IndexViewMixin):
+class Resource(BasePage, Router):
     group = _('Resources', domain='ohmyadmin')
     form_class: type[wtforms.Form] = wtforms.Form
+    datasource: DataSource
+    page_param: typing.ClassVar[str] = 'page'
+    page_size_param: typing.ClassVar[str] = 'page_size'
+    search_param: typing.ClassVar[str] = 'search'
+    ordering_param: typing.ClassVar[str] = 'ordering'
+    page_size: typing.ClassVar[int] = 25
+    max_page_size: typing.ClassVar[int] = 100
+    columns: typing.Sequence[TableColumn] | None = None
+    page_actions: typing.Sequence[actions.PageAction] | None = None
+    object_actions: typing.Sequence[actions.ObjectAction] | None = None
+    batch_actions: typing.Sequence[actions.BatchAction] | None = None
+    filters: typing.Sequence[UnboundFilter | BaseFilter] | None = None
+    metrics: typing.Sequence[type[Card]] | None = None
     create_form_actions: typing.Sequence[actions.Submit | actions.Link] | None = None
     update_form_actions: typing.Sequence[actions.Submit | actions.Link] | None = None
 
@@ -38,7 +55,8 @@ class Resource(BasePage, Router, IndexViewMixin):
 
     def get_page_actions(self, request: Request) -> list[actions.PageAction]:
         create_route_name = self.get_path_name() + '.create'
-        page_actions: list[actions.PageAction] = [
+        return [
+            *(self.page_actions or []),
             actions.Link(
                 label=_('Create', domain='ohmyadmin'),
                 url=LazyURL(create_route_name),
@@ -46,11 +64,11 @@ class Resource(BasePage, Router, IndexViewMixin):
                 icon='plus',
             ),
         ]
-        return super().get_page_actions(request) + page_actions
 
     def get_object_actions(self, request: Request, obj: typing.Any) -> list[actions.ObjectAction]:
         edit_route_name = self.get_path_name() + '.edit'
-        object_actions: list[actions.ObjectAction] = [
+        return [
+            *(self.object_actions or []),
             actions.ObjectLink(
                 label=_('Edit', domain='ohmyadmin'),
                 icon='pencil',
@@ -58,22 +76,18 @@ class Resource(BasePage, Router, IndexViewMixin):
             ),
             DeleteObjectAction(),
         ]
-        return super().get_object_actions(request, obj) + object_actions
 
     def get_batch_actions(self, request: Request) -> list[actions.BatchAction]:
-        return super().get_batch_actions(request) + [BatchDelete()]
+        return [*(self.batch_actions or []), BatchDelete()]
 
-    async def create_form(self, request: Request, model: typing.Any = None) -> wtforms.Form:
-        return await create_form(request, self.form_class, model)
+    def get_filters(self, request: Request) -> typing.Sequence[UnboundFilter | BaseFilter]:
+        return self.filters or []
+
+    def get_metrics(self, request: Request) -> typing.Sequence[Card]:
+        return [metric() for metric in self.metrics or []]
 
     def build_form_layout(self, request: Request, form: wtforms.Form) -> layouts.Layout:
         return layouts.Card([layouts.StackedForm([layouts.Input(field) for field in form])])
-
-    def create_empty_model(self, request: Request) -> typing.Any:
-        return self.datasource.new()
-
-    async def index_view(self, request: Request) -> Response:
-        return await self.dispatch_index_view(request)
 
     def get_create_form_actions(self, request: Request) -> typing.Sequence[actions.Submit | actions.Link]:
         return self.create_form_actions or [
@@ -96,29 +110,6 @@ class Resource(BasePage, Router, IndexViewMixin):
             return ActionResponse().redirect(request, request.url_for(name=self.get_path_name() + '.create'))
         return ActionResponse().redirect(request, self.generate_url(request))
 
-    async def create_view(self, request: Request) -> Response:
-        model = self.create_empty_model(request)
-        form = await self.create_form(request)
-        if await validate_on_submit(request, form):
-            await populate_object(request, form, model)
-            await self.datasource.create(request, model)
-            return self.get_create_view_response(request, await request.form(), model)
-
-        form_actions = self.get_create_form_actions(request)
-        form_layout = self.build_form_layout(request, form)
-        return self.render_to_response(
-            request,
-            'ohmyadmin/resources/create.html',
-            {
-                'page_title': _('Create {label}', domain='ohmyadmin').format(label=self.label),
-                'resource': self,
-                'form': form,
-                'object': model,
-                'form_layout': form_layout,
-                'form_actions': form_actions,
-            },
-        )
-
     def get_update_form_actions(self, request: Request) -> typing.Sequence[actions.Submit | actions.Link]:
         return self.update_form_actions or [
             actions.Submit(label=_('Update and return to list', domain='ohmyadmin'), variant='accent', name='_return'),
@@ -133,29 +124,84 @@ class Resource(BasePage, Router, IndexViewMixin):
             return ActionResponse().redirect(request, self.generate_url(request))
         return ActionResponse().show_toast(message)
 
-    async def update_view(self, request: Request) -> Response:
-        pk = request.path_params['pk']
-        model = await self.datasource.get(request, pk)
-        form = await create_form(request, self.form_class, model)
-        if await validate_on_submit(request, form):
-            await populate_object(request, form, model)
-            await self.datasource.update(request, model)
-            return self.get_update_view_response(request, await request.form(), model)
+    async def index_view(self, request: Request) -> Response:
+        resource = self
 
-        form_actions = self.get_update_form_actions(request)
-        form_layout = self.build_form_layout(request, form)
-        return self.render_to_response(
-            request,
-            'ohmyadmin/resources/edit.html',
-            {
-                'page_title': _('Update {label}', domain='ohmyadmin').format(label=self.label),
-                'resource': self,
-                'form': form,
-                'object': model,
-                'form_layout': form_layout,
-                'form_actions': form_actions,
-            },
-        )
+        class IndexPage(TablePage):
+            page_title = self.page_title
+            label = self.label
+            label_plural = self.label_plural
+            datasource = self.datasource
+            page_param = self.page_param
+            page_size = self.page_size
+            page_size_param = self.page_size_param
+            search_param = self.search_param
+            ordering_param = self.ordering_param
+            max_page_size = self.max_page_size
+            filters = self.get_filters(request)
+            columns = self.get_table_columns(request)
+
+            def get_metrics(self, request: Request) -> typing.Sequence[Card]:
+                return resource.get_metrics(request)
+
+            def get_page_actions(self, request: Request) -> list[actions.PageAction]:
+                return resource.get_page_actions(request)
+
+            def get_object_actions(self, request: Request, obj: typing.Any) -> list[actions.ObjectAction]:
+                return resource.get_object_actions(request, obj)
+
+            def get_batch_actions(self, request: Request) -> list[actions.BatchAction]:
+                return resource.get_batch_actions(request)
+
+        page = IndexPage()
+        return await page.dispatch(request)
+
+    async def create_view(self, request: Request) -> Response:
+        resource = self
+
+        class CreateFormPage(FormPage):
+            label = 'Create {label_singular}'.format(label_singular=self.label)
+            form_class = self.form_class
+            form_actions = self.get_create_form_actions(request)
+
+            def build_form_layout(self, request: Request, form: wtforms.Form) -> layouts.Layout:
+                return resource.build_form_layout(request, form)
+
+            async def get_form_object(self, request: Request) -> typing.Any:
+                return resource.datasource.new()
+
+            async def handle_submit(self, request: Request, form: wtforms.Form, model: typing.Any) -> Response:
+                await populate_object(request, form, model)
+                await resource.datasource.create(request, model)
+                form_data = await request.form()
+                return resource.get_create_view_response(request, form_data, model)
+
+        page = CreateFormPage()
+        return await page.dispatch(request)
+
+    async def update_view(self, request: Request) -> Response:
+        resource = self
+
+        class UpdateFormPage(FormPage):
+            label = 'Update {label_singular}'.format(label_singular=self.label)
+            form_class = self.form_class
+            form_actions = self.get_update_form_actions(request)
+
+            def build_form_layout(self, request: Request, form: wtforms.Form) -> layouts.Layout:
+                return resource.build_form_layout(request, form)
+
+            async def get_form_object(self, request: Request) -> typing.Any:
+                pk = request.path_params['pk']
+                return await resource.datasource.get(request, pk)
+
+            async def handle_submit(self, request: Request, form: wtforms.Form, model: typing.Any) -> Response:
+                await populate_object(request, form, model)
+                await resource.datasource.update(request, model)
+                form_data = await request.form()
+                return resource.get_update_view_response(request, form_data, model)
+
+        page = UpdateFormPage()
+        return await page.dispatch(request)
 
     async def delete_view(self, request: Request) -> Response:
         pk = request.path_params['pk']

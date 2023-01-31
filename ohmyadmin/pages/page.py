@@ -5,12 +5,12 @@ from starlette.exceptions import HTTPException
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import BaseRoute, Route
+from starlette.types import Receive, Scope, Send
 
 from ohmyadmin.pages.base import BasePage
-from ohmyadmin.pages.pagemixins import Dispatchable
 
 
-class Page(Dispatchable, BasePage):
+class Page(BasePage):
     """
     A simple page that renders a template with context. Much like Starlette's HTTPEndpoint class.
 
@@ -67,3 +67,9 @@ class Page(Dispatchable, BasePage):
                 methods.append(method)
 
         return Route(f'/{self.slug}', self, methods=methods, name=self.get_path_name())
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        """ASGI integration point."""
+        request = Request(scope, receive, send)
+        response = await self.dispatch(request)
+        await response(scope, receive, send)
