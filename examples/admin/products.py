@@ -71,7 +71,6 @@ class Invisible(ProgressMetric):
 
 class ProductsByYear(TrendMetric):
     label = 'Products by year'
-    size = 6
 
     async def calculate(self, request: Request) -> TrendResult:
         stmt = (
@@ -92,7 +91,8 @@ class ProductsByYear(TrendMetric):
 class Products(Resource):
     icon = 'assembly'
     form_class = ProductForm
-    metrics = [TotalProducts, AveragePrice, Invisible, ProductsByYear, Invisible]
+    label_plural = 'Products'
+    metrics = [ProductsByYear, TotalProducts, AveragePrice]
     datasource = SQLADataSource(
         Product,
         query=(
