@@ -6,7 +6,7 @@ from starlette.requests import Request
 from examples.models import Order, OrderItem
 from ohmyadmin import filters, formatters
 from ohmyadmin.contrib.sqlalchemy import SQLADataSource
-from ohmyadmin.metrics import PartitionMetric, PartitionResult
+from ohmyadmin.metrics import PartitionMetric, PartitionResult, TrendMetric, TrendResult, ValueMetric
 from ohmyadmin.resources import Resource
 from ohmyadmin.views.table import TableColumn
 
@@ -58,20 +58,43 @@ class ByStatusMetric(PartitionMetric):
         )
 
 
+class TotalProductsMetric(ValueMetric):
+    suffix = 'orders'
+
+    async def calculate(self, request: Request) -> str:
+        stmt = sa.select(sa.func.count()).select_from(sa.select(Order).subquery())
+        return await request.state.dbsession.scalar(stmt)
+
+
+class OrdersByYear(TrendMetric):
+    label = 'Orders by year'
+
+    async def calculate(self, request: Request) -> TrendResult:
+        stmt = (
+            sa.select(
+                sa.func.date_trunc('year', Order.created_at).label('year'),
+                sa.func.count().label('total'),
+            )
+            .order_by(sa.text('1'))
+            .group_by(sa.text('1'))
+        )
+        result = await request.state.dbsession.execute(stmt)
+        return TrendResult(
+            current_value=42,
+            series=[(row.year.year, row.total) for row in result.all()],
+        )
+
+
 class Orders(Resource):
     icon = 'shopping-cart'
     form_class = OrderForm
-    metrics = [ByStatusMetric]
+    metrics = [TotalProductsMetric, ByStatusMetric, OrdersByYear]
     datasource = SQLADataSource(
         Order,
-        query=(
-            sa.select(Order)
-            .order_by(Order.created_at.desc())
-            .options(
-                joinedload(Order.customer),
-                joinedload(Order.currency),
-                selectinload(Order.items),
-            )
+        query=sa.select(Order).options(
+            joinedload(Order.customer),
+            joinedload(Order.currency),
+            selectinload(Order.items),
         ),
         query_for_list=(
             sa.select(Order)
@@ -85,7 +108,7 @@ class Orders(Resource):
     )
     filters = [
         filters.ChoiceFilter('status', choices=Order.Status.choices),
-        # filters.ChoiceFilter(Order.currency_code, )
+        # filters.ChoiceFilter(Order.currency_code),
         filters.DecimalFilter('total_price'),
         filters.DateRangeFilter('created_at'),
     ]
