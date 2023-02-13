@@ -47,7 +47,7 @@
     h4,
     h5,
     h6 {
-        @apply mb-2;
+        @apply mb-3 font-medium;
     }
 
     h1 {
@@ -299,20 +299,20 @@
     }
 
     .alert {
-        @apply mb-4 rounded-md p-4 text-sm border rounded flex items-center gap-3;
+        @apply mb-4 rounded-md p-4 text-sm border rounded flex flex-col items-start justify-center;
     }
 
     .alert.alert-success {
-        @apply bg-green-50 text-green-500 border-green-200;
+        @apply bg-green-50 text-green-700 border-green-200;
     }
 
     .alert.alert-danger,
     .alert.alert-error {
-        @apply bg-red-50 text-red-500 border-red-200;
+        @apply bg-red-50 text-red-700 border-red-200;
     }
 
     .alert.alert-info {
-        @apply bg-blue-50 text-blue-500 border-blue-200;
+        @apply bg-blue-50 text-blue-700 border-blue-200;
     }
 
     .alert.alert-warning {
