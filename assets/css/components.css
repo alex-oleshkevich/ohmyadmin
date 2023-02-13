@@ -78,7 +78,8 @@
         @apply min-w-full;
     }
 
-    table td, table th {
+    table td,
+    table th {
         @apply px-3 py-2;
     }
 
@@ -96,7 +97,6 @@
     }
 
     table tbody td {
-
     }
 
     table tbody tr {
@@ -171,7 +171,7 @@
     .btn.btn-warning:not(:disabled) {
         @apply border-transparent bg-yellow-600 text-white;
         @apply hover:bg-yellow-700;
-        @apply active:bg-yellow-800
+        @apply active:bg-yellow-800;
     }
 
     .btn.btn-success:not(:disabled) {
@@ -197,6 +197,22 @@
     .btn.btn-link {
         @apply border-transparent flex items-center justify-center gap-2 bg-transparent shadow-none text-blue-700;
         @apply hover:bg-blue-50;
+    }
+
+    .btn.loading::before {
+        content: "";
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' stroke-width='1' stroke='currentColor' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath stroke='none' d='M0 0h24v24H0z' fill='none'%3E%3C/path%3E%3Cpath d='M12 3a9 9 0 1 0 9 9'%3E%3C/path%3E%3C/svg%3E");
+        @apply h-6 w-6 flex items-center justify-center;
+        animation: rotator 1s linear infinite;
+    }
+
+    @keyframes rotator {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
     }
 
     .btn > svg {
@@ -323,6 +339,22 @@
         @apply fixed inset-0 z-10 overflow-y-auto md:items-center items-center justify-center flex p-2 md:p-0;
     }
 
+    .modal-lg .modal-dialog {
+        @apply max-w-2xl;
+    }
+
+    .modal-xl .modal-dialog {
+        @apply max-w-3xl;
+    }
+
+    .modal-2xl .modal-dialog {
+        @apply max-w-4xl;
+    }
+
+    .modal-3xl .modal-dialog {
+        @apply max-w-5xl;
+    }
+
     .modal::after {
         content: " ";
         @apply fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity;
@@ -337,6 +369,8 @@
     }
 
     .modal main {
+        max-height: 80vh;
+        overflow-y: auto;
         @apply px-4;
     }
 
@@ -399,13 +433,11 @@
         @apply hover:bg-slate-100 active:bg-slate-200;
     }
 
-
     .pagination-controls > a:first-child:has(svg) span,
     .pagination-controls > a:last-child:has(svg) span {
         /* hide Previous/Next labels on mobiles */
         @apply hidden md:inline;
     }
-
 
     .pagination-controls > span {
         @apply text-gray-600 hover:bg-inherit active:bg-inherit;
@@ -498,7 +530,8 @@
         @apply flex items-center justify-between mb-1 text-xs;
     }
 
-    .progress-label-md, .progress-label-lg {
+    .progress-label-md,
+    .progress-label-lg {
         @apply text-sm;
     }
 
@@ -516,7 +549,7 @@
             width: 50%;
         }
         to {
-            transform: translateX(400%)
+            transform: translateX(400%);
         }
     }
 
@@ -601,6 +634,10 @@
 
     .list-menu-item.disabled {
         @apply cursor-not-allowed text-gray-400;
+    }
+
+    .list-menu-item.active:not(.disabled) {
+        @apply bg-gray-200;
     }
 
     .list-menu-item svg {
