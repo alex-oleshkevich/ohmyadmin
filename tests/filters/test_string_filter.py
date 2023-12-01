@@ -1,7 +1,7 @@
 from unittest import mock
 
-from ohmyadmin.datasource.base import StringOperation
-from ohmyadmin.datasource.memory import InMemoryDataSource
+from ohmyadmin.datasources.datasource import StringOperation
+from ohmyadmin.datasources.datasource import InMemoryDataSource
 from ohmyadmin.filters import StringFilter, UnboundFilter
 from ohmyadmin.testing import MarkupSelector
 from tests.conftest import RequestFactory

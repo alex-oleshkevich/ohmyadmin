@@ -45,11 +45,17 @@
                 </form>
             </section>
         </aside>
-        <article class="w-full h-full p-6">
-            <header>
-                <h1 class="text-2xl font-semibold mb-5">
-                    {% block page_title %}{{ page_title }}{% endblock %}
-                </h1>
+        <article class="w-full h-full p-8">
+            <header class="flex justify-between gap-5 mb-10">
+                <div>
+                    <h1 class="text-3xl font-semibold mb-1">
+                        {% block page_title %}{% if page_title is defined %}{{ page_title }}{% endif %}{% endblock %}
+                    </h1>
+                    {% if page_description is defined %}
+                        <div>{{ page_description }}</div>
+                    {% endif %}
+                </div>
+                <div></div>
             </header>
             <main>
                 {% block content %}{% endblock %}

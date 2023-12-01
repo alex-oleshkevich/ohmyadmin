@@ -3,7 +3,7 @@ from starlette.testclient import TestClient
 from unittest import mock
 
 from ohmyadmin import filters
-from ohmyadmin.datasource.memory import InMemoryDataSource
+from ohmyadmin.datasources.datasource import InMemoryDataSource
 from ohmyadmin.pages.table import TablePage
 from ohmyadmin.testing import MarkupSelector
 from ohmyadmin.views.table import TableColumn

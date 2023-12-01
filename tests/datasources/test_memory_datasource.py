@@ -4,8 +4,8 @@ import datetime
 import pytest
 from starlette.requests import Request
 
-from ohmyadmin.datasource.base import NumberOperation, StringOperation
-from ohmyadmin.datasource.memory import InMemoryDataSource
+from ohmyadmin.datasources.datasource import NumberOperation, StringOperation
+from ohmyadmin.datasources.datasource import InMemoryDataSource
 
 MAX_OBJECTS = 21
 
@@ -87,7 +87,7 @@ async def test_delete(datasource: InMemoryDataSource[Post], http_request: Reques
 
 
 async def test_search_contains(datasource: InMemoryDataSource[Post], http_request: Request) -> None:
-    qs = datasource.apply_search('Title 2', searchable_fields=['title'])
+    qs = datasource.apply_search_filter('Title 2', searchable_fields=['title'])
     obj = await qs.paginate(http_request, 1, 20)
     assert len(obj.rows) == 2
     assert obj[0].title == 'Title 2'
@@ -95,7 +95,7 @@ async def test_search_contains(datasource: InMemoryDataSource[Post], http_reques
 
 
 async def test_search_starts_with(datasource: InMemoryDataSource[Post], http_request: Request) -> None:
-    qs = datasource.apply_search('^Title 2', searchable_fields=['title'])
+    qs = datasource.apply_search_filter('^Title 2', searchable_fields=['title'])
     obj = await qs.paginate(http_request, 1, 20)
     assert len(obj.rows) == 2
     assert obj[0].title == 'Title 2'
@@ -103,7 +103,7 @@ async def test_search_starts_with(datasource: InMemoryDataSource[Post], http_req
 
 
 async def test_search_ends_with(datasource: InMemoryDataSource[Post], http_request: Request) -> None:
-    qs = datasource.apply_search('$2', searchable_fields=['title'])
+    qs = datasource.apply_search_filter('$2', searchable_fields=['title'])
     obj = await qs.paginate(http_request, 1, 20)
     assert len(obj.rows) == 2
     assert obj[0].title == 'Title 2'
@@ -111,14 +111,14 @@ async def test_search_ends_with(datasource: InMemoryDataSource[Post], http_reque
 
 
 async def test_search_equals(datasource: InMemoryDataSource[Post], http_request: Request) -> None:
-    qs = datasource.apply_search('=Title 2', searchable_fields=['title'])
+    qs = datasource.apply_search_filter('=Title 2', searchable_fields=['title'])
     obj = await qs.paginate(http_request, 1, 20)
     assert len(obj.rows) == 1
     assert obj[0].title == 'Title 2'
 
 
 async def test_search_pattern(datasource: InMemoryDataSource[Post], http_request: Request) -> None:
-    qs = datasource.apply_search('@Title 1[12]', searchable_fields=['title'])
+    qs = datasource.apply_search_filter('@Title 1[12]', searchable_fields=['title'])
     obj = await qs.paginate(http_request, 1, 20)
     assert [obj.title for obj in obj.rows] == ['Title 11', 'Title 12']
 

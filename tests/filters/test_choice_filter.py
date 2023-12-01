@@ -1,7 +1,7 @@
 from starlette.requests import Request
 from unittest import mock
 
-from ohmyadmin.datasource.memory import InMemoryDataSource
+from ohmyadmin.datasources.datasource import InMemoryDataSource
 from ohmyadmin.filters import ChoiceFilter, UnboundFilter
 from ohmyadmin.testing import MarkupSelector
 from tests.conftest import RequestFactory

@@ -14,7 +14,7 @@ from starlette.routing import BaseRoute, Mount, Route
 
 from ohmyadmin.app import OhMyAdmin
 from ohmyadmin.authentication import BaseAuthPolicy
-from ohmyadmin.datasource.memory import InMemoryDataSource
+from ohmyadmin.datasources.datasource import InMemoryDataSource
 from ohmyadmin.menu import NavItem
 from ohmyadmin.pages.base import BasePage
 from tests.models import Post

@@ -1,0 +1,11 @@
+<div class="flex flex-col justify-center h-full">
+    {% if formatter.label -%}
+        <dl class="progress-label progress-label-{{ formatter.size }}">
+            <dt>{{ formatter.label }}</dt>
+            <dd>{{ value }}%</dd>
+        </dl>
+    {% endif -%}
+    <div class="progress progress-{{ formatter.size }} progress-{{ formatter.color }}">
+        <div class="progress-bar" style="width: {{ value }}%"></div>
+    </div>
+</div>

@@ -2,7 +2,7 @@ from starlette.datastructures import URL
 from starlette.requests import Request
 from starlette.testclient import TestClient
 
-from ohmyadmin.datasource.base import DataSource
+from ohmyadmin.datasources.datasource import DataSource
 from ohmyadmin.helpers import LazyObjectURL, LazyURL
 from ohmyadmin.ordering import SortingHelper
 from ohmyadmin.pages.table import TablePage

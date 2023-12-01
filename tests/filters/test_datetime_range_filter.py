@@ -2,7 +2,7 @@ import datetime
 import pytest
 from unittest import mock
 
-from ohmyadmin.datasource.memory import InMemoryDataSource
+from ohmyadmin.datasources.datasource import InMemoryDataSource
 from ohmyadmin.filters import DateTimeRangeFilter, UnboundFilter
 from ohmyadmin.testing import MarkupSelector
 from tests.conftest import RequestFactory

@@ -1,7 +1,7 @@
 import pytest
 from starlette.testclient import TestClient
 
-from ohmyadmin.datasource.memory import InMemoryDataSource
+from ohmyadmin.datasources.datasource import InMemoryDataSource
 from tests.conftest import CreateTestAppFactory
 from tests.models import Post
 from tests.resources.demo_resource import DemoResource

@@ -2,7 +2,7 @@ import pytest
 from starlette.requests import Request
 from starlette.testclient import TestClient
 
-from ohmyadmin.datasource.memory import InMemoryDataSource
+from ohmyadmin.datasources.datasource import InMemoryDataSource
 from ohmyadmin.metrics import UndefinedCardError, ValueMetric
 from ohmyadmin.pages.table import TablePage
 from ohmyadmin.views.table import TableColumn

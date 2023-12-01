@@ -40,6 +40,7 @@ class OhMyAdmin(Router):
         self.templating = templating.Jinja2Templates(
             env=jinja2.Environment(
                 autoescape=True,
+                undefined=jinja2.StrictUndefined,
                 loader=jinja2.ChoiceLoader([jinja2.PackageLoader('ohmyadmin')]),
             ),
             context_processors=[

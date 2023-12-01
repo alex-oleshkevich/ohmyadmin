@@ -3,7 +3,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from ohmyadmin import actions, filters
-from ohmyadmin.datasource.memory import InMemoryDataSource
+from ohmyadmin.datasources.datasource import InMemoryDataSource
 from ohmyadmin.metrics import ValueMetric
 from ohmyadmin.resources import Resource
 from ohmyadmin.views.table import TableColumn

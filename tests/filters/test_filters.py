@@ -4,7 +4,7 @@ import wtforms
 from starlette.requests import Request
 from unittest import mock
 
-from ohmyadmin.datasource.base import DataSource
+from ohmyadmin.datasources.datasource import DataSource
 from ohmyadmin.filters import BaseFilter, UnboundFilter
 from ohmyadmin.testing import MarkupSelector
 from tests.conftest import RequestFactory

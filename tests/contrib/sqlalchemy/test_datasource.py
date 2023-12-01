@@ -9,7 +9,7 @@ from unittest import mock
 
 from ohmyadmin.contrib.sqlalchemy import SQLADataSource
 from ohmyadmin.contrib.sqlalchemy.datasource import guess_pk_type
-from ohmyadmin.datasource.base import NumberOperation, StringOperation
+from ohmyadmin.datasources.datasource import NumberOperation, StringOperation
 from tests.contrib.sqlalchemy.models import (
     Post,
     PostWithBigIntegerPK,
@@ -81,32 +81,32 @@ def test_create_new_model(datasource: SQLADataSource[Post]) -> None:
 
 
 def test_apply_search_contains(datasource: SQLADataSource[Post]) -> None:
-    sql = datasource.apply_search('FINDME', ['title']).raw
+    sql = datasource.apply_search_filter('FINDME', ['title']).raw
     assert 'WHERE lower(CAST(posts.title AS TEXT)) LIKE lower(:param_1)' in str(sql)
 
 
 def test_apply_search_starts_with(datasource: SQLADataSource[Post]) -> None:
-    sql = datasource.apply_search('^FINDME', ['title']).raw
+    sql = datasource.apply_search_filter('^FINDME', ['title']).raw
     assert "WHERE (CAST(posts.title AS TEXT) LIKE :param_1 || '%')" in str(sql)
 
 
 def test_apply_search_ends_with(datasource: SQLADataSource[Post]) -> None:
-    sql = datasource.apply_search('$FINDME', ['title']).raw
+    sql = datasource.apply_search_filter('$FINDME', ['title']).raw
     assert "WHERE (CAST(posts.title AS TEXT) LIKE '%' || :param_1)" in str(sql)
 
 
 def test_apply_search_equals(datasource: SQLADataSource[Post]) -> None:
-    sql = datasource.apply_search('=FINDME', ['title']).raw
+    sql = datasource.apply_search_filter('=FINDME', ['title']).raw
     assert "WHERE CAST(posts.title AS TEXT) = :param_1" in str(sql)
 
 
 def test_apply_search_pattern(datasource: SQLADataSource[Post]) -> None:
-    sql = datasource.apply_search('@FINDME1[12]', ['title']).raw
+    sql = datasource.apply_search_filter('@FINDME1[12]', ['title']).raw
     assert "WHERE CAST(posts.title AS TEXT) <regexp> :param_1" in str(sql)
 
 
 def test_apply_search_no_term(datasource: SQLADataSource[Post]) -> None:
-    sql = datasource.apply_search('', ['title']).raw
+    sql = datasource.apply_search_filter('', ['title']).raw
     assert 'WHERE' not in str(sql)
 
 

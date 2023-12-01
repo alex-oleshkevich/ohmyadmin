@@ -9,6 +9,7 @@ from ohmyadmin.menu import MenuItem
 
 class View:
     label: str = ''
+    description: str = ''
     group: str = ''
     show_in_menu: bool = True
 

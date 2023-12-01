@@ -1,7 +1,7 @@
 from unittest import mock
 
 from ohmyadmin.actions import DeleteObjectAction
-from ohmyadmin.datasource.base import DataSource
+from ohmyadmin.datasources.datasource import DataSource
 from tests.conftest import RequestFactory
 
 

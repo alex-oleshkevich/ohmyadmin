@@ -7,7 +7,7 @@ from starlette.testclient import TestClient
 
 from ohmyadmin import actions
 from ohmyadmin.actions import BaseObjectAction
-from ohmyadmin.datasource.memory import InMemoryDataSource
+from ohmyadmin.datasources.datasource import InMemoryDataSource
 from ohmyadmin.pages.table import TablePage
 from ohmyadmin.testing import MarkupSelector
 from ohmyadmin.views.table import TableColumn

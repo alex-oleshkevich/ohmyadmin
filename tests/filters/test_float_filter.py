@@ -1,7 +1,7 @@
 from unittest import mock
 
-from ohmyadmin.datasource.base import NumberOperation
-from ohmyadmin.datasource.memory import InMemoryDataSource
+from ohmyadmin.datasources.datasource import NumberOperation
+from ohmyadmin.datasources.datasource import InMemoryDataSource
 from ohmyadmin.filters import FloatFilter, UnboundFilter
 from ohmyadmin.testing import MarkupSelector
 from tests.conftest import RequestFactory

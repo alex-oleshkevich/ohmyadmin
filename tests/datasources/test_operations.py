@@ -1,6 +1,6 @@
 import pytest
 
-from ohmyadmin.datasource.base import NumberOperation, StringOperation
+from ohmyadmin.datasources.datasource import NumberOperation, StringOperation
 
 
 @pytest.mark.parametrize('op', ['startswith', 'endswith', 'exact', 'contains', 'pattern'])

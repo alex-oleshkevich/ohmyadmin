@@ -1,0 +1,31 @@
+{% import 'ohmyadmin/icons.html' as icons %}
+
+{% macro sortable_cell(column, control) -%}
+    <a href="{{ control.url }}" class="flex items-center gap-2 whitespace-nowrap" hx-boost="true">
+        <span>{{ column.label }}</span>
+        <span class="text-gray-400 flex items-center">
+            {% if control.ordering == 'asc' %}
+                {{ icons.sort_asc() }}
+            {% elif control.ordering == 'desc' %}
+                {{ icons.sort_desc() }}
+            {% else %}
+                {{ icons.sort() }}
+            {% endif %}
+
+            {% if control.show_index and control.index %}
+                <span class="text-sm text-accent-600 ml-1">{{ control.index }}</span>
+            {% endif %}
+    </span>
+    </a>
+{%- endmacro -%}
+
+{%- macro simple_cell(column) -%}
+    {{ column.label }}
+{%- endmacro -%}
+
+{% if column.sortable -%}
+    {% set control = sorting.get_control(column.sort_by) %}
+    {{ sortable_cell(column, control) }}
+{%- else -%}
+    {{ simple_cell(column) }}
+{%- endif %}
