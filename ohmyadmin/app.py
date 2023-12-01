@@ -104,6 +104,9 @@ class OhMyAdmin(Router):
             ) for group in groups
         ]
 
+    def generate_user_menu(self, request: Request) -> list[MenuItem]:
+        return []
+
     def context_processor(self, request: Request) -> dict[str, typing.Any]:
         return {
             'ohmyadmin': self,
@@ -113,10 +116,12 @@ class OhMyAdmin(Router):
             'url_matches': functools.partial(url_matches, request),
             'flash_messages': flash(request),
             'ohmyadmin_main_menu': request.scope['ohmyadmin_main_menu'],
+            'ohmyadmin_user_menu': request.scope['ohmyadmin_user_menu'],
         }
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         scope.setdefault('state')
         scope['state']['ohmyadmin'] = self
         scope['ohmyadmin_main_menu'] = await self.generate_menu(Request(scope))
+        scope['ohmyadmin_user_menu'] = self.generate_user_menu(Request(scope))
         await super().__call__(scope, receive, send)

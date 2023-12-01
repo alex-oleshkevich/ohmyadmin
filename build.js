@@ -8,17 +8,17 @@ Usage:
     yarn run esbuild:watch
 */
 
-const esbuild = require("esbuild");
-const copyStaticFiles = require("esbuild-copy-static-files");
+const esbuild = require('esbuild');
+const copyStaticFiles = require('esbuild-copy-static-files');
 
 const args = process.argv.slice(2);
-const mode = args.includes("--watch") ? "watch" : "build";
+const mode = args.includes('--watch') ? 'watch' : 'build';
 
 const outputDir = process.env.DIST_DIR || `${__dirname}/ohmyadmin/statics`;
 
 const plugins = [
     copyStaticFiles({
-        src: "./assets/static",
+        src: './assets/static',
         dest: outputDir,
         dereference: true,
         errorOnExist: false,
@@ -30,28 +30,31 @@ const plugins = [
 async function main() {
     const context = await esbuild.context({
         entryPoints: [
-            `${__dirname}/assets/js/*.ts`,
+            `${__dirname}/assets/main.ts`,
+            // `${__dirname}/assets/js/**/*.ts`,
+            // `${__dirname}/assets/components/**/*.ts`,
         ],
         outdir: outputDir,
-        target: "esnext",
-        format: "esm",
-        bundle: false,
-        sourcemap: mode == "build" ? true : "inline",
-        // define: {},
-        // treeShaking: true,
+        target: 'esnext',
+        format: 'esm',
+        bundle: true,
+        chunkNames: '[name]-[hash]',
+        sourcemap: true,
+        define: {},
+        treeShaking: true,
         loader: {
-            ".png": "dataurl",
-            ".jpg": "file",
-            ".jpeg": "file",
-            ".svg": "file",
-            ".gif": "file",
+            '.png': 'dataurl',
+            '.jpg': 'file',
+            '.jpeg': 'file',
+            '.svg': 'file',
+            '.gif': 'file',
         },
         plugins: plugins,
-        minify: mode == "build",
-        // external: ["/fonts/*", "/images/*"],
-        logLevel: "debug",
+        minify: mode == 'build',
+        external: ['/fonts/*', '/images/*'],
+        logLevel: 'debug',
     });
-    if (mode == "watch") {
+    if (mode == 'watch') {
         await context.watch();
     } else {
         await context.rebuild();

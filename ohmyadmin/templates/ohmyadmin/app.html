@@ -13,16 +13,18 @@
 
 {% block main %}
     <div class="flex gap-4 h-full">
-        <aside class="w-[280px] bg-gray-100 border-r border-r-gray-200 px-4 py-6 flex flex-col gap-5">
+        <aside class="w-[280px] bg-gray-100 border-r border-r-gray-200 px-4 py-6 flex flex-col gap-5 sticky top-0">
             <section class="px-3">
                 <a href="{{ url_for('ohmyadmin.welcome') }}">
                     <img src="{{ theme.logo }}" class="h-8">
                 </a>
             </section>
-            <section class="space-y-1">
+            <section class="space-y-2">
                 {% for menu_group in ohmyadmin_main_menu %}
-                    <div class="space-y-1">
-                        {{ menu_heading(menu_group.label) }}
+                    <div class="space-y-px">
+                        {% if menu_group.label %}
+                            {{ menu_heading(menu_group.label) }}
+                        {% endif %}
                         {% for item in menu_group.children %}
                             {{ menu_item(item.url, item.label, url_matches(item.url)) }}
                         {% endfor %}
@@ -38,6 +40,9 @@
                     <div class="font-medium">{{ request.user }}</div>
                 </button>
                 {% include 'ohmyadmin/layout/user_menu.html' %}
+                <form method="post" id="logout-form" action="{{ url_for('ohmyadmin.logout') }}">
+                    <input type="hidden" name="next" value="{{ request.url }}">
+                </form>
             </section>
         </aside>
         <article class="w-full h-full p-6">

@@ -19,12 +19,8 @@
 
     <link href="{{ static_url('main.css') }}" rel="stylesheet"/>
     <script defer src="//cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="//unpkg.com/htmx.org@1.8.0"
-            integrity="sha384-cZuAZ+ZbwkNRnrKi05G/fjBX+azI9DNOkNYysZ0I/X5ZFgsmMiBXgDZof30F5ofc"
-            crossorigin="anonymous">
-
-    </script>
-    <script type="module" src="{{ static_url('js/notifications.js') }}"></script>
+    <script defer src="//unpkg.com/htmx.org@1.8.0"></script>
+    <script defer type="module" src="{{ static_url('main.js') }}"></script>
 
     {% block head %}{% endblock %}
     {% block head_scripts %}{% endblock %}
@@ -32,10 +28,8 @@
 <body class="antialiased h-full">
 {% block main %}{% endblock %}
 {% block page_scripts %}{% endblock %}
-<script>
-    window.__TOASTS__ = {{ flash_messages|list|tojson }};
-</script>
 
-<div id="modals"></div>
+<o-modals></o-modals>
+<o-toasts>{{ flash_messages|list|tojson }}</o-toasts>
 </body>
 </html>
