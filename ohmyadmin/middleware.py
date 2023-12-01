@@ -23,6 +23,6 @@ class LoginRequiredMiddleware:
         if scope['type'] == 'http':
             flash(Request(scope)).error(_('You need to be logged in to access this page.', domain='ohmyadmin'))
 
-        redirect_to = conn.url_for('ohmyadmin.login') + '?next=' + conn.url.path
+        redirect_to = conn.url_for('ohmyadmin.login').include_query_params(next=conn.url.path)
         response = RedirectResponse(url=redirect_to, status_code=302)
         await response(scope, receive, send)

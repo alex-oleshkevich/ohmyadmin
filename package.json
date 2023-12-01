@@ -1,0 +1,24 @@
+{
+    "license": "UNLICENSED",
+    "scripts": {
+        "tailwind:watch": "npx tailwindcss -i assets/css/main.css -o ./ohmyadmin/statics/main.css --watch",
+        "tailwind:build": "npx tailwindcss --minify -i assets/css/main.css -o ./ohmyadmin/statics/main.css",
+        "esbuild:watch": "node build.js --watch",
+        "esbuild:build": "node build.js --build",
+        "build": "yarn tailwind:build && yarn esbuild:build"
+    },
+    "devDependencies": {
+        "autoprefixer": "^10.4.16",
+        "esbuild": "^0.19.8",
+        "esbuild-copy-static-files": "^0.1.0",
+        "lit": "^3.1.0",
+        "notyf": "^3.10.0",
+        "tailwindcss": "^3.3.5",
+        "ts-lit-plugin": "^2.0.1",
+        "@tailwindcss/forms": "^0.5.7",
+        "typescript": "^5.3.2"
+    },
+    "dependencies": {
+        "chart.js": "^4.4.0"
+    }
+}

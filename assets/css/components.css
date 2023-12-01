@@ -206,14 +206,6 @@
         animation: rotator 1s linear infinite;
     }
 
-    @keyframes rotator {
-        from {
-            transform: rotate(0deg);
-        }
-        to {
-            transform: rotate(360deg);
-        }
-    }
 
     .btn > svg {
         @apply h-5 w-5;

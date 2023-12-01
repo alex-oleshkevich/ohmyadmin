@@ -1,5 +1,5 @@
 from ohmyadmin.views.base import View
 
 
-class TableView(View):
+class ResourceView(View):
     pass

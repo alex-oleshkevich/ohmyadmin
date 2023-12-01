@@ -1,36 +1,32 @@
+import pathlib
+
+import sqlalchemy as sa
+from passlib.handlers.pbkdf2 import pbkdf2_sha256
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from starception import install_error_handler
 from starlette.applications import Starlette
+from starlette.authentication import BaseUser
 from starlette.middleware import Middleware
 from starlette.middleware.sessions import SessionMiddleware
-from starlette.requests import Request
+from starlette.requests import HTTPConnection, Request
 from starlette.responses import Response
 from starlette.routing import Mount, Route
+from starlette.types import ASGIApp, Receive, Scope, Send
 
-from examples import config
-from examples.admin.actions_demo import Actions
-from examples.admin.auth import AuthPolicy
-from examples.admin.brands import Brands
-from examples.admin.categories import Categories
-from examples.admin.components import Components
-from examples.admin.countries import Countries
-from examples.admin.currencies import Currencies
-from examples.admin.customers import Customers
-from examples.admin.form_layouts.card_layout import CardLayout
-from examples.admin.form_layouts.fieldset_layout import FieldSetLayout
-from examples.admin.form_layouts.simple_layout import SimpleLayout
-from examples.admin.form_layouts.stacked_layout import StackedLayout
-from examples.admin.orders import Orders
-from examples.admin.pages_demo.blank_page import BlankPage
-from examples.admin.pages_demo.table_page import ProductsPage
-from examples.admin.products import Products
-from examples.admin.profile import ProfilePage
-from examples.admin.settings import SettingsPage
-from examples.admin.users import Users
-from examples.config import async_session, file_storage
-from ohmyadmin import menu
+from examples import settings
+from examples.models import User
+from examples.resources.users_table import UsersTable
 from ohmyadmin.app import OhMyAdmin
-from ohmyadmin.contrib.sqlalchemy import DatabaseSessionMiddleware
-from ohmyadmin.helpers import LazyURL
+from ohmyadmin.authentication.policy import AuthPolicy
+from ohmyadmin.storages.storage import FileSystemStorage
+from ohmyadmin.theme import Theme
+
+install_error_handler()
+
+this_dir = pathlib.Path(__file__).parent
+
+engine = create_async_engine(settings.DATABASE_URL)
+async_session = async_sessionmaker(engine, expire_on_commit=False)
 
 
 def index_view(request: Request) -> Response:
@@ -38,43 +34,58 @@ def index_view(request: Request) -> Response:
     return Response(f'<a href="{url}">admin</a>')
 
 
+class DatabaseSessionMiddleware:
+    def __init__(self, app: ASGIApp, sessionmaker: async_sessionmaker) -> None:
+        self.app = app
+        self.sessionmaker = sessionmaker
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope['type'] != 'http':
+            await self.app(scope, receive, send)
+            return
+
+        async with self.sessionmaker() as dbsession:
+            scope.setdefault('state', {})
+            scope['state']['dbsession'] = dbsession
+            await self.app(scope, receive, send)
+
+
+class UserPolicy(AuthPolicy):
+
+    async def authenticate(self, request: Request, identity: str, password: str) -> BaseUser | None:
+        async with async_session() as session:
+            stmt = sa.select(User).where(User.email == identity)
+            result = await session.scalars(stmt)
+            if (user := result.one_or_none()) and pbkdf2_sha256.verify(password, user.password):
+                return user
+            return None
+
+    async def load_user(self, conn: HTTPConnection, user_id: str) -> BaseUser | None:
+        async with async_session() as session:
+            stmt = sa.select(User).where(User.id == int(user_id))
+            result = await session.scalars(stmt)
+            return result.one_or_none()
+
+
 admin = OhMyAdmin(
-    title='Admin Demo',
-    # logo_url='https://haj.aliashkevich.com/static/logo_square.svg',
-    auth_policy=AuthPolicy(),
-    template_dir=config.this_dir / 'templates',
-    file_storage=file_storage,
-    user_menu=[
-        menu.MenuLink('My profile', '/admin/profile', icon='address-book'),
-        menu.MenuLink('Settings', url=LazyURL(SettingsPage.get_path_name()), icon='address-book'),
-    ],
-    pages=[
-        Categories(),
-        Brands(),
-        Customers(),
-        Orders(),
-        Countries(),
-        Currencies(),
-        Users(),
-        Products(),
-        SettingsPage(),
-        ProfilePage(),
-        Actions(),
-        Components(),
-        CardLayout(),
-        FieldSetLayout(),
-        SimpleLayout(),
-        StackedLayout(),
-        ProductsPage(),
-        BlankPage(),
-    ],
+    auth_policy=UserPolicy(),
+    file_storage=FileSystemStorage(
+        directory=this_dir / 'media',
+        url_prefix='/',
+    ),
+    theme=Theme(
+        logo='https://jelpy.io/static/logo.svg',
+        title='Jelpy',
+    ),
+    views=[
+        UsersTable(),
+    ]
 )
 
-install_error_handler()
 app = Starlette(
     debug=True,
     middleware=[
-        Middleware(DatabaseSessionMiddleware, async_session=async_session),
+        Middleware(DatabaseSessionMiddleware, sessionmaker=async_session),
         Middleware(SessionMiddleware, secret_key='key!', path='/'),
     ],
     routes=[

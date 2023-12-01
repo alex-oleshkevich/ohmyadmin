@@ -1,118 +1,54 @@
 {% extends 'ohmyadmin/base.html' %}
 
-{% set user_menu = admin.get_user_menu(request) %}
-{% set main_menu = admin.get_main_menu(request) %}
+{% macro menu_heading(label) %}
+    <div class="text-xs uppercase text-gray-500 font-medium px-3 pt-2">{{ label }}</div>
+{% endmacro %}
+
+{% macro menu_item(url, label, active) %}
+    {% set base_classes = 'hover:bg-gray-200' %}
+    {% set active_classes = 'text-accent-900 bg-accent-100 hover:bg-accent-200' %}
+    {% set state_classes = active_classes if active else base_classes %}
+    <a class="block w-full rounded px-3 py-2 text-sm font-medium {{ state_classes }}" href="{{ url }}">{{ label }}</a>
+{% endmacro %}
 
 {% block main %}
-    <main class="flex flex-col md:flex-row w-full overflow-hidden h-screen"
-          x-data="{mobileMenuOpen: window.matchMedia('only screen and (min-width: 768px').matches}"
-    >
-        <aside class="bg-slate-900 px-3 w-full md:w-72 text-white flex-shrink-0 overflow-y-auto max-h-screen">
-            <header class="py-2 flex items-center gap-3 mt-0 md:mt-3">
-                <!-- mobile menu toggle -->
-                <button class="flex items-center justify-center p-2 block md:hidden"
-                        @click="mobileMenuOpen = !mobileMenuOpen">
-                    {{ tabler_icon('menu-2', size=24) }}
-                    <span></span>
-                </button>
-                <div class="text-lg block md:hidden">{{ page_title }}</div>
-
-                <!-- logo -->
-                <a href="{{ url('ohmyadmin.welcome') }}"
-                   class="font-light text-2xl flex items-center gap-2 ml-auto p-2 md:p-0 md:ml-0"
-                >
-                    {% if admin.logo_url %}
-                        <img src="{{ admin.logo_url }}" class="h-6 md:h-8">
-                    {% else %}
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 md:h-8"
-                             viewBox="0 0 24 24" stroke-width="1" stroke="currentColor"
-                             fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
-                            <rect x="4" y="4" width="6" height="6" rx="1"></rect>
-                            <rect x="14" y="4" width="6" height="6" rx="1"></rect>
-                            <rect x="4" y="14" width="6" height="6" rx="1"></rect>
-                            <rect x="14" y="14" width="6" height="6" rx="1"></rect>
-                        </svg>
-                    {% endif %}
-                    <span class="hidden md:block">{{ admin.title }}</span>
+    <div class="flex gap-4 h-full">
+        <aside class="w-[280px] bg-gray-100 border-r border-r-gray-200 px-4 py-6 flex flex-col gap-5">
+            <section class="px-3">
+                <a href="{{ url_for('ohmyadmin.welcome') }}">
+                    <img src="{{ theme.logo }}" class="h-8">
                 </a>
-            </header>
-
-            <!-- sidebar content, collapsed on mobiles -->
-            <div x-show="mobileMenuOpen" class="flex-col gap-4 py-5">
-                <!-- user menu -->
-                <section class="relative" x-data="{open: false}">
-                    <button
-                        class="flex items-center gap-3 rounded p-2 cursor-pointer hover:bg-slate-700 transition easy-on-out duration-150 w-full active:bg-slate-800"
-                        @click="open = !open"
-                        @click.outside="open = false"
-                    >
-                        <div class="avatar">
-                            {% if request.user.avatar %}
-                                <img src="{{ media_url(request.user.avatar) }}" class="h-full w-full" alt="">
-                            {% else %}
-                                {{ tabler_icon('user') }}
-                            {% endif %}
-                        </div>
-                        <div class="text-left">
-                            <div class="text-sm font-medium">
-                                {{ request.user.display_name or _('anon.', domain='ohmyadmin') }}
-                            </div>
-                            <div class="text-slate-300">{{ request.user.email }}</div>
-                        </div>
-                    </button>
-
-                    <!-- user menu -->
-                    {% if request.user.is_authenticated %}
-                        <div
-                            x-show="open"
-                            x-transition:enter="transition ease-out duration-100"
-                            x-transition:enter-start="transform opacity-0 scale-95"
-                            x-transition:enter-end="transform opacity-100 scale-100"
-                            x-transition:leave="transition ease-in duration-75"
-                            x-transition:leave-start="transform opacity-100 scale-100"
-                            x-transition:leave-end="transform opacity-0 scale-95"
-                            class="absolute dropdown"
-                        >
-                            <nav class="list-menu" aria-label="{{ _('User menu', domain='ohmyadmin') }}">
-                                {% for item in user_menu %}
-                                    <a href="{{ item.url }}" class="list-menu-item">
-                                        {{ tabler_icon(item.icon) if item.icon else '' }}
-                                        {{ item.text }}
-                                    </a>
-                                {% endfor %}
-                                <button class="list-menu-item" @click="$refs.logoutForm.submit();">
-                                    {{ tabler_icon('logout') }} {{ _('Logout', domain='ohmyadmin') }}
-                                </button>
-                            </nav>
-                            <form action="{{ url('ohmyadmin.logout') }}" method="post" x-ref="logoutForm"></form>
-                        </div>
-                    {% endif %}
-
-                </section>
-
-                <!-- main navigation -->
-                <nav>
-                    {% for item in main_menu %}
-                        {{ item.render(request)|safe }}
-                    {% endfor %}
-                </nav>
-
-            </div>
-
-        </aside>
-        <article class="h-screen w-full flex-grow-0 overflow-y-auto">
-            <div class="mx-auto max-w-7xl p-3 pt-10 md:p-10">
-                <header class="mb-8">
-                    <div class="flex items-center justify-between">
-                        <div class="text-3xl font-medium">{{ page_title }}</div>
-                        <div class="flex items-center gap-2" data-test="page-actions">
-                            {% block page_actions %}{% endblock %}
-                        </div>
+            </section>
+            <section class="space-y-1">
+                {% for menu_group in ohmyadmin_main_menu %}
+                    <div class="space-y-1">
+                        {{ menu_heading(menu_group.label) }}
+                        {% for item in menu_group.children %}
+                            {{ menu_item(item.url, item.label, url_matches(item.url)) }}
+                        {% endfor %}
                     </div>
-                </header>
-                {% block content %}Page content goes here...{% endblock %}
-            </div>
+                {% endfor %}
+            </section>
+            <section class="mt-auto" x-data="{open: false}">
+                <button @click="open = !open;" id="user-menu" type="button"
+                        class="flex gap-2 items-center rounded hover:bg-gray-200 active:bg-gray-300 p-2 w-full">
+                    <div class="h-10 w-10 rounded overflow-hidden">
+                        <img src="{{ request.user.avatar }}" class="w-full h-full">
+                    </div>
+                    <div class="font-medium">{{ request.user }}</div>
+                </button>
+                {% include 'ohmyadmin/layout/user_menu.html' %}
+            </section>
+        </aside>
+        <article class="w-full h-full p-6">
+            <header>
+                <h1 class="text-2xl font-semibold mb-5">
+                    {% block page_title %}{{ page_title }}{% endblock %}
+                </h1>
+            </header>
+            <main>
+                {% block content %}{% endblock %}
+            </main>
         </article>
-    </main>
+    </div>
 {% endblock %}

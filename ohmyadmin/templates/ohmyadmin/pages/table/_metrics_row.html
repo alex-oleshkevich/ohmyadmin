@@ -1,8 +1,0 @@
-{% set metrics = page.get_metrics(request) %}
-{% if metrics %}
-    <div class="flex flex-col md:grid grid-cols-12 gap-4 mb-12" style="min-height: 150px" data-test="cards">
-        {% for metric in page.get_metrics(request) %}
-            <div hx-get="{{ metric.resolve_url(request) }}" hx-trigger="load" hx-swap="outerHTML"></div>
-        {% endfor %}
-    </div>
-{% endif %}
