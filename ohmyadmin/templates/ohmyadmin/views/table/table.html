@@ -1,36 +1,20 @@
-{% extends 'ohmyadmin/app.html' %}
-
-{% macro render_head_cell(request, column) %}
-    {% include 'ohmyadmin/views/table/table_head_cell.html' %}
-{% endmacro %}
-
-{% macro render_cell(request, column, object) %}
-    {% set value = column.get_value(object) %}
-    {% set value = column.format_value(request, value) %}
-    {% include 'ohmyadmin/views/table/table_cell.html' %}
-{% endmacro %}
-
-{% block content %}
-    <div class="overflow-x-auto">
-        <table data-test="datatable">
-            <thead>
-            <tr>
-                {% for column in table.columns %}
-                    <th class="whitespace-nowrap">
-                        {{ render_head_cell(request, column) }}
-                    </th>
-                {% endfor %}
-            </tr>
-            </thead>
-            <tbody>
-            {% for object in objects %}
-                <tr x-data="{selected: false}" :class="{selected: selected}">
-                    {% for columm in table.columns %}
-                        <td>{{ render_cell(request, columm, object) }}</td>
-                    {% endfor %}
-                </tr>
+<table data-test="datatable">
+    <thead>
+    <tr>
+        {% for column in table.columns %}
+            <th class="whitespace-nowrap">
+                {{ render_head_cell(request, column) }}
+            </th>
+        {% endfor %}
+    </tr>
+    </thead>
+    <tbody>
+    {% for object in objects %}
+        <tr x-data="{selected: false}" :class="{selected: selected}">
+            {% for columm in table.columns %}
+                <td>{{ render_cell(request, columm, object) }}</td>
             {% endfor %}
-            </tbody>
-        </table>
-    </div>
-{% endblock %}
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>

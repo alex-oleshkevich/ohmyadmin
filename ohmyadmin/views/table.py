@@ -3,6 +3,7 @@ import typing
 
 from starlette.requests import Request
 from starlette.responses import Response
+from starlette_babel import gettext_lazy as _
 
 from ohmyadmin.datasources.datasource import DataSource
 from ohmyadmin.filters import Filter, OrderingFilter, SearchFilter
@@ -52,19 +53,24 @@ class TableView(View):
     page_size: int = 50
     page_sizes: list[int] = [10, 25, 50, 100]
     ordering_param: str = 'ordering'
-    search_param: str = 'search'
-    template = 'ohmyadmin/views/table/table.html'
+    template = 'ohmyadmin/views/table/page.html'
     datasource: DataSource | None = None
     columns: list[Column] | None = None
     filters: list[Filter] | None = None
+
+    search_param: str = 'search'
+    search_placeholder: str = ''
 
     def __init__(self) -> None:
         self.columns = self.columns or []
         self.filters = self.filters or []
         self.filters.extend([
-            OrderingFilter(self.ordering_param, [column.sort_by for column in self.columns]),
-            SearchFilter(self.search_param, [column.search_in for column in self.columns])
+            OrderingFilter(self.ordering_param, [column.sort_by for column in self.columns if column.sortable]),
+            SearchFilter(self.search_param, [column.search_in for column in self.columns if column.searchable])
         ])
+        self.search_placeholder = self.search_placeholder or _('Search in {fields}...').format(fields=', '.join([
+            column.label for column in self.columns if column.searchable
+        ]))
 
     async def dispatch(self, request: Request) -> Response:
         page = get_page_value(request, self.page_param)
@@ -82,4 +88,5 @@ class TableView(View):
             'objects': rows,
             'table': self,
             'sorting': sorting,
+            'search_term': request.query_params.get(self.search_param, ''),
         })
