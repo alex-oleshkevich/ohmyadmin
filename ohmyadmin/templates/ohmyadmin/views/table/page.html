@@ -1,45 +1,45 @@
 {% extends 'ohmyadmin/app.html' %}
 
-{% macro render_head_cell(request, column) %}
-    {% include 'ohmyadmin/views/table/table_head_cell.html' %}
-{% endmacro %}
-
-{% macro render_cell(request, column, object) %}
-    {% set value = column.get_value(object) %}
-    {% set value = column.format_value(request, value) %}
-    {% include 'ohmyadmin/views/table/table_cell.html' %}
-{% endmacro %}
-
 {% block content %}
-    <!-- metrics -->
-    {#    <section class="mb-5 grid grid-cols-12 gap-5"></section>#}
+    <div hx-trigger="refresh from:body"
+         hx-target="#datatable"
+         hx-indicator="#load-indicator"
+         hx-get="{{ request.url.remove_query_params(table.search_param) }}"
+    >
 
-    <!-- search and actions -->
-    <section class="flex items-center justify-between mb-5">
-        <form method="post" role="search" action="{{ request.url }}" id="search-form" class="w-full">
-            <input type="search"
-                   role="searchbox"
-                   class="w-full"
-                   value="{{ search_term }}"
-                   name="{{ table.search_param }}"
-                   hx-trigger="keyup changed delay:300ms, search delay:300ms"
-                   placeholder="{{ table.search_placeholder }}">
-        </form>
-        <div></div>
-    </section>
+        <!-- metrics -->
+        {#    <section class="mb-5 grid grid-cols-12 gap-5"></section>#}
 
-    <!-- active filters -->
-    <section class="mb-5"></section>
+        <!-- search and actions -->
+        <section class="flex items-center justify-between mb-5">
+            <form method="post"
+                  role="search"
+                  id="search-form" class="w-full max-w-xl">
+                <input type="search"
+                       role="searchbox"
+                       class="w-full"
+                       value="{{ search_term }}"
+                       name="{{ table.search_param }}"
+                       hx-get="{{ request.url.remove_query_params(table.search_param) }}"
+                       hx-trigger="keyup changed delay:300ms, search delay:300ms"
+                       placeholder="{{ table.search_placeholder }}">
+            </form>
+            <div></div>
+        </section>
 
-    <section class="overflow-x-auto mb-5" hx-indicator="#load-indicator">
-        <div class="-mb-[1px] htmx-indicator" id="load-indicator">
-            <div class="progress progress-indeterminate progress-square progress-xs">
-                <div class="progress-bar"></div>
+        <!-- active filters -->
+        <section class="mb-5"></section>
+
+        <section class="overflow-x-auto mb-5">
+            <div class="-mb-[1px] htmx-indicator" id="load-indicator">
+                <div class="progress progress-indeterminate progress-square progress-xs">
+                    <div class="progress-bar"></div>
+                </div>
             </div>
-        </div>
 
-        <div hx-target="this" hx-trigger="refresh from:body" hx-get hx-include="#search-form">
-            {% include 'ohmyadmin/views/table/table.html' %}
-        </div>
-    </section>
+            <div id="datatable">
+                {% include 'ohmyadmin/views/table/table.html' %}
+            </div>
+        </section>
+    </div>
 {% endblock %}

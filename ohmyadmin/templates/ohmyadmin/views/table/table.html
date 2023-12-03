@@ -1,3 +1,13 @@
+{% macro render_head_cell(request, column) %}
+    {% include 'ohmyadmin/views/table/table_head_cell.html' %}
+{% endmacro %}
+
+{% macro render_cell(request, column, object) %}
+    {% set value = column.get_value(object) %}
+    {% set value = column.format_value(request, value) %}
+    {% include 'ohmyadmin/views/table/table_cell.html' %}
+{% endmacro %}
+
 <table data-test="datatable">
     <thead>
     <tr>

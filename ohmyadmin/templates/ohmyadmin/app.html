@@ -12,8 +12,8 @@
 {% endmacro %}
 
 {% block main %}
-    <div class="flex gap-4 h-full">
-        <aside class="w-[280px] bg-gray-100 border-r border-r-gray-200 px-4 py-6 flex flex-col gap-5 sticky top-0">
+    <div class="flex flex-col md:flex-row w-full h-full overflow-hidden">
+        <aside class="w-full md:w-72 bg-gray-100 border-r border-r-gray-200 flex-shrink-0 overflow-y-auto max-h-screen px-4 py-6 flex flex-col gap-5">
             <section class="px-3">
                 <a href="{{ url_for('ohmyadmin.welcome') }}">
                     <img src="{{ theme.logo }}" class="h-8">
@@ -45,7 +45,7 @@
                 </form>
             </section>
         </aside>
-        <article class="w-full h-full p-8">
+        <article class="h-screen flex-grow-0 overflow-y-auto w-full p-8">
             <header class="flex justify-between gap-5 mb-10">
                 <div>
                     <h1 class="text-3xl font-semibold mb-1">

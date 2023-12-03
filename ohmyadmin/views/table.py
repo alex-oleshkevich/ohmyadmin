@@ -5,6 +5,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette_babel import gettext_lazy as _
 
+from ohmyadmin import htmx
 from ohmyadmin.datasources.datasource import DataSource
 from ohmyadmin.filters import Filter, OrderingFilter, SearchFilter
 from ohmyadmin.formatters import CellFormatter, StringFormatter
@@ -82,11 +83,17 @@ class TableView(View):
             query = _filter.apply(request, query)
 
         rows = await query.paginate(request, page, page_size)
-        return render_to_response(request, self.template, {
+        template = self.template
+        if htmx.matches_target(request, 'datatable'):
+            template = 'ohmyadmin/views/table/table.html'
+
+        return render_to_response(request, template, {
             'page_title': self.label,
             'page_description': self.description,
             'objects': rows,
             'table': self,
             'sorting': sorting,
             'search_term': request.query_params.get(self.search_param, ''),
+        }, headers={
+            'hx-push-url': str(request.url),
         })
