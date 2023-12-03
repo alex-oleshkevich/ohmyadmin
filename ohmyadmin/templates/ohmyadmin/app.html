@@ -55,7 +55,9 @@
                         <div>{{ page_description }}</div>
                     {% endif %}
                 </div>
-                <div></div>
+                <div class="flex items-center gap-2 justify-end">
+                    {% block page_actions %}{% endblock %}
+                </div>
             </header>
             <main>
                 {% block content %}{% endblock %}
