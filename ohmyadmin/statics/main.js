@@ -35,6 +35,16 @@ var o = class {
   }
 };
 var r = (t4) => new o("string" == typeof t4 ? t4 : t4 + "", void 0, s);
+var i = (t4, ...e8) => {
+  const n6 = 1 === t4.length ? t4[0] : e8.reduce((e9, s5, n7) => e9 + ((t5) => {
+    if (true === t5._$cssResult$)
+      return t5.cssText;
+    if ("number" == typeof t5)
+      return t5;
+    throw Error("Value passed to 'css' function must be a 'css' function result: " + t5 + ". Use 'unsafeCSS' to pass non-literal values, but take care to ensure page security.");
+  })(s5) + t4[n7 + 1], t4[0]);
+  return new o(n6, t4, s);
+};
 var S = (s5, n6) => {
   e ? s5.adoptedStyleSheets = n6.map((t4) => t4 instanceof CSSStyleSheet ? t4 : t4.styleSheet) : n6.forEach((e8) => {
     const n7 = document.createElement("style"), o6 = t.litNonce;
@@ -2112,11 +2122,41 @@ ToastsElement = __decorateClass([
 ], ToastsElement);
 
 // assets/components/modals.ts
-var Modals = class extends s4 {
+var ModalsElement = class extends s4 {
+  render() {
+    return y`
+            <slot></slot>`;
+  }
+  firstUpdated() {
+    document.body.addEventListener("htmx:beforeSwap", (e8) => {
+      console.log(e8.detail);
+    });
+    document.body.addEventListener("htmx:afterSettle", (e8) => {
+      if (!(e8 instanceof CustomEvent)) {
+        return;
+      }
+      const target = e8.target;
+      const dialog = target.querySelector("dialog[data-autoopen]");
+      if (dialog) {
+        dialog.addEventListener("close", () => dialog.remove());
+        dialog.showModal();
+      }
+    });
+    document.addEventListener("modals-close", this.closeActiveModal.bind(this));
+  }
+  closeActiveModal() {
+    this.dialogs.forEach((el) => el.close());
+  }
 };
-Modals = __decorateClass([
+ModalsElement.styles = i`:host {
+        display: block
+    }`;
+__decorateClass([
+  l4({ selector: "dialog" })
+], ModalsElement.prototype, "dialogs", 2);
+ModalsElement = __decorateClass([
   e4("o-modals")
-], Modals);
+], ModalsElement);
 /*! Bundled license information:
 
 @lit/reactive-element/css-tag.js:

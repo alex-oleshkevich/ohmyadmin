@@ -1,3 +1,5 @@
+import wtforms
+from markupsafe import Markup
 from starlette.datastructures import URL
 from starlette.requests import Request
 from starlette.responses import Response
@@ -18,6 +20,26 @@ async def show_toast_callback(request: Request) -> Response:
     return response().toast('Clicked!')
 
 
+class CreateUserForm(wtforms.Form):
+    first_name = wtforms.StringField()
+    last_name = wtforms.StringField()
+    email = wtforms.EmailField(validators=[wtforms.validators.data_required()])
+    # password = wtforms.PasswordField(validators=[wtforms.validators.data_required()])
+    # confirm_password = wtforms.PasswordField(validators=[wtforms.validators.equal_to('password')])
+
+
+PLUS_ICON = Markup("""
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 5l0 14" />
+<path d="M5 12l14 0" />
+</svg>
+""")
+
+
+async def create_user_callback(request: Request, form: CreateUserForm) -> Response:
+    return response().toast('New user created!').close_modal()
+
+
 class UsersTable(TableView):
     label = 'Users'
     group = 'Other'
@@ -28,6 +50,11 @@ class UsersTable(TableView):
         actions.CallFunctionAction(function='alert', args=['kek'], label='Show alert'),
         actions.EventAction(event='refresh', variant='text', label='Refresh data'),
         actions.CallbackAction(show_toast_callback, label='Show toast', variant='danger'),
+        actions.FormAction(
+            form_class=CreateUserForm, callback=create_user_callback,
+            label='New User', icon=PLUS_ICON, variant='accent',
+            modal_title='Create user', modal_description='Create a new user right now!',
+        ),
     ]
     columns = [
         Column('photo', formatter=AvatarFormatter()),

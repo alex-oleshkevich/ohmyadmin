@@ -1,11 +1,16 @@
+import abc
 import dataclasses
 import typing
 
+import wtforms
 from slugify import slugify
 from starlette.requests import Request
 from starlette.responses import Response
+from starlette.routing import BaseRoute, Route
 from starlette.types import Receive, Scope, Send
 from starlette_babel import gettext_lazy as _
+
+from ohmyadmin.templating import render_to_response
 
 ActionVariant = typing.Literal['accent', 'default', 'text', 'danger']
 
@@ -46,8 +51,36 @@ class CallFunctionAction(Action):
 CallbackActionHandler = typing.Callable[[Request], typing.Awaitable[Response]]
 
 
+class WithRoute(abc.ABC):
+
+    @abc.abstractmethod
+    def get_slug(self) -> str:
+        raise NotImplementedError()
+
+    def get_url_name(self, url_name_prefix: str) -> str:
+        return url_name_prefix + '.action.' + self.get_slug()
+
+    def get_route(self, url_name_prefix: str) -> BaseRoute:
+        return Route(
+            '/' + self.get_slug(), self,
+            name=self.get_url_name(url_name_prefix),
+            methods=['get', 'post', 'put', 'patch', 'delete'],
+        )
+
+
+class Dispatchable(abc.ABC):
+    @abc.abstractmethod
+    async def dispatch(self, request: Request) -> Response:
+        raise NotImplementedError()
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        request = Request(scope, receive, send)
+        response = await self.dispatch(request)
+        await response(scope, receive, send)
+
+
 @dataclasses.dataclass
-class CallbackAction(Action):
+class CallbackAction(Action, WithRoute, Dispatchable):
     callback: CallbackActionHandler
     icon: str = ''
     request_method: typing.Literal['GET', 'POST', 'PUT', 'PATCH', 'DELETE'] = 'GET'
@@ -56,13 +89,50 @@ class CallbackAction(Action):
     slug: str = ''
     template: str = 'ohmyadmin/actions/callback.html'
 
-    def __post_init__(self):
-        self.slug = self.slug or slugify(self.label or str(id(self)))
-
     async def dispatch(self, request: Request) -> Response:
         return await self.callback(request)
 
-    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        request = Request(scope, receive, send)
-        response = await self.dispatch(request)
-        await response(scope, receive, send)
+    def get_slug(self) -> str:
+        return self.slug or slugify(self.label or str(id(self)))
+
+
+F = typing.TypeVar('F', bound=wtforms.Form)
+FormActionHandler = typing.Callable[[Request, F], typing.Awaitable[Response]]
+
+
+@dataclasses.dataclass
+class FormAction(Action, WithRoute, Dispatchable):
+    form_class: typing.Type[wtforms.Form]
+    icon: str = ''
+    slug: str = ''
+    modal_title: str = ''
+    modal_description: str = ''
+    variant: ActionVariant = 'default'
+    callback: FormActionHandler | None = None
+    template: str = 'ohmyadmin/actions/form.html'
+    modal_template: str = 'ohmyadmin/actions/form_modal.html'
+    label: str = dataclasses.field(default_factory=lambda: _('Unlabeled'))
+
+    def get_slug(self) -> str:
+        return self.slug or slugify(self.label or str(id(self)))
+
+    async def create_form(self, request: Request) -> wtforms.Form:
+        form = self.form_class(formdata=await request.form() if request.method == 'POST' else None)
+        await self.initialize_form(request, form)
+        return form
+
+    def default_callback(self) -> Response:
+        raise NotImplementedError('Action handler not implemented.')
+
+    async def initialize_form(self, request: Request, form: wtforms.Form) -> None:
+        pass
+
+    async def validate_form(self, request: Request, form: wtforms.Form) -> None:
+        form.validate()
+
+    async def dispatch(self, request: Request) -> Response:
+        form = await self.create_form(request)
+        if request.method == 'POST' and await self.validate_form(request, form):
+            return await self.callback(request, form) if self.callback else self.default_callback(request)
+
+        return render_to_response(request, self.modal_template, {'form': form, 'action': self})

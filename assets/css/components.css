@@ -328,7 +328,8 @@
     }
 
     .modal {
-        @apply fixed inset-0 z-10 overflow-y-auto md:items-center items-center justify-center flex p-2 md:p-0;
+        @apply fixed inset-0 z-10 overflow-y-auto md:items-center items-center justify-center flex p-3 md:p-0;
+        @apply bg-transparent w-full;
     }
 
     .modal-lg .modal-dialog {
@@ -357,17 +358,17 @@
     }
 
     .modal header {
-        @apply p-4 text-lg font-medium leading-6 text-gray-900 text-left flex items-center justify-between;
+        @apply px-5 py-4 text-lg font-medium leading-6 text-gray-900 text-left flex items-center justify-between;
     }
 
     .modal main {
         max-height: 80vh;
         overflow-y: auto;
-        @apply px-4;
+        @apply px-5;
     }
 
     .modal footer {
-        @apply p-4 flex items-center gap-2;
+        @apply p-5 flex items-center gap-2;
     }
 
     .modal.animated {

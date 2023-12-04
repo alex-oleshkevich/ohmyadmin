@@ -41,7 +41,7 @@
 {% endmacro %}
 
 {% macro form_label(field) %}
-    <label for="{{ field.label.id }}">{{ field.label.text }}</label>
+    <label for="{{ field.label.field_id }}">{{ field.label.text }}</label>
 {% endmacro %}
 
 {% macro form_field(field) %}

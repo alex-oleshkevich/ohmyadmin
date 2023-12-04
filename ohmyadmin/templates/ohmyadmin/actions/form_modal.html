@@ -1,0 +1,18 @@
+{% import 'ohmyadmin/forms.html' as forms %}
+<dialog class="modal" data-autoopen hx-swap="outerHTML" hx-target="this">
+    <form class="modal-dialog">
+        <header>{{ action.modal_title or action.label }}</header>
+        <main>
+            {% if action.modal_description %}
+                <p>{{ action.modal_description }}</p>
+            {% endif %}
+            {% for field in form %}
+                {{ forms.form_group(field) }}
+            {% endfor %}
+        </main>
+        <footer>
+            <button type="submit" class="btn btn-accent" hx-post="{{ request.url }}">{{ _('Submit') }}</button>
+            <button type="submit" formnovalidate formmethod="dialog" class="btn btn-text">{{ _('Cancel') }}</button>
+        </footer>
+    </form>
+</dialog>

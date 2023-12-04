@@ -22,11 +22,15 @@ def push_url(response: R, url: str) -> R:
     return response
 
 
-def trigger(response: R, event: str, data: typing.Any) -> R:
+def trigger(response: R, event: str, data: typing.Any = '') -> R:
     triggers = json.loads(response.headers.get('hx-trigger', '{}'))
     triggers[event] = data
     response.headers['hx-trigger'] = json.dumps(triggers)
     return response
+
+
+def close_modal(response: R) -> R:
+    return trigger(response, 'modals-close')
 
 
 def toast(response: R, message: str, category: ToastCategory = 'success') -> R:
@@ -36,6 +40,9 @@ def toast(response: R, message: str, category: ToastCategory = 'success') -> R:
 class HXResponse(Response):
     def toast(self, message: str, category: ToastCategory = 'success') -> typing.Self:
         return toast(self, message, category)
+
+    def close_modal(self) -> typing.Self:
+        return close_modal(self)
 
 
 def response(

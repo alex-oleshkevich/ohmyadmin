@@ -8,7 +8,7 @@ from starlette.routing import BaseRoute, Mount, Route
 from starlette_babel import gettext_lazy as _
 
 from ohmyadmin import htmx
-from ohmyadmin.actions.actions import Action, CallbackAction
+from ohmyadmin.actions.actions import Action, CallbackAction, WithRoute
 from ohmyadmin.datasources.datasource import DataSource
 from ohmyadmin.filters import Filter, OrderingFilter, SearchFilter
 from ohmyadmin.formatters import CellFormatter, StringFormatter
@@ -93,27 +93,21 @@ class TableView(View):
             template = 'ohmyadmin/views/table/table.html'
 
         response = render_to_response(request, template, {
+            'table': self,
+            'objects': rows,
+            'sorting': sorting,
             'page_title': self.label,
             'page_description': self.description,
-            'objects': rows,
-            'table': self,
-            'sorting': sorting,
             'search_term': request.query_params.get(self.search_param, ''),
         })
         return htmx.push_url(response, str(request.url))
 
     def get_route(self) -> BaseRoute:
-        action_routes = [
-            Route(
-                '/actions/' + action.slug, action,
-                name=self.url_name + '.action.' + action.slug,
-                methods=['get', 'post', 'delete', 'patch', 'put']
-            )
-            for action in self.actions if isinstance(action, CallbackAction)
-        ]
         return Mount('/' + self.slug, routes=[
             Route('/', self.dispatch, name=self.url_name),
-            *action_routes,
+            Mount('/actions', routes=[
+                action.get_route(self.url_name) for action in self.actions if isinstance(action, WithRoute)
+            ]),
         ])
 
 
