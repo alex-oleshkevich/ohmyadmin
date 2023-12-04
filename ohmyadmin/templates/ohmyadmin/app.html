@@ -13,7 +13,8 @@
 
 {% block main %}
     <div class="flex flex-col md:flex-row w-full h-full overflow-hidden">
-        <aside class="w-full md:w-72 bg-gray-100 border-r border-r-gray-200 flex-shrink-0 overflow-y-auto max-h-screen px-4 py-6 flex flex-col gap-5">
+        <aside
+            class="w-full md:w-72 bg-gray-100 border-r border-r-gray-200 flex-shrink-0 overflow-y-auto max-h-screen px-4 py-6 flex flex-col gap-5">
             <section class="px-3">
                 <a href="{{ url_for('ohmyadmin.welcome') }}">
                     <img src="{{ theme.logo }}" class="h-8">
@@ -31,15 +32,19 @@
                     </div>
                 {% endfor %}
             </section>
-            <section class="mt-auto" x-data="{open: false}">
-                <button @click="open = !open;" id="user-menu" type="button"
+            <section class="mt-auto">
+                <button id="user-menu" type="button"
                         class="flex gap-2 items-center rounded hover:bg-gray-200 active:bg-gray-300 p-2 w-full">
                     <div class="h-10 w-10 rounded overflow-hidden">
                         <img src="{{ request.user.avatar }}" class="w-full h-full">
                     </div>
                     <div class="font-medium">{{ request.user }}</div>
                 </button>
-                {% include 'ohmyadmin/layout/user_menu.html' %}
+                <o-popover trigger="#user-menu" placement="top">
+                    <div class="dropdown absolute">
+                        {% include 'ohmyadmin/layout/user_menu.html' %}
+                    </div>
+                </o-popover>
                 <form method="post" id="logout-form" action="{{ url_for('ohmyadmin.logout') }}">
                     <input type="hidden" name="next" value="{{ request.url }}">
                 </form>

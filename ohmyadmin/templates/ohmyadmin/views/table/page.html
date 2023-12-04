@@ -1,6 +1,12 @@
 {% extends 'ohmyadmin/app.html' %}
 
-{% block page_actions %}{% endblock %}
+{% block page_actions %}
+    {% for action in table.actions %}
+        {% with action=action %}
+            {% include action.template %}
+        {% endwith %}
+    {% endfor %}
+{% endblock %}
 
 {% block content %}
     <div hx-trigger="refresh from:body"

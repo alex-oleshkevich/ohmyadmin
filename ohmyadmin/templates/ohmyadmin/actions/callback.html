@@ -1,0 +1,6 @@
+<button type="button"
+        class="btn btn-{{ action.variant }}"
+        hx-{{ action.request_method|lower }}="{{ url_for(table.url_name ~ '.action.' ~ action.slug) }}">
+    {{ action.icon }}
+    {{ action.label }}
+</button>

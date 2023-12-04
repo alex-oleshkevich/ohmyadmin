@@ -1,13 +1,9 @@
-<o-popover trigger="#user-menu" placement="top">
-    <div class="dropdown absolute ml-6">
-        <div class="list-menu">
-            {% for item in ohmyadmin_user_menu %}
-                <a href="{{ item.url }}">{{ item.label }}</a>
-            {% endfor %}
+<div class="list-menu">
+    {% for item in ohmyadmin_user_menu %}
+        <a href="{{ item.url }}">{{ item.label }}</a>
+    {% endfor %}
 
-            <button class="list-menu-item" form="logout-form">
-                {{ _('Log out', domain='ohmyadmin') }}
-            </button>
-        </div>
-    </div>
-</o-popover>
+    <button class="list-menu-item" form="logout-form">
+        {{ _('Log out', domain='ohmyadmin') }}
+    </button>
+</div>

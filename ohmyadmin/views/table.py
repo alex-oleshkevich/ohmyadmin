@@ -1,11 +1,14 @@
+import dataclasses
 import functools
 import typing
 
 from starlette.requests import Request
 from starlette.responses import Response
+from starlette.routing import BaseRoute, Mount, Route
 from starlette_babel import gettext_lazy as _
 
 from ohmyadmin import htmx
+from ohmyadmin.actions.actions import Action, CallbackAction
 from ohmyadmin.datasources.datasource import DataSource
 from ohmyadmin.filters import Filter, OrderingFilter, SearchFilter
 from ohmyadmin.formatters import CellFormatter, StringFormatter
@@ -58,6 +61,7 @@ class TableView(View):
     datasource: DataSource | None = None
     columns: list[Column] | None = None
     filters: list[Filter] | None = None
+    actions: list[Action] | None = None
 
     search_param: str = 'search'
     search_placeholder: str = ''
@@ -65,6 +69,7 @@ class TableView(View):
     def __init__(self) -> None:
         self.columns = self.columns or []
         self.filters = self.filters or []
+        self.actions = self.actions or []
         self.filters.extend([
             OrderingFilter(self.ordering_param, [column.sort_by for column in self.columns if column.sortable]),
             SearchFilter(self.search_param, [column.search_in for column in self.columns if column.searchable])
@@ -87,13 +92,36 @@ class TableView(View):
         if htmx.matches_target(request, 'datatable'):
             template = 'ohmyadmin/views/table/table.html'
 
-        return render_to_response(request, template, {
+        response = render_to_response(request, template, {
             'page_title': self.label,
             'page_description': self.description,
             'objects': rows,
             'table': self,
             'sorting': sorting,
             'search_term': request.query_params.get(self.search_param, ''),
-        }, headers={
-            'hx-push-url': str(request.url),
         })
+        return htmx.push_url(response, str(request.url))
+
+    def get_route(self) -> BaseRoute:
+        action_routes = [
+            Route(
+                '/actions/' + action.slug, action,
+                name=self.url_name + '.action.' + action.slug,
+                methods=['get', 'post', 'delete', 'patch', 'put']
+            )
+            for action in self.actions if isinstance(action, CallbackAction)
+        ]
+        return Mount('/' + self.slug, routes=[
+            Route('/', self.dispatch, name=self.url_name),
+            *action_routes,
+        ])
+
+
+@dataclasses.dataclass
+class _CallbackActionWrapper:
+    table: TableView
+    action: CallbackAction
+
+    @property
+    def url_name(self) -> str:
+        return self.table.url_name + '.action.' + self.action.slug

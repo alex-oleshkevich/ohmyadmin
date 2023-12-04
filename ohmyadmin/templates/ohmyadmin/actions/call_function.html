@@ -1,0 +1,11 @@
+<button type="button" class="btn btn-{{ action.variant }}">
+    {{ action.icon }}
+    {{ action.label }}
+</button>
+<script>
+    document.currentScript.previousElementSibling.addEventListener('click', () => {
+        // @formatter:off
+        {{ action.function }}.apply(window, {{ action.args|tojson|safe }});
+        // @formatter:on
+    });
+</script>
