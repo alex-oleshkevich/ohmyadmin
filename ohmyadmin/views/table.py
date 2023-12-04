@@ -1,14 +1,13 @@
-import dataclasses
-
 import functools
 import typing
+
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import BaseRoute, Mount, Route
 from starlette_babel import gettext_lazy as _
 
 from ohmyadmin import htmx
-from ohmyadmin.actions.actions import Action, CallbackAction, WithRoute
+from ohmyadmin.actions.actions import Action, WithRoute
 from ohmyadmin.datasources.datasource import DataSource
 from ohmyadmin.filters import Filter, OrderingFilter, SearchFilter
 from ohmyadmin.formatters import CellFormatter, StringFormatter
@@ -122,12 +121,4 @@ class TableView(View):
             ],
         )
 
-
-@dataclasses.dataclass
-class _CallbackActionWrapper:
-    table: TableView
-    action: CallbackAction
-
-    @property
-    def url_name(self) -> str:
-        return self.table.url_name + '.action.' + self.action.slug
+]
