@@ -1,7 +1,6 @@
 import datetime
 import decimal
 import typing
-
 from starlette.requests import Request
 from starlette_babel import gettext_lazy as _
 
@@ -78,8 +77,9 @@ class AvatarFormatter(BaseFormatter[str]):
 class LinkFormatter(BaseFormatter[str]):
     template: str = 'ohmyadmin/formatters/link.html'
 
-    def __init__(self, *, url: str | typing.Callable[[Request], str],
-                 target: typing.Literal['_blank', ''] = '') -> None:
+    def __init__(
+        self, *, url: str | typing.Callable[[Request], str], target: typing.Literal['_blank', ''] = ''
+    ) -> None:
         self.url = url
         self.target = target
 

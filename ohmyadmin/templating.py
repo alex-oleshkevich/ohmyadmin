@@ -1,7 +1,6 @@
 import functools
 import time
 import typing
-
 from markupsafe import Markup
 from starlette.datastructures import URL
 from starlette.requests import Request
@@ -28,12 +27,15 @@ def url_matches(request: Request, url: URL | str) -> bool:
 
 
 def render_to_response(
-    request: Request, name: str,
+    request: Request,
+    name: str,
     context: typing.Mapping[str, typing.Any] | None = None,
-    status_code: int = 200, headers: typing.Mapping[str, str] | None = None,
+    status_code: int = 200,
+    headers: typing.Mapping[str, str] | None = None,
 ) -> HTMLResponse:
     return request.state.ohmyadmin.templating.TemplateResponse(
-        request, name,
+        request,
+        name,
         context=context,
         status_code=status_code,
         headers=headers,
@@ -42,10 +44,12 @@ def render_to_response(
 
 def render_to_string(request: Request, name: str, context: typing.Mapping[str, typing.Any] | None = None) -> str:
     context = context or {}
-    context.update({
-        'request': request,
-        'media_url': functools.partial(media_url, request),
-        'static_url': functools.partial(static_url, request),
-    })
+    context.update(
+        {
+            'request': request,
+            'media_url': functools.partial(media_url, request),
+            'static_url': functools.partial(static_url, request),
+        }
+    )
     content = request.state.ohmyadmin.templating.env.get_template(name).render(context)
     return Markup(content)

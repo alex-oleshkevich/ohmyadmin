@@ -56,5 +56,3 @@ export class ModalsElement extends LitElement {
         this.dialogs.forEach(el => el.close());
     }
 }
-
-

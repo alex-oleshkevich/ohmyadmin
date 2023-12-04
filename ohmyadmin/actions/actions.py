@@ -1,7 +1,7 @@
-import abc
 import dataclasses
-import typing
 
+import abc
+import typing
 import wtforms
 from slugify import slugify
 from starlette.requests import Request
@@ -15,7 +15,8 @@ from ohmyadmin.templating import render_to_response
 ActionVariant = typing.Literal['accent', 'default', 'text', 'danger']
 
 
-class Action: ...
+class Action:
+    ...
 
 
 @dataclasses.dataclass
@@ -52,7 +53,6 @@ CallbackActionHandler = typing.Callable[[Request], typing.Awaitable[Response]]
 
 
 class WithRoute(abc.ABC):
-
     @abc.abstractmethod
     def get_slug(self) -> str:
         raise NotImplementedError()
@@ -62,7 +62,8 @@ class WithRoute(abc.ABC):
 
     def get_route(self, url_name_prefix: str) -> BaseRoute:
         return Route(
-            '/' + self.get_slug(), self,
+            '/' + self.get_slug(),
+            self,
             name=self.get_url_name(url_name_prefix),
             methods=['get', 'post', 'put', 'patch', 'delete'],
         )
@@ -128,7 +129,7 @@ class FormAction(Action, WithRoute, Dispatchable):
         pass
 
     async def validate_form(self, request: Request, form: wtforms.Form) -> None:
-        form.validate()
+        return form.validate()
 
     async def dispatch(self, request: Request) -> Response:
         form = await self.create_form(request)

@@ -1,7 +1,7 @@
 import dataclasses
+
 import functools
 import typing
-
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import BaseRoute, Mount, Route
@@ -70,13 +70,15 @@ class TableView(View):
         self.columns = self.columns or []
         self.filters = self.filters or []
         self.actions = self.actions or []
-        self.filters.extend([
-            OrderingFilter(self.ordering_param, [column.sort_by for column in self.columns if column.sortable]),
-            SearchFilter(self.search_param, [column.search_in for column in self.columns if column.searchable])
-        ])
-        self.search_placeholder = self.search_placeholder or _('Search in {fields}...').format(fields=', '.join([
-            column.label for column in self.columns if column.searchable
-        ]))
+        self.filters.extend(
+            [
+                OrderingFilter(self.ordering_param, [column.sort_by for column in self.columns if column.sortable]),
+                SearchFilter(self.search_param, [column.search_in for column in self.columns if column.searchable]),
+            ]
+        )
+        self.search_placeholder = self.search_placeholder or _('Search in {fields}...').format(
+            fields=', '.join([column.label for column in self.columns if column.searchable])
+        )
 
     async def dispatch(self, request: Request) -> Response:
         page = get_page_value(request, self.page_param)
@@ -92,23 +94,33 @@ class TableView(View):
         if htmx.matches_target(request, 'datatable'):
             template = 'ohmyadmin/views/table/table.html'
 
-        response = render_to_response(request, template, {
-            'table': self,
-            'objects': rows,
-            'sorting': sorting,
-            'page_title': self.label,
-            'page_description': self.description,
-            'search_term': request.query_params.get(self.search_param, ''),
-        })
+        response = render_to_response(
+            request,
+            template,
+            {
+                'table': self,
+                'objects': rows,
+                'sorting': sorting,
+                'page_title': self.label,
+                'page_description': self.description,
+                'search_term': request.query_params.get(self.search_param, ''),
+            },
+        )
         return htmx.push_url(response, str(request.url))
 
     def get_route(self) -> BaseRoute:
-        return Mount('/' + self.slug, routes=[
-            Route('/', self.dispatch, name=self.url_name),
-            Mount('/actions', routes=[
-                action.get_route(self.url_name) for action in self.actions if isinstance(action, WithRoute)
-            ]),
-        ])
+        return Mount(
+            '/' + self.slug,
+            routes=[
+                Route('/', self.dispatch, name=self.url_name),
+                Mount(
+                    '/actions',
+                    routes=[
+                        action.get_route(self.url_name) for action in self.actions if isinstance(action, WithRoute)
+                    ],
+                ),
+            ],
+        )
 
 
 @dataclasses.dataclass

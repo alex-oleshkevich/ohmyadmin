@@ -1,9 +1,8 @@
 import functools
 import itertools
+import jinja2
 import operator
 import typing
-
-import jinja2
 from starlette import templating
 from starlette.middleware import Middleware
 from starlette.middleware.authentication import AuthenticationMiddleware
@@ -59,12 +58,12 @@ class OhMyAdmin(Router):
                     Route('/login', self.login_view, name='ohmyadmin.login', methods=['get', 'post']),
                     Route('/logout', self.logout_view, name='ohmyadmin.logout', methods=['post']),
                     Mount('/static', app=StaticFiles(packages=['ohmyadmin']), name='ohmyadmin.static'),
-                    *[view.get_route() for view in self.views]
+                    *[view.get_route() for view in self.views],
                 ],
                 middleware=[
                     Middleware(AuthenticationMiddleware, backend=self.auth_policy.get_authentication_backend()),
                     Middleware(LoginRequiredMiddleware, exclude_paths=['/login', '/static']),
-                ]
+                ],
             ),
         ]
 
@@ -83,10 +82,14 @@ class OhMyAdmin(Router):
             else:
                 flash(request).error(_('Invalid credentials.', domain='ohmyadmin'))
 
-        return self.templating.TemplateResponse(request, 'ohmyadmin/login.html', {
-            'page_title': _('Login'),
-            'form': form,
-        })
+        return self.templating.TemplateResponse(
+            request,
+            'ohmyadmin/login.html',
+            {
+                'page_title': _('Login'),
+                'form': form,
+            },
+        )
 
     async def logout_view(self, request: Request) -> Response:
         self.auth_policy.logout(request)
@@ -96,13 +99,8 @@ class OhMyAdmin(Router):
     async def generate_menu(self, request: Request) -> list[MenuItem]:
         groups = itertools.groupby(self.views, key=operator.attrgetter('group'))
         return [
-            MenuItem(
-                label=group[0],
-                children=[
-                    await view.get_menu_item(request)
-                    for view in group[1]
-                ]
-            ) for group in groups
+            MenuItem(label=group[0], children=[await view.get_menu_item(request) for view in group[1]])
+            for group in groups
         ]
 
     def generate_user_menu(self, request: Request) -> list[MenuItem]:

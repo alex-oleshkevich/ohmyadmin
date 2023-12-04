@@ -1,8 +1,7 @@
 import decimal
+import sqlalchemy as sa
 import typing
 import uuid
-
-import sqlalchemy as sa
 from sqlalchemy import orm
 from starlette.requests import Request
 
@@ -10,7 +9,9 @@ from ohmyadmin.datasources.datasource import DataSource, SearchPredicate
 from ohmyadmin.ordering import SortingType
 from ohmyadmin.pagination import Pagination
 
-T = typing.TypeVar('T', )
+T = typing.TypeVar(
+    'T',
+)
 
 
 def get_column_properties(model_class: typing.Any, prop_names: typing.Sequence[str]) -> dict[str, orm.ColumnProperty]:
@@ -61,7 +62,6 @@ def guess_pk_type(model_class: type, pk_field: str) -> typing.Callable:
 
 
 class SADataSource(DataSource[T]):
-
     def __init__(
         self,
         model_class: typing.Type[T],

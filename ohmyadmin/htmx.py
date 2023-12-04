@@ -1,6 +1,5 @@
 import json
 import typing
-
 from starlette.background import BackgroundTask
 from starlette.requests import Request
 from starlette.responses import Response
@@ -22,7 +21,7 @@ def push_url(response: R, url: str) -> R:
     return response
 
 
-def trigger(response: R, event: str, data: typing.Any = '') -> R:
+def trigger(response: R, event: str, data: typing.Any = None) -> R:
     triggers = json.loads(response.headers.get('hx-trigger', '{}'))
     triggers[event] = data
     response.headers['hx-trigger'] = json.dumps(triggers)
@@ -52,5 +51,8 @@ def response(
     background: BackgroundTask | None = None,
 ) -> HXResponse:
     return HXResponse(
-        status_code=status_code, headers=headers, media_type=media_type, background=background,
+        status_code=status_code,
+        headers=headers,
+        media_type=media_type,
+        background=background,
     )

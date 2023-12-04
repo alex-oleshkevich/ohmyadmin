@@ -1,6 +1,5 @@
 import abc
 import typing
-
 import wtforms as wtforms
 from starlette.authentication import AuthCredentials, AuthenticationBackend, BaseUser, UnauthenticatedUser
 from starlette.requests import HTTPConnection, Request

@@ -4,8 +4,7 @@ import datetime
 import pytest
 from starlette.requests import Request
 
-from ohmyadmin.datasources.datasource import NumberOperation, StringOperation
-from ohmyadmin.datasources.datasource import InMemoryDataSource
+from ohmyadmin.datasources.datasource import InMemoryDataSource, NumberOperation, StringOperation
 
 MAX_OBJECTS = 21
 

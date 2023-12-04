@@ -1,5 +1,4 @@
 import pathlib
-
 import sqlalchemy as sa
 from passlib.handlers.pbkdf2 import pbkdf2_sha256
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -51,7 +50,6 @@ class DatabaseSessionMiddleware:
 
 
 class UserPolicy(AuthPolicy):
-
     async def authenticate(self, request: Request, identity: str, password: str) -> BaseUser | None:
         async with async_session() as session:
             stmt = sa.select(User).where(User.email == identity)
@@ -79,7 +77,7 @@ admin = OhMyAdmin(
     ),
     views=[
         UsersTable(),
-    ]
+    ],
 )
 
 app = Starlette(

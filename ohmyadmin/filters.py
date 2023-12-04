@@ -1,5 +1,4 @@
 import abc
-
 from starlette.requests import Request
 
 from ohmyadmin.datasources.datasource import DataSource

@@ -1,6 +1,5 @@
 import abc
 import typing
-
 from starlette.requests import Request
 
 from ohmyadmin.ordering import SortingType
