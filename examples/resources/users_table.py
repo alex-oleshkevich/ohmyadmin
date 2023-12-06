@@ -7,7 +7,12 @@ from starlette.responses import Response
 from examples.models import User
 from ohmyadmin.actions import actions
 from ohmyadmin.datasources.sqlalchemy import SADataSource
-from ohmyadmin.formatters import AvatarFormatter, BoolFormatter, DateFormatter, LinkFormatter
+from ohmyadmin.formatters import (
+    AvatarFormatter,
+    BoolFormatter,
+    DateFormatter,
+    LinkFormatter,
+)
 from ohmyadmin.htmx import response
 from ohmyadmin.views.table import Column, TableView
 
@@ -17,7 +22,7 @@ def user_edit_url(request: Request) -> URL:
 
 
 async def show_toast_callback(request: Request) -> Response:
-    return response().toast('Clicked!')
+    return response().toast("Clicked!")
 
 
 class CreateUserForm(wtforms.Form):
@@ -25,7 +30,9 @@ class CreateUserForm(wtforms.Form):
     last_name = wtforms.StringField()
     email = wtforms.EmailField(validators=[wtforms.validators.data_required()])
     password = wtforms.PasswordField(validators=[wtforms.validators.data_required()])
-    confirm_password = wtforms.PasswordField(validators=[wtforms.validators.equal_to('password')])
+    confirm_password = wtforms.PasswordField(
+        validators=[wtforms.validators.equal_to("password")]
+    )
 
 
 PLUS_ICON = Markup(
@@ -40,35 +47,37 @@ PLUS_ICON = Markup(
 
 async def create_user_callback(request: Request, form: CreateUserForm) -> Response:
     print(form.data)
-    r = response().toast('New user created!').close_modal()
+    r = response().toast("New user created!").close_modal()
     return r
 
 
 class UsersTable(TableView):
-    label = 'Users'
-    group = 'Other'
-    description = 'List all users.'
+    label = "Users"
+    group = "Other"
+    description = "List all users."
     datasource = SADataSource(User)
     actions = [
-        actions.LinkAction(url='/admin', label='To Main page'),
-        actions.CallFunctionAction(function='alert', args=['kek'], label='Show alert'),
-        actions.EventAction(event='refresh', variant='text', label='Refresh data'),
-        actions.CallbackAction(show_toast_callback, label='Show toast', variant='danger'),
+        actions.LinkAction(url="/admin", label="To Main page"),
+        actions.CallFunctionAction(function="alert", args=["kek"], label="Show alert"),
+        actions.EventAction(event="refresh", variant="text", label="Refresh data"),
+        actions.CallbackAction(
+            show_toast_callback, label="Show toast", variant="danger"
+        ),
         actions.FormAction(
             form_class=CreateUserForm,
             callback=create_user_callback,
-            label='New User',
+            label="New User",
             icon=PLUS_ICON,
-            variant='accent',
-            modal_title='Create user',
-            modal_description='Create a new user right now!',
+            variant="accent",
+            modal_title="Create user",
+            modal_description="Create a new user right now!",
         ),
     ]
     columns = [
-        Column('photo', formatter=AvatarFormatter()),
-        Column('first_name', formatter=LinkFormatter(url='/admin')),
-        Column('last_name', searchable=True, sortable=True),
-        Column('email', searchable=True),
-        Column('is_active', sortable=True, formatter=BoolFormatter(as_text=True)),
-        Column('created_at', sortable=True, formatter=DateFormatter()),
+        Column("photo", formatter=AvatarFormatter()),
+        Column("first_name", formatter=LinkFormatter(url="/admin")),
+        Column("last_name", searchable=True, sortable=True),
+        Column("email", searchable=True),
+        Column("is_active", sortable=True, formatter=BoolFormatter(as_text=True)),
+        Column("created_at", sortable=True, formatter=DateFormatter()),
     ]

@@ -11,42 +11,48 @@ from tests.models import Post
 
 
 class ExampleCard(ValueMetric):
-    slug = 'example'
+    slug = "example"
 
     async def calculate(self, request: Request) -> str:
-        return 'CARD DATA'
+        return "CARD DATA"
 
 
 def test_renders_cards(create_test_app: CreateTestAppFactory) -> None:
     class DummyTable(TablePage):
-        slug = 'dummy'
-        datasource = InMemoryDataSource(Post, [Post(title='Title 1'), Post(title='Title 2'), Post(title='Title 3')])
-        columns = [TableColumn(name='title')]
+        slug = "dummy"
+        datasource = InMemoryDataSource(
+            Post, [Post(title="Title 1"), Post(title="Title 2"), Post(title="Title 3")]
+        )
+        columns = [TableColumn(name="title")]
         metrics = [ExampleCard]
 
     client = TestClient(create_test_app(pages=[DummyTable()]))
-    response = client.get('/admin/dummy')
-    assert '_metric=example' in response.text
+    response = client.get("/admin/dummy")
+    assert "_metric=example" in response.text
 
 
 def test_dispatches_cards(create_test_app: CreateTestAppFactory) -> None:
     class DummyTable(TablePage):
-        slug = 'dummy'
-        datasource = InMemoryDataSource(Post, [Post(title='Title 1'), Post(title='Title 2'), Post(title='Title 3')])
-        columns = [TableColumn(name='title')]
+        slug = "dummy"
+        datasource = InMemoryDataSource(
+            Post, [Post(title="Title 1"), Post(title="Title 2"), Post(title="Title 3")]
+        )
+        columns = [TableColumn(name="title")]
         metrics = [ExampleCard]
 
     client = TestClient(create_test_app(pages=[DummyTable()]))
-    response = client.get('/admin/dummy?_metric=example')
-    assert 'CARD DATA' in response.text
+    response = client.get("/admin/dummy?_metric=example")
+    assert "CARD DATA" in response.text
 
 
 def test_undefined_card(create_test_app: CreateTestAppFactory) -> None:
     class DummyTable(TablePage):
-        slug = 'dummy'
-        datasource = InMemoryDataSource(Post, [Post(title='Title 1'), Post(title='Title 2'), Post(title='Title 3')])
-        columns = [TableColumn(name='title')]
+        slug = "dummy"
+        datasource = InMemoryDataSource(
+            Post, [Post(title="Title 1"), Post(title="Title 2"), Post(title="Title 3")]
+        )
+        columns = [TableColumn(name="title")]
 
     with pytest.raises(UndefinedCardError, match='Metric "example" is not defined.'):
         client = TestClient(create_test_app(pages=[DummyTable()]))
-        client.get('/admin/dummy?_metric=example')
+        client.get("/admin/dummy?_metric=example")

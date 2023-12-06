@@ -32,7 +32,9 @@ class CreateTestAppFactory(typing.Protocol):  # pragma: no cover
 
 
 @pytest.fixture()
-def extra_template_dir(tmp_path: pathlib.Path) -> typing.Generator[pathlib.Path, None, None]:
+def extra_template_dir(
+    tmp_path: pathlib.Path,
+) -> typing.Generator[pathlib.Path, None, None]:
     yield tmp_path
 
 
@@ -49,15 +51,17 @@ def auth_policy() -> BaseAuthPolicy:
 @pytest.fixture
 def admin(extra_template_dir: pathlib.Path) -> OhMyAdmin:
     return OhMyAdmin(
-        title='test',
-        logo_url='http://example.com',
+        title="test",
+        logo_url="http://example.com",
         template_dir=extra_template_dir,
     )
 
 
 @pytest.fixture
 def create_test_app(
-    extra_template_dir: pathlib.Path, file_storage: FileStorage, auth_policy: BaseAuthPolicy
+    extra_template_dir: pathlib.Path,
+    file_storage: FileStorage,
+    auth_policy: BaseAuthPolicy,
 ) -> CreateTestAppFactory:
     default_auth_policy = auth_policy
 
@@ -75,12 +79,12 @@ def create_test_app(
         )
         return Starlette(
             routes=[
-                Mount('/admin', admin),
-                Route('/users', Response('ok'), name='users'),
-                Route('/posts/{id}', Response('ok'), name='posts'),
+                Mount("/admin", admin),
+                Route("/users", Response("ok"), name="users"),
+                Route("/posts/{id}", Response("ok"), name="posts"),
             ],
             middleware=[
-                Middleware(SessionMiddleware, secret_key='key!'),
+                Middleware(SessionMiddleware, secret_key="key!"),
             ],
         )
 
@@ -91,11 +95,11 @@ class RequestFactory(typing.Protocol):
     def __call__(
         self,
         https: bool = False,
-        path: str = '/admin',
-        host: str = 'testserver',
-        query_string: str = '',
-        root_path: str = '/admin',
-        method: str = 'GET',
+        path: str = "/admin",
+        host: str = "testserver",
+        query_string: str = "",
+        root_path: str = "/admin",
+        method: str = "GET",
         auth: AuthCredentials | None = None,
         user: BaseUser | None = None,
         routes: typing.Sequence[BaseRoute] | None = None,
@@ -110,11 +114,11 @@ class RequestFactory(typing.Protocol):
 def request_f(admin: OhMyAdmin) -> typing.Callable[[], Request]:
     def http_request(
         https: bool = False,
-        path: str = '/',
-        host: str = 'testserver',
-        query_string: str = '',
-        root_path: str = '/admin',
-        method: str = 'GET',
+        path: str = "/",
+        host: str = "testserver",
+        query_string: str = "",
+        root_path: str = "/admin",
+        method: str = "GET",
         auth: AuthCredentials | None = None,
         user: BaseUser | None = None,
         routes: typing.Sequence[BaseRoute] | None = None,
@@ -134,41 +138,41 @@ def request_f(admin: OhMyAdmin) -> typing.Callable[[], Request]:
         app = Starlette(
             routes=routes
             or [
-                Mount('/', Response('ok'), name='ohmyadmin.welcome'),
-                Mount('/static', Response('ok'), name='ohmyadmin.static'),
-                Mount('/media', Response('ok'), name='ohmyadmin.media'),
+                Mount("/", Response("ok"), name="ohmyadmin.welcome"),
+                Mount("/static", Response("ok"), name="ohmyadmin.static"),
+                Mount("/media", Response("ok"), name="ohmyadmin.media"),
             ]
         )
         state = state or {}
-        state.setdefault('admin', admin)
-        state.setdefault('app', app)
+        state.setdefault("admin", admin)
+        state.setdefault("app", app)
         scope = {
-            'type': 'http',
-            'version': '3.0',
-            'spec_version': '2.3',
-            'http_version': '1.1',
-            'server': ('127.0.0.1', 7002),
-            'client': ('127.0.0.1', 49880),
-            'path': path,
-            'raw_path': (root_path + path).encode(),
-            'root_path': root_path,
-            'scheme': 'https' if https else 'http',
-            'headers': [
-                (b'host', host.encode()),
+            "type": "http",
+            "version": "3.0",
+            "spec_version": "2.3",
+            "http_version": "1.1",
+            "server": ("127.0.0.1", 7002),
+            "client": ("127.0.0.1", 49880),
+            "path": path,
+            "raw_path": (root_path + path).encode(),
+            "root_path": root_path,
+            "scheme": "https" if https else "http",
+            "headers": [
+                (b"host", host.encode()),
             ],
-            'method': method,
-            'session': session or {},
-            'path_params': {},
-            'query_string': query_string.encode(),
-            'state': state,
-            'auth': auth,
-            'user': user,
-            'app': app,
-            'router': app.router,
+            "method": method,
+            "session": session or {},
+            "path_params": {},
+            "query_string": query_string.encode(),
+            "state": state,
+            "auth": auth,
+            "user": user,
+            "app": app,
+            "router": app.router,
         }
         request = Request(scope)
         if form_data:
-            setattr(request, '_form', form_data)
+            setattr(request, "_form", form_data)
         return request
 
     return http_request
@@ -178,12 +182,12 @@ def request_f(admin: OhMyAdmin) -> typing.Callable[[], Request]:
 def http_request(request_f: RequestFactory, datasource: InMemoryDataSource) -> Request:
     return request_f(
         routes=[
-            Route('/users', Response('ok'), name='users'),
-            Route('/posts/{id}', Response('ok'), name='posts'),
-            Mount('/media', Response('ok'), name='ohmyadmin.media'),
+            Route("/users", Response("ok"), name="users"),
+            Route("/posts/{id}", Response("ok"), name="posts"),
+            Mount("/media", Response("ok"), name="ohmyadmin.media"),
         ],
         state={
-            'datasource': datasource,
+            "datasource": datasource,
         },
     )
 
@@ -195,7 +199,7 @@ def datasource() -> InMemoryDataSource[Post]:
         [
             Post(
                 id=index,
-                title=f'Title {index}',
+                title=f"Title {index}",
                 published=index % 5 == 0,
                 date_published=datetime.date(2023, 1, index),
                 updated_at=datetime.datetime(2023, 1, index, 12, 0, 0),

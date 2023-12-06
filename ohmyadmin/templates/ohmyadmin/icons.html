@@ -13,7 +13,8 @@
 
 {% macro sort_desc(size=20, stroke=1) %}
     <svg xmlns="http://www.w3.org/2000/svg" width="{{ size }}"
-         height="{{ size }}" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none" stroke-linecap="round"
+         height="{{ size }}" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" fill="none"
+         stroke-linecap="round"
          stroke-linejoin="round">
         <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
         <path d="M15 21v-5c0 -1.38 .62 -2 2 -2s2 .62 2 2v5m0 -3h-4"/>
@@ -30,5 +31,27 @@
         <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
         <path d="M3 9l4 -4l4 4m-4 -4v14"/>
         <path d="M21 15l-4 4l-4 -4m4 4v-14"/>
+    </svg>
+{% endmacro %}
+
+{% macro arrow_left(size=20, stroke=1) %}
+    <svg xmlns="http://www.w3.org/2000/svg" width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" stroke-width="2"
+         stroke="currentColor" fill="none" stroke-linecap="round"
+         stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <path d="M5 12l14 0"/>
+        <path d="M5 12l4 4"/>
+        <path d="M5 12l4 -4"/>
+    </svg>
+{% endmacro %}
+
+{% macro arrow_right(size=20, stroke=1) %}
+    <svg xmlns="http://www.w3.org/2000/svg" width="{{ size }}" height="{{ size }}"
+         viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round"
+         stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+        <path d="M5 12l14 0"/>
+        <path d="M15 16l4 -4"/>
+        <path d="M15 8l4 4"/>
     </svg>
 {% endmacro %}

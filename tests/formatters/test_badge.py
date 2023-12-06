@@ -5,8 +5,8 @@ from ohmyadmin.testing import MarkupSelector
 
 
 def test_badge(http_request: Request) -> None:
-    formatter = BadgeFormatter(color_map={'success': 'green'})
-    content = formatter.format(http_request, 'success')
+    formatter = BadgeFormatter(color_map={"success": "green"})
+    content = formatter.format(http_request, "success")
     selector = MarkupSelector(content)
-    assert selector.has_node('.badge.badge-green')
-    assert selector.get_text('.badge') == 'success'
+    assert selector.has_node(".badge.badge-green")
+    assert selector.get_text(".badge") == "success"

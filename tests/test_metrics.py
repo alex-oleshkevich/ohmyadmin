@@ -16,55 +16,57 @@ from tests.conftest import RequestFactory
 
 class ExampleCard(Card):  # pragma: no cover
     async def dispatch(self, request: Request) -> Response:
-        return Response('CARD CONTENT')
+        return Response("CARD CONTENT")
 
 
 def test_autogenerates_slug() -> None:
     card = ExampleCard()
-    assert card.slug == 'examplecard'
+    assert card.slug == "examplecard"
 
 
 def test_autogenerates_label() -> None:
     card = ExampleCard()
-    assert card.label == 'Example card'
+    assert card.label == "Example card"
 
 
 def test_generates_url(request_f: RequestFactory) -> None:
     card = ExampleCard()
     request = request_f()
-    assert str(card.resolve_url(request)) == 'http://testserver/admin/?_metric=examplecard'
+    assert (
+        str(card.resolve_url(request)) == "http://testserver/admin/?_metric=examplecard"
+    )
 
 
 async def test_renders_title(request_f: RequestFactory) -> None:
     class ExampleMetric(ValueMetric):
-        label = 'Example Metric'
+        label = "Example Metric"
 
         async def calculate(self, request: Request) -> str:
-            return 'HUNDRED'
+            return "HUNDRED"
 
     card = ExampleMetric()
     request = request_f()
     response = await card.dispatch(request)
     page = MarkupSelector(response.body)
-    assert page.get_text('[data-test="metric"] header') == 'Example Metric'
+    assert page.get_text('[data-test="metric"] header') == "Example Metric"
 
 
 async def test_value_metric(request_f: RequestFactory) -> None:
     class ExampleMetric(ValueMetric):
         async def calculate(self, request: Request) -> str:
-            return 'HUNDRED'
+            return "HUNDRED"
 
     card = ExampleMetric()
     request = request_f()
     response = await card.dispatch(request)
     page = MarkupSelector(response.body)
-    assert page.get_text('[data-test="metric"] main') == 'HUNDRED'
+    assert page.get_text('[data-test="metric"] main') == "HUNDRED"
 
 
 async def test_trend_metric(request_f: RequestFactory) -> None:
     class ExampleMetric(TrendMetric):
         async def calculate(self, request: Request) -> TrendResult:
-            return TrendResult(current_value=100, series=[('zero', 10), ('one', 20)])
+            return TrendResult(current_value=100, series=[("zero", 10), ("one", 20)])
 
     card = ExampleMetric()
     request = request_f()
@@ -72,10 +74,15 @@ async def test_trend_metric(request_f: RequestFactory) -> None:
     page = MarkupSelector(response.body)
 
     # current value rendered
-    assert page.get_text('[data-test="metric"] main [data-test="trend-current"]') == '100'
+    assert (
+        page.get_text('[data-test="metric"] main [data-test="trend-current"]') == "100"
+    )
 
     # renders script data
-    assert page.get_text('[data-test="metric"] main script') == '[["zero", 10], ["one", 20]]'
+    assert (
+        page.get_text('[data-test="metric"] main script')
+        == '[["zero", 10], ["one", 20]]'
+    )
 
     # renders chart tag
     assert page.has_node('[data-test="metric"] main x-trend-metric-chart')
@@ -94,10 +101,19 @@ async def test_progress_metric(request_f: RequestFactory) -> None:
     page = MarkupSelector(response.body)
 
     # current value rendered
-    assert page.get_text('[data-test="metric"] main [data-test="progress-current"]') == '20%'
+    assert (
+        page.get_text('[data-test="metric"] main [data-test="progress-current"]')
+        == "20%"
+    )
 
     # renders chart tag
-    assert page.get_style('[data-test="metric"] main [data-test="progress-value"] .progress-bar', 'width') == '20%'
+    assert (
+        page.get_style(
+            '[data-test="metric"] main [data-test="progress-value"] .progress-bar',
+            "width",
+        )
+        == "20%"
+    )
 
 
 async def test_partition_metric(request_f: RequestFactory) -> None:
@@ -105,8 +121,8 @@ async def test_partition_metric(request_f: RequestFactory) -> None:
         async def calculate(self, request: Request) -> PartitionResult:
             return PartitionResult(
                 groups={
-                    'red': {'color': 'red', 'value': 30},
-                    'blue': {'color': 'blue', 'value': 70},
+                    "red": {"color": "red", "value": 30},
+                    "blue": {"color": "blue", "value": 70},
                 }
             )
 
@@ -116,9 +132,11 @@ async def test_partition_metric(request_f: RequestFactory) -> None:
     page = MarkupSelector(response.body)
 
     # renders table
-    table_text = page.get_text('[data-test="metric"] main [data-test="partition-table"]')
-    assert 'red' in table_text
-    assert 'blue' in table_text
+    table_text = page.get_text(
+        '[data-test="metric"] main [data-test="partition-table"]'
+    )
+    assert "red" in table_text
+    assert "blue" in table_text
 
     # renders script data
     assert (

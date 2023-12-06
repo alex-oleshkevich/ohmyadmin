@@ -6,15 +6,15 @@ from ohmyadmin.actions import BasePageAction
 
 class MyAction(BasePageAction):  # pragma: no cover
     async def apply(self, request: Request) -> Response:
-        return Response('CALLED')
+        return Response("CALLED")
 
 
 def test_generates_slug(http_request: Request) -> None:
     action = MyAction()
-    assert action.slug == 'myaction'
+    assert action.slug == "myaction"
 
 
 async def test_dispatch(http_request: Request) -> None:
     action = MyAction()
     response = await action.dispatch(http_request)
-    assert response.body == b'CALLED'
+    assert response.body == b"CALLED"

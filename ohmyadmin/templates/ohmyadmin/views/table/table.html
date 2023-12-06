@@ -1,3 +1,5 @@
+{% import 'ohmyadmin/pagination.html' as pagination %}
+
 {% macro render_head_cell(request, column) %}
     {% include 'ohmyadmin/views/table/table_head_cell.html' %}
 {% endmacro %}
@@ -28,3 +30,7 @@
     {% endfor %}
     </tbody>
 </table>
+
+<div class="mt-5" hx-boost="true">
+    {{ pagination.pagination(request, objects) }}
+</div>

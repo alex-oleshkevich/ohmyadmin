@@ -1,11 +1,16 @@
 import abc
 import typing
 import wtforms as wtforms
-from starlette.authentication import AuthCredentials, AuthenticationBackend, BaseUser, UnauthenticatedUser
+from starlette.authentication import (
+    AuthCredentials,
+    AuthenticationBackend,
+    BaseUser,
+    UnauthenticatedUser,
+)
 from starlette.requests import HTTPConnection, Request
 from starlette_babel import gettext_lazy as _
 
-SESSION_KEY = '_auth_user_id_'
+SESSION_KEY = "_auth_user_id_"
 
 
 class AdminUser(typing.Protocol):
@@ -15,13 +20,15 @@ class AdminUser(typing.Protocol):
 
 class AnonymousUser(UnauthenticatedUser):
     is_anonymous = True
-    display_name = _('Anonymous', domain='ohmyadmin')
+    display_name = _("Anonymous", domain="ohmyadmin")
 
 
 class SessionAuthBackend(AuthenticationBackend):
-    async def authenticate(self, conn: HTTPConnection) -> tuple[AuthCredentials, BaseUser] | None:
+    async def authenticate(
+        self, conn: HTTPConnection
+    ) -> tuple[AuthCredentials, BaseUser] | None:
         auth_policy: AuthPolicy = conn.state.ohmyadmin.auth_policy
-        user_id = conn.session.get(SESSION_KEY, '')
+        user_id = conn.session.get(SESSION_KEY, "")
         if user_id and (user := await auth_policy.load_user(conn, user_id)):
             return AuthCredentials(), user
         return AuthCredentials([]), UnauthenticatedUser()
@@ -29,15 +36,15 @@ class SessionAuthBackend(AuthenticationBackend):
 
 class LoginForm(wtforms.Form):
     identity = wtforms.EmailField(
-        label=_('Email', domain='ohmyadmin'),
-        render_kw={'autocomplete': 'email', 'inputmode': 'email'},
+        label=_("Email", domain="ohmyadmin"),
+        render_kw={"autocomplete": "email", "inputmode": "email"},
         validators=[
             wtforms.validators.data_required(),
         ],
     )
     password = wtforms.PasswordField(
-        label=_('Password', domain='ohmyadmin'),
-        render_kw={'autocomplete': 'password'},
+        label=_("Password", domain="ohmyadmin"),
+        render_kw={"autocomplete": "password"},
         validators=[
             wtforms.validators.data_required(),
         ],
@@ -49,11 +56,15 @@ class AuthPolicy(abc.ABC):
     login_form_class: type[LoginForm] = LoginForm
 
     @abc.abstractmethod
-    async def authenticate(self, request: Request, identity: str, password: str) -> BaseUser | None:  # pragma: nocover
+    async def authenticate(
+        self, request: Request, identity: str, password: str
+    ) -> BaseUser | None:  # pragma: nocover
         ...
 
     @abc.abstractmethod
-    async def load_user(self, conn: HTTPConnection, user_id: str) -> BaseUser | None:  # pragma: nocover
+    async def load_user(
+        self, conn: HTTPConnection, user_id: str
+    ) -> BaseUser | None:  # pragma: nocover
         ...
 
     def login(self, request: Request, user: BaseUser) -> None:
@@ -71,7 +82,9 @@ class AuthPolicy(abc.ABC):
 
 
 class AnonymousAuthPolicy(AuthPolicy):
-    async def authenticate(self, request: Request, identity: str, password: str) -> BaseUser | None:
+    async def authenticate(
+        self, request: Request, identity: str, password: str
+    ) -> BaseUser | None:
         return None
 
     async def load_user(self, conn: HTTPConnection, user_id: str) -> BaseUser | None:

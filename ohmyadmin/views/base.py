@@ -8,27 +8,27 @@ from ohmyadmin.menu import MenuItem
 
 
 class View:
-    label: str = ''
-    description: str = ''
-    group: str = ''
+    label: str = ""
+    description: str = ""
+    group: str = ""
     show_in_menu: bool = True
 
     @property
     def slug(self) -> str:
-        group = self.group.lower().replace(' ', '-')
-        label = self.label.lower().replace(' ', '-')
-        return '/'.join([group, label])
+        group = self.group.lower().replace(" ", "-")
+        label = self.label.lower().replace(" ", "-")
+        return "/".join([group, label])
 
     @property
     def url_name(self) -> str:
-        view_name = self.slug.replace('/', '_')
-        return f'ohmyadmin.view.{view_name}'
+        view_name = self.slug.replace("/", "_")
+        return f"ohmyadmin.view.{view_name}"
 
     def get_url(self, request: Request) -> URL:
         return request.url_for(self.url_name)
 
     def get_route(self) -> BaseRoute:
-        return Route(path='/' + self.slug, endpoint=self.dispatch, name=self.url_name)
+        return Route(path="/" + self.slug, endpoint=self.dispatch, name=self.url_name)
 
     async def get_menu_item(self, request: Request) -> MenuItem:
         """Generate a menu item."""

@@ -4,12 +4,12 @@ from ohmyadmin.views.table import TableView
 
 
 class CountriesTable(TableView):
-    label = 'Countries'
+    label = "Countries"
 
 
 class EditCountryView(FormView):
-    label = 'Edit Country'
-    create_label = 'Create country'
+    label = "Edit Country"
+    create_label = "Create country"
 
 
 class CountriesResource(ResourceView):

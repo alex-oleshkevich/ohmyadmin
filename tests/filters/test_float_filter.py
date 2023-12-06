@@ -8,7 +8,7 @@ from tests.models import Post
 
 
 async def test_renders_form(request_f: RequestFactory) -> None:
-    unbound = FloatFilter('example')
+    unbound = FloatFilter("example")
     assert isinstance(unbound, UnboundFilter)
 
     request = request_f()
@@ -20,10 +20,10 @@ async def test_renders_form(request_f: RequestFactory) -> None:
 
 
 async def test_is_active(request_f: RequestFactory) -> None:
-    unbound = FloatFilter('example')
+    unbound = FloatFilter("example")
     assert isinstance(unbound, UnboundFilter)
 
-    request = request_f(query_string='example-query=1&example-operation=eq')
+    request = request_f(query_string="example-query=1&example-operation=eq")
     instance = await unbound.create(request)
     assert instance.is_active(request)
 
@@ -32,37 +32,39 @@ async def test_is_active(request_f: RequestFactory) -> None:
     assert not instance.is_active(request)
 
 
-async def test_applies_filter(request_f: RequestFactory, datasource: InMemoryDataSource[Post]) -> None:
-    unbound = FloatFilter('example')
+async def test_applies_filter(
+    request_f: RequestFactory, datasource: InMemoryDataSource[Post]
+) -> None:
+    unbound = FloatFilter("example")
     assert isinstance(unbound, UnboundFilter)
 
-    request = request_f(query_string='example-query=1&example-operation=eq')
+    request = request_f(query_string="example-query=1&example-operation=eq")
     instance = await unbound.create(request)
-    with mock.patch.object(datasource, 'apply_number_filter') as fn:
+    with mock.patch.object(datasource, "apply_number_filter") as fn:
         instance.apply(request, datasource)
-        fn.assert_called_once_with('example', NumberOperation.eq, 1)
+        fn.assert_called_once_with("example", NumberOperation.eq, 1)
 
 
 async def test_not_applies_for_malformed_operation(
     request_f: RequestFactory,
     datasource: InMemoryDataSource[Post],
 ) -> None:
-    unbound = FloatFilter('example')
+    unbound = FloatFilter("example")
     assert isinstance(unbound, UnboundFilter)
 
-    request = request_f(query_string='example-query=1&example-operation=error')
+    request = request_f(query_string="example-query=1&example-operation=error")
     instance = await unbound.create(request)
-    with mock.patch.object(datasource, 'apply_number_filter') as fn:
+    with mock.patch.object(datasource, "apply_number_filter") as fn:
         instance.apply(request, datasource)
         fn.assert_not_called()
 
 
 async def test_renders_indicator(request_f: RequestFactory) -> None:
-    unbound = FloatFilter('example')
+    unbound = FloatFilter("example")
     assert isinstance(unbound, UnboundFilter)
 
-    request = request_f(query_string='example-query=1&example-operation=eq')
+    request = request_f(query_string="example-query=1&example-operation=eq")
     instance = await unbound.create(request)
     content = instance.render_indicator(request)
     page = MarkupSelector(content)
-    assert page.get_text('[data-test="indicator"]') == 'Example:\n\nequals 1.0'
+    assert page.get_text('[data-test="indicator"]') == "Example:\n\nequals 1.0"

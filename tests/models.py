@@ -8,7 +8,7 @@ from starlette.authentication import BaseUser
 class User(BaseUser):
     id: str
     is_authenticated: bool = True
-    display_name: str = 'User'
+    display_name: str = "User"
 
     @property
     def identity(self) -> str:
@@ -18,10 +18,14 @@ class User(BaseUser):
 @dataclasses.dataclass
 class Post:
     id: int = 1
-    title: str = 'Title'
+    title: str = "Title"
     published: bool = False
-    date_published: datetime.date = dataclasses.field(default_factory=lambda: datetime.datetime.today().date())
-    updated_at: datetime.date = dataclasses.field(default_factory=lambda: datetime.datetime.today())
+    date_published: datetime.date = dataclasses.field(
+        default_factory=lambda: datetime.datetime.today().date()
+    )
+    updated_at: datetime.date = dataclasses.field(
+        default_factory=lambda: datetime.datetime.today()
+    )
 
     def __str__(self) -> str:
         return self.title

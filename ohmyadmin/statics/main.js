@@ -292,10 +292,10 @@ var c2 = (t4) => u(t4) || "function" == typeof (null == t4 ? void 0 : t4[Symbol.
 var v = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g;
 var a2 = /-->/g;
 var f = />/g;
-var _ = RegExp(`>|[ 	
-\f\r](?:([^\\s"'>=/]+)([ 	
-\f\r]*=[ 	
-\f\r]*(?:[^ 	
+var _ = RegExp(`>|[
+\f\r](?:([^\\s"'>=/]+)([
+\f\r]*=[
+\f\r]*(?:[^
 \f\r"'\`<>=]|("|')|))|$)`, "g");
 var m = /'/g;
 var p = /"/g;
@@ -2281,10 +2281,10 @@ lit-html/directives/style-map.js:
 notyf/notyf.es.js:
   (*! *****************************************************************************
   Copyright (c) Microsoft Corporation.
-  
+
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted.
-  
+
   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
   REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
   AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,

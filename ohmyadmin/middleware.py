@@ -16,13 +16,19 @@ class LoginRequiredMiddleware:
             return
 
         conn = HTTPConnection(scope)
-        if conn.user.is_authenticated or any([excluded_path in conn.url.path for excluded_path in self.exclude_paths]):
+        if conn.user.is_authenticated or any(
+            [excluded_path in conn.url.path for excluded_path in self.exclude_paths]
+        ):
             await self.app(scope, receive, send)
             return
 
-        if scope['type'] == 'http':
-            flash(Request(scope)).error(_('You need to be logged in to access this page.', domain='ohmyadmin'))
+        if scope["type"] == "http":
+            flash(Request(scope)).error(
+                _("You need to be logged in to access this page.", domain="ohmyadmin")
+            )
 
-        redirect_to = conn.url_for('ohmyadmin.login').include_query_params(next=conn.url.path)
+        redirect_to = conn.url_for("ohmyadmin.login").include_query_params(
+            next=conn.url.path
+        )
         response = RedirectResponse(url=redirect_to, status_code=302)
         await response(scope, receive, send)

@@ -1,16 +1,20 @@
 from __future__ import annotations
 
 import datetime
+
 import sqlalchemy as sa
-from sqlalchemy.orm import Mapped, backref, declarative_base, mapped_column, query_expression, relationship
+from sqlalchemy.orm import (backref, DeclarativeBase, Mapped, mapped_column, query_expression, relationship)
 from starlette.authentication import BaseUser
 
 metadata = sa.MetaData()
-Base = declarative_base(metadata=metadata)
+
+
+class Base(DeclarativeBase):
+    metadata = metadata
 
 
 class User(BaseUser, Base):
-    __tablename__ = 'users'
+    __tablename__ = "users"
     is_authenticated = True
 
     id: Mapped[int] = mapped_column(sa.BigInteger, primary_key=True)
@@ -20,7 +24,9 @@ class User(BaseUser, Base):
     password: Mapped[str] = mapped_column(sa.Text)
     photo: Mapped[str] = mapped_column(sa.Text)
     is_active: Mapped[bool] = mapped_column(sa.Boolean, default=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(sa.DateTime, default=datetime.datetime.now)
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        sa.DateTime, default=datetime.datetime.now
+    )
 
     @property
     def identity(self) -> str:
@@ -28,11 +34,11 @@ class User(BaseUser, Base):
 
     @property
     def avatar(self) -> str:
-        return self.photo or ''
+        return self.photo or ""
 
     @property
     def display_name(self) -> str:
-        return f'{self.first_name} {self.last_name}'
+        return f"{self.first_name} {self.last_name}"
 
     def __str__(self) -> str:
         return self.display_name
@@ -42,119 +48,141 @@ class User(BaseUser, Base):
 
 
 class Country(Base):
-    __tablename__ = 'countries'
+    __tablename__ = "countries"
     code: Mapped[str] = mapped_column(sa.Text, primary_key=True)
     name: Mapped[str] = mapped_column(sa.Text)
 
     def __str__(self) -> str:
-        return self.name or 'n/a'
+        return self.name or "n/a"
 
 
 class Currency(Base):
-    __tablename__ = 'currencies'
+    __tablename__ = "currencies"
     code: Mapped[str] = mapped_column(sa.Text, primary_key=True)
     name: Mapped[str] = mapped_column(sa.Text)
 
     def __str__(self) -> str:
-        return self.name or 'n/a'
+        return self.name or "n/a"
 
 
 class Customer(Base):
-    __tablename__ = 'customers'
+    __tablename__ = "customers"
     id: Mapped[int] = mapped_column(sa.BigInteger, primary_key=True)
     name: Mapped[str] = mapped_column(sa.Text)
     email: Mapped[str] = mapped_column(sa.Text)
     phone: Mapped[str] = mapped_column(sa.Text)
     birthday: Mapped[datetime.date] = mapped_column(sa.Date)
-    created_at: Mapped[datetime.datetime] = mapped_column(sa.DateTime, default=datetime.datetime.now)
-    updated_at: Mapped[datetime.datetime] = mapped_column(sa.DateTime, default=datetime.datetime.now)
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        sa.DateTime, default=datetime.datetime.now
+    )
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        sa.DateTime, default=datetime.datetime.now
+    )
 
-    addresses: Mapped[list[Address]] = relationship('Address', cascade='all, delete-orphan')
-    payments: Mapped[list[Payment]] = relationship('Payment', cascade='all, delete-orphan')
-    comments: Mapped[list[Comment]] = relationship('Comment', cascade='all, delete-orphan')
-    orders: Mapped[list[Order]] = relationship('Order', cascade='all, delete-orphan', back_populates='customer')
+    addresses: Mapped[list[Address]] = relationship(
+        "Address", cascade="all, delete-orphan"
+    )
+    payments: Mapped[list[Payment]] = relationship(
+        "Payment", cascade="all, delete-orphan"
+    )
+    comments: Mapped[list[Comment]] = relationship(
+        "Comment", cascade="all, delete-orphan"
+    )
+    orders: Mapped[list[Order]] = relationship(
+        "Order", cascade="all, delete-orphan", back_populates="customer"
+    )
 
     def __str__(self) -> str:
-        return self.name or 'n/a'
+        return self.name or "n/a"
 
 
 class Address(Base):
-    __tablename__ = 'addresses'
+    __tablename__ = "addresses"
     id: Mapped[int] = mapped_column(sa.BigInteger, primary_key=True)
     street: Mapped[str] = mapped_column(sa.Text)
     zip: Mapped[str] = mapped_column(sa.Text)
     city: Mapped[str] = mapped_column(sa.Text)
-    country: Mapped[str] = mapped_column(sa.ForeignKey('countries.code'))
-    customer_id: Mapped[int] = mapped_column(sa.ForeignKey('customers.id'))
+    country: Mapped[str] = mapped_column(sa.ForeignKey("countries.code"))
+    customer_id: Mapped[int] = mapped_column(sa.ForeignKey("customers.id"))
 
     def __str__(self) -> str:
-        return self.street or 'n/a'
+        return self.street or "n/a"
 
 
 class Payment(Base):
-    __tablename__ = 'payments'
+    __tablename__ = "payments"
     id: Mapped[int] = mapped_column(sa.BigInteger, primary_key=True)
     reference: Mapped[str] = mapped_column(sa.Text, nullable=False)
     amount: Mapped[str] = mapped_column(sa.Numeric, nullable=False)
-    currency_code: Mapped[str] = mapped_column(sa.ForeignKey('currencies.code'), nullable=False)
+    currency_code: Mapped[str] = mapped_column(
+        sa.ForeignKey("currencies.code"), nullable=False
+    )
     provider: Mapped[str] = mapped_column(sa.Text, nullable=False)
     method: Mapped[str] = mapped_column(sa.Text, nullable=False)
-    customer_id: Mapped[int] = mapped_column(sa.ForeignKey('customers.id'))
+    customer_id: Mapped[int] = mapped_column(sa.ForeignKey("customers.id"))
 
     def __str__(self) -> str:
-        return self.reference or 'n/a'
+        return self.reference or "n/a"
 
 
 class Brand(Base):
-    __tablename__ = 'brands'
+    __tablename__ = "brands"
     id: Mapped[int] = mapped_column(sa.BigInteger, primary_key=True)
     name: Mapped[str] = mapped_column(sa.Text, nullable=False)
     slug: Mapped[str] = mapped_column(sa.Text, nullable=False)
     website: Mapped[str] = mapped_column(sa.Text)
     description: Mapped[str] = mapped_column(sa.Text)
     visible_to_customers: Mapped[bool] = mapped_column(sa.Boolean, default=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(sa.DateTime, default=datetime.datetime.now)
-    updated_at: Mapped[datetime.datetime] = mapped_column(sa.DateTime, default=datetime.datetime.now)
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        sa.DateTime, default=datetime.datetime.now
+    )
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        sa.DateTime, default=datetime.datetime.now
+    )
 
     def __str__(self) -> str:
-        return self.name or 'n/a'
+        return self.name or "n/a"
 
 
 product_categories = sa.Table(
-    'product_categories',
+    "product_categories",
     Base.metadata,
-    sa.Column('id', sa.BigInteger, primary_key=True),
-    sa.Column('product_id', sa.ForeignKey('products.id')),
-    sa.Column('category_id', sa.ForeignKey('categories.id')),
+    sa.Column("id", sa.BigInteger, primary_key=True),
+    sa.Column("product_id", sa.ForeignKey("products.id")),
+    sa.Column("category_id", sa.ForeignKey("categories.id")),
 )
 
 
 class Category(Base):
-    __tablename__ = 'categories'
+    __tablename__ = "categories"
     id: Mapped[int] = mapped_column(sa.BigInteger, primary_key=True)
     name: Mapped[str] = mapped_column(sa.Text, nullable=False)
     slug: Mapped[str] = mapped_column(sa.Text, nullable=False)
     description: Mapped[str] = mapped_column(sa.Text)
-    parent_id: Mapped[int | None] = mapped_column(sa.ForeignKey('categories.id'))
+    parent_id: Mapped[int | None] = mapped_column(sa.ForeignKey("categories.id"))
     visible_to_customers: Mapped[bool] = mapped_column(sa.Boolean, default=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(sa.DateTime, default=datetime.datetime.now)
-    updated_at: Mapped[datetime.datetime] = mapped_column(sa.DateTime, default=datetime.datetime.now)
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        sa.DateTime, default=datetime.datetime.now
+    )
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        sa.DateTime, default=datetime.datetime.now
+    )
 
-    parent: Mapped[Category | None] = relationship('Category')
+    parent: Mapped[Category | None] = relationship("Category")
 
     def __str__(self) -> str:
-        return self.name or 'n/a'
+        return self.name or "n/a"
 
 
 class Product(Base):
-    __tablename__ = 'products'
+    __tablename__ = "products"
     id: Mapped[int] = mapped_column(sa.BigInteger, primary_key=True)
     name: Mapped[str] = mapped_column(sa.Text, nullable=False)
     slug: Mapped[str] = mapped_column(sa.Text, nullable=False)
     description: Mapped[str] = mapped_column(sa.Text)
     visible: Mapped[bool] = mapped_column(sa.Boolean, default=True)
     availability: Mapped[datetime.datetime] = mapped_column(sa.DateTime)
-    brand_id: Mapped[int] = mapped_column(sa.ForeignKey('brands.id'))
+    brand_id: Mapped[int] = mapped_column(sa.ForeignKey("brands.id"))
     price: Mapped[float] = mapped_column(sa.Numeric, nullable=False)
     compare_at_price: Mapped[float] = mapped_column(sa.Numeric, nullable=False)
     cost_per_item: Mapped[float] = mapped_column(sa.Numeric, nullable=False)
@@ -164,16 +192,24 @@ class Product(Base):
     barcode: Mapped[str] = mapped_column(sa.Text)
     can_be_returned: Mapped[bool] = mapped_column(sa.Boolean)
     can_be_shipped: Mapped[bool] = mapped_column(sa.Boolean)
-    created_at: Mapped[datetime.datetime] = mapped_column(sa.DateTime, default=datetime.datetime.now)
-    updated_at: Mapped[datetime.datetime] = mapped_column(sa.DateTime, default=datetime.datetime.now)
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        sa.DateTime, default=datetime.datetime.now
+    )
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        sa.DateTime, default=datetime.datetime.now
+    )
 
     brand: Mapped[Brand] = relationship(Brand)
-    images: Mapped[list[Image]] = relationship('Image', cascade='all, delete-orphan')
-    comments: Mapped[list[Comment]] = relationship('Comment', cascade='all, delete-orphan')
-    categories: Mapped[list[Category]] = relationship('Category', secondary=product_categories)
+    images: Mapped[list[Image]] = relationship("Image", cascade="all, delete-orphan")
+    comments: Mapped[list[Comment]] = relationship(
+        "Comment", cascade="all, delete-orphan"
+    )
+    categories: Mapped[list[Category]] = relationship(
+        "Category", secondary=product_categories
+    )
 
     def __str__(self) -> str:
-        return self.name or 'n/a'
+        return self.name or "n/a"
 
 
 class ProductCategory(Base):
@@ -183,34 +219,36 @@ class ProductCategory(Base):
 
 
 class Image(Base):
-    __tablename__ = 'images'
+    __tablename__ = "images"
     id: Mapped[int] = mapped_column(sa.BigInteger, primary_key=True)
     image_path: Mapped[str] = mapped_column(sa.Text, nullable=False)
-    product_id: Mapped[int] = mapped_column(sa.ForeignKey('products.id'))
-    product: Mapped[Product] = relationship(Product, back_populates='images')
+    product_id: Mapped[int] = mapped_column(sa.ForeignKey("products.id"))
+    product: Mapped[Product] = relationship(Product, back_populates="images")
 
 
 class Comment(Base):
-    __tablename__ = 'comments'
+    __tablename__ = "comments"
     id: Mapped[int] = mapped_column(sa.BigInteger, primary_key=True)
     title: Mapped[str] = mapped_column(sa.Text)
     content: Mapped[str] = mapped_column(sa.Text, nullable=False)
     public: Mapped[bool] = mapped_column(sa.Boolean)
-    product_id: Mapped[int] = mapped_column(sa.ForeignKey('products.id'))
-    customer_id: Mapped[int] = mapped_column(sa.ForeignKey('customers.id'))
-    created_at: Mapped[datetime.datetime] = mapped_column(sa.DateTime, default=datetime.datetime.now)
+    product_id: Mapped[int] = mapped_column(sa.ForeignKey("products.id"))
+    customer_id: Mapped[int] = mapped_column(sa.ForeignKey("customers.id"))
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        sa.DateTime, default=datetime.datetime.now
+    )
 
     def __str__(self) -> str:
-        return self.title or ''
+        return self.title or ""
 
 
 class Order(Base):
     class Status:
-        NEW = 'New'
-        PROCESSING = 'Processing'
-        SHIPPED = 'Shipped'
-        DELIVERED = 'Delivered'
-        CANCELLED = 'Cancelled'
+        NEW = "New"
+        PROCESSING = "Processing"
+        SHIPPED = "Shipped"
+        DELIVERED = "Delivered"
+        CANCELLED = "Cancelled"
 
         choices = (
             (NEW, NEW),
@@ -220,49 +258,65 @@ class Order(Base):
             (CANCELLED, CANCELLED),
         )
 
-    __tablename__ = 'orders'
+    __tablename__ = "orders"
     id: Mapped[int] = mapped_column(sa.BigInteger, primary_key=True)
     number: Mapped[str] = mapped_column(sa.Text, nullable=False)
-    customer_id: Mapped[int] = mapped_column(sa.ForeignKey('customers.id'), nullable=False)
+    customer_id: Mapped[int] = mapped_column(
+        sa.ForeignKey("customers.id"), nullable=False
+    )
     status: Mapped[str] = mapped_column(sa.Text, nullable=False)
     address: Mapped[str] = mapped_column(sa.Text)
     city: Mapped[str] = mapped_column(sa.Text)
     zip: Mapped[str] = mapped_column(sa.Text)
     notes: Mapped[str] = mapped_column(sa.Text)
-    currency_code: Mapped[str] = mapped_column(sa.ForeignKey('currencies.code'), nullable=False)
-    country_code: Mapped[str] = mapped_column(sa.ForeignKey('countries.code'), nullable=False)
-    created_at: Mapped[datetime.datetime] = mapped_column(sa.DateTime, default=datetime.datetime.now)
-    updated_at: Mapped[datetime.datetime] = mapped_column(sa.DateTime, default=datetime.datetime.now)
+    currency_code: Mapped[str] = mapped_column(
+        sa.ForeignKey("currencies.code"), nullable=False
+    )
+    country_code: Mapped[str] = mapped_column(
+        sa.ForeignKey("countries.code"), nullable=False
+    )
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        sa.DateTime, default=datetime.datetime.now
+    )
+    updated_at: Mapped[datetime.datetime] = mapped_column(
+        sa.DateTime, default=datetime.datetime.now
+    )
 
     total_price: Mapped[float] = query_expression()
-    customer: Mapped[Customer] = relationship('Customer', cascade='all', back_populates='orders')
-    items: Mapped[OrderItem] = relationship('OrderItem')
-    currency: Mapped[Currency] = relationship('Currency')
+    customer: Mapped[Customer] = relationship(
+        "Customer", cascade="all", back_populates="orders"
+    )
+    items: Mapped[OrderItem] = relationship("OrderItem")
+    currency: Mapped[Currency] = relationship("Currency")
 
     def __str__(self) -> str:
-        return self.number or 'n/a'
+        return self.number or "n/a"
 
 
 class OrderItem(Base):
-    __tablename__ = 'order_items'
+    __tablename__ = "order_items"
     id: Mapped[int] = mapped_column(sa.BigInteger, primary_key=True)
-    order_id: Mapped[int] = mapped_column(sa.ForeignKey('orders.id'), nullable=False)
-    product_id: Mapped[int] = mapped_column(sa.ForeignKey('products.id'), nullable=False)
+    order_id: Mapped[int] = mapped_column(sa.ForeignKey("orders.id"), nullable=False)
+    product_id: Mapped[int] = mapped_column(
+        sa.ForeignKey("products.id"), nullable=False
+    )
     quantity: Mapped[int] = mapped_column(sa.Integer)
     unit_price: Mapped[float] = mapped_column(sa.Numeric)
 
-    order: Mapped[Order] = relationship(Order, back_populates='items')
-    product: Mapped[Product] = relationship(Product, backref=backref('items', cascade='all, delete-orphan'))
+    order: Mapped[Order] = relationship(Order, back_populates="items")
+    product: Mapped[Product] = relationship(
+        Product, backref=backref("items", cascade="all, delete-orphan")
+    )
 
 
 class BlogPost(Base):
-    __tablename__ = 'blog_posts'
+    __tablename__ = "blog_posts"
 
     id: Mapped[int] = mapped_column(sa.BigInteger, primary_key=True)
     title: Mapped[str] = mapped_column(
         sa.String,
     )
-    content: Mapped[str] = mapped_column(sa.Text, default='')
+    content: Mapped[str] = mapped_column(sa.Text, default="")
     author_id: Mapped[int] = mapped_column(sa.ForeignKey(User.id))
 
     author: Mapped[User] = relationship(User)

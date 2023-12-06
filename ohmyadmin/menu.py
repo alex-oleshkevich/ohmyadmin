@@ -8,6 +8,6 @@ from starlette.datastructures import URL
 @dataclasses.dataclass
 class MenuItem:
     label: str
-    group: str = ''
+    group: str = ""
     url: URL | None = None
     children: list[MenuItem] | None = None

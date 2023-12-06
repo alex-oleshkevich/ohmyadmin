@@ -4,10 +4,10 @@ import math
 import typing
 from starlette.requests import Request
 
-M = typing.TypeVar('M')
+M = typing.TypeVar("M")
 
 
-def get_page_value(request: Request, param_name: str = 'page') -> int:
+def get_page_value(request: Request, param_name: str = "page") -> int:
     page = 1
     try:
         page = max(1, int(request.query_params.get(param_name, 1)))
@@ -16,7 +16,12 @@ def get_page_value(request: Request, param_name: str = 'page') -> int:
     return page
 
 
-def get_page_size_value(request: Request, param_name: str = 'page_size', max_size: int = 100, default: int = 25) -> int:
+def get_page_size_value(
+    request: Request,
+    param_name: str = "page_size",
+    max_size: int = 100,
+    default: int = 25,
+) -> int:
     page_size = default
     try:
         page_size = int(request.query_params.get(param_name, default))
@@ -26,7 +31,9 @@ def get_page_size_value(request: Request, param_name: str = 'page_size', max_siz
 
 
 class Pagination(typing.Generic[M]):
-    def __init__(self, rows: typing.Sequence[M], total_rows: int, page: int, page_size: int) -> None:
+    def __init__(
+        self, rows: typing.Sequence[M], total_rows: int, page: int, page_size: int
+    ) -> None:
         self.rows = rows
         self.total_rows = total_rows
         self.page = page
@@ -84,7 +91,11 @@ class Pagination(typing.Generic[M]):
         return min(self.start_index + self.page_size - 1, self.total_rows)
 
     def iter_pages(
-        self, left_edge: int = 1, left_current: int = 1, right_current: int = 1, right_edge: int = 1
+        self,
+        left_edge: int = 1,
+        left_current: int = 1,
+        right_current: int = 1,
+        right_edge: int = 1,
     ) -> typing.Generator[int | None, None, None]:
         pages_end = self.total_pages + 1
 
@@ -134,9 +145,7 @@ class Pagination(typing.Generic[M]):
         return len(self.rows) > 0
 
     def __str__(self) -> str:
-        return (
-            f'Page {self.page} of {self.total_pages}, rows {self.start_index} - {self.end_index} of {self.total_rows}.'
-        )
+        return f"Page {self.page} of {self.total_pages}, rows {self.start_index} - {self.end_index} of {self.total_rows}."
 
     def __repr__(self) -> str:
-        return f'<Page: page={self.page}, total_pages={self.total_pages}>'
+        return f"<Page: page={self.page}, total_pages={self.total_pages}>"

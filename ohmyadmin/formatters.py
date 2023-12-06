@@ -6,8 +6,8 @@ from starlette_babel import gettext_lazy as _
 
 from ohmyadmin.templating import render_to_string
 
-TextAlign = typing.Literal['left', 'right', 'center']
-_T = typing.TypeVar('_T')
+TextAlign = typing.Literal["left", "right", "center"]
+_T = typing.TypeVar("_T")
 
 
 class CellFormatter(typing.Protocol):  # pragma: no cover
@@ -22,10 +22,12 @@ class CellFormatter(typing.Protocol):  # pragma: no cover
 
 
 class BaseFormatter(typing.Generic[_T]):
-    template: str = 'ohmyadmin/formatters/string.html'
+    template: str = "ohmyadmin/formatters/string.html"
 
     def format(self, request: Request, value: _T) -> str:
-        return render_to_string(request, self.template, {'formatter': self, 'value': value})
+        return render_to_string(
+            request, self.template, {"formatter": self, "value": value}
+        )
 
     def __call__(self, request: Request, value: _T) -> str:
         return self.format(request, value)
@@ -36,34 +38,40 @@ class StringFormatter(BaseFormatter[str]):
 
 
 class DateTimeFormatter(BaseFormatter[datetime.datetime]):
-    template: str = 'ohmyadmin/formatters/datetime.html'
+    template: str = "ohmyadmin/formatters/datetime.html"
 
-    def __init__(self, format: typing.Literal['short', 'medium', 'long', 'full'] = 'medium') -> None:
+    def __init__(
+        self, format: typing.Literal["short", "medium", "long", "full"] = "medium"
+    ) -> None:
         self.value_format = format
 
 
 class DateFormatter(BaseFormatter[datetime.date | datetime.datetime]):
-    template: str = 'ohmyadmin/formatters/date.html'
+    template: str = "ohmyadmin/formatters/date.html"
 
-    def __init__(self, format: typing.Literal['short', 'medium', 'long', 'full'] = 'medium') -> None:
+    def __init__(
+        self, format: typing.Literal["short", "medium", "long", "full"] = "medium"
+    ) -> None:
         self.value_format = format
 
 
 class TimeFormatter(BaseFormatter[datetime.datetime | datetime.time]):
-    template: str = 'ohmyadmin/formatters/time.html'
+    template: str = "ohmyadmin/formatters/time.html"
 
-    def __init__(self, format: typing.Literal['short', 'medium', 'long', 'full'] = 'short') -> None:
+    def __init__(
+        self, format: typing.Literal["short", "medium", "long", "full"] = "short"
+    ) -> None:
         self.value_format = format
 
 
 class BoolFormatter(BaseFormatter[bool]):
-    template: str = 'ohmyadmin/formatters/bool.html'
+    template: str = "ohmyadmin/formatters/bool.html"
 
     def __init__(
         self,
         as_text: bool = False,
-        true_text: str = _('Yes', domain='ohmyadmin'),
-        false_text: str = _('No', domain='ohmyadmin'),
+        true_text: str = _("Yes", domain="ohmyadmin"),
+        false_text: str = _("No", domain="ohmyadmin"),
     ) -> None:
         self.true_text = true_text
         self.false_text = false_text
@@ -71,14 +79,17 @@ class BoolFormatter(BaseFormatter[bool]):
 
 
 class AvatarFormatter(BaseFormatter[str]):
-    template: str = 'ohmyadmin/formatters/avatar.html'
+    template: str = "ohmyadmin/formatters/avatar.html"
 
 
 class LinkFormatter(BaseFormatter[str]):
-    template: str = 'ohmyadmin/formatters/link.html'
+    template: str = "ohmyadmin/formatters/link.html"
 
     def __init__(
-        self, *, url: str | typing.Callable[[Request], str], target: typing.Literal['_blank', ''] = ''
+        self,
+        *,
+        url: str | typing.Callable[[Request], str],
+        target: typing.Literal["_blank", ""] = "",
     ) -> None:
         self.url = url
         self.target = target
@@ -89,45 +100,55 @@ class LinkFormatter(BaseFormatter[str]):
         else:
             url = self.url
 
-        return render_to_string(request, self.template, {'formatter': self, 'value': value, 'url': url})
+        return render_to_string(
+            request, self.template, {"formatter": self, "value": value, "url": url}
+        )
 
 
 class NumberFormatter(BaseFormatter[int | float | decimal.Decimal]):
-    template: str = 'ohmyadmin/formatters/number.html'
+    template: str = "ohmyadmin/formatters/number.html"
 
-    def __init__(self, *, prefix: str = '', suffix: str = '', align: TextAlign = 'right') -> None:
+    def __init__(
+        self, *, prefix: str = "", suffix: str = "", align: TextAlign = "right"
+    ) -> None:
         self.prefix = prefix
         self.suffix = suffix
         self.align = align
 
 
-BadgeColor: typing.TypeAlias = typing.Literal['gray', 'red', 'yellow', 'green', 'blue', 'indigo', 'purple', 'pink']
+BadgeColor: typing.TypeAlias = typing.Literal[
+    "gray", "red", "yellow", "green", "blue", "indigo", "purple", "pink"
+]
 
 
 class BadgeFormatter(BaseFormatter[str | int]):
-    template: str = 'ohmyadmin/formatters/badge.html'
+    template: str = "ohmyadmin/formatters/badge.html"
 
     def __init__(self, *, color_map: dict[str | int, BadgeColor]) -> None:
         self.color_map = color_map or {}
 
     def format(self, request: Request, value: str | int) -> str:
-        color = self.color_map.get(value, 'gray')
-        return render_to_string(request, self.template, {'formatter': self, 'value': value, 'color': color})
+        color = self.color_map.get(value, "gray")
+        return render_to_string(
+            request, self.template, {"formatter": self, "value": value, "color": color}
+        )
 
 
-ProgressSize = typing.Literal['xxs', 'xs', 'sm', 'md', 'lg']
-ProgressColor = typing.Literal['accent', 'gray', 'red', 'yellow', 'green', 'blue', 'indigo', 'purple', 'pink']
+ProgressSize = typing.Literal["xxs", "xs", "sm", "md", "lg"]
+ProgressColor = typing.Literal[
+    "accent", "gray", "red", "yellow", "green", "blue", "indigo", "purple", "pink"
+]
 
 
 class ProgressFormatter(BaseFormatter[int | float]):
-    template: str = 'ohmyadmin/formatters/progress.html'
+    template: str = "ohmyadmin/formatters/progress.html"
 
     def __init__(
         self,
         *,
-        size: ProgressSize = 'sm',
-        color: ProgressColor = 'accent',
-        label: str = '',
+        size: ProgressSize = "sm",
+        color: ProgressColor = "accent",
+        label: str = "",
     ) -> None:
         self.size = size
         self.color = color

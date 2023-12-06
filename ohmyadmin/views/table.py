@@ -1,6 +1,5 @@
 import functools
 import typing
-
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import BaseRoute, Mount, Route
@@ -19,7 +18,7 @@ from ohmyadmin.views.base import View
 
 
 def default_value_getter(obj: typing.Any, attr: str) -> typing.Any:
-    return getattr(obj, attr, 'undefined!')
+    return getattr(obj, attr, "undefined!")
 
 
 class Column:
@@ -41,7 +40,9 @@ class Column:
         self.sort_by = sort_by or name
         self.formatter = formatter
         self.label = label or snake_to_sentence(name)
-        self.value_getter = value_getter or functools.partial(default_value_getter, attr=name)
+        self.value_getter = value_getter or functools.partial(
+            default_value_getter, attr=name
+        )
 
     def get_value(self, obj: typing.Any) -> typing.Any:
         return self.value_getter(obj)
@@ -51,37 +52,49 @@ class Column:
 
 
 class TableView(View):
-    page_param: str = 'page'
-    page_size_param: str = 'page_size'
-    page_size: int = 50
-    page_sizes: list[int] = [10, 25, 50, 100]
-    ordering_param: str = 'ordering'
-    template = 'ohmyadmin/views/table/page.html'
-    datasource: DataSource | None = None
-    columns: list[Column] | None = None
-    filters: list[Filter] | None = None
-    actions: list[Action] | None = None
+    page_param: typing.ClassVar[str] = "page"
+    page_size_param: typing.ClassVar[str] = "page_size"
+    page_size: typing.ClassVar[int] = 50
+    page_sizes: typing.ClassVar[typing.Sequence[int]] = [10, 25, 50, 100]
+    ordering_param: typing.ClassVar[str] = "ordering"
+    template = "ohmyadmin/views/table/page.html"
+    datasource: typing.ClassVar[DataSource | None] = None
+    columns: typing.Sequence[Column] = tuple()
+    filters: typing.Sequence[Filter] = tuple()
+    actions: typing.Sequence[Action] = tuple()
 
-    search_param: str = 'search'
-    search_placeholder: str = ''
+    search_param: str = "search"
+    search_placeholder: str = ""
 
     def __init__(self) -> None:
-        self.columns = self.columns or []
-        self.filters = self.filters or []
-        self.actions = self.actions or []
+        self.columns = list(self.columns or [])
+        self.actions = list(self.actions or [])
+        self.filters: list[Filter] = list(self.filters or [])
         self.filters.extend(
             [
-                OrderingFilter(self.ordering_param, [column.sort_by for column in self.columns if column.sortable]),
-                SearchFilter(self.search_param, [column.search_in for column in self.columns if column.searchable]),
+                OrderingFilter(
+                    self.ordering_param,
+                    [column.sort_by for column in self.columns if column.sortable],
+                ),
+                SearchFilter(
+                    self.search_param,
+                    [column.search_in for column in self.columns if column.searchable],
+                ),
             ]
         )
-        self.search_placeholder = self.search_placeholder or _('Search in {fields}...').format(
-            fields=', '.join([column.label for column in self.columns if column.searchable])
+        self.search_placeholder = self.search_placeholder or _(
+            "Search in {fields}..."
+        ).format(
+            fields=", ".join(
+                [column.label for column in self.columns if column.searchable]
+            )
         )
 
     async def dispatch(self, request: Request) -> Response:
         page = get_page_value(request, self.page_param)
-        page_size = get_page_size_value(request, self.page_size_param, max(self.page_sizes), self.page_size)
+        page_size = get_page_size_value(
+            request, self.page_size_param, max(self.page_sizes), self.page_size
+        )
         sorting = SortingHelper(request, self.ordering_param)
 
         query = self.datasource.get_query_for_list()
@@ -90,35 +103,35 @@ class TableView(View):
 
         rows = await query.paginate(request, page, page_size)
         template = self.template
-        if htmx.matches_target(request, 'datatable'):
-            template = 'ohmyadmin/views/table/table.html'
+        if htmx.matches_target(request, "datatable"):
+            template = "ohmyadmin/views/table/table.html"
 
         response = render_to_response(
             request,
             template,
             {
-                'table': self,
-                'objects': rows,
-                'sorting': sorting,
-                'page_title': self.label,
-                'page_description': self.description,
-                'search_term': request.query_params.get(self.search_param, ''),
+                "table": self,
+                "objects": rows,
+                "sorting": sorting,
+                "page_title": self.label,
+                "page_description": self.description,
+                "search_term": request.query_params.get(self.search_param, ""),
             },
         )
         return htmx.push_url(response, str(request.url))
 
     def get_route(self) -> BaseRoute:
         return Mount(
-            '/' + self.slug,
+            "/" + self.slug,
             routes=[
-                Route('/', self.dispatch, name=self.url_name),
+                Route("/", self.dispatch, name=self.url_name),
                 Mount(
-                    '/actions',
+                    "/actions",
                     routes=[
-                        action.get_route(self.url_name) for action in self.actions if isinstance(action, WithRoute)
+                        action.get_route(self.url_name)
+                        for action in self.actions
+                        if isinstance(action, WithRoute)
                     ],
                 ),
             ],
         )
-
-]

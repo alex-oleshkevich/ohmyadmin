@@ -40,8 +40,8 @@ asyncpg = "^0.26"
 pytest = "^7.2"
 pytest-asyncio = "^0.19"
 pytest-cov = "^4.0"
-black = "^22.10"
-mypy = "^0.990"
+black = "^23"
+mypy = "^1"
 flake8 = "^5.0"
 types-python-slugify = "^6.1"
 passlib = "^1.7.4"
@@ -50,6 +50,7 @@ Faker = "^15.0.0"
 uvicorn = "^0.18.3"
 starception = "^1.0"
 httpx = "^0.23.3"
+ruff = "^0.1.7"
 
 
 [tool.poetry.group.docs.dependencies]
@@ -119,7 +120,7 @@ omit = [".venv/*", ".git/*", "*/__main__.py", "examples/*"]
 disallow_untyped_defs = true
 ignore_missing_imports = true
 show_error_codes = true
-files = ["ohmyadmin", "examples", "tests"]
+files = ["ohmyadmin", "examples"]
 
 [tool.pytest.ini_options]
 minversion = "7.2"

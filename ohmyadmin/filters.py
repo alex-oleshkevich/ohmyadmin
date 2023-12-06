@@ -20,19 +20,29 @@ class SearchFilter(Filter):
         self.searchable_fields = searchable_fields
 
     def apply(self, request: Request, query: DataSource) -> DataSource:
-        value = request.query_params.get(self.search_param, '')
+        value = request.query_params.get(self.search_param, "")
         if not value:
             return query
 
-        if value.startswith('^'):
-            return query.apply_search_filter(term=value[1:], predicate='startswith', fields=self.searchable_fields)
-        if value.startswith('='):
-            return query.apply_search_filter(term=value[1:], predicate='exact', fields=self.searchable_fields)
-        if value.startswith('$'):
-            return query.apply_search_filter(term=value[1:], predicate='endswith', fields=self.searchable_fields)
-        if value.startswith('@'):
-            return query.apply_search_filter(term=value[1:], predicate='matches', fields=self.searchable_fields)
-        return query.apply_search_filter(term=value, predicate='like', fields=self.searchable_fields)
+        if value.startswith("^"):
+            return query.apply_search_filter(
+                term=value[1:], predicate="startswith", fields=self.searchable_fields
+            )
+        if value.startswith("="):
+            return query.apply_search_filter(
+                term=value[1:], predicate="exact", fields=self.searchable_fields
+            )
+        if value.startswith("$"):
+            return query.apply_search_filter(
+                term=value[1:], predicate="endswith", fields=self.searchable_fields
+            )
+        if value.startswith("@"):
+            return query.apply_search_filter(
+                term=value[1:], predicate="matches", fields=self.searchable_fields
+            )
+        return query.apply_search_filter(
+            term=value, predicate="like", fields=self.searchable_fields
+        )
 
 
 class OrderingFilter(Filter):

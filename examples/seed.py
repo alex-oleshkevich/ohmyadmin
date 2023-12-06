@@ -4,7 +4,7 @@ import decimal
 import random
 from faker import Faker
 from passlib.handlers.pbkdf2 import pbkdf2_sha256
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from examples.models import (
@@ -28,56 +28,56 @@ from examples.models import (
 
 fake = Faker()
 TABLES = [
-    'users',
-    'countries',
-    'currencies',
-    'customers',
-    'addresses',
-    'payments',
-    'brands',
-    'categories',
-    'products',
-    'product_categories',
-    'images',
-    'comments',
-    'orders',
-    'order_items',
+    "users",
+    "countries",
+    "currencies",
+    "customers",
+    "addresses",
+    "payments",
+    "brands",
+    "categories",
+    "products",
+    "product_categories",
+    "images",
+    "comments",
+    "orders",
+    "order_items",
 ]
 
 COUNTRIES = [
-    dict(code='us', name='USA'),
-    dict(code='by', name='Belarus'),
-    dict(code='pl', name='Poland'),
-    dict(code='ua', name='Ukraine'),
-    dict(code='uk', name='UK'),
-    dict(code='lt', name='Lithuania'),
-    dict(code='lv', name='Latvia'),
-    dict(code='de', name='Germany'),
-    dict(code='fr', name='France'),
-    dict(code='jp', name='Japan'),
+    dict(code="us", name="USA"),
+    dict(code="by", name="Belarus"),
+    dict(code="pl", name="Poland"),
+    dict(code="ua", name="Ukraine"),
+    dict(code="uk", name="UK"),
+    dict(code="lt", name="Lithuania"),
+    dict(code="lv", name="Latvia"),
+    dict(code="de", name="Germany"),
+    dict(code="fr", name="France"),
+    dict(code="jp", name="Japan"),
 ]
 
 CURRENCIES = [
-    dict(code='eur', name='Euro'),
-    dict(code='usd', name='US Dollar'),
-    dict(code='byn', name='Belarusian taler'),
-    dict(code='pln', name='Polish zloty'),
+    dict(code="eur", name="Euro"),
+    dict(code="usd", name="US Dollar"),
+    dict(code="byn", name="Belarusian taler"),
+    dict(code="pln", name="Polish zloty"),
 ]
 
 PAYMENT_PROVIDER = [
-    'PayPal',
-    'Stripe',
+    "PayPal",
+    "Stripe",
 ]
 
 PAYMENT_METHOD = [
-    'Bank transfer',
-    'Credit Card',
-    'PayPal',
-    'Cash',
+    "Bank transfer",
+    "Credit Card",
+    "PayPal",
+    "Cash",
 ]
 
 OBJECTS_COUNT = 1000
-STATUSES = ['New', 'Processing', 'Shipped', 'Delivered', 'Cancelled']
+STATUSES = ["New", "Processing", "Shipped", "Delivered", "Cancelled"]
 
 
 def random_status() -> str:
@@ -85,15 +85,15 @@ def random_status() -> str:
 
 
 def random_country() -> str:
-    return COUNTRIES[random.randint(0, len(COUNTRIES) - 1)]['code']
+    return COUNTRIES[random.randint(0, len(COUNTRIES) - 1)]["code"]
 
 
 def random_currency() -> str:
-    return CURRENCIES[random.randint(0, len(CURRENCIES) - 1)]['code']
+    return CURRENCIES[random.randint(0, len(CURRENCIES) - 1)]["code"]
 
 
 def refcode() -> str:
-    return ''.join(
+    return "".join(
         [
             fake.random_letter(),
             fake.random_letter(),
@@ -111,7 +111,7 @@ def seed_users(session: AsyncSession) -> None:
                 last_name=fake.last_name(),
                 email=fake.email(safe=False),
                 photo=fake.image_url(600, 400),
-                password=pbkdf2_sha256.hash('password'),
+                password=pbkdf2_sha256.hash("password"),
                 created_at=fake.date_between(),
                 is_active=False if index % 10 == 0 else True,
             )
@@ -121,11 +121,15 @@ def seed_users(session: AsyncSession) -> None:
 
 
 def seed_countries(session: AsyncSession) -> None:
-    session.add_all([Country(code=country['code'], name=country['name']) for country in COUNTRIES])
+    session.add_all(
+        [Country(code=country["code"], name=country["name"]) for country in COUNTRIES]
+    )
 
 
 def seed_currencies(session: AsyncSession) -> None:
-    session.add_all([Currency(code=item['code'], name=item['name']) for item in CURRENCIES])
+    session.add_all(
+        [Currency(code=item["code"], name=item["name"]) for item in CURRENCIES]
+    )
 
 
 def seed_customers(session: AsyncSession) -> None:
@@ -151,7 +155,7 @@ def seed_addresses(session: AsyncSession) -> None:
                 street=fake.street_address(),
                 zip=fake.postcode(),
                 city=fake.city(),
-                country=COUNTRIES[random.randint(0, len(COUNTRIES) - 1)]['code'],
+                country=COUNTRIES[random.randint(0, len(COUNTRIES) - 1)]["code"],
                 customer_id=random.randint(1, OBJECTS_COUNT),
             )
             for _ in range(1, OBJECTS_COUNT + 1)
@@ -165,7 +169,9 @@ def seed_payment(session: AsyncSession) -> None:
             Payment(
                 reference=refcode(),
                 amount=random.randint(0, 20),
-                currency_code=CURRENCIES[random.randint(0, len(CURRENCIES) - 1)]['code'],
+                currency_code=CURRENCIES[random.randint(0, len(CURRENCIES) - 1)][
+                    "code"
+                ],
                 provider=PAYMENT_PROVIDER[random.randint(0, len(PAYMENT_PROVIDER) - 1)],
                 method=PAYMENT_METHOD[random.randint(0, len(PAYMENT_METHOD) - 1)],
                 customer_id=random.randint(1, 500),
@@ -219,9 +225,15 @@ def seed_products(session: AsyncSession) -> None:
                 visible=fake.boolean(),
                 availability=fake.date_between(),
                 brand_id=random.randint(1, 20),
-                price=decimal.Decimal(f'{random.randint(1, 500)}.{random.randint(1, 99):02}'),
-                compare_at_price=decimal.Decimal(f'{random.randint(1, 500)}.{random.randint(1, 99):02}'),
-                cost_per_item=decimal.Decimal(f'{random.randint(1, 500)}.{random.randint(1, 99):02}'),
+                price=decimal.Decimal(
+                    f"{random.randint(1, 500)}.{random.randint(1, 99):02}"
+                ),
+                compare_at_price=decimal.Decimal(
+                    f"{random.randint(1, 500)}.{random.randint(1, 99):02}"
+                ),
+                cost_per_item=decimal.Decimal(
+                    f"{random.randint(1, 500)}.{random.randint(1, 99):02}"
+                ),
                 sku=random.randint(1, 100),
                 quantity=random.randint(1, 100),
                 security_stock=random.randint(1, 1000),
@@ -304,7 +316,9 @@ def seed_order_items(session: AsyncSession) -> None:
                 order_id=random.randint(1, OBJECTS_COUNT - 1),
                 product_id=random.randint(1, OBJECTS_COUNT),
                 quantity=random.randint(1, 100),
-                unit_price=decimal.Decimal(f'{random.randint(1, 500)}.{random.randint(1, 99):02}'),
+                unit_price=decimal.Decimal(
+                    f"{random.randint(1, 500)}.{random.randint(1, 99):02}"
+                ),
             )
             for _ in range(1, OBJECTS_COUNT * 5)
         ]
@@ -316,7 +330,7 @@ def seed_blog_posts(session: AsyncSession) -> None:
         [
             BlogPost(
                 title=fake.sentence(5),
-                content='',
+                content="",
                 author_id=random.randint(1, OBJECTS_COUNT - 1),
             )
             for _ in range(1, OBJECTS_COUNT * 5)
@@ -325,8 +339,8 @@ def seed_blog_posts(session: AsyncSession) -> None:
 
 
 async def main() -> None:
-    engine = create_async_engine('postgresql+asyncpg://postgres:postgres@localhost/ohmyadmin', future=True)
-    async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+    engine = create_async_engine("postgresql+asyncpg://postgres:postgres@localhost/ohmyadmin")
+    async_session = async_sessionmaker(engine, expire_on_commit=False)
 
     async with engine.begin() as conn:
         await conn.run_sync(metadata.drop_all)

@@ -1,0 +1,45 @@
+{% import 'ohmyadmin/icons.html' as icons %}
+{% macro pagination(request, page) %}
+    {% with start_index = page.start_index, end_index = page.end_index, total_rows = page.total_rows %}
+        <div class="pagination" data-test="pagination">
+            <div class="pagination-info">
+                {% trans %}Showing {{ start_index }} - {{ end_index }} of {{ total_rows }} results.{% endtrans %}
+            </div>
+
+            {% if page.total_pages > 1 %}
+                <div class="pagination-controls" data-test="pagination-controls">
+                    {% if page.has_previous %}
+                        <a href="{{ request.url.include_query_params(page=page.previous_page) }}"
+                           data-test="pagination-control"
+                        >
+                            {{ icons.arrow_left() }}
+                            <span class="hidden md:inline">{{ _('Previous', domain='ohmyadmin') }}</span>
+                        </a>
+                    {% endif %}
+
+                    {% for page_number in page.iter_pages() %}
+                        {% if page_number %}
+                            <a href="{{ request.url.include_query_params(page=page_number) }}"
+                               class="{{ 'active' if page_number == page.page else '' }}"
+                               data-test="pagination-control"
+                            >
+                                {{ page_number }}
+                            </a>
+                        {% else %}
+                            <span>...</span>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page.has_next %}
+                        <a href="{{ request.url.include_query_params(page=page.next_page) }}"
+                           data-test="pagination-control"
+                        >
+                            <span class="hidden md:inline">{{ _('Next', domain='ohmyadmin') }}</span>
+                            {{ icons.arrow_right() }}
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    {% endwith %}
+{% endmacro %}

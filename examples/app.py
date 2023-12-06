@@ -29,7 +29,7 @@ async_session = async_sessionmaker(engine, expire_on_commit=False)
 
 
 def index_view(request: Request) -> Response:
-    url = request.url_for('ohmyadmin.welcome')
+    url = request.url_for("ohmyadmin.welcome")
     return Response(f'<a href="{url}">admin</a>')
 
 
@@ -39,22 +39,26 @@ class DatabaseSessionMiddleware:
         self.sessionmaker = sessionmaker
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        if scope['type'] != 'http':
+        if scope["type"] != "http":
             await self.app(scope, receive, send)
             return
 
         async with self.sessionmaker() as dbsession:
-            scope.setdefault('state', {})
-            scope['state']['dbsession'] = dbsession
+            scope.setdefault("state", {})
+            scope["state"]["dbsession"] = dbsession
             await self.app(scope, receive, send)
 
 
 class UserPolicy(AuthPolicy):
-    async def authenticate(self, request: Request, identity: str, password: str) -> BaseUser | None:
+    async def authenticate(
+        self, request: Request, identity: str, password: str
+    ) -> BaseUser | None:
         async with async_session() as session:
             stmt = sa.select(User).where(User.email == identity)
             result = await session.scalars(stmt)
-            if (user := result.one_or_none()) and pbkdf2_sha256.verify(password, user.password):
+            if (user := result.one_or_none()) and pbkdf2_sha256.verify(
+                password, user.password
+            ):
                 return user
             return None
 
@@ -68,12 +72,12 @@ class UserPolicy(AuthPolicy):
 admin = OhMyAdmin(
     auth_policy=UserPolicy(),
     file_storage=FileSystemStorage(
-        directory=this_dir / 'media',
-        url_prefix='/',
+        directory=this_dir / "media",
+        url_prefix="/",
     ),
     theme=Theme(
-        logo='https://jelpy.io/static/logo.svg',
-        title='Jelpy',
+        logo="https://jelpy.io/static/logo.svg",
+        title="Jelpy",
     ),
     views=[
         UsersTable(),
@@ -84,10 +88,10 @@ app = Starlette(
     debug=True,
     middleware=[
         Middleware(DatabaseSessionMiddleware, sessionmaker=async_session),
-        Middleware(SessionMiddleware, secret_key='key!', path='/'),
+        Middleware(SessionMiddleware, secret_key="key!", path="/"),
     ],
     routes=[
-        Route('/', index_view),
-        Mount('/admin', admin),
+        Route("/", index_view),
+        Mount("/admin", admin),
     ],
 )

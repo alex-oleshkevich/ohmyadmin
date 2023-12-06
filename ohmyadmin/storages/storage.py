@@ -29,4 +29,4 @@ class FileSystemStorage:
         (self.directory / path).write_bytes(data)
 
     async def url(self, path: str) -> str:
-        return self.url_prefix.rstrip('/') + '/' + path
+        return self.url_prefix.rstrip("/") + "/" + path

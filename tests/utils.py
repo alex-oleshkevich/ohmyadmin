@@ -6,17 +6,21 @@ from ohmyadmin.authentication import BaseAuthPolicy
 
 
 class SimpleBackend(AuthenticationBackend):  # pragma: no cover
-    async def authenticate(self, conn: HTTPConnection) -> tuple[AuthCredentials, BaseUser] | None:
+    async def authenticate(
+        self, conn: HTTPConnection
+    ) -> tuple[AuthCredentials, BaseUser] | None:
         user = await conn.state.admin.auth_policy.load_user(conn, 1)
         return AuthCredentials([]), user
 
 
 class AuthTestPolicy(BaseAuthPolicy):  # pragma: no cover
-    async def authenticate(self, request: Request, identity: str, password: str) -> BaseUser | None:
-        return User(id='1')
+    async def authenticate(
+        self, request: Request, identity: str, password: str
+    ) -> BaseUser | None:
+        return User(id="1")
 
     async def load_user(self, conn: HTTPConnection, user_id: str) -> BaseUser | None:
-        return User(id='1')
+        return User(id="1")
 
     def get_authentication_backend(self) -> AuthenticationBackend:
         return SimpleBackend()

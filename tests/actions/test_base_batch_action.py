@@ -14,46 +14,50 @@ class MyForm(wtforms.Form):
 class MyAction(BaseBatchAction):  # pragma: no cover
     form_class = MyForm
 
-    async def apply(self, request: Request, object_ids: list[str], form: wtforms.Form) -> Response:
-        return Response('CALLED')
+    async def apply(
+        self, request: Request, object_ids: list[str], form: wtforms.Form
+    ) -> Response:
+        return Response("CALLED")
 
 
 def test_generates_slug(http_request: Request) -> None:
     action = MyAction()
-    assert action.slug == 'myaction'
+    assert action.slug == "myaction"
 
 
 async def test_renders_form(request_f: RequestFactory) -> None:
-    request = request_f(method='get', query_string='_ids=1')
+    request = request_f(method="get", query_string="_ids=1")
     action = MyAction()
     response = await action.dispatch(request)
     selector = MarkupSelector(response.body)
     assert selector.has_node('form input[type="text"][name="name"]')
-    assert selector.get_text('form button[type="submit"]') == 'Execute'
-    assert selector.get_text('form button[type="button"].btn-text') == 'Cancel'
+    assert selector.get_text('form button[type="submit"]') == "Execute"
+    assert selector.get_text('form button[type="button"].btn-text') == "Cancel"
 
 
 async def test_submit_valid_form(request_f: RequestFactory) -> None:
-    request = request_f(method='POST', form_data={'name': 'user'}, query_string='_ids=1')
+    request = request_f(
+        method="POST", form_data={"name": "user"}, query_string="_ids=1"
+    )
     action = MyAction()
     response = await action.dispatch(request)
-    assert response.body == b'CALLED'
+    assert response.body == b"CALLED"
 
 
 async def test_dangerous_variant(request_f: RequestFactory) -> None:
-    request = request_f(method='GET', query_string='_ids=1')
+    request = request_f(method="GET", query_string="_ids=1")
     action = MyAction()
     action.dangerous = True
     response = await action.dispatch(request)
     selector = MarkupSelector(response.body)
-    assert selector.has_class('form button[type="submit"]', 'btn-danger')
+    assert selector.has_class('form button[type="submit"]', "btn-danger")
 
 
 async def test_confirmation(request_f: RequestFactory) -> None:
-    request = request_f(method='GET', query_string='_ids=1')
+    request = request_f(method="GET", query_string="_ids=1")
     action = MyAction()
     response = await action.dispatch(request)
     selector = MarkupSelector(response.body)
     assert selector.get_text('form [data-test="confirmation"]') == (
-        'Do you really want to appy this action on selected rows?'
+        "Do you really want to appy this action on selected rows?"
     )

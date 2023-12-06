@@ -5,7 +5,7 @@ from starlette.datastructures import URL, MultiDict
 from starlette.requests import Request
 from urllib.parse import parse_qsl, urlencode
 
-SortingType = typing.Literal['asc', 'desc']
+SortingType = typing.Literal["asc", "desc"]
 
 
 @dataclasses.dataclass
@@ -22,7 +22,9 @@ def get_ordering_value(request: Request, param_name: str) -> dict[str, SortingTy
     Returns a dictionary where keys are parameter names and values either 'asc' or 'desc' literals.
     """
     return {
-        value[1:] if value.startswith('-') else value: 'desc' if value.startswith('-') else 'asc'
+        value[1:] if value.startswith("-") else value: "desc"
+        if value.startswith("-")
+        else "asc"
         for value in request.query_params.getlist(param_name)
         if value
     }
@@ -47,9 +49,9 @@ class SortingHelper:
     def get_current_ordering(self, field: str) -> SortingType | None:
         for order in self.ordering:
             if order == field:
-                return 'asc'
-            if order == f'-{field}':
-                return 'desc'
+                return "asc"
+            if order == f"-{field}":
+                return "desc"
 
         return None
 
@@ -68,9 +70,9 @@ class SortingHelper:
         ordering = self.ordering.copy()
         if field in ordering:
             index = ordering.index(field)
-            ordering[index] = f'-{field}'
-        elif f'-{field}' in ordering:
-            ordering.remove(f'-{field}')
+            ordering[index] = f"-{field}"
+        elif f"-{field}" in ordering:
+            ordering.remove(f"-{field}")
         else:
             ordering.append(field)
 
@@ -92,4 +94,6 @@ class SortingHelper:
         ordering = self.get_current_ordering(field)
         index = self.get_current_ordering_index(field)
         show_index = self.should_show_index()
-        return SortControl(index=index, ordering=ordering, url=url, show_index=show_index)
+        return SortControl(
+            index=index, ordering=ordering, url=url, show_index=show_index
+        )
