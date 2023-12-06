@@ -1,4 +1,5 @@
 {% import 'ohmyadmin/pagination.html' as pagination %}
+{% import 'ohmyadmin/icons.html' as icons %}
 
 {% macro render_head_cell(request, column) %}
     {% include 'ohmyadmin/views/table/table_head_cell.html' %}
@@ -18,6 +19,9 @@
                 {{ render_head_cell(request, column) }}
             </th>
         {% endfor %}
+        {% if table.row_actions %}
+            <th></th>
+        {% endif %}
     </tr>
     </thead>
     <tbody>
@@ -26,6 +30,26 @@
             {% for columm in table.columns %}
                 <td>{{ render_cell(request, columm, object) }}</td>
             {% endfor %}
+            {% if table.row_actions %}
+                <td>
+                    <div class="flex items-center justify-end gap-2">
+                        <button class="btn btn-icon" id="object-menu-{{ loop.index0 }}">
+                            {{ icons.dots_vertical() }}
+                        </button>
+                    </div>
+                    <o-popover trigger="#object-menu-{{ loop.index0 }}" placement="bottom-end">
+                        <div class="dropdown absolute hidden">
+                            <div class="list-menu">
+                                {% for row_action in table.row_actions %}
+                                    {% with action=row_action %}
+                                        {% include row_action.template %}
+                                    {% endwith %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </o-popover>
+                </td>
+            {% endif %}
         </tr>
     {% endfor %}
     </tbody>

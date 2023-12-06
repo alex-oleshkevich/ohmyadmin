@@ -44,7 +44,7 @@ def get_column_properties(
 def guess_pk_field(model_class: type) -> str:
     mapper: orm.Mapper = orm.class_mapper(model_class)
     pk_columns = [
-        getattr(c, 'name')
+        getattr(c, "name")
         for c in mapper.all_orm_descriptors
         if hasattr(c, "primary_key") and c.primary_key  # type: ignore
     ]
@@ -168,6 +168,9 @@ class SADataSource(DataSource[T]):
         return Pagination(
             rows=list(rows), total_rows=row_count, page=page, page_size=page_size
         )
+
+    def get_pk(self, obj: T) -> str:
+        return str(getattr(obj, self.pk_column))
 
     def _clone(self, stmt: sa.Select | None = None) -> typing.Self:
         return self.__class__(

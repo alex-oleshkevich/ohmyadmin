@@ -1,7 +1,7 @@
-import dataclasses
-
 import abc
+import dataclasses
 import typing
+
 import wtforms
 from slugify import slugify
 from starlette.requests import Request
@@ -107,12 +107,13 @@ class FormAction(Action, WithRoute, Dispatchable):
     form_class: typing.Type[wtforms.Form]
     icon: str = ""
     slug: str = ""
-    modal_title: str = ""
-    modal_description: str = ""
     variant: ActionVariant = "default"
     template: str = "ohmyadmin/actions/form.html"
-    modal_template: str = "ohmyadmin/actions/form_modal.html"
+    modal_title: str = ""
     label: str = dataclasses.field(default_factory=lambda: _("Unlabeled"))
+
+    modal_description: str = ""
+    modal_template: str = "ohmyadmin/actions/form_modal.html"
 
     def get_slug(self) -> str:
         return self.slug or slugify(self.label or str(id(self)))

@@ -78,3 +78,18 @@ export class ToastsElement extends LitElement {
         return null;
     }
 }
+
+export const toasts = {
+    success(message: string) {
+        document.dispatchEvent(new CustomEvent('toast', {
+            bubbles: true,
+            detail: { message, category: 'success' },
+        }));
+    },
+    error(message: string) {
+        document.dispatchEvent(new CustomEvent('toast', {
+            bubbles: true,
+            detail: { message, category: 'error' },
+        }));
+    },
+};

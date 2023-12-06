@@ -1,6 +1,6 @@
 {% import 'ohmyadmin/forms.html' as forms %}
 <dialog class="modal" data-autoopen hx-swap="outerHTML" hx-target="this">
-    <form class="modal-dialog">
+    <form class="modal-dialog" method="dialog">
         <header>{{ action.modal_title or action.label }}</header>
         <main>
             {% if action.modal_description %}
@@ -12,7 +12,9 @@
         </main>
         <footer>
             <button type="submit" class="btn btn-accent" hx-post="{{ request.url }}">{{ _('Submit') }}</button>
-            <button type="button" @click="ohmyadmin.modals.closeActive;" class="btn btn-text">{{ _('Cancel') }}</button>
+            <button type="button" @click="ohmyadmin.modals.closeActive" class="btn btn-text">
+                {{ _('Cancel') }}
+            </button>
         </footer>
     </form>
 </dialog>

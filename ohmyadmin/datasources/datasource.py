@@ -21,6 +21,10 @@ class DataSource(abc.ABC, typing.Generic[T]):
         return self
 
     @abc.abstractmethod
+    def get_pk(self, obj: typing.Any) -> str:  # pragma: no cover
+        ...
+
+    @abc.abstractmethod
     def apply_search_filter(
         self, term: str, predicate: SearchPredicate, fields: list[str]
     ) -> typing.Self:

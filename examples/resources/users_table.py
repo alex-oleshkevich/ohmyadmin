@@ -1,3 +1,5 @@
+import typing
+
 import wtforms
 from markupsafe import Markup
 from starlette.datastructures import URL
@@ -5,7 +7,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from examples.models import User
-from ohmyadmin.actions import actions
+from ohmyadmin.actions import actions, object_actions
 from ohmyadmin.datasources.sqlalchemy import SADataSource
 from ohmyadmin.formatters import (
     AvatarFormatter,
@@ -47,8 +49,25 @@ PLUS_ICON = Markup(
 
 async def create_user_callback(request: Request, form: CreateUserForm) -> Response:
     print(form.data)
-    r = response().toast("New user created!").close_modal()
-    return r
+    return response().toast("New user created!").close_modal()
+
+
+async def object_toast_callback(
+    request: Request, selected: typing.Sequence[str]
+) -> Response:
+    return response().toast(f"Object selected: {selected}.").close_modal()
+
+
+class RowObjectForm(wtforms.Form):
+    first_name = wtforms.StringField()
+    last_name = wtforms.StringField(validators=[wtforms.validators.data_required()])
+
+
+async def object_form_callback(
+    request: Request, selected: typing.Sequence[str], form: wtforms.Form
+) -> Response:
+    print(form.data)
+    return response().toast(f"Form submitted: {selected}.").close_modal().refresh()
 
 
 class UsersTable(TableView):
@@ -64,13 +83,34 @@ class UsersTable(TableView):
             show_toast_callback, label="Show toast", variant="danger"
         ),
         actions.FormAction(
-            form_class=CreateUserForm,
-            callback=create_user_callback,
-            label="New User",
             icon=PLUS_ICON,
+            label="New User",
             variant="accent",
             modal_title="Create user",
+            form_class=CreateUserForm,
+            callback=create_user_callback,
             modal_description="Create a new user right now!",
+        ),
+    ]
+    row_actions = [
+        object_actions.LinkAction(url="/admin", label="Show details"),
+        object_actions.LinkAction(
+            url=lambda r, o: f"/admin?id={o.id}", label="Generated URL"
+        ),
+        object_actions.CallbackAction(
+            label="Show toast", callback=object_toast_callback
+        ),
+        object_actions.CallbackAction(
+            dangerous=True,
+            label="Show toast with confirmation",
+            callback=object_toast_callback,
+            confirmation="Call this dangerous action?",
+        ),
+        object_actions.FormAction(
+            label="Form action",
+            callback=object_form_callback,
+            form_class=RowObjectForm,
+            icon=PLUS_ICON,
         ),
     ]
     columns = [

@@ -32,6 +32,11 @@ def close_modal(response: R) -> R:
     return trigger(response, "modals-close")
 
 
+def refresh(response: R) -> R:
+    """Refresh table items."""
+    return trigger(response, "refresh")
+
+
 def toast(response: R, message: str, category: ToastCategory = "success") -> R:
     return trigger(response, "toast", {"message": message, "category": category})
 
@@ -42,6 +47,9 @@ class HXResponse(Response):
 
     def close_modal(self) -> typing.Self:
         return close_modal(self)
+
+    def refresh(self) -> typing.Self:
+        return refresh(self)
 
 
 def response(

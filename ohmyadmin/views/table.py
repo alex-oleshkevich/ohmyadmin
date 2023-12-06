@@ -7,6 +7,7 @@ from starlette_babel import gettext_lazy as _
 
 from ohmyadmin import htmx
 from ohmyadmin.actions.actions import Action, WithRoute
+from ohmyadmin.actions.object_actions import ObjectAction
 from ohmyadmin.datasources.datasource import DataSource
 from ohmyadmin.filters import Filter, OrderingFilter, SearchFilter
 from ohmyadmin.formatters import CellFormatter, StringFormatter
@@ -62,14 +63,17 @@ class TableView(View):
     columns: typing.Sequence[Column] = tuple()
     filters: typing.Sequence[Filter] = tuple()
     actions: typing.Sequence[Action] = tuple()
+    row_actions: typing.Sequence[ObjectAction] = tuple()
+    # batch_actions: typing.Sequence[]
 
     search_param: str = "search"
     search_placeholder: str = ""
 
     def __init__(self) -> None:
-        self.columns = list(self.columns or [])
-        self.actions = list(self.actions or [])
-        self.filters: list[Filter] = list(self.filters or [])
+        self.columns = list(self.columns)
+        self.actions = list(self.actions)
+        self.row_actions = list(self.row_actions)
+        self.filters: list[Filter] = list(self.filters)
         self.filters.extend(
             [
                 OrderingFilter(
@@ -130,6 +134,14 @@ class TableView(View):
                     routes=[
                         action.get_route(self.url_name)
                         for action in self.actions
+                        if isinstance(action, WithRoute)
+                    ],
+                ),
+                Mount(
+                    "/object-actions",
+                    routes=[
+                        action.get_route(self.url_name)
+                        for action in self.row_actions
                         if isinstance(action, WithRoute)
                     ],
                 ),

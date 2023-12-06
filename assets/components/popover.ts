@@ -1,8 +1,13 @@
 import { html, LitElement } from 'lit';
 import { customElement, property, queryAssignedElements } from 'lit/decorators.js';
-import { styleMap } from 'lit/directives/style-map.js';
-import { computePosition, autoUpdate, offset } from '@floating-ui/dom';
+import { autoPlacement, autoUpdate, computePosition, offset } from '@floating-ui/dom';
 import { Placement } from '@floating-ui/utils';
+
+declare global {
+    interface HTMLElementTagNameMap {
+        'o-popover': PopoverElement,
+    }
+}
 
 @customElement('o-popover')
 export class PopoverElement extends LitElement {
@@ -18,8 +23,14 @@ export class PopoverElement extends LitElement {
     @property()
     placement: Placement = 'bottom';
 
-    @property({ type: Number })
-    offset = 12;
+    @property({ type: Number, attribute: 'offset-main-axis' })
+    offsetMainAxis = 8;
+
+    @property({ type: Number, attribute: 'offset-cross-axis' })
+    offsetCrossAxis = 0;
+
+    @property({ type: Number, attribute: 'offset-alignment-axis' })
+    offsetAlignmentAxis = 0;
 
     protected override firstUpdated() {
         const triggered = () => this.open ? this.destroy() : this.setup();
@@ -53,7 +64,16 @@ export class PopoverElement extends LitElement {
         autoUpdate(triggerEl, this.floatingEl[0], () => {
             computePosition(triggerEl, this.floatingEl[0], {
                 placement: this.placement,
-                middleware: [offset(this.offset)],
+                middleware: [
+                    offset({
+                        crossAxis: this.offsetCrossAxis,
+                        mainAxis: this.offsetMainAxis,
+                        alignmentAxis: this.offsetAlignmentAxis,
+                    }),
+                    autoPlacement({
+                        allowedPlacements: [this.placement],
+                    }),
+                ],
             })
                 .then(({ x, y }) => {
                     Object.assign(this.floatingEl[0].style, {
@@ -69,10 +89,8 @@ export class PopoverElement extends LitElement {
     }
 
     override render(): unknown {
-        const styles = styleMap({
-            display: this.open ? 'block' : 'none',
-        });
+        this.floatingEl.forEach(el => el.style.display = this.open ? 'block' : 'none');
         return html`
-            <slot style="${ styles }"></slot>`;
+            <slot></slot>`;
     }
 }

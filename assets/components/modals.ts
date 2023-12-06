@@ -33,10 +33,7 @@ export class ModalsElement extends LitElement {
     }
 
     protected override firstUpdated() {
-        document.body.addEventListener('htmx:beforeSwap', e => {
-            console.log(e.detail);
-        });
-
+        window.addEventListener('modals-close', this.closeActiveModal.bind(this));
         document.body.addEventListener('htmx:afterSettle', e => {
             if (!(e instanceof CustomEvent)) {
                 return;
@@ -49,10 +46,15 @@ export class ModalsElement extends LitElement {
                 dialog.showModal();
             }
         });
-        document.addEventListener('modals-close', this.closeActiveModal.bind(this));
     }
 
     closeActiveModal() {
-        this.dialogs.forEach(el => el.close());
+        this.dialogs.forEach(el => el.remove());
     }
 }
+
+export const modals = {
+    closeActive() {
+        window.dispatchEvent(new CustomEvent('modals-close'));
+    },
+};
