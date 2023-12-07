@@ -52,7 +52,6 @@ starception = "^1.0"
 httpx = "^0.23.3"
 ruff = "^0.1.7"
 
-
 [tool.poetry.group.docs.dependencies]
 mkdocs = "^1.4.2"
 mkdocstrings = { extras = ["css", "html", "javascript", "python", "typescript"], version = "^0.20.0" }
@@ -62,42 +61,6 @@ mkautodoc = "^0.2.0"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.black]
-target-version = ["py310"]
-skip-string-normalization = true
-line_length = 120
-extend-exclude = true
-exclude = '''
-(
-    asv_bench/env
-  | \.egg
-  | \.git
-  | \.hg
-  | \.mypy_cache
-  | \.nox
-  | \.tox
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-  | setup.py
-)
-'''
-
-
-[tool.isort]
-combine_as_imports = true
-include_trailing_comma = true
-known_standard_library = "dataclasses,typing_extensions"
-known_first_party = "ohmyadmin"
-known_third_party = ["pkg_resources", "toml"]
-known_future_library = "__future__"
-line_length = 120
-multi_line_output = 3
-profile = "black"
-use_parentheses = true
 
 [tool.coverage.run]
 source = ["ohmyadmin"]
@@ -136,3 +99,22 @@ filterwarnings = [
     "ignore::UserWarning",
     "ignore::DeprecationWarning",
 ]
+
+[tool.ruff]
+exclude = [
+    ".egg",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".tox",
+    ".venv",
+]
+line-length = 120
+indent-width = 4
+
+[tool.ruff.lint]
+fixable = ["ALL"]
+
+[tool.ruff.format]
+skip-magic-trailing-comma = false

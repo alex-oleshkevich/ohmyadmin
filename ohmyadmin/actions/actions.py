@@ -68,8 +68,6 @@ class WithRoute(abc.ABC):
             methods=["get", "post", "put", "patch", "delete"],
         )
 
-
-class Dispatchable(abc.ABC):
     @abc.abstractmethod
     async def dispatch(self, request: Request) -> Response:
         raise NotImplementedError()
@@ -81,7 +79,7 @@ class Dispatchable(abc.ABC):
 
 
 @dataclasses.dataclass
-class CallbackAction(Action, WithRoute, Dispatchable):
+class CallbackAction(Action, WithRoute):
     callback: CallbackActionHandler
     icon: str = ""
     request_method: typing.Literal["GET", "POST", "PUT", "PATCH", "DELETE"] = "GET"
@@ -102,7 +100,7 @@ FormActionHandler = typing.Callable[[Request, F], typing.Awaitable[Response]]
 
 
 @dataclasses.dataclass
-class FormAction(Action, WithRoute, Dispatchable):
+class FormAction(Action, WithRoute):
     callback: FormActionHandler
     form_class: typing.Type[wtforms.Form]
     icon: str = ""
@@ -119,9 +117,7 @@ class FormAction(Action, WithRoute, Dispatchable):
         return self.slug or slugify(self.label or str(id(self)))
 
     async def create_form(self, request: Request) -> wtforms.Form:
-        form = self.form_class(
-            formdata=await request.form() if request.method == "POST" else None
-        )
+        form = self.form_class(formdata=await request.form() if request.method == "POST" else None)
         await self.initialize_form(request, form)
         return form
 
@@ -137,6 +133,4 @@ class FormAction(Action, WithRoute, Dispatchable):
             await self.validate_form(request, form)
             return await self.callback(request, form)
 
-        return render_to_response(
-            request, self.modal_template, {"form": form, "action": self}
-        )
+        return render_to_response(request, self.modal_template, {"form": form, "action": self})

@@ -32,9 +32,7 @@ class CreateUserForm(wtforms.Form):
     last_name = wtforms.StringField()
     email = wtforms.EmailField(validators=[wtforms.validators.data_required()])
     password = wtforms.PasswordField(validators=[wtforms.validators.data_required()])
-    confirm_password = wtforms.PasswordField(
-        validators=[wtforms.validators.equal_to("password")]
-    )
+    confirm_password = wtforms.PasswordField(validators=[wtforms.validators.equal_to("password")])
 
 
 PLUS_ICON = Markup(
@@ -52,9 +50,7 @@ async def create_user_callback(request: Request, form: CreateUserForm) -> Respon
     return response().toast("New user created!").close_modal()
 
 
-async def object_toast_callback(
-    request: Request, selected: typing.Sequence[str]
-) -> Response:
+async def object_toast_callback(request: Request, selected: typing.Sequence[str]) -> Response:
     return response().toast(f"Object selected: {selected}.").close_modal()
 
 
@@ -63,9 +59,7 @@ class RowObjectForm(wtforms.Form):
     last_name = wtforms.StringField(validators=[wtforms.validators.data_required()])
 
 
-async def object_form_callback(
-    request: Request, selected: typing.Sequence[str], form: wtforms.Form
-) -> Response:
+async def object_form_callback(request: Request, selected: typing.Sequence[str], form: wtforms.Form) -> Response:
     print(form.data)
     return response().toast(f"Form submitted: {selected}.").close_modal().refresh()
 
@@ -79,9 +73,7 @@ class UsersTable(TableView):
         actions.LinkAction(url="/admin", label="To Main page"),
         actions.CallFunctionAction(function="alert", args=["kek"], label="Show alert"),
         actions.EventAction(event="refresh", variant="text", label="Refresh data"),
-        actions.CallbackAction(
-            show_toast_callback, label="Show toast", variant="danger"
-        ),
+        actions.CallbackAction(show_toast_callback, label="Show toast", variant="danger"),
         actions.FormAction(
             icon=PLUS_ICON,
             label="New User",
@@ -94,12 +86,8 @@ class UsersTable(TableView):
     ]
     row_actions = [
         object_actions.LinkAction(url="/admin", label="Show details"),
-        object_actions.LinkAction(
-            url=lambda r, o: f"/admin?id={o.id}", label="Generated URL"
-        ),
-        object_actions.CallbackAction(
-            label="Show toast", callback=object_toast_callback
-        ),
+        object_actions.LinkAction(url=lambda r, o: f"/admin?id={o.id}", label="Generated URL"),
+        object_actions.CallbackAction(label="Show toast", callback=object_toast_callback),
         object_actions.CallbackAction(
             dangerous=True,
             label="Show toast with confirmation",

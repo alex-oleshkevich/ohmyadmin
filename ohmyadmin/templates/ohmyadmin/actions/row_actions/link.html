@@ -1,4 +1,4 @@
-<a href="{{ action.generate_url(request, object) }}" class="list-menu-item" target="{{ action.target }}">
-    {{ action.generate_icon(request, object) }}
-    {{ action.generate_label(request, object) }}
+<a href="{{ action.get_url(request, object) }}" class="list-menu-item" target="{{ action.target }}">
+    {{ action.get_icon(request, object) }}
+    {{ action.get_label(request, object) }}
 </a>

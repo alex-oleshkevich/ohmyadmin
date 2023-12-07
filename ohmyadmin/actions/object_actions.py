@@ -7,7 +7,7 @@ from slugify import slugify
 from starlette.requests import Request
 from starlette.responses import Response
 
-from ohmyadmin.actions.actions import Dispatchable, WithRoute
+from ohmyadmin.actions.actions import WithRoute
 from ohmyadmin.forms.utils import create_form, validate_on_submit
 from ohmyadmin.templating import render_to_response
 
@@ -17,13 +17,10 @@ class ObjectAction(abc.ABC):
     icon: str = ""
     label: str = "<unlabeled>"
 
-    # dangerous: bool = False
-    # confirmation: str = ''
-
-    def generate_label(self, request: Request, obj: typing.Any) -> str:
+    def get_label(self, request: Request, obj: typing.Any) -> str:
         return self.label
 
-    def generate_icon(self, request: Request, obj: typing.Any) -> str:
+    def get_icon(self, request: Request, obj: typing.Any) -> str:
         return self.icon
 
 
@@ -33,19 +30,17 @@ class LinkAction(ObjectAction):
     url: str | typing.Callable[[Request, typing.Any], str] = ""
     template = "ohmyadmin/actions/row_actions/link.html"
 
-    def generate_url(self, request: Request, obj: typing.Any) -> str:
+    def get_url(self, request: Request, obj: typing.Any) -> str:
         if callable(self.url):
             return self.url(request, obj)
         return self.url
 
 
-ObjectCallbackHandler = typing.Callable[
-    [Request, typing.Sequence[str]], typing.Awaitable[Response]
-]
+ObjectCallbackHandler = typing.Callable[[Request, typing.Sequence[str]], typing.Awaitable[Response]]
 
 
 @dataclasses.dataclass
-class CallbackAction(ObjectAction, WithRoute, Dispatchable):
+class CallbackAction(ObjectAction, WithRoute):
     slug: str = ""
     dangerous: bool = False
     callback: ObjectCallbackHandler | None = None
@@ -55,7 +50,12 @@ class CallbackAction(ObjectAction, WithRoute, Dispatchable):
 
     async def dispatch(self, request: Request) -> Response:
         selected = request.query_params.getlist("selected")
-        return await self.callback(request, selected)
+        return await self.handle(request, selected)
+
+    async def handle(self, request: Request, selected: typing.Sequence[str]) -> Response:
+        if self.callback:
+            return await self.callback(request, selected)
+        raise NotImplementedError()
 
     def get_slug(self) -> str:
         return self.slug or slugify(self.label or str(id(self)))
@@ -69,13 +69,11 @@ class CallbackAction(ObjectAction, WithRoute, Dispatchable):
         return url_name_prefix + ".row_action." + self.get_slug()
 
 
-FormCallbackHandler = typing.Callable[
-    [Request, typing.Sequence[str], wtforms.Form], typing.Awaitable[Response]
-]
+FormCallbackHandler = typing.Callable[[Request, typing.Sequence[str], wtforms.Form], typing.Awaitable[Response]]
 
 
 @dataclasses.dataclass
-class FormAction(ObjectAction, WithRoute, Dispatchable):
+class FormAction(ObjectAction, WithRoute):
     slug: str = ""
     dangerous: bool = False
     callback: FormCallbackHandler | None = None
@@ -91,15 +89,16 @@ class FormAction(ObjectAction, WithRoute, Dispatchable):
         selected = request.query_params.getlist("selected")
         form = await self.create_form(request, selected)
         if await validate_on_submit(request, form):
+            return await self.handle(request, selected, form)
+
+        return render_to_response(request, self.modal_template, {"form": form, "action": self})
+
+    async def handle(self, request: Request, selected: typing.Sequence[str], form: wtforms.Form) -> Response:
+        if self.callback:
             return await self.callback(request, selected, form)
+        raise NotImplementedError()
 
-        return render_to_response(
-            request, self.modal_template, {"form": form, "action": self}
-        )
-
-    async def create_form(
-        self, request: Request, selected: typing.Sequence[str]
-    ) -> wtforms.Form:
+    async def create_form(self, request: Request, selected: typing.Sequence[str]) -> wtforms.Form:
         return await create_form(request, self.form_class)
 
     def get_slug(self) -> str:
