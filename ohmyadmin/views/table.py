@@ -76,17 +76,11 @@ class TableView(View):
         self.filters: list[Filter] = list(self.filters)
         self.filters.extend(
             [
-                OrderingFilter(
-                    self.ordering_param,
-                    [column.sort_by for column in self.columns if column.sortable],
-                ),
-                SearchFilter(
-                    self.search_param,
-                    [column.search_in for column in self.columns if column.searchable],
-                ),
+                OrderingFilter(self.ordering_param, [column.sort_by for column in self.columns if column.sortable]),
+                SearchFilter(self.search_param, [column.search_in for column in self.columns if column.searchable]),
             ]
         )
-        self.search_placeholder = self.search_placeholder or _("Search in {fields}...").format(
+        self.search_placeholder = self.search_placeholder or _("Search in {fields}...", domain="ohmyadmin").format(
             fields=", ".join([column.label for column in self.columns if column.searchable])
         )
 

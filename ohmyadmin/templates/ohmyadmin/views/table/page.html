@@ -41,7 +41,7 @@
         <section class="flex items-center justify-between mb-5">
             <div class="w-1/2 flex items-center justify-start">
                 {% if table.searchable %}
-                    <form method="post" role="search" id="search-form" class="w-full max-w-md">
+                    <form method="get" role="search" id="search-form" class="w-full max-w-md">
                         <input type="search" role="searchbox" class="w-full" value="{{ search_term }}"
                                name="{{ table.search_param }}"
                                hx-get="{{ request.url.remove_query_params(table.search_param) }}"

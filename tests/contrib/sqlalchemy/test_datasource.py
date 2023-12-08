@@ -121,9 +121,7 @@ async def test_sorts_asc(datasource: SQLADataSource[Post]) -> None:
 
 
 async def test_sorts_relation(datasource: SQLADataSource[Post]) -> None:
-    sql = datasource.apply_ordering(
-        {"author.name": "asc"}, sortable_fields=["title", "author.name"]
-    ).raw
+    sql = datasource.apply_ordering({"author.name": "asc"}, sortable_fields=["title", "author.name"]).raw
     assert "ORDER BY users.name ASC" in str(sql)
 
 
@@ -138,35 +136,27 @@ async def test_not_sorts_unsupported_fields(datasource: SQLADataSource[Post]) ->
 
 
 async def test_string_filter_startswith(datasource: SQLADataSource[Post]) -> None:
-    sql = datasource.apply_string_filter(
-        "title", StringOperation.startswith, "Title 2"
-    ).raw
+    sql = datasource.apply_string_filter("title", StringOperation.STARTSWITH, "Title 2").raw
     assert "WHERE (lower(posts.title) LIKE :lower_1 || '%')" in str(sql)
 
 
 async def test_string_filter_endswith(datasource: SQLADataSource[Post]) -> None:
-    sql = datasource.apply_string_filter(
-        "title", StringOperation.endswith, "Title 2"
-    ).raw
+    sql = datasource.apply_string_filter("title", StringOperation.ENDSWITH, "Title 2").raw
     assert "WHERE (lower(posts.title) LIKE '%' || :lower_1)" in str(sql)
 
 
 async def test_string_filter_contains(datasource: SQLADataSource[Post]) -> None:
-    sql = datasource.apply_string_filter(
-        "title", StringOperation.contains, "Title 2"
-    ).raw
+    sql = datasource.apply_string_filter("title", StringOperation.CONTAINS, "Title 2").raw
     assert "WHERE lower(posts.title) LIKE :lower_1" in str(sql)
 
 
 async def test_string_filter_pattern(datasource: SQLADataSource[Post]) -> None:
-    sql = datasource.apply_string_filter(
-        "title", StringOperation.pattern, "Title 1([12])"
-    ).raw
+    sql = datasource.apply_string_filter("title", StringOperation.pattern, "Title 1([12])").raw
     assert "WHERE lower(posts.title) <regexp> :lower_1" in str(sql)
 
 
 async def test_string_filter_exact(datasource: SQLADataSource[Post]) -> None:
-    sql = datasource.apply_string_filter("title", StringOperation.exact, "Title 1").raw
+    sql = datasource.apply_string_filter("title", StringOperation.EXACT, "Title 1").raw
     assert "WHERE lower(posts.title) = :lower_1" in str(sql)
 
 
@@ -201,23 +191,17 @@ async def test_date_filter(datasource: SQLADataSource[Post]) -> None:
 
 
 async def test_datetime_filter(datasource: SQLADataSource[Post]) -> None:
-    sql = datasource.apply_date_filter(
-        "date_published", datetime.datetime(2023, 1, 2, 12, 0, 0)
-    ).raw
+    sql = datasource.apply_date_filter("date_published", datetime.datetime(2023, 1, 2, 12, 0, 0)).raw
     assert "WHERE posts.date_published = :date_published_1" in str(sql)
 
 
 async def test_date_range_filter_before(datasource: SQLADataSource[Post]) -> None:
-    sql = datasource.apply_date_range_filter(
-        "date_published", before=datetime.date(2023, 1, 2), after=None
-    ).raw
+    sql = datasource.apply_date_range_filter("date_published", before=datetime.date(2023, 1, 2), after=None).raw
     assert "WHERE posts.date_published <= :date_published_1" in str(sql)
 
 
 async def test_date_range_filter_after(datasource: SQLADataSource[Post]) -> None:
-    sql = datasource.apply_date_range_filter(
-        "date_published", before=None, after=datetime.date(2023, 1, 2)
-    ).raw
+    sql = datasource.apply_date_range_filter("date_published", before=None, after=datetime.date(2023, 1, 2)).raw
     assert "WHERE posts.date_published >= :date_published_1" in str(sql)
 
 
@@ -227,10 +211,7 @@ async def test_date_range_filter_between(datasource: SQLADataSource[Post]) -> No
         after=datetime.date(2023, 1, 2),
         before=datetime.date(2023, 1, 3),
     ).raw
-    assert (
-        "WHERE posts.date_published <= :date_published_1 AND posts.date_published >= :date_published_2"
-        in str(sql)
-    )
+    assert "WHERE posts.date_published <= :date_published_1 AND posts.date_published >= :date_published_2" in str(sql)
 
 
 async def test_datetime_range_filter_before(datasource: SQLADataSource[Post]) -> None:
@@ -253,10 +234,7 @@ async def test_datetime_range_filter_between(datasource: SQLADataSource[Post]) -
         after=datetime.datetime(2023, 1, 2, 12, 0, 0),
         before=datetime.datetime(2023, 1, 3, 12, 0, 0),
     ).raw
-    assert (
-        "WHERE posts.updated_at <= :updated_at_1 AND posts.updated_at >= :updated_at_2"
-        in str(sql)
-    )
+    assert "WHERE posts.updated_at <= :updated_at_1 AND posts.updated_at >= :updated_at_2" in str(sql)
 
 
 async def test_choice_filter(datasource: SQLADataSource[Post]) -> None:
@@ -313,9 +291,7 @@ async def test_get(datasource: SQLADataSource[Post], http_request: Request) -> N
     )
 
 
-async def test_paginate(
-    datasource: SQLADataSource[Post], http_request: Request
-) -> None:
+async def test_paginate(datasource: SQLADataSource[Post], http_request: Request) -> None:
     model = Post()
     result = mock.MagicMock()
     result.all = mock.MagicMock(return_value=[model])
@@ -323,9 +299,7 @@ async def test_paginate(
     dbsession.scalars = mock.AsyncMock(return_value=result)
 
     http_request.state.dbsession = dbsession
-    assert (await datasource.paginate(http_request, page=2, page_size=10)).rows == [
-        model
-    ]
+    assert (await datasource.paginate(http_request, page=2, page_size=10)).rows == [model]
     assert dbsession.scalars.call_count == 2
     assert str(dbsession.scalars.call_args_list[1].args[0]) == (
         "SELECT posts.id, posts.title, posts.date_published, posts.updated_at, "

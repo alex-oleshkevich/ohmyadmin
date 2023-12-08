@@ -1,6 +1,8 @@
 import abc
+
 from starlette.requests import Request
 
+from ohmyadmin.datasources import datasource
 from ohmyadmin.datasources.datasource import DataSource
 from ohmyadmin.ordering import get_ordering_value
 
@@ -25,23 +27,71 @@ class SearchFilter(Filter):
             return query
 
         if value.startswith("^"):
-            return query.apply_search_filter(
-                term=value[1:], predicate="startswith", fields=self.searchable_fields
+            return query.filter(
+                datasource.OrFilter(
+                    [
+                        datasource.StringFilter(
+                            field=field,
+                            value=value[1:],
+                            predicate=datasource.StringOperation.STARTSWITH,
+                            case_insensitive=True,
+                        )
+                        for field in self.searchable_fields
+                    ]
+                )
             )
         if value.startswith("="):
-            return query.apply_search_filter(
-                term=value[1:], predicate="exact", fields=self.searchable_fields
+            return query.filter(
+                datasource.OrFilter(
+                    [
+                        datasource.StringFilter(
+                            field=field,
+                            value=value[1:],
+                            predicate=datasource.StringOperation.EXACT,
+                            case_insensitive=True,
+                        )
+                        for field in self.searchable_fields
+                    ]
+                )
             )
         if value.startswith("$"):
-            return query.apply_search_filter(
-                term=value[1:], predicate="endswith", fields=self.searchable_fields
+            return query.filter(
+                datasource.OrFilter(
+                    [
+                        datasource.StringFilter(
+                            field=field,
+                            value=value[1:],
+                            predicate=datasource.StringOperation.ENDSWITH,
+                            case_insensitive=True,
+                        )
+                        for field in self.searchable_fields
+                    ]
+                )
             )
         if value.startswith("@"):
-            return query.apply_search_filter(
-                term=value[1:], predicate="matches", fields=self.searchable_fields
+            return query.filter(
+                datasource.OrFilter(
+                    [
+                        datasource.StringFilter(
+                            field=field,
+                            value=value[1:],
+                            predicate=datasource.StringOperation.MATCHES,
+                            case_insensitive=True,
+                        )
+                        for field in self.searchable_fields
+                    ]
+                )
             )
-        return query.apply_search_filter(
-            term=value, predicate="like", fields=self.searchable_fields
+
+        return query.filter(
+            datasource.OrFilter(
+                [
+                    datasource.StringFilter(
+                        field=field, value=value, predicate=datasource.StringOperation.CONTAINS, case_insensitive=True
+                    )
+                    for field in self.searchable_fields
+                ]
+            )
         )
 
 
@@ -52,4 +102,4 @@ class OrderingFilter(Filter):
 
     def apply(self, request: Request, query: DataSource) -> DataSource:
         ordering = get_ordering_value(request, self.ordering_param)
-        return query.apply_ordering_filter(ordering, self.orderable_fields)
+        return query.order_by({k: v for k, v in ordering.items() if k in self.orderable_fields})
