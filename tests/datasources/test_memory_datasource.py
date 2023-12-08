@@ -193,35 +193,35 @@ async def test_string_filter_exact(datasource: InMemoryDataSource[Post], http_re
 
 
 async def test_number_filter_equals(datasource: InMemoryDataSource[Post], http_request: Request) -> None:
-    qs = datasource.apply_number_filter("id", NumberOperation.eq, 2)
+    qs = datasource.apply_number_filter("id", NumberOperation.EQUALS, 2)
     obj = await qs.paginate(http_request, 1, 20)
     assert len(obj.rows) == 1
     assert [obj.id for obj in obj] == [2]
 
 
 async def test_number_filter_gt(datasource: InMemoryDataSource[Post], http_request: Request) -> None:
-    qs = datasource.apply_number_filter("id", NumberOperation.gt, 19)
+    qs = datasource.apply_number_filter("id", NumberOperation.GREATER, 19)
     obj = await qs.paginate(http_request, 1, 20)
     assert len(obj.rows) == 1
     assert [obj.id for obj in obj] == [20]
 
 
 async def test_number_filter_gte(datasource: InMemoryDataSource[Post], http_request: Request) -> None:
-    qs = datasource.apply_number_filter("id", NumberOperation.gte, 19)
+    qs = datasource.apply_number_filter("id", NumberOperation.GREATER_OR_EQUAL, 19)
     obj = await qs.paginate(http_request, 1, 20)
     assert len(obj.rows) == 2
     assert [obj.id for obj in obj] == [19, 20]
 
 
 async def test_number_filter_lt(datasource: InMemoryDataSource[Post], http_request: Request) -> None:
-    qs = datasource.apply_number_filter("id", NumberOperation.lt, 1)
+    qs = datasource.apply_number_filter("id", NumberOperation.LESS, 1)
     obj = await qs.paginate(http_request, 1, 20)
     assert len(obj.rows) == 1
     assert [obj.id for obj in obj] == [0]
 
 
 async def test_number_filter_lte(datasource: InMemoryDataSource[Post], http_request: Request) -> None:
-    qs = datasource.apply_number_filter("id", NumberOperation.lte, 1)
+    qs = datasource.apply_number_filter("id", NumberOperation.LESS_OR_EQUAL, 1)
     obj = await qs.paginate(http_request, 1, 20)
     assert len(obj.rows) == 2
     assert [obj.id for obj in obj] == [0, 1]

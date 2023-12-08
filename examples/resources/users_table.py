@@ -1,5 +1,3 @@
-import typing
-
 import wtforms
 from markupsafe import Markup
 from starlette.datastructures import URL
@@ -8,6 +6,7 @@ from starlette.responses import Response
 
 from examples.models import User
 from ohmyadmin.actions import actions, object_actions
+from ohmyadmin.datasources.datasource import DataSource
 from ohmyadmin.datasources.sqlalchemy import SADataSource
 from ohmyadmin.formatters import (
     AvatarFormatter,
@@ -50,8 +49,8 @@ async def create_user_callback(request: Request, form: CreateUserForm) -> Respon
     return response().toast("New user created!").close_modal()
 
 
-async def object_toast_callback(request: Request, selected: typing.Sequence[str]) -> Response:
-    return response().toast(f"Object selected: {selected}.").close_modal()
+async def object_toast_callback(request: Request, query: DataSource) -> Response:
+    return response().toast(f"Object selected: {query}.").close_modal()
 
 
 class RowObjectForm(wtforms.Form):
@@ -59,14 +58,15 @@ class RowObjectForm(wtforms.Form):
     last_name = wtforms.StringField(validators=[wtforms.validators.data_required()])
 
 
-async def object_form_callback(request: Request, selected: typing.Sequence[str], form: wtforms.Form) -> Response:
+async def object_form_callback(request: Request, query: DataSource, form: wtforms.Form) -> Response:
     print(form.data)
-    return response().toast(f"Form submitted: {selected}.").close_modal().refresh()
+    return response().toast(f"Form submitted: {query}.").close_modal().refresh()
 
 
-async def delete_selected_callback(request: Request, selected: typing.Sequence[str], form: wtforms.Form) -> Response:
+async def delete_selected_callback(request: Request, query: DataSource, form: wtforms.Form) -> Response:
     print(form.data)
-    return response().toast(f"Rows deleted: {selected}.").close_modal().refresh()
+    count = await query.count(request)
+    return response().toast(f"Rows deleted: {count}.").close_modal().refresh()
 
 
 class UsersTable(TableView):
@@ -114,7 +114,7 @@ class UsersTable(TableView):
         ),
     ]
     batch_actions = [
-        object_actions.BatchAction(label="Delete selected row", dangerous=True, callback=delete_selected_callback),
+        object_actions.FormAction(label="Delete selected row", dangerous=True, callback=delete_selected_callback),
     ]
     columns = [
         Column("photo", formatter=AvatarFormatter()),

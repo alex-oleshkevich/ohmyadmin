@@ -30,11 +30,11 @@ class StringOperation(enum.Enum):
 
 
 class NumberOperation(enum.Enum):
-    eq = _("equals", domain="ohmyadmin")
-    gt = _("is greater than", domain="ohmyadmin")
-    gte = _("is greater than or equal", domain="ohmyadmin")
-    lt = _("is less than", domain="ohmyadmin")
-    lte = _("is less than or equal", domain="ohmyadmin")
+    EQUALS = _("equals", domain="ohmyadmin")
+    GREATER = _("is greater than", domain="ohmyadmin")
+    GREATER_OR_EQUAL = _("is greater than or equal", domain="ohmyadmin")
+    LESS = _("is less than", domain="ohmyadmin")
+    LESS_OR_EQUAL = _("is less than or equal", domain="ohmyadmin")
 
     @classmethod
     def choices(cls) -> typing.Sequence[tuple[str, str]]:
@@ -42,9 +42,9 @@ class NumberOperation(enum.Enum):
 
 
 class DateOperation(enum.Enum):
-    eq = _("equals", domain="ohmyadmin")
-    after = _("after", domain="ohmyadmin")
-    before = _("before", domain="ohmyadmin")
+    EQUALS = _("equals", domain="ohmyadmin")
+    AFTER = _("after", domain="ohmyadmin")
+    BEFORE = _("before", domain="ohmyadmin")
 
     @classmethod
     def choices(cls) -> typing.Sequence[tuple[str, str]]:
@@ -95,6 +95,12 @@ class DateTimeRangeFilter:
 
 
 @dataclasses.dataclass
+class InFilter:
+    field: str
+    values: typing.Sequence[typing.Any]
+
+
+@dataclasses.dataclass
 class OrFilter:
     filters: typing.Sequence[QueryFilter] = dataclasses.field(default_factory=list)
 
@@ -105,7 +111,7 @@ class AndFilter:
 
 
 ValueFilter: typing.TypeAlias = (
-    StringFilter | NumberFilter | DateFilter | DateTimeFilter | DateRangeFilter | DateTimeRangeFilter
+    StringFilter | NumberFilter | DateFilter | DateTimeFilter | DateRangeFilter | DateTimeRangeFilter | InFilter
 )
 QueryFilter: typing.TypeAlias = OrFilter | AndFilter | ValueFilter
 
@@ -113,6 +119,10 @@ QueryFilter: typing.TypeAlias = OrFilter | AndFilter | ValueFilter
 class DataSource(abc.ABC, typing.Generic[T]):
     @abc.abstractmethod
     async def paginate(self, request: Request, page: int, page_size: int) -> Pagination[T]:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    async def count(self, request: Request) -> int:
         raise NotImplementedError()
 
     def get_query_for_list(self) -> typing.Self:
@@ -129,3 +139,6 @@ class DataSource(abc.ABC, typing.Generic[T]):
     @abc.abstractmethod
     def filter(self, clause: QueryFilter) -> typing.Self:
         raise NotImplementedError()
+
+    def get_id_field(self) -> str:
+        return "id"

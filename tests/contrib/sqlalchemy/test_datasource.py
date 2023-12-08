@@ -161,27 +161,27 @@ async def test_string_filter_exact(datasource: SQLADataSource[Post]) -> None:
 
 
 async def test_number_filter_equals(datasource: SQLADataSource[Post]) -> None:
-    sql = datasource.apply_number_filter("id", NumberOperation.eq, 2).raw
+    sql = datasource.apply_number_filter("id", NumberOperation.EQUALS, 2).raw
     assert "WHERE CAST(posts.id AS INTEGER) = :param_1" in str(sql)
 
 
 async def test_number_filter_gt(datasource: SQLADataSource[Post]) -> None:
-    sql = datasource.apply_number_filter("id", NumberOperation.gt, 2).raw
+    sql = datasource.apply_number_filter("id", NumberOperation.GREATER, 2).raw
     assert "WHERE CAST(posts.id AS INTEGER) > :param_1" in str(sql)
 
 
 async def test_number_filter_gte(datasource: SQLADataSource[Post]) -> None:
-    sql = datasource.apply_number_filter("id", NumberOperation.gte, 2).raw
+    sql = datasource.apply_number_filter("id", NumberOperation.GREATER_OR_EQUAL, 2).raw
     assert "WHERE CAST(posts.id AS INTEGER) >= :param_1" in str(sql)
 
 
 async def test_number_filter_lt(datasource: SQLADataSource[Post]) -> None:
-    sql = datasource.apply_number_filter("id", NumberOperation.lt, 2).raw
+    sql = datasource.apply_number_filter("id", NumberOperation.LESS, 2).raw
     assert "WHERE CAST(posts.id AS INTEGER) < :param_1" in str(sql)
 
 
 async def test_number_filter_lte(datasource: SQLADataSource[Post]) -> None:
-    sql = datasource.apply_number_filter("id", NumberOperation.lte, 2).raw
+    sql = datasource.apply_number_filter("id", NumberOperation.LESS_OR_EQUAL, 2).raw
     assert "WHERE CAST(posts.id AS INTEGER) <= :param_1" in str(sql)
 
 

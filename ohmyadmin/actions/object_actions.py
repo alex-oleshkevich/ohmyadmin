@@ -8,9 +8,10 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from ohmyadmin.actions.actions import WithRoute
-from ohmyadmin.datasources.datasource import DataSource
+from ohmyadmin.datasources.datasource import DataSource, InFilter
 from ohmyadmin.forms.utils import create_form, validate_on_submit
 from ohmyadmin.templating import render_to_response
+from ohmyadmin.views.base import HasFilters
 
 
 @dataclasses.dataclass
@@ -37,7 +38,7 @@ class LinkAction(ObjectAction):
         return self.url
 
 
-ObjectCallbackHandler = typing.Callable[[Request, typing.Sequence[str]], typing.Awaitable[Response]]
+ObjectCallbackHandler = typing.Callable[[Request, DataSource], typing.Awaitable[Response]]
 
 
 @dataclasses.dataclass
@@ -51,11 +52,13 @@ class CallbackAction(ObjectAction, WithRoute):
 
     async def dispatch(self, request: Request) -> Response:
         selected = request.query_params.getlist("selected")
-        return await self.handle(request, selected)
+        query: DataSource = request.state.view.get_query(request)
+        query = query.filter(InFilter(field=query.get_id_field(), values=selected))
+        return await self.handle(request, query)
 
-    async def handle(self, request: Request, selected: typing.Sequence[str]) -> Response:
+    async def handle(self, request: Request, query: DataSource) -> Response:
         if self.callback:
-            return await self.callback(request, selected)
+            return await self.callback(request, query)
         raise NotImplementedError()
 
     def get_slug(self) -> str:
@@ -70,7 +73,7 @@ class CallbackAction(ObjectAction, WithRoute):
         return url_name_prefix + ".row_action." + self.get_slug()
 
 
-FormCallbackHandler = typing.Callable[[Request, typing.Sequence[str], wtforms.Form], typing.Awaitable[Response]]
+FormCallbackHandler = typing.Callable[[Request, DataSource, wtforms.Form], typing.Awaitable[Response]]
 
 
 @dataclasses.dataclass
@@ -88,15 +91,21 @@ class FormAction(ObjectAction, WithRoute):
 
     async def dispatch(self, request: Request) -> Response:
         selected = request.query_params.getlist("selected")
+        query: DataSource = request.state.view.get_query(request)
+        if "select_all" not in request.query_params:
+            query = query.filter(InFilter(field=query.get_id_field(), values=selected))
+        if isinstance(request.state.view, HasFilters):
+            query = request.state.view.apply_filters(request, query)
+
         form = await self.create_form(request, selected)
         if await validate_on_submit(request, form):
-            return await self.handle(request, selected, form)
+            return await self.handle(request, query, form)
 
         return render_to_response(request, self.modal_template, {"form": form, "action": self})
 
-    async def handle(self, request: Request, selected: typing.Sequence[str], form: wtforms.Form) -> Response:
+    async def handle(self, request: Request, query: DataSource, form: wtforms.Form) -> Response:
         if self.callback:
-            return await self.callback(request, selected, form)
+            return await self.callback(request, query, form)
         raise NotImplementedError()
 
     async def create_form(self, request: Request, selected: typing.Sequence[str]) -> wtforms.Form:
@@ -112,20 +121,3 @@ class FormAction(ObjectAction, WithRoute):
 
     def get_url_name(self, url_name_prefix: str) -> str:
         return url_name_prefix + ".row_action." + self.get_slug()
-
-
-class BatchAction(FormAction):
-    async def handle(self, request: Request, selected: typing.Sequence[str], form: wtforms.Form) -> Response:
-        table = request.state.view
-        query = table.datasource.get_query_for_list()
-        query = table.apply_filters(request, query)
-
-        if "select_all" not in request.query_params:
-            query = query.filter(pk__in=selected)
-
-        if self.callback:
-            return await self.callback(request, selected, form)
-        raise NotImplementedError()
-
-    async def apply(self, request: Request, query: DataSource) -> Response:
-        raise NotImplementedError()

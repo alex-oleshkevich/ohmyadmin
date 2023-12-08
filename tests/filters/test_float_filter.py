@@ -32,9 +32,7 @@ async def test_is_active(request_f: RequestFactory) -> None:
     assert not instance.is_active(request)
 
 
-async def test_applies_filter(
-    request_f: RequestFactory, datasource: InMemoryDataSource[Post]
-) -> None:
+async def test_applies_filter(request_f: RequestFactory, datasource: InMemoryDataSource[Post]) -> None:
     unbound = FloatFilter("example")
     assert isinstance(unbound, UnboundFilter)
 
@@ -42,7 +40,7 @@ async def test_applies_filter(
     instance = await unbound.create(request)
     with mock.patch.object(datasource, "apply_number_filter") as fn:
         instance.apply(request, datasource)
-        fn.assert_called_once_with("example", NumberOperation.eq, 1)
+        fn.assert_called_once_with("example", NumberOperation.EQUALS, 1)
 
 
 async def test_not_applies_for_malformed_operation(

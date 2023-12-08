@@ -1,6 +1,7 @@
 import functools
 import typing
 
+from starlette.middleware import Middleware
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import BaseRoute, Mount, Route
@@ -16,7 +17,7 @@ from ohmyadmin.helpers import snake_to_sentence
 from ohmyadmin.ordering import SortingHelper
 from ohmyadmin.pagination import get_page_size_value, get_page_value
 from ohmyadmin.templating import render_to_response
-from ohmyadmin.views.base import View
+from ohmyadmin.views.base import ExposeViewMiddleware, View
 
 
 def default_value_getter(obj: typing.Any, attr: str) -> typing.Any:
@@ -134,6 +135,9 @@ class TableView(View):
                     routes=[
                         action.get_route(self.url_name) for action in self.actions if isinstance(action, WithRoute)
                     ],
+                    middleware=[
+                        Middleware(ExposeViewMiddleware, view=self),
+                    ],
                 ),
                 Mount(
                     "/object-actions",
@@ -141,6 +145,9 @@ class TableView(View):
                         action.get_route(self.url_name)
                         for action in [*self.row_actions, *self.batch_actions]
                         if isinstance(action, WithRoute)
+                    ],
+                    middleware=[
+                        Middleware(ExposeViewMiddleware, view=self),
                     ],
                 ),
             ],

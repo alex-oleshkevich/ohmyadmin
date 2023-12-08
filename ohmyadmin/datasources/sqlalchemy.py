@@ -10,6 +10,7 @@ from starlette.requests import Request
 from ohmyadmin.datasources.datasource import (
     AndFilter,
     DataSource,
+    InFilter,
     OrFilter,
     QueryFilter,
     StringFilter,
@@ -58,7 +59,7 @@ def guess_pk_field(model_class: type) -> str:
     return pk_columns[0]
 
 
-def guess_pk_type(model_class: type, pk_field: str) -> typing.Callable:
+def guess_field_type(model_class: type, pk_field: str) -> typing.Callable:
     mapper: orm.Mapper = orm.class_mapper(model_class)
     column = mapper.columns[pk_field]
     match column.type:
@@ -86,11 +87,14 @@ class SADataSource(DataSource[T]):
         _stmt: sa.Select[tuple[T]] | None = None,
     ) -> None:
         self.pk_column = pk_column or guess_pk_field(model_class)
-        self.pk_cast = pk_cast or guess_pk_type(model_class, self.pk_column)
+        self.pk_cast = pk_cast or guess_field_type(model_class, self.pk_column)
         self.model_class = model_class
         self.query = query if query is not None else sa.select(model_class)
         self.query_for_list = query_for_list if query_for_list is not None else self.query
         self._stmt = _stmt if _stmt is not None else self.query
+
+    def get_id_field(self) -> str:
+        return self.pk_column
 
     def order_by(self, sorting: typing.Mapping[str, SortingType]) -> typing.Self:
         stmt = self._stmt.order_by(None)
@@ -122,6 +126,10 @@ class SADataSource(DataSource[T]):
                 return column.regexp_match(value)
             case StringFilter(value=value, predicate=StringOperation.EXACT):
                 return column == value
+
+            case InFilter(values=values):
+                field_type = guess_field_type(self.model_class, clause.field)
+                return column.in_([field_type(v) for v in values])
 
             case _:
                 raise AttributeError("Unsupported filter type.")

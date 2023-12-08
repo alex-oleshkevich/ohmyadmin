@@ -1,9 +1,12 @@
+import typing
+
 from starlette.datastructures import URL
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import BaseRoute, Route
-from starlette.types import Receive, Scope, Send
+from starlette.types import ASGIApp, Receive, Scope, Send
 
+from ohmyadmin.datasources.datasource import DataSource
 from ohmyadmin.menu import MenuItem
 
 
@@ -41,3 +44,20 @@ class View:
         request = Request(scope, receive, send)
         response = await self.dispatch(request)
         await response(scope, receive, send)
+
+
+class ExposeViewMiddleware:
+    def __init__(self, app: ASGIApp, view: View) -> None:
+        self.app = app
+        self.view = view
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        request = Request(scope, receive, send)
+        request.state.view = self.view
+        await self.app(scope, receive, send)
+
+
+@typing.runtime_checkable
+class HasFilters(typing.Protocol):
+    def apply_filters(self, request: Request, query: DataSource) -> DataSource:
+        ...
