@@ -1,5 +1,6 @@
 import functools
 import typing
+
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import BaseRoute, Mount, Route
@@ -7,7 +8,7 @@ from starlette_babel import gettext_lazy as _
 
 from ohmyadmin import htmx
 from ohmyadmin.actions.actions import Action, WithRoute
-from ohmyadmin.actions.object_actions import ObjectAction
+from ohmyadmin.actions.object_actions import FormAction, ObjectAction
 from ohmyadmin.datasources.datasource import DataSource
 from ohmyadmin.filters import Filter, OrderingFilter, SearchFilter
 from ohmyadmin.formatters import CellFormatter, StringFormatter
@@ -41,9 +42,7 @@ class Column:
         self.sort_by = sort_by or name
         self.formatter = formatter
         self.label = label or snake_to_sentence(name)
-        self.value_getter = value_getter or functools.partial(
-            default_value_getter, attr=name
-        )
+        self.value_getter = value_getter or functools.partial(default_value_getter, attr=name)
 
     def get_value(self, obj: typing.Any) -> typing.Any:
         return self.value_getter(obj)
@@ -64,7 +63,7 @@ class TableView(View):
     filters: typing.Sequence[Filter] = tuple()
     actions: typing.Sequence[Action] = tuple()
     row_actions: typing.Sequence[ObjectAction] = tuple()
-    # batch_actions: typing.Sequence[]
+    batch_actions: typing.Sequence[FormAction] = tuple()
 
     search_param: str = "search"
     search_placeholder: str = ""
@@ -73,6 +72,7 @@ class TableView(View):
         self.columns = list(self.columns)
         self.actions = list(self.actions)
         self.row_actions = list(self.row_actions)
+        self.batch_actions = list(self.batch_actions)
         self.filters: list[Filter] = list(self.filters)
         self.filters.extend(
             [
@@ -86,24 +86,30 @@ class TableView(View):
                 ),
             ]
         )
-        self.search_placeholder = self.search_placeholder or _(
-            "Search in {fields}..."
-        ).format(
-            fields=", ".join(
-                [column.label for column in self.columns if column.searchable]
-            )
+        self.search_placeholder = self.search_placeholder or _("Search in {fields}...").format(
+            fields=", ".join([column.label for column in self.columns if column.searchable])
         )
+
+    @property
+    def searchable(self) -> bool:
+        return any([column.searchable for column in self.columns])
+
+    def get_query(self, request: Request) -> DataSource:
+        assert self.datasource, "No data source configured."
+        return self.datasource.get_query_for_list()
+
+    def apply_filters(self, request: Request, query: DataSource) -> DataSource:
+        for _filter in self.filters:
+            query = _filter.apply(request, query)
+        return query
 
     async def dispatch(self, request: Request) -> Response:
         page = get_page_value(request, self.page_param)
-        page_size = get_page_size_value(
-            request, self.page_size_param, max(self.page_sizes), self.page_size
-        )
+        page_size = get_page_size_value(request, self.page_size_param, max(self.page_sizes), self.page_size)
         sorting = SortingHelper(request, self.ordering_param)
 
-        query = self.datasource.get_query_for_list()
-        for _filter in self.filters:
-            query = _filter.apply(request, query)
+        query = self.get_query(request)
+        query = self.apply_filters(request, query)
 
         rows = await query.paginate(request, page, page_size)
         template = self.template
@@ -132,16 +138,14 @@ class TableView(View):
                 Mount(
                     "/actions",
                     routes=[
-                        action.get_route(self.url_name)
-                        for action in self.actions
-                        if isinstance(action, WithRoute)
+                        action.get_route(self.url_name) for action in self.actions if isinstance(action, WithRoute)
                     ],
                 ),
                 Mount(
                     "/object-actions",
                     routes=[
                         action.get_route(self.url_name)
-                        for action in self.row_actions
+                        for action in [*self.row_actions, *self.batch_actions]
                         if isinstance(action, WithRoute)
                     ],
                 ),

@@ -14,6 +14,33 @@
 <table data-test="datatable">
     <thead>
     <tr>
+        {% if table.batch_actions %}
+            <th class="flex items-center justify-start w-auto">
+                <button class="p-0 h-full w-auto hover:bg-gray-50 flex items-center gap-1 bg-transparent cursor-pointer"
+                        id="batch-all">
+                    <input type="checkbox" onclick="return false" onmousedown="return false">
+                    {{ icons.chevron_down() }}
+                </button>
+                <o-popover trigger="#batch-all" placement="bottom-start">
+                    <div class="dropdown absolute hidden z-10">
+                        <div class="list-menu">
+                            <button type="button" class="list-menu-item"
+                                    @click="selectedAll = !selectedAll; selectedMatched = false; setSelectedFlag(selectedAll || selectedMatched)">
+                                <input type="checkbox" name="select_all" onclick="return false"
+                                       onmousedown="return false" x-model="selectedAll">
+                                {{ _('Select all ({count})').format(count=objects.total_rows) }}
+                            </button>
+                            <button type="button" class="list-menu-item"
+                                    @click="selectedMatched = !selectedMatched; selectedAll = false; setSelectedFlag(selectedAll || selectedMatched)">
+                                <input type="checkbox" name="select_matched" onclick="return false"
+                                       onmousedown="return false" x-model="selectedMatched">
+                                {{ _('Select all matching') }}
+                            </button>
+                        </div>
+                    </div>
+                </o-popover>
+            </th>
+        {% endif %}
         {% for column in table.columns %}
             <th class="whitespace-nowrap">
                 {{ render_head_cell(request, column) }}
@@ -26,7 +53,15 @@
     </thead>
     <tbody>
     {% for object in objects %}
-        <tr x-data="{selected: false}" :class="{selected: selected}">
+        <tr x-data="{selected: false}" :class="{selected}">
+            {% if table.batch_actions %}
+                {% set pk_value = table.datasource.get_pk(object) %}
+                <th>
+                    <div class="flex items-center justify-start">
+                        <input type="checkbox" name="selected" :checked="selected" value="{{ pk_value }}">
+                    </div>
+                </th>
+            {% endif %}
             {% for columm in table.columns %}
                 <td>{{ render_cell(request, columm, object) }}</td>
             {% endfor %}

@@ -48,6 +48,16 @@ export class PopoverElement extends LitElement {
                 this.open = false;
             }
         });
+        this.renderRoot.querySelectorAll('.list-menu-item').forEach(el => {
+            el.addEventListener('click', () => {
+                console.log('clicked');
+                setTimeout(this.close, 40);
+            });
+        });
+    }
+
+    close() {
+        this.open = false;
     }
 
     private setup() {

@@ -14,7 +14,7 @@
     [multiple],
     textarea,
     select {
-        @apply block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 leading-4 text-sm;
+        @apply block w-full rounded-md border-gray-300 shadow-sm px-3 py-2 leading-4 text-sm pr-8;
         @apply focus:border-blue-400 focus:ring focus:ring-blue-200 focus:ring-opacity-50;
         @apply disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500;
         @apply transition duration-150 ease-in-out;

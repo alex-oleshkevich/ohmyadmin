@@ -64,6 +64,11 @@ async def object_form_callback(request: Request, selected: typing.Sequence[str],
     return response().toast(f"Form submitted: {selected}.").close_modal().refresh()
 
 
+async def delete_selected_callback(request: Request, selected: typing.Sequence[str], form: wtforms.Form) -> Response:
+    print(form.data)
+    return response().toast(f"Rows deleted: {selected}.").close_modal().refresh()
+
+
 class UsersTable(TableView):
     label = "Users"
     group = "Other"
@@ -100,6 +105,16 @@ class UsersTable(TableView):
             form_class=RowObjectForm,
             icon=PLUS_ICON,
         ),
+        object_actions.FormAction(
+            label="Dangerous form action",
+            dangerous=True,
+            callback=object_form_callback,
+            form_class=RowObjectForm,
+            icon=PLUS_ICON,
+        ),
+    ]
+    batch_actions = [
+        object_actions.BatchAction(label="Delete selected row", dangerous=True, callback=delete_selected_callback),
     ]
     columns = [
         Column("photo", formatter=AvatarFormatter()),

@@ -1767,6 +1767,15 @@ var PopoverElement = class extends s4 {
         this.open = false;
       }
     });
+    this.renderRoot.querySelectorAll(".list-menu-item").forEach((el) => {
+      el.addEventListener("click", () => {
+        console.log("clicked");
+        setTimeout(this.close, 40);
+      });
+    });
+  }
+  close() {
+    this.open = false;
   }
   setup() {
     this.open = true;

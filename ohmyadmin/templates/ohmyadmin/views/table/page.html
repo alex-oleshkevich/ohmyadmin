@@ -1,4 +1,5 @@
 {% extends 'ohmyadmin/app.html' %}
+{% import 'ohmyadmin/icons.html' as icons %}
 
 {% block page_actions %}
     {% for action in table.actions %}
@@ -9,30 +10,68 @@
 {% endblock %}
 
 {% block content %}
-    <div hx-trigger="refresh from:body"
+    <script>
+        function setSelectedFlag(flag) {
+            document
+                .querySelectorAll('#datatable input[name="selected"]')
+                .forEach(el => {
+                    el.checked = flag;
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelector('#batch-action-form').addEventListener('htmx:configRequest', (e) => {
+                e.detail.path = e.target.getAttribute('hx-get');
+            });
+        });
+
+    </script>
+
+    <div x-data="{selectedAll: false, selectedMatched: false}"
+         hx-trigger="refresh from:body"
          hx-target="#datatable"
          hx-indicator="#load-indicator"
          hx-get="{{ request.url.remove_query_params(table.search_param) }}"
     >
 
         <!-- metrics -->
-        {#    <section class="mb-5 grid grid-cols-12 gap-5"></section>#}
+        {#        <section class="mb-5 grid grid-cols-12 gap-5" id="data-filters"></section>#}
 
         <!-- search and actions -->
         <section class="flex items-center justify-between mb-5">
-            <form method="post"
-                  role="search"
-                  id="search-form" class="w-full max-w-xl">
-                <input type="search"
-                       role="searchbox"
-                       class="w-full"
-                       value="{{ search_term }}"
-                       name="{{ table.search_param }}"
-                       hx-get="{{ request.url.remove_query_params(table.search_param) }}"
-                       hx-trigger="keyup changed delay:300ms, search delay:300ms"
-                       placeholder="{{ table.search_placeholder }}">
-            </form>
-            <div></div>
+            <div class="w-1/2 flex items-center justify-start">
+                {% if table.searchable %}
+                    <form method="post" role="search" id="search-form" class="w-full max-w-md">
+                        <input type="search" role="searchbox" class="w-full" value="{{ search_term }}"
+                               name="{{ table.search_param }}"
+                               hx-get="{{ request.url.remove_query_params(table.search_param) }}"
+                               hx-trigger="keyup changed delay:300ms, search delay:300ms"
+                               placeholder="{{ table.search_placeholder }}">
+                    </form>
+                {% endif %}
+            </div>
+            <div class="w-1/2 flex items-center justify-end" x-data="{action: ''}">
+                {% if table.batch_actions %}
+                    <form class="flex items-center gap-2 justify-end max-w-xs w-full" id="batch-action-form"
+                          :hx-get="action"
+                          hx-target="o-modals"
+                          hx-include="#data-filters, #search-form, #datatable"
+                          x-init="$watch('action', () => $nextTick(() => htmx.process($el)))"
+                    >
+                        <select x-model="action">
+                            <option value=""></option>
+                            {% for batch_action in table.batch_actions %}
+                                <option value="{{ url_for(batch_action.get_url_name(table.url_name)) }}">
+                                    {{ batch_action.label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <button class="btn btn-accent" :disabled="!action">
+                            {{ icons.play() }}
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
         </section>
 
         <!-- active filters -->

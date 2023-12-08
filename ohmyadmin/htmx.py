@@ -43,7 +43,7 @@ def toast(response: R, message: str, category: ToastCategory = "success") -> R:
 
 class HXResponse(Response):
     def toast(self, message: str, category: ToastCategory = "success") -> typing.Self:
-        return toast(self, message, category)
+        return toast(self, str(message), category)
 
     def close_modal(self) -> typing.Self:
         return close_modal(self)

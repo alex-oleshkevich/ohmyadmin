@@ -8,6 +8,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from ohmyadmin.actions.actions import WithRoute
+from ohmyadmin.datasources.datasource import DataSource
 from ohmyadmin.forms.utils import create_form, validate_on_submit
 from ohmyadmin.templating import render_to_response
 
@@ -111,3 +112,20 @@ class FormAction(ObjectAction, WithRoute):
 
     def get_url_name(self, url_name_prefix: str) -> str:
         return url_name_prefix + ".row_action." + self.get_slug()
+
+
+class BatchAction(FormAction):
+    async def handle(self, request: Request, selected: typing.Sequence[str], form: wtforms.Form) -> Response:
+        table = request.state.view
+        query = table.datasource.get_query_for_list()
+        query = table.apply_filters(request, query)
+
+        if "select_all" not in request.query_params:
+            query = query.filter(pk__in=selected)
+
+        if self.callback:
+            return await self.callback(request, selected, form)
+        raise NotImplementedError()
+
+    async def apply(self, request: Request, query: DataSource) -> Response:
+        raise NotImplementedError()
