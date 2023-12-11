@@ -115,6 +115,12 @@ class UsersTable(TableView):
     ]
     batch_actions = [
         object_actions.FormAction(label="Delete selected row", dangerous=True, callback=delete_selected_callback),
+        object_actions.FormAction(
+            label="Batch Update",
+            callback=object_form_callback,
+            form_class=RowObjectForm,
+            icon=PLUS_ICON,
+        ),
     ]
     columns = [
         Column("photo", formatter=AvatarFormatter()),

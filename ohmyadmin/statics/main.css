@@ -900,11 +900,6 @@ table tbody tr:hover {
   background-color: rgb(243 244 246 / var(--tw-bg-opacity));
 }
 
-table tbody tr.\!selected {
-  --tw-bg-opacity: 1;
-  background-color: rgb(219 234 254 / var(--tw-bg-opacity));
-}
-
 table tbody tr.selected {
   --tw-bg-opacity: 1;
   background-color: rgb(219 234 254 / var(--tw-bg-opacity));
@@ -2776,12 +2771,12 @@ body {
   width: 24rem;
 }
 
-.w-full {
-  width: 100%;
-}
-
 .w-auto {
   width: auto;
+}
+
+.w-full {
+  width: 100%;
 }
 
 .max-w-0 {
