@@ -21,42 +21,45 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelector('#batch-action-form').addEventListener('htmx:configRequest', (e) => {
-                e.detail.path = e.target.getAttribute('hx-get');
+                e.detail.path = e.target.getAttribute('action');
             });
         });
-
     </script>
 
-    <div x-data="{selectedAll: false, selectedMatched: false}"
-         hx-trigger="refresh from:body"
+    <div class="space-y-5"
+         x-data="{selectedAll: false, selectedMatched: false}"
          hx-target="#datatable"
          hx-indicator="#load-indicator"
-         hx-get="{{ request.url.remove_query_params(table.search_param) }}"
+         hx-include="#search-form, #view-filters, #datatable"
     >
 
         <!-- metrics -->
-        {#        <section class="mb-5 grid grid-cols-12 gap-5" id="data-filters"></section>#}
+        {#        <section class="grid grid-cols-12 gap-5" id="data-filters"></section>#}
 
-        <!-- search and actions -->
-        <section class="flex items-center justify-between mb-5">
+        <section class="flex items-center justify-between">
+            <!-- search -->
             <div class="w-1/2 flex items-center justify-start">
                 {% if table.searchable %}
                     <form method="get" role="search" id="search-form" class="w-full max-w-md">
                         <input type="search" role="searchbox" class="w-full" value="{{ search_term }}"
                                name="{{ table.search_param }}"
-                               hx-get="{{ request.url.remove_query_params(table.search_param) }}"
+                               hx-get="{{ request.url.path }}"
+                               hx-push-url="true"
                                hx-trigger="keyup changed delay:300ms, search delay:300ms"
                                placeholder="{{ table.search_placeholder }}">
                     </form>
                 {% endif %}
             </div>
+
+            <!-- batch actions -->
             <div class="w-1/2 flex items-center justify-end" x-data="{action: ''}">
                 {% if table.batch_actions %}
                     <form class="flex items-center gap-2 justify-end max-w-xs w-full" id="batch-action-form"
-                          :hx-get="action"
+                          method="get"
+                          :action="action"
+                          hx-get="{{ request.url.path }}"
                           hx-target="o-modals"
-                          hx-include="#data-filters, #search-form, #datatable"
-                          x-init="$watch('action', () => $nextTick(() => htmx.process($el)))"
+                          hx-push-url="false"
                     >
                         <select x-model="action">
                             <option value=""></option>
@@ -72,19 +75,29 @@
                     </form>
                 {% endif %}
             </div>
+
         </section>
 
         <!-- active filters -->
-        <section class="mb-5"></section>
+        <section id="view-filters"
+                 hx-get="{{ request.url.path }}"
+                 hx-target="this"
+                 hx-trigger="filterchange"
+                 class="flex items-center gap-2 flex-wrap border border-gray-200 p-1 rounded-md">
+            {% include 'ohmyadmin/views/table/filters_bar.html' %}
+        </section>
 
-        <section class="overflow-x-auto mb-5">
+        <section class="overflow-x-auto">
             <div class="-mb-[1px] htmx-indicator" id="load-indicator">
                 <div class="progress progress-indeterminate progress-square progress-xs">
                     <div class="progress-bar"></div>
                 </div>
             </div>
 
-            <div id="datatable">
+            <div id="datatable"
+                 hx-get="{{ request.url.path }}"
+                 hx-trigger="refresh from:body"
+                 hx-push-url="true">
                 {% include 'ohmyadmin/views/table/table.html' %}
             </div>
         </section>

@@ -2345,10 +2345,19 @@ var modals = {
   }
 };
 
+// assets/js/events.ts
+var events = {
+  REFRESH: "refresh",
+  // refresh data table
+  FILTER_CHANGE: "filterchange"
+  // emitted when list filter changes
+};
+
 // assets/main.ts
 var admin = {
   modals,
-  toasts
+  toasts,
+  events
 };
 window.ohmyadmin = admin;
 /*! Bundled license information:

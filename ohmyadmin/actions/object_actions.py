@@ -95,7 +95,7 @@ class FormAction(ObjectAction, WithRoute):
         if "select_all" not in request.query_params:
             query = query.filter(InFilter(field=query.get_id_field(), values=selected))
         if isinstance(request.state.view, HasFilters):
-            query = request.state.view.apply_filters(request, query)
+            query = await request.state.view.apply_filters(request, query)
 
         form = await self.create_form(request, selected)
         if await validate_on_submit(request, form):
@@ -121,3 +121,6 @@ class FormAction(ObjectAction, WithRoute):
 
     def get_url_name(self, url_name_prefix: str) -> str:
         return url_name_prefix + ".row_action." + self.get_slug()
+
+
+BatchAction: typing.TypeAlias = FormAction

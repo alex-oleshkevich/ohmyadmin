@@ -1,0 +1,26 @@
+{% import 'ohmyadmin/icons.html' as icons %}
+
+<div class="inline-flex gap-2 rounded-lg px-3 py-2 bg-blue-50 font-medium border border-transparent"
+     data-test="indicator" x-data="{form: true}"
+>
+    <div class="text-gray-500">{{ filter.label }}</div>
+    <div>{% block content %}{% endblock %}</div>
+    <a class="text-gray-500 hover:text-red-700"
+       href="{{ filter.get_reset_url(request) }}"
+       @click="form = false"
+       hx-boost="true"
+       hx-include="this"
+       hx-push-url="true"
+       hx-target="#datatable"
+       hx-headers='{"x-ohmyadmin-force-filter-refresh": ""}'
+    >
+        {{ icons.close() }}
+    </a>
+    <template x-if="form">
+        <div hidden="">
+            {% for field in filter.form %}
+                {{ field }}
+            {% endfor %}
+        </div>
+    </template>
+</div>

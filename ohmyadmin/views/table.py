@@ -93,9 +93,10 @@ class TableView(View):
         assert self.datasource, "No data source configured."
         return self.datasource.get_query_for_list()
 
-    def apply_filters(self, request: Request, query: DataSource) -> DataSource:
-        for _filter in self.filters:
-            query = _filter.apply(request, query)
+    async def apply_filters(self, request: Request, query: DataSource) -> DataSource:
+        for filter_ in self.filters:
+            filter_form = await filter_.get_form(request)
+            query = filter_.apply(request, query, filter_form)
         return query
 
     async def dispatch(self, request: Request) -> Response:
@@ -104,12 +105,15 @@ class TableView(View):
         sorting = SortingHelper(request, self.ordering_param)
 
         query = self.get_query(request)
-        query = self.apply_filters(request, query)
+        query = await self.apply_filters(request, query)
 
         rows = await query.paginate(request, page, page_size)
         template = self.template
         if htmx.matches_target(request, "datatable"):
             template = "ohmyadmin/views/table/table.html"
+
+        if htmx.matches_target(request, "view-filters"):
+            template = "ohmyadmin/views/table/filters_bar.html"
 
         response = render_to_response(
             request,
@@ -123,7 +127,10 @@ class TableView(View):
                 "search_term": request.query_params.get(self.search_param, ""),
             },
         )
-        return htmx.push_url(response, str(request.url))
+
+        if "x-ohmyadmin-force-filter-refresh" in request.headers:
+            response = htmx.trigger(response, "filterchange")
+        return response
 
     def get_route(self) -> BaseRoute:
         return Mount(

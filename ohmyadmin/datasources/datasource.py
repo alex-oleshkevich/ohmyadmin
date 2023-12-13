@@ -18,10 +18,10 @@ SearchPredicate = typing.Literal["startswith", "endswith", "exact", "matches", "
 
 
 class StringOperation(enum.Enum):
-    EXACT = _("same as", domain="ohmyadmin")
+    CONTAINS = _("contains", domain="ohmyadmin")
     STARTSWITH = _("starts with", domain="ohmyadmin")
     ENDSWITH = _("ends with", domain="ohmyadmin")
-    CONTAINS = _("contains", domain="ohmyadmin")
+    EXACT = _("same as", domain="ohmyadmin")
     MATCHES = _("matches", domain="ohmyadmin")
 
     @classmethod

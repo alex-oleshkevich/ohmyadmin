@@ -8,6 +8,7 @@ from examples.models import User
 from ohmyadmin.actions import actions, object_actions
 from ohmyadmin.datasources.datasource import DataSource
 from ohmyadmin.datasources.sqlalchemy import SADataSource
+from ohmyadmin.filters import StringFilter
 from ohmyadmin.formatters import (
     AvatarFormatter,
     BoolFormatter,
@@ -70,10 +71,15 @@ async def delete_selected_callback(request: Request, query: DataSource, form: wt
 
 
 class UsersTable(TableView):
-    label = "Users"
-    group = "Other"
+    label = "Users table"
+    group = "Demos"
     description = "List all users."
     datasource = SADataSource(User)
+    filters = [
+        StringFilter("last_name"),
+        StringFilter("email"),
+        # IntegerFilter('id'),
+    ]
     actions = [
         actions.LinkAction(url="/admin", label="To Main page"),
         actions.CallFunctionAction(function="alert", args=["kek"], label="Show alert"),
@@ -114,8 +120,8 @@ class UsersTable(TableView):
         ),
     ]
     batch_actions = [
-        object_actions.FormAction(label="Delete selected row", dangerous=True, callback=delete_selected_callback),
-        object_actions.FormAction(
+        object_actions.BatchAction(label="Delete selected row", dangerous=True, callback=delete_selected_callback),
+        object_actions.BatchAction(
             label="Batch Update",
             callback=object_form_callback,
             form_class=RowObjectForm,

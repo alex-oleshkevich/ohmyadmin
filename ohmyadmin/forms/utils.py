@@ -1,8 +1,10 @@
 import abc
+import enum
 import inspect
 import typing
 import wtforms
 from starlette.concurrency import run_in_threadpool
+from starlette.datastructures import ImmutableMultiDict
 from starlette.requests import Request
 
 _F = typing.TypeVar("_F", bound=wtforms.Form)
@@ -21,12 +23,14 @@ class Processable(abc.ABC):  # pragma: no cover
 
 
 async def create_form(
-    request: Request, form_class: type[_F], obj: typing.Any | None = None
+    request: Request,
+    form_class: type[_F],
+    obj: typing.Any | None = None,
+    form_data: ImmutableMultiDict | None = None,
+    prefix: str = "",
 ) -> _F:
-    form_data = (
-        None if request.method in ["GET", "HEAD", "OPTIONS"] else await request.form()
-    )
-    form = form_class(form_data, obj=obj)
+    form_data = form_data or (None if request.method in ["GET", "HEAD", "OPTIONS"] else await request.form())
+    form = form_class(form_data, obj=obj, prefix=prefix)
     await init_form(request, form)
     return form
 
@@ -76,7 +80,12 @@ async def validate_on_submit(request: Request, form: wtforms.Form) -> bool:
     return False
 
 
-async def populate_object(
-    request: Request, form: wtforms.Form, obj: typing.Any
-) -> None:
+async def populate_object(request: Request, form: wtforms.Form, obj: typing.Any) -> None:
     form.populate_obj(obj)
+
+
+def safe_enum_coerce(value: typing.Any, choices: type[enum.Enum]) -> typing.Any:
+    try:
+        return choices[value]
+    except KeyError:
+        return None

@@ -86,6 +86,12 @@
                 </td>
             {% endif %}
         </tr>
+    {% else %}
+        <tr>
+            <td colspan="9999">
+                <div class="text-muted text-center">{{ _('No data.', 'ohmyadmin') }}</div>
+            </td>
+        </tr>
     {% endfor %}
     </tbody>
 </table>

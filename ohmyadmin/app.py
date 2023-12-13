@@ -36,12 +36,15 @@ class OhMyAdmin(Router):
         self.views = views or []
         self.auth_policy = auth_policy or AnonymousAuthPolicy()
         self.file_storage = file_storage
+
+        self.jinja_env = jinja2.Environment(
+            autoescape=True,
+            undefined=jinja2.StrictUndefined,
+            loader=jinja2.ChoiceLoader([jinja2.PackageLoader("ohmyadmin")]),
+        )
+        self.jinja_env.filters.update({"object_id": id})
         self.templating = templating.Jinja2Templates(
-            env=jinja2.Environment(
-                autoescape=True,
-                undefined=jinja2.StrictUndefined,
-                loader=jinja2.ChoiceLoader([jinja2.PackageLoader("ohmyadmin")]),
-            ),
+            env=self.jinja_env,
             context_processors=[
                 self.context_processor,
             ],
@@ -79,9 +82,7 @@ class OhMyAdmin(Router):
                         AuthenticationMiddleware,
                         backend=self.auth_policy.get_authentication_backend(),
                     ),
-                    Middleware(
-                        LoginRequiredMiddleware, exclude_paths=["/login", "/static"]
-                    ),
+                    Middleware(LoginRequiredMiddleware, exclude_paths=["/login", "/static"]),
                 ],
             ),
         ]
@@ -90,19 +91,13 @@ class OhMyAdmin(Router):
         return self.templating.TemplateResponse(request, "ohmyadmin/welcome.html")
 
     async def login_view(self, request: Request) -> Response:
-        next_url = request.query_params.get(
-            "next", request.url_for("ohmyadmin.welcome")
-        )
+        next_url = request.query_params.get("next", request.url_for("ohmyadmin.welcome"))
         form_class = self.auth_policy.get_login_form_class()
         form = form_class(formdata=await request.form(), data={"next_url": next_url})
         if request.method in ["POST"] and form.validate():
-            if user := await self.auth_policy.authenticate(
-                request, form.identity.data, form.password.data
-            ):
+            if user := await self.auth_policy.authenticate(request, form.identity.data, form.password.data):
                 self.auth_policy.login(request, user)
-                flash(request).success(
-                    _("You have been logged in.", domain="ohmyadmin")
-                )
+                flash(request).success(_("You have been logged in.", domain="ohmyadmin"))
                 return RedirectResponse(url=form.next_url.data, status_code=302)
             else:
                 flash(request).error(_("Invalid credentials.", domain="ohmyadmin"))

@@ -1,28 +1,75 @@
-import abc
+from __future__ import annotations
 
+import abc
+import contextvars
+import functools
+import typing
+
+import wtforms
+from starlette.datastructures import URL
 from starlette.requests import Request
+from starlette_babel import gettext_lazy as _
 
 from ohmyadmin.datasources import datasource
-from ohmyadmin.datasources.datasource import DataSource
+from ohmyadmin.datasources.datasource import DataSource, NumberFilter, NumberOperation
+from ohmyadmin.forms.utils import create_form, safe_enum_coerce
+from ohmyadmin.helpers import snake_to_sentence
 from ohmyadmin.ordering import get_ordering_value
 
+F = typing.TypeVar("F", bound=wtforms.Form)
 
-class Filter(abc.ABC):
-    visible = True
 
-    def apply(self, request: Request, query: DataSource) -> DataSource:
-        return query
+class Filter(abc.ABC, typing.Generic[F]):
+    visible_in_toolbar: bool = True
+    form_class: typing.Type[F] = wtforms.Form
+    template: str = "ohmyadmin/filters/form.html"
+    indicator_template: str = "ohmyadmin/filters/blank_indicator.html"
+
+    def __init__(self, field_name: str, label: str = "") -> None:
+        self.field_name = field_name
+        self.label = label or snake_to_sentence(self.field_name.title())
+        self._form_instance: contextvars.ContextVar[F] = contextvars.ContextVar(f"_local_form_{field_name}")
+
+    async def get_form(self, request: Request) -> F:
+        try:
+            return self._form_instance.get()
+        except LookupError:
+            form = await create_form(request, self.form_class, form_data=request.query_params, prefix=self.field_name)
+            self._form_instance.set(form)
+        return self._form_instance.get()
+
+    def get_indicator_context(self) -> typing.Mapping[str, typing.Any]:
+        return self.form.data
+
+    def get_reset_url(self, request: Request) -> URL:
+        return request.url.remove_query_params([field.name for field in self.form])
+
+    @property
+    def form(self) -> F:
+        return self._form_instance.get()
+
+    @abc.abstractmethod
+    def apply(self, request: Request, query: DataSource, form: wtforms.Form) -> DataSource:
+        """Apply filter to the data source query."""
+
+    @abc.abstractmethod
+    def is_active(self, request: Request) -> bool:
+        """
+        Check if the filter is active.
+
+        Active filters rendered differently in the filter bar.
+        """
 
 
 class SearchFilter(Filter):
-    visible = False
+    visible_in_toolbar = False
 
-    def __init__(self, search_param: str, searchable_fields: list[str]) -> None:
-        self.search_param = search_param
+    def __init__(self, field_name: str, searchable_fields: list[str]) -> None:
+        super().__init__(field_name=field_name)
         self.searchable_fields = searchable_fields
 
-    def apply(self, request: Request, query: DataSource) -> DataSource:
-        value = request.query_params.get(self.search_param, "")
+    def apply(self, request: Request, query: DataSource, form: wtforms.Form) -> DataSource:
+        value = request.query_params.get(self.field_name, "")
         if not value:
             return query
 
@@ -94,12 +141,72 @@ class SearchFilter(Filter):
             )
         )
 
+    def is_active(self, request: Request) -> bool:
+        return False
+
 
 class OrderingFilter(Filter):
-    def __init__(self, ordering_param: str, orderable_fields: list[str]) -> None:
-        self.ordering_param = ordering_param
+    visible_in_toolbar = False
+
+    def __init__(self, field_name: str, orderable_fields: list[str]) -> None:
+        super().__init__(field_name=field_name)
         self.orderable_fields = orderable_fields
 
-    def apply(self, request: Request, query: DataSource) -> DataSource:
-        ordering = get_ordering_value(request, self.ordering_param)
+    def apply(self, request: Request, query: DataSource, form: wtforms.Form) -> DataSource:
+        ordering = get_ordering_value(request, self.field_name)
         return query.order_by({k: v for k, v in ordering.items() if k in self.orderable_fields})
+
+    def is_active(self, request: Request) -> bool:
+        return False
+
+
+class StringFilterForm(wtforms.Form):
+    predicate = wtforms.SelectField(
+        _("Predicate"),
+        choices=datasource.StringOperation.choices(),
+        coerce=functools.partial(safe_enum_coerce, choices=datasource.StringOperation),
+    )
+    query = wtforms.StringField(validators=[wtforms.validators.data_required()], render_kw={"autofocus": "on"})
+
+
+class StringFilter(Filter[StringFilterForm]):
+    form_class = StringFilterForm
+    indicator_template = "ohmyadmin/filters/enum_indicator.html"
+
+    def apply(self, request: Request, query: DataSource, form: StringFilterForm) -> DataSource:
+        operation = form.data["predicate"]
+        if not operation:
+            return query
+
+        value = form.data["query"]
+        if not value:
+            return query
+
+        return query.filter(datasource.StringFilter(self.field_name, value, operation, case_insensitive=True))
+
+    def is_active(self, request: Request) -> bool:
+        return bool(self.form.query.data)
+
+
+class IntegerFilterForm(wtforms.Form):
+    operation = wtforms.SelectField(
+        choices=NumberOperation.choices(),
+        coerce=functools.partial(safe_enum_coerce, choices=NumberOperation),
+    )
+    query = wtforms.IntegerField(validators=[wtforms.validators.data_required()])
+
+
+class IntegerFilter(Filter[IntegerFilterForm]):
+    form_class = IntegerFilterForm
+    indicator_template = "ohmyadmin/filters/enum_indicator.html"
+
+    def apply(self, request: Request, query: DataSource, form: IntegerFilterForm) -> DataSource:
+        predicate = form.data["operation"]
+        if not predicate:
+            return query
+
+        value = self.form.data["query"]
+        return query.filter(NumberFilter(self.field_name, value, predicate))
+
+    def is_active(self, request: Request) -> bool:
+        return bool(self.form.data["query"])

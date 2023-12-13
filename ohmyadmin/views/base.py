@@ -59,5 +59,5 @@ class ExposeViewMiddleware:
 
 @typing.runtime_checkable
 class HasFilters(typing.Protocol):
-    def apply_filters(self, request: Request, query: DataSource) -> DataSource:
+    def apply_filters(self, request: Request, query: DataSource) -> typing.Awaitable[DataSource]:
         ...

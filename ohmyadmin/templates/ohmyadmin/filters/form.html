@@ -1,0 +1,7 @@
+{% extends 'ohmyadmin/filters/base_filter.html' %}
+
+{% block content %}
+    {% for field in filter.form %}
+        {{ forms.form_group(field) }}
+    {% endfor %}
+{% endblock %}
