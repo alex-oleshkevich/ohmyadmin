@@ -3,6 +3,7 @@ from __future__ import annotations
 import abc
 import dataclasses
 import datetime
+import decimal
 import enum
 import typing
 
@@ -62,7 +63,7 @@ class StringFilter:
 @dataclasses.dataclass
 class NumberFilter:
     field: str
-    value: int | float
+    value: int | float | decimal.Decimal
     predicate: NumberOperation
 
 

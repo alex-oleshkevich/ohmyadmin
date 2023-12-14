@@ -189,7 +189,7 @@ class StringFilter(Filter[StringFilterForm]):
 
 
 class IntegerFilterForm(wtforms.Form):
-    operation = wtforms.SelectField(
+    predicate = wtforms.SelectField(
         choices=NumberOperation.choices(),
         coerce=functools.partial(safe_enum_coerce, choices=NumberOperation),
     )
@@ -201,7 +201,7 @@ class IntegerFilter(Filter[IntegerFilterForm]):
     indicator_template = "ohmyadmin/filters/enum_indicator.html"
 
     def apply(self, request: Request, query: DataSource, form: IntegerFilterForm) -> DataSource:
-        predicate = form.data["operation"]
+        predicate = form.data["predicate"]
         if not predicate:
             return query
 

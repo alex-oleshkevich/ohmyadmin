@@ -8,7 +8,7 @@ from examples.models import User
 from ohmyadmin.actions import actions, object_actions
 from ohmyadmin.datasources.datasource import DataSource
 from ohmyadmin.datasources.sqlalchemy import SADataSource
-from ohmyadmin.filters import StringFilter
+from ohmyadmin.filters import IntegerFilter, StringFilter
 from ohmyadmin.formatters import (
     AvatarFormatter,
     BoolFormatter,
@@ -78,7 +78,7 @@ class UsersTable(TableView):
     filters = [
         StringFilter("last_name"),
         StringFilter("email"),
-        # IntegerFilter('id'),
+        IntegerFilter("id", label="ID"),
     ]
     actions = [
         actions.LinkAction(url="/admin", label="To Main page"),

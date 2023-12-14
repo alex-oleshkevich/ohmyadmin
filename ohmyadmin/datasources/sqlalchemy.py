@@ -11,11 +11,13 @@ from ohmyadmin.datasources.datasource import (
     AndFilter,
     DataSource,
     InFilter,
+    NumberOperation,
     OrFilter,
     QueryFilter,
     StringFilter,
     StringOperation,
     ValueFilter,
+    NumberFilter,
 )
 from ohmyadmin.ordering import SortingType
 from ohmyadmin.pagination import Pagination
@@ -127,18 +129,19 @@ class SADataSource(DataSource[T]):
             case StringFilter(value=value, predicate=StringOperation.EXACT):
                 return column == value
 
-            # # number operations
-            # case StringFilter(value=value, predicate=StringOperation.STARTSWITH, case_insensitive=case_insensitive):
-            #     return column.istartswith(value) if case_insensitive else column.startswith(value)
-            # case StringFilter(value=value, predicate=StringOperation.ENDSWITH, case_insensitive=case_insensitive):
-            #     return column.iendswith(value) if case_insensitive else column.endswith(value)
-            # case StringFilter(value=value, predicate=StringOperation.CONTAINS, case_insensitive=case_insensitive):
-            #     return column.icontains(value) if case_insensitive else column.contains(value)
-            # case StringFilter(value=value, predicate=StringOperation.MATCHES):
-            #     return column.regexp_match(value)
-            # case StringFilter(value=value, predicate=StringOperation.EXACT):
-            #     return column == value
+            # number operations
+            case NumberFilter(value=value, predicate=NumberOperation.GREATER):
+                return column > value
+            case NumberFilter(value=value, predicate=NumberOperation.GREATER_OR_EQUAL):
+                return column >= value
+            case NumberFilter(value=value, predicate=NumberOperation.EQUALS):
+                return column == value
+            case NumberFilter(value=value, predicate=NumberOperation.LESS):
+                return column < value
+            case NumberFilter(value=value, predicate=NumberOperation.LESS_OR_EQUAL):
+                return column <= value
 
+            # array operations
             case InFilter(values=values):
                 field_type = guess_field_type(self.model_class, clause.field)
                 return column.in_([field_type(v) for v in values])
