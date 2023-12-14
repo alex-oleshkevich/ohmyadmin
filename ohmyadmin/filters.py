@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import abc
 import contextvars
+import decimal
 import functools
 import typing
 
@@ -25,7 +26,7 @@ class Filter(abc.ABC, typing.Generic[F]):
     template: str = "ohmyadmin/filters/form.html"
     indicator_template: str = "ohmyadmin/filters/blank_indicator.html"
 
-    def __init__(self, field_name: str, label: str = "", filter_id: str = "") -> None:
+    def __init__(self, field_name: str, label: str = "", *, filter_id: str = "") -> None:
         self.field_name = field_name
         self.filter_id = filter_id or field_name
         self.label = label or snake_to_sentence(self.field_name.title())
@@ -310,3 +311,96 @@ class DateTimeRangeFilterForm(wtforms.Form):
 class DateTimeRangeFilter(DateRangeFilter, Filter[DateTimeRangeFilterForm]):
     form_class = DateTimeRangeFilterForm
     format: typing.Literal["date", "datetime"] = "datetime"
+
+
+class ChoiceFilterForm(wtforms.Form):
+    choice = wtforms.SelectField(label=_("Choices", domain="ohmyadmin"), choices=[])
+
+
+class ChoiceFilter(Filter[ChoiceFilterForm]):
+    form_class = ChoiceFilterForm
+    indicator_template = "ohmyadmin/filters/choice_indicator.html"
+
+    def __init__(
+        self,
+        query_param: str,
+        label: str = "",
+        filter_id: str = "",
+        *,
+        choices: typing.Any,
+        coerce: type[str | int | float | decimal.Decimal] = str,
+        **kwargs: typing.Any,
+    ) -> None:
+        super().__init__(query_param, label, filter_id=filter_id, **kwargs)
+        self.coerce = coerce
+        self.choices = choices
+
+    async def get_form(self, request: Request) -> ChoiceFilterForm:
+        form: ChoiceFilterForm = await super().get_form(request)
+        form.choice.coerce = self.coerce
+        form.choice.choices = self.choices
+        return form
+
+    def apply(self, request: Request, query: DataSource, form: ChoiceFilterForm) -> DataSource:
+        choice = form.choice.data
+        if choice:
+            return query.filter(datasource.InFilter(self.field_name, [self.coerce(choice)]))
+        return query
+
+    def is_active(self, request: Request) -> bool:
+        return bool(self.form.data["choice"])
+
+    def get_indicator_context(self) -> dict[str, typing.Any]:
+        value = self.form.data
+        by_key = {choice[0]: choice[1] for choice in self.form.choice.choices}
+        choice = by_key.get(value["choice"], "")
+        return {"value": choice}
+
+
+class MultiChoiceFilterForm(wtforms.Form):
+    choice = wtforms.SelectMultipleField(label=_("Select multiple", domain="ohmyadmin"), choices=[])
+
+
+class MultiChoiceFilter(Filter[MultiChoiceFilterForm]):
+    form_class = MultiChoiceFilterForm
+    indicator_template = "ohmyadmin/filters/multi_choice_indicator.html"
+
+    def __init__(
+        self,
+        query_param: str,
+        label: str = "",
+        filter_id: str = "",
+        *,
+        choices: typing.Any,
+        coerce: type[str | int | float | decimal.Decimal] = str,
+        **kwargs: typing.Any,
+    ) -> None:
+        super().__init__(query_param, label, filter_id=filter_id, **kwargs)
+        self.coerce = coerce
+        self.choices = choices
+
+    async def get_form(self, request: Request) -> ChoiceFilterForm:
+        form: ChoiceFilterForm = await super().get_form(request)
+        form.choice.coerce = self.coerce
+        form.choice.choices = self.choices
+        return form
+
+    def apply(self, request: Request, query: DataSource, form: MultiChoiceFilterForm) -> DataSource:
+        if self.is_active(request):
+            return query.filter(
+                datasource.InFilter(
+                    field=self.field_name, values=[self.coerce(value) for value in self.form.choice.data]
+                )
+            )
+        return query
+
+    def is_active(self, request: Request) -> bool:
+        if self.form.validate():
+            return bool(self.form.data["choice"])
+        return False
+
+    def get_indicator_context(self) -> dict[str, typing.Any]:
+        value = self.form.choice.data
+        choices = (choice for choice in self.form.choice.choices if choice[0] in value)
+        values = [choice[1] for choice in choices]
+        return {"value": values}

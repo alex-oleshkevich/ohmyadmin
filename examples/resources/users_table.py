@@ -9,6 +9,7 @@ from ohmyadmin.actions import actions, object_actions
 from ohmyadmin.datasources.datasource import DataSource
 from ohmyadmin.datasources.sqlalchemy import SADataSource
 from ohmyadmin.filters import (
+    ChoiceFilter,
     DateFilter,
     DateRangeFilter,
     DateTimeFilter,
@@ -16,6 +17,7 @@ from ohmyadmin.filters import (
     DecimalFilter,
     FloatFilter,
     IntegerFilter,
+    MultiChoiceFilter,
     StringFilter,
 )
 from ohmyadmin.formatters import (
@@ -96,6 +98,23 @@ class UsersTable(TableView):
         DateTimeFilter("created_at"),
         DateRangeFilter("created_at", filter_id="created_range"),
         DateTimeRangeFilter("created_at", filter_id="created_timerange"),
+        ChoiceFilter(
+            "gender",
+            choices=[
+                ("male", "Male"),
+                ("female", "Female"),
+                ("unknown", "Unknown"),
+            ],
+        ),
+        MultiChoiceFilter(
+            "gender",
+            filter_id="gender_multi",
+            choices=[
+                ("male", "Male"),
+                ("female", "Female"),
+                ("unknown", "Unknown"),
+            ],
+        ),
     ]
     actions = [
         actions.LinkAction(url="/admin", label="To Main page"),
@@ -154,5 +173,6 @@ class UsersTable(TableView):
         Column("rating"),
         Column("email", searchable=True),
         Column("is_active", sortable=True, formatter=BoolFormatter(as_text=True)),
+        Column("gender"),
         Column("created_at", sortable=True, formatter=DateFormatter()),
     ]
