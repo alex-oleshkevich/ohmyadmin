@@ -11,6 +11,12 @@
     {% include 'ohmyadmin/views/table/table_cell.html' %}
 {% endmacro %}
 
+{% if oob_filters %}
+    <div hx-swap-oob="innerHTML" id="view-filters">
+    {% include 'ohmyadmin/views/table/filters_bar.html' %}
+    </div>
+{% endif %}
+
 <table data-test="datatable">
     <thead>
     <tr>

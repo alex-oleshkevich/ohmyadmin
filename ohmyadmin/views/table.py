@@ -124,12 +124,10 @@ class TableView(View):
                 "sorting": sorting,
                 "page_title": self.label,
                 "page_description": self.description,
+                "oob_filters": "x-ohmyadmin-force-filter-refresh" in request.headers,
                 "search_term": request.query_params.get(self.search_param, ""),
             },
         )
-
-        if "x-ohmyadmin-force-filter-refresh" in request.headers:
-            response = htmx.trigger(response, "filterchange")
         return response
 
     def get_route(self) -> BaseRoute:

@@ -7,6 +7,7 @@
         <span class="text-gray-500">{{ icons.chevron_down() }}</span>
     </button>
     <form method="get" autocomplete="off" x-show="open"
+          @click.outside="open = false"
           @submit.prevent="open = false; $dispatch(ohmyadmin.events.REFRESH); $dispatch(ohmyadmin.events.FILTER_CHANGE)"
           class="dropdown absolute top-0 left-0 w-64 translate-y-10 px-3 py-2"
           x-transition:enter="transition ease-out duration-100"
