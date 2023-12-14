@@ -112,10 +112,17 @@ class TableView(View):
         if htmx.matches_target(request, "datatable"):
             template = "ohmyadmin/views/table/table.html"
 
-        should_refresh_filters = any([
-            "x-ohmyadmin-force-filter-refresh" in request.headers,
-            any([f.is_active(request) for f in self.filters])
-        ])
+        should_refresh_filters = htmx.matches_target(request, "datatable") and any(
+            ["x-ohmyadmin-force-filter-refresh" in request.headers, any([f.is_active(request) for f in self.filters])]
+        )
+
+        # clean url from unused filters
+        push_url = request.url
+        for filter_ in self.filters:
+            if not filter_.is_active(request):
+                push_url = push_url.remove_query_params([f.name for f in filter_.form])
+        if not request.query_params.get(self.search_param):
+            push_url = push_url.remove_query_params(self.search_param)
 
         response = render_to_response(
             request,
@@ -130,7 +137,7 @@ class TableView(View):
                 "search_term": request.query_params.get(self.search_param, ""),
             },
         )
-        return response
+        return htmx.push_url(response, push_url)
 
     def get_route(self) -> BaseRoute:
         return Mount(

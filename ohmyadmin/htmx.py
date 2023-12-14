@@ -1,6 +1,7 @@
 import json
 import typing
 from starlette.background import BackgroundTask
+from starlette.datastructures import URL
 from starlette.requests import Request
 from starlette.responses import Response
 
@@ -16,8 +17,8 @@ def matches_target(request: Request, target: str) -> bool:
     return request.headers.get("hx-target", "") == target
 
 
-def push_url(response: R, url: str) -> R:
-    response.headers["hx-push-url"] = url
+def push_url(response: R, url: str | URL) -> R:
+    response.headers["hx-push-url"] = str(url)
     return response
 
 

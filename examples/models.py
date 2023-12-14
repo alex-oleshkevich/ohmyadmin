@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import datetime
+import decimal
 
 import sqlalchemy as sa
-from sqlalchemy.orm import (backref, DeclarativeBase, Mapped, mapped_column, query_expression, relationship)
+from sqlalchemy.orm import backref, DeclarativeBase, Mapped, mapped_column, query_expression, relationship
 from starlette.authentication import BaseUser
 
 metadata = sa.MetaData()
@@ -23,10 +24,12 @@ class User(BaseUser, Base):
     email: Mapped[str] = mapped_column(sa.Text, nullable=False)
     password: Mapped[str] = mapped_column(sa.Text)
     photo: Mapped[str] = mapped_column(sa.Text)
+    birthdate: Mapped[datetime.date] = mapped_column(sa.Date)
+    gender: Mapped[str] = mapped_column()
+    balance: Mapped[decimal.Decimal] = mapped_column(default=0)
+    rating: Mapped[float] = mapped_column(default=0)
     is_active: Mapped[bool] = mapped_column(sa.Boolean, default=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(
-        sa.DateTime, default=datetime.datetime.now
-    )
+    created_at: Mapped[datetime.datetime] = mapped_column(sa.DateTime, default=datetime.datetime.now)
 
     @property
     def identity(self) -> str:
@@ -72,25 +75,13 @@ class Customer(Base):
     email: Mapped[str] = mapped_column(sa.Text)
     phone: Mapped[str] = mapped_column(sa.Text)
     birthday: Mapped[datetime.date] = mapped_column(sa.Date)
-    created_at: Mapped[datetime.datetime] = mapped_column(
-        sa.DateTime, default=datetime.datetime.now
-    )
-    updated_at: Mapped[datetime.datetime] = mapped_column(
-        sa.DateTime, default=datetime.datetime.now
-    )
+    created_at: Mapped[datetime.datetime] = mapped_column(sa.DateTime, default=datetime.datetime.now)
+    updated_at: Mapped[datetime.datetime] = mapped_column(sa.DateTime, default=datetime.datetime.now)
 
-    addresses: Mapped[list[Address]] = relationship(
-        "Address", cascade="all, delete-orphan"
-    )
-    payments: Mapped[list[Payment]] = relationship(
-        "Payment", cascade="all, delete-orphan"
-    )
-    comments: Mapped[list[Comment]] = relationship(
-        "Comment", cascade="all, delete-orphan"
-    )
-    orders: Mapped[list[Order]] = relationship(
-        "Order", cascade="all, delete-orphan", back_populates="customer"
-    )
+    addresses: Mapped[list[Address]] = relationship("Address", cascade="all, delete-orphan")
+    payments: Mapped[list[Payment]] = relationship("Payment", cascade="all, delete-orphan")
+    comments: Mapped[list[Comment]] = relationship("Comment", cascade="all, delete-orphan")
+    orders: Mapped[list[Order]] = relationship("Order", cascade="all, delete-orphan", back_populates="customer")
 
     def __str__(self) -> str:
         return self.name or "n/a"
@@ -114,9 +105,7 @@ class Payment(Base):
     id: Mapped[int] = mapped_column(sa.BigInteger, primary_key=True)
     reference: Mapped[str] = mapped_column(sa.Text, nullable=False)
     amount: Mapped[str] = mapped_column(sa.Numeric, nullable=False)
-    currency_code: Mapped[str] = mapped_column(
-        sa.ForeignKey("currencies.code"), nullable=False
-    )
+    currency_code: Mapped[str] = mapped_column(sa.ForeignKey("currencies.code"), nullable=False)
     provider: Mapped[str] = mapped_column(sa.Text, nullable=False)
     method: Mapped[str] = mapped_column(sa.Text, nullable=False)
     customer_id: Mapped[int] = mapped_column(sa.ForeignKey("customers.id"))
@@ -133,12 +122,8 @@ class Brand(Base):
     website: Mapped[str] = mapped_column(sa.Text)
     description: Mapped[str] = mapped_column(sa.Text)
     visible_to_customers: Mapped[bool] = mapped_column(sa.Boolean, default=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(
-        sa.DateTime, default=datetime.datetime.now
-    )
-    updated_at: Mapped[datetime.datetime] = mapped_column(
-        sa.DateTime, default=datetime.datetime.now
-    )
+    created_at: Mapped[datetime.datetime] = mapped_column(sa.DateTime, default=datetime.datetime.now)
+    updated_at: Mapped[datetime.datetime] = mapped_column(sa.DateTime, default=datetime.datetime.now)
 
     def __str__(self) -> str:
         return self.name or "n/a"
@@ -161,12 +146,8 @@ class Category(Base):
     description: Mapped[str] = mapped_column(sa.Text)
     parent_id: Mapped[int | None] = mapped_column(sa.ForeignKey("categories.id"))
     visible_to_customers: Mapped[bool] = mapped_column(sa.Boolean, default=True)
-    created_at: Mapped[datetime.datetime] = mapped_column(
-        sa.DateTime, default=datetime.datetime.now
-    )
-    updated_at: Mapped[datetime.datetime] = mapped_column(
-        sa.DateTime, default=datetime.datetime.now
-    )
+    created_at: Mapped[datetime.datetime] = mapped_column(sa.DateTime, default=datetime.datetime.now)
+    updated_at: Mapped[datetime.datetime] = mapped_column(sa.DateTime, default=datetime.datetime.now)
 
     parent: Mapped[Category | None] = relationship("Category")
 
@@ -192,21 +173,13 @@ class Product(Base):
     barcode: Mapped[str] = mapped_column(sa.Text)
     can_be_returned: Mapped[bool] = mapped_column(sa.Boolean)
     can_be_shipped: Mapped[bool] = mapped_column(sa.Boolean)
-    created_at: Mapped[datetime.datetime] = mapped_column(
-        sa.DateTime, default=datetime.datetime.now
-    )
-    updated_at: Mapped[datetime.datetime] = mapped_column(
-        sa.DateTime, default=datetime.datetime.now
-    )
+    created_at: Mapped[datetime.datetime] = mapped_column(sa.DateTime, default=datetime.datetime.now)
+    updated_at: Mapped[datetime.datetime] = mapped_column(sa.DateTime, default=datetime.datetime.now)
 
     brand: Mapped[Brand] = relationship(Brand)
     images: Mapped[list[Image]] = relationship("Image", cascade="all, delete-orphan")
-    comments: Mapped[list[Comment]] = relationship(
-        "Comment", cascade="all, delete-orphan"
-    )
-    categories: Mapped[list[Category]] = relationship(
-        "Category", secondary=product_categories
-    )
+    comments: Mapped[list[Comment]] = relationship("Comment", cascade="all, delete-orphan")
+    categories: Mapped[list[Category]] = relationship("Category", secondary=product_categories)
 
     def __str__(self) -> str:
         return self.name or "n/a"
@@ -234,9 +207,7 @@ class Comment(Base):
     public: Mapped[bool] = mapped_column(sa.Boolean)
     product_id: Mapped[int] = mapped_column(sa.ForeignKey("products.id"))
     customer_id: Mapped[int] = mapped_column(sa.ForeignKey("customers.id"))
-    created_at: Mapped[datetime.datetime] = mapped_column(
-        sa.DateTime, default=datetime.datetime.now
-    )
+    created_at: Mapped[datetime.datetime] = mapped_column(sa.DateTime, default=datetime.datetime.now)
 
     def __str__(self) -> str:
         return self.title or ""
@@ -261,31 +232,19 @@ class Order(Base):
     __tablename__ = "orders"
     id: Mapped[int] = mapped_column(sa.BigInteger, primary_key=True)
     number: Mapped[str] = mapped_column(sa.Text, nullable=False)
-    customer_id: Mapped[int] = mapped_column(
-        sa.ForeignKey("customers.id"), nullable=False
-    )
+    customer_id: Mapped[int] = mapped_column(sa.ForeignKey("customers.id"), nullable=False)
     status: Mapped[str] = mapped_column(sa.Text, nullable=False)
     address: Mapped[str] = mapped_column(sa.Text)
     city: Mapped[str] = mapped_column(sa.Text)
     zip: Mapped[str] = mapped_column(sa.Text)
     notes: Mapped[str] = mapped_column(sa.Text)
-    currency_code: Mapped[str] = mapped_column(
-        sa.ForeignKey("currencies.code"), nullable=False
-    )
-    country_code: Mapped[str] = mapped_column(
-        sa.ForeignKey("countries.code"), nullable=False
-    )
-    created_at: Mapped[datetime.datetime] = mapped_column(
-        sa.DateTime, default=datetime.datetime.now
-    )
-    updated_at: Mapped[datetime.datetime] = mapped_column(
-        sa.DateTime, default=datetime.datetime.now
-    )
+    currency_code: Mapped[str] = mapped_column(sa.ForeignKey("currencies.code"), nullable=False)
+    country_code: Mapped[str] = mapped_column(sa.ForeignKey("countries.code"), nullable=False)
+    created_at: Mapped[datetime.datetime] = mapped_column(sa.DateTime, default=datetime.datetime.now)
+    updated_at: Mapped[datetime.datetime] = mapped_column(sa.DateTime, default=datetime.datetime.now)
 
     total_price: Mapped[float] = query_expression()
-    customer: Mapped[Customer] = relationship(
-        "Customer", cascade="all", back_populates="orders"
-    )
+    customer: Mapped[Customer] = relationship("Customer", cascade="all", back_populates="orders")
     items: Mapped[OrderItem] = relationship("OrderItem")
     currency: Mapped[Currency] = relationship("Currency")
 
@@ -297,16 +256,12 @@ class OrderItem(Base):
     __tablename__ = "order_items"
     id: Mapped[int] = mapped_column(sa.BigInteger, primary_key=True)
     order_id: Mapped[int] = mapped_column(sa.ForeignKey("orders.id"), nullable=False)
-    product_id: Mapped[int] = mapped_column(
-        sa.ForeignKey("products.id"), nullable=False
-    )
+    product_id: Mapped[int] = mapped_column(sa.ForeignKey("products.id"), nullable=False)
     quantity: Mapped[int] = mapped_column(sa.Integer)
     unit_price: Mapped[float] = mapped_column(sa.Numeric)
 
     order: Mapped[Order] = relationship(Order, back_populates="items")
-    product: Mapped[Product] = relationship(
-        Product, backref=backref("items", cascade="all, delete-orphan")
-    )
+    product: Mapped[Product] = relationship(Product, backref=backref("items", cascade="all, delete-orphan"))
 
 
 class BlogPost(Base):

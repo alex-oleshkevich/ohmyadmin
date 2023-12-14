@@ -25,16 +25,17 @@ class Filter(abc.ABC, typing.Generic[F]):
     template: str = "ohmyadmin/filters/form.html"
     indicator_template: str = "ohmyadmin/filters/blank_indicator.html"
 
-    def __init__(self, field_name: str, label: str = "") -> None:
+    def __init__(self, field_name: str, label: str = "", filter_id: str = "") -> None:
         self.field_name = field_name
+        self.filter_id = filter_id or field_name
         self.label = label or snake_to_sentence(self.field_name.title())
-        self._form_instance: contextvars.ContextVar[F] = contextvars.ContextVar(f"_local_form_{field_name}")
+        self._form_instance: contextvars.ContextVar[F] = contextvars.ContextVar(f"_local_form_{filter_id}")
 
     async def get_form(self, request: Request) -> F:
         try:
             return self._form_instance.get()
         except LookupError:
-            form = await create_form(request, self.form_class, form_data=request.query_params, prefix=self.field_name)
+            form = await create_form(request, self.form_class, form_data=request.query_params, prefix=self.filter_id)
             self._form_instance.set(form)
         return self._form_instance.get()
 
@@ -202,11 +203,53 @@ class IntegerFilter(Filter[IntegerFilterForm]):
 
     def apply(self, request: Request, query: DataSource, form: IntegerFilterForm) -> DataSource:
         predicate = form.data["predicate"]
-        if not predicate:
+        value = self.form.data["query"]
+        if not predicate or value is None:
             return query
 
-        value = self.form.data["query"]
         return query.filter(NumberFilter(self.field_name, value, predicate))
+
+    def is_active(self, request: Request) -> bool:
+        return bool(self.form.data["query"])
+
+
+class FloatFilterForm(wtforms.Form):
+    predicate = wtforms.SelectField(
+        choices=NumberOperation.choices(),
+        coerce=functools.partial(safe_enum_coerce, choices=NumberOperation),
+    )
+    query = wtforms.FloatField(validators=[wtforms.validators.data_required()])
+
+
+class FloatFilter(IntegerFilter, Filter[FloatFilterForm]):
+    form_class = FloatFilterForm
+
+
+class DecimalFilterForm(wtforms.Form):
+    predicate = wtforms.SelectField(
+        choices=NumberOperation.choices(),
+        coerce=functools.partial(safe_enum_coerce, choices=NumberOperation),
+    )
+    query = wtforms.DecimalField(validators=[wtforms.validators.data_required()])
+
+
+class DecimalFilter(IntegerFilter, Filter[FloatFilterForm]):
+    form_class = DecimalFilterForm
+
+
+class DateFilterForm(wtforms.Form):
+    query = wtforms.DateField()
+
+
+class DateFilter(Filter[DateFilterForm]):
+    form_class = DateFilterForm
+    indicator_template = "ohmyadmin/filters/date_indicator.html"
+
+    def apply(self, request: Request, query: DataSource) -> DataSource:
+        value = self.form.data["query"]
+        if not value:
+            return query
+        return query.apply_date_filter(self.query_param, value)
 
     def is_active(self, request: Request) -> bool:
         return bool(self.form.data["query"])

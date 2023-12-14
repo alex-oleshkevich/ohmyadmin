@@ -5,7 +5,6 @@ import random
 from faker import Faker
 from passlib.handlers.pbkdf2 import pbkdf2_sha256
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
 
 from examples.models import (
     Address,
@@ -112,7 +111,11 @@ def seed_users(session: AsyncSession) -> None:
                 email=fake.email(safe=False),
                 photo=fake.image_url(600, 400),
                 password=pbkdf2_sha256.hash("password"),
-                created_at=fake.date_between(),
+                created_at=fake.date_time_between(),
+                birthdate=fake.date_of_birth(),
+                gender=fake.random_element(elements=("male", "female", "unknown")),
+                rating=fake.pyfloat(min_value=0, max_value=10, right_digits=1),
+                balance=fake.pydecimal(min_value=0, max_value=10_000, right_digits=2),
                 is_active=False if index % 10 == 0 else True,
             )
             for index in range(1, OBJECTS_COUNT + 1)
@@ -121,15 +124,11 @@ def seed_users(session: AsyncSession) -> None:
 
 
 def seed_countries(session: AsyncSession) -> None:
-    session.add_all(
-        [Country(code=country["code"], name=country["name"]) for country in COUNTRIES]
-    )
+    session.add_all([Country(code=country["code"], name=country["name"]) for country in COUNTRIES])
 
 
 def seed_currencies(session: AsyncSession) -> None:
-    session.add_all(
-        [Currency(code=item["code"], name=item["name"]) for item in CURRENCIES]
-    )
+    session.add_all([Currency(code=item["code"], name=item["name"]) for item in CURRENCIES])
 
 
 def seed_customers(session: AsyncSession) -> None:
@@ -169,9 +168,7 @@ def seed_payment(session: AsyncSession) -> None:
             Payment(
                 reference=refcode(),
                 amount=random.randint(0, 20),
-                currency_code=CURRENCIES[random.randint(0, len(CURRENCIES) - 1)][
-                    "code"
-                ],
+                currency_code=CURRENCIES[random.randint(0, len(CURRENCIES) - 1)]["code"],
                 provider=PAYMENT_PROVIDER[random.randint(0, len(PAYMENT_PROVIDER) - 1)],
                 method=PAYMENT_METHOD[random.randint(0, len(PAYMENT_METHOD) - 1)],
                 customer_id=random.randint(1, 500),
@@ -225,15 +222,9 @@ def seed_products(session: AsyncSession) -> None:
                 visible=fake.boolean(),
                 availability=fake.date_between(),
                 brand_id=random.randint(1, 20),
-                price=decimal.Decimal(
-                    f"{random.randint(1, 500)}.{random.randint(1, 99):02}"
-                ),
-                compare_at_price=decimal.Decimal(
-                    f"{random.randint(1, 500)}.{random.randint(1, 99):02}"
-                ),
-                cost_per_item=decimal.Decimal(
-                    f"{random.randint(1, 500)}.{random.randint(1, 99):02}"
-                ),
+                price=decimal.Decimal(f"{random.randint(1, 500)}.{random.randint(1, 99):02}"),
+                compare_at_price=decimal.Decimal(f"{random.randint(1, 500)}.{random.randint(1, 99):02}"),
+                cost_per_item=decimal.Decimal(f"{random.randint(1, 500)}.{random.randint(1, 99):02}"),
                 sku=random.randint(1, 100),
                 quantity=random.randint(1, 100),
                 security_stock=random.randint(1, 1000),
@@ -316,9 +307,7 @@ def seed_order_items(session: AsyncSession) -> None:
                 order_id=random.randint(1, OBJECTS_COUNT - 1),
                 product_id=random.randint(1, OBJECTS_COUNT),
                 quantity=random.randint(1, 100),
-                unit_price=decimal.Decimal(
-                    f"{random.randint(1, 500)}.{random.randint(1, 99):02}"
-                ),
+                unit_price=decimal.Decimal(f"{random.randint(1, 500)}.{random.randint(1, 99):02}"),
             )
             for _ in range(1, OBJECTS_COUNT * 5)
         ]

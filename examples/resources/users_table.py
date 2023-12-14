@@ -8,12 +8,13 @@ from examples.models import User
 from ohmyadmin.actions import actions, object_actions
 from ohmyadmin.datasources.datasource import DataSource
 from ohmyadmin.datasources.sqlalchemy import SADataSource
-from ohmyadmin.filters import IntegerFilter, StringFilter
+from ohmyadmin.filters import DecimalFilter, FloatFilter, IntegerFilter, StringFilter
 from ohmyadmin.formatters import (
     AvatarFormatter,
     BoolFormatter,
     DateFormatter,
     LinkFormatter,
+    NumberFormatter,
 )
 from ohmyadmin.htmx import response
 from ohmyadmin.views.table import Column, TableView
@@ -79,6 +80,9 @@ class UsersTable(TableView):
         StringFilter("last_name"),
         StringFilter("email"),
         IntegerFilter("id", label="ID"),
+        FloatFilter("rating", label="Rating from"),
+        FloatFilter("rating", label="Rating to", filter_id="rating_to"),
+        DecimalFilter("balance"),
     ]
     actions = [
         actions.LinkAction(url="/admin", label="To Main page"),
@@ -132,6 +136,9 @@ class UsersTable(TableView):
         Column("photo", formatter=AvatarFormatter()),
         Column("first_name", formatter=LinkFormatter(url="/admin")),
         Column("last_name", searchable=True, sortable=True),
+        Column("birthdate", formatter=DateFormatter()),
+        Column("balance", formatter=NumberFormatter(prefix="$", align="right")),
+        Column("rating"),
         Column("email", searchable=True),
         Column("is_active", sortable=True, formatter=BoolFormatter(as_text=True)),
         Column("created_at", sortable=True, formatter=DateFormatter()),
