@@ -300,3 +300,13 @@ class DateRangeFilter(Filter[DateRangeFilterForm]):
 
     def is_active(self, request: Request) -> bool:
         return self.form.data["before"] or self.form.data["after"]
+
+
+class DateTimeRangeFilterForm(wtforms.Form):
+    after = wtforms.DateTimeLocalField()
+    before = wtforms.DateTimeLocalField()
+
+
+class DateTimeRangeFilter(DateRangeFilter, Filter[DateTimeRangeFilterForm]):
+    form_class = DateTimeRangeFilterForm
+    format: typing.Literal["date", "datetime"] = "datetime"

@@ -12,6 +12,7 @@ from ohmyadmin.filters import (
     DateFilter,
     DateRangeFilter,
     DateTimeFilter,
+    DateTimeRangeFilter,
     DecimalFilter,
     FloatFilter,
     IntegerFilter,
@@ -94,6 +95,7 @@ class UsersTable(TableView):
         DateFilter("birthdate"),
         DateTimeFilter("created_at"),
         DateRangeFilter("created_at", filter_id="created_range"),
+        DateTimeRangeFilter("created_at", filter_id="created_timerange"),
     ]
     actions = [
         actions.LinkAction(url="/admin", label="To Main page"),
