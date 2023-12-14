@@ -79,11 +79,7 @@
         </section>
 
         <!-- active filters -->
-        <section id="view-filters"
-                 hx-get="{{ request.url.path }}"
-                 hx-target="this"
-                 hx-trigger="filterchange"
-                 class="flex items-center gap-2 flex-wrap border border-gray-200 p-1 rounded-md">
+        <section id="view-filters" class="flex items-center gap-2 flex-wrap border border-gray-200 p-1 rounded-md">
             {% include 'ohmyadmin/views/table/filters_bar.html' %}
         </section>
 

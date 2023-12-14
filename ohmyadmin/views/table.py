@@ -112,8 +112,10 @@ class TableView(View):
         if htmx.matches_target(request, "datatable"):
             template = "ohmyadmin/views/table/table.html"
 
-        if htmx.matches_target(request, "view-filters"):
-            template = "ohmyadmin/views/table/filters_bar.html"
+        should_refresh_filters = any([
+            "x-ohmyadmin-force-filter-refresh" in request.headers,
+            any([f.is_active(request) for f in self.filters])
+        ])
 
         response = render_to_response(
             request,
@@ -124,7 +126,7 @@ class TableView(View):
                 "sorting": sorting,
                 "page_title": self.label,
                 "page_description": self.description,
-                "oob_filters": "x-ohmyadmin-force-filter-refresh" in request.headers,
+                "oob_filters": should_refresh_filters,
                 "search_term": request.query_params.get(self.search_param, ""),
             },
         )
