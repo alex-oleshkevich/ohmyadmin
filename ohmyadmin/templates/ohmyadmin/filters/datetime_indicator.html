@@ -1,0 +1,7 @@
+{% extends 'ohmyadmin/filters/base_indicator.html' %}
+
+{% block content %}
+    <span class="text-amber-700">
+    {{ _('{predicate} {value}').format(predicate=indicator.predicate.value, value=indicator.query|datetime) }}
+    </span>
+{% endblock %}

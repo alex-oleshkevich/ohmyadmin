@@ -10,6 +10,9 @@ from starlette.requests import Request
 from ohmyadmin.datasources.datasource import (
     AndFilter,
     DataSource,
+    DateFilter,
+    DateOperation,
+    DateTimeFilter,
     InFilter,
     NumberOperation,
     OrFilter,
@@ -140,6 +143,17 @@ class SADataSource(DataSource[T]):
                 return column < value
             case NumberFilter(value=value, predicate=NumberOperation.LESS_OR_EQUAL):
                 return column <= value
+
+            # date operations
+            case DateFilter(value=value, predicate=DateOperation.EQUALS):
+                expr = column if isinstance(clause, DateTimeFilter) else sa.func.date(column)
+                return expr == value
+            case DateFilter(value=value, predicate=DateOperation.AFTER):
+                expr = column if isinstance(clause, DateTimeFilter) else sa.func.date(column)
+                return expr >= value
+            case DateFilter(value=value, predicate=DateOperation.BEFORE):
+                expr = column if isinstance(clause, DateTimeFilter) else sa.func.date(column)
+                return expr <= value
 
             # array operations
             case InFilter(values=values):

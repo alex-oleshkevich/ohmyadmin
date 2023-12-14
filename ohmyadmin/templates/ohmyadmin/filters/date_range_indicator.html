@@ -1,0 +1,19 @@
+{% extends 'ohmyadmin/filters/base_indicator.html' %}
+
+{% macro indicator_value(value, format) -%}
+    <span class="text-amber-700">{{ value|date if format == 'date' else value|datetime }}</span>
+{% endmacro %}
+
+{% block content -%}
+    {% if indicator.before and indicator.after -%}
+        {% set before = indicator_value(indicator.before, filter.format) -%}
+        {% set after = indicator_value(indicator.after, filter.format) -%}
+        {{ _('between {after} and {before}'.format(before=before, after=after), domain='ohmyadmin')|safe }}
+    {% elif indicator.before -%}
+        {% set before = indicator_value(indicator.before, filter.format) -%}
+        {{ _('before {before}'.format(before=before), domain='ohmyadmin')|safe }}
+    {% elif indicator.after -%}
+        {% set after = indicator_value(indicator.after, filter.format) -%}
+        {{ _('after {after}'.format(after=after), domain='ohmyadmin')|safe }}
+    {% endif %}
+{% endblock %}

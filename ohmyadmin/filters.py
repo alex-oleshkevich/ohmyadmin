@@ -11,7 +11,7 @@ from starlette.requests import Request
 from starlette_babel import gettext_lazy as _
 
 from ohmyadmin.datasources import datasource
-from ohmyadmin.datasources.datasource import DataSource, NumberFilter, NumberOperation
+from ohmyadmin.datasources.datasource import DataSource, DateOperation, NumberFilter, NumberOperation
 from ohmyadmin.forms.utils import create_form, safe_enum_coerce
 from ohmyadmin.helpers import snake_to_sentence
 from ohmyadmin.ordering import get_ordering_value
@@ -176,11 +176,8 @@ class StringFilter(Filter[StringFilterForm]):
 
     def apply(self, request: Request, query: DataSource, form: StringFilterForm) -> DataSource:
         operation = form.data["predicate"]
-        if not operation:
-            return query
-
         value = form.data["query"]
-        if not value:
+        if not operation or not value:
             return query
 
         return query.filter(datasource.StringFilter(self.field_name, value, operation, case_insensitive=True))
@@ -238,6 +235,10 @@ class DecimalFilter(IntegerFilter, Filter[FloatFilterForm]):
 
 
 class DateFilterForm(wtforms.Form):
+    predicate = wtforms.SelectField(
+        choices=DateOperation.choices(),
+        coerce=functools.partial(safe_enum_coerce, choices=DateOperation),
+    )
     query = wtforms.DateField()
 
 
@@ -245,11 +246,57 @@ class DateFilter(Filter[DateFilterForm]):
     form_class = DateFilterForm
     indicator_template = "ohmyadmin/filters/date_indicator.html"
 
-    def apply(self, request: Request, query: DataSource) -> DataSource:
+    def apply(self, request: Request, query: DataSource, form: wtforms.Form) -> DataSource:
+        predicate = self.form.data["predicate"]
         value = self.form.data["query"]
-        if not value:
+        if value is None or predicate is None:
             return query
-        return query.apply_date_filter(self.query_param, value)
+        return query.filter(datasource.DateFilter(self.field_name, value, predicate))
 
     def is_active(self, request: Request) -> bool:
         return bool(self.form.data["query"])
+
+
+class DateTimeFilterForm(wtforms.Form):
+    predicate = wtforms.SelectField(
+        choices=DateOperation.choices(),
+        coerce=functools.partial(safe_enum_coerce, choices=DateOperation),
+    )
+    query = wtforms.DateTimeLocalField()
+
+
+class DateTimeFilter(DateFilter, Filter[DateFilterForm]):
+    form_class = DateTimeFilterForm
+    indicator_template = "ohmyadmin/filters/datetime_indicator.html"
+
+
+class DateRangeFilterForm(wtforms.Form):
+    after = wtforms.DateField()
+    before = wtforms.DateField()
+
+
+class DateRangeFilter(Filter[DateRangeFilterForm]):
+    form_class = DateRangeFilterForm
+    format: typing.Literal["date", "datetime"] = "date"
+    indicator_template = "ohmyadmin/filters/date_range_indicator.html"
+
+    def apply(self, request: Request, query: DataSource, form: DateTimeFilterForm) -> DataSource:
+        before = self.form.data["before"]
+        after = self.form.data["after"]
+        if before and after:
+            return query.filter(
+                datasource.AndFilter(
+                    filters=[
+                        datasource.DateFilter(self.field_name, before, datasource.DateOperation.BEFORE),
+                        datasource.DateFilter(self.field_name, after, datasource.DateOperation.AFTER),
+                    ]
+                )
+            )
+        if before:
+            return query.filter(datasource.DateFilter(self.field_name, before, datasource.DateOperation.BEFORE))
+        if after:
+            return query.filter(datasource.DateFilter(self.field_name, after, datasource.DateOperation.AFTER))
+        return query
+
+    def is_active(self, request: Request) -> bool:
+        return self.form.data["before"] or self.form.data["after"]
