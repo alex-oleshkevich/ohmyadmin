@@ -34,6 +34,7 @@ export class PopoverElement extends LitElement {
 
     protected override firstUpdated() {
         const triggered = () => this.open ? this.destroy() : this.setup();
+        this.addEventListener('close', () => this.close())
         document.querySelector(this.trigger)?.addEventListener('click', triggered);
         document.addEventListener('click', e => {
             if (!this.open) {

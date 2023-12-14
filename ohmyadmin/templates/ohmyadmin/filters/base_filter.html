@@ -1,32 +1,24 @@
 {% import 'ohmyadmin/forms.html' as forms %}
 {% import 'ohmyadmin/icons.html' as icons %}
 
-<div class="inline-block relative z-10" x-data="{open: false}" data-test="filter">
-    <button class="btn" @click="open = !open">
+<div class="inline-block relative z-10" data-test="filter">
+    <button class="btn" id="filter-{{ filter | object_id }}">
         <span>{{ filter.label }}</span>
         <span class="text-gray-500">{{ icons.chevron_down() }}</span>
     </button>
-    <form method="get" autocomplete="off" x-show="open"
-          @click.outside="open = false"
-          @submit.prevent="open = false; $dispatch(ohmyadmin.events.REFRESH); $dispatch(ohmyadmin.events.FILTER_CHANGE)"
-          class="dropdown absolute top-0 left-0 w-64 translate-y-10 px-3 py-2"
-          x-transition:enter="transition ease-out duration-100"
-          x-transition:enter-start="transform opacity-0 scale-95"
-          x-transition:enter-end="transform opacity-100 scale-100"
-          x-transition:leave="transition ease-in duration-75"
-          x-transition:leave-start="transform opacity-100 scale-100"
-          x-transition:leave-end="transform opacity-0 scale-95"
-    >
-        <div>
-            {% block content %}{% endblock %}
-        </div>
-        <div class="mt-5 flex items-center gap-2">
-            <button class="btn btn-accent" type="submit">
-                {{ _('Apply', domain='ohmyadmin') }}
-            </button>
-            <button class="btn btn-text" type="button" @click="open = !open">
-                {{ _('Cancel', domain='ohmyadmin') }}
-            </button>
-        </div>
-    </form>
+    <o-popover trigger="#filter-{{ filter | object_id }}" placement="bottom-start">
+        <form class="dropdown absolute w-64 px-3 py-2 hidden" method="get" autocomplete="off"
+              @submit.prevent="$dispatch(ohmyadmin.events.REFRESH); $dispatch(ohmyadmin.events.FILTER_CHANGE)"
+        >
+            <div>{% block content %}{% endblock %}</div>
+            <div class="mt-5 flex items-center gap-2">
+                <button class="btn btn-accent" type="submit">
+                    {{ _('Apply', domain='ohmyadmin') }}
+                </button>
+                <button class="btn btn-text" type="button" @click="$dispatch('close')">
+                    {{ _('Cancel', domain='ohmyadmin') }}
+                </button>
+            </div>
+        </form>
+    </o-popover>
 </div>

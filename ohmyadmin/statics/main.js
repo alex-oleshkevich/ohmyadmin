@@ -292,10 +292,10 @@ var c2 = (t3) => u(t3) || "function" == typeof (null == t3 ? void 0 : t3[Symbol.
 var v = /<(?:(!--|\/[^a-zA-Z])|(\/?[a-zA-Z][^>\s]*)|(\/?$))/g;
 var a2 = /-->/g;
 var f = />/g;
-var _ = RegExp(`>|[
-\f\r](?:([^\\s"'>=/]+)([
-\f\r]*=[
-\f\r]*(?:[^
+var _ = RegExp(`>|[ 	
+\f\r](?:([^\\s"'>=/]+)([ 	
+\f\r]*=[ 	
+\f\r]*(?:[^ 	
 \f\r"'\`<>=]|("|')|))|$)`, "g");
 var m = /'/g;
 var p = /"/g;
@@ -1755,6 +1755,7 @@ var PopoverElement = class extends s4 {
   }
   firstUpdated() {
     const triggered = () => this.open ? this.destroy() : this.setup();
+    this.addEventListener("close", () => this.close());
     document.querySelector(this.trigger)?.addEventListener("click", triggered);
     document.addEventListener("click", (e7) => {
       if (!this.open) {
@@ -2470,10 +2471,10 @@ lit-html/is-server.js:
 notyf/notyf.es.js:
   (*! *****************************************************************************
   Copyright (c) Microsoft Corporation.
-
+  
   Permission to use, copy, modify, and/or distribute this software for any
   purpose with or without fee is hereby granted.
-
+  
   THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
   REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
   AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
