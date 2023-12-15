@@ -14,6 +14,7 @@ from ohmyadmin.datasources.datasource import DataSource
 from ohmyadmin.filters import Filter, OrderingFilter, SearchFilter
 from ohmyadmin.formatters import CellFormatter, StringFormatter
 from ohmyadmin.helpers import snake_to_sentence
+from ohmyadmin.metrics.base import Metric
 from ohmyadmin.ordering import SortingHelper
 from ohmyadmin.pagination import get_page_size_value, get_page_value
 from ohmyadmin.templating import render_to_response
@@ -65,6 +66,7 @@ class TableView(View):
     actions: typing.Sequence[Action] = tuple()
     row_actions: typing.Sequence[ObjectAction] = tuple()
     batch_actions: typing.Sequence[FormAction] = tuple()
+    metrics: typing.Sequence[Metric] = tuple()
 
     search_param: str = "search"
     search_placeholder: str = ""
@@ -161,6 +163,13 @@ class TableView(View):
                         for action in [*self.row_actions, *self.batch_actions]
                         if isinstance(action, WithRoute)
                     ],
+                    middleware=[
+                        Middleware(ExposeViewMiddleware, view=self),
+                    ],
+                ),
+                Mount(
+                    "/metrics",
+                    routes=[metric.get_route(self.url_name) for metric in self.metrics],
                     middleware=[
                         Middleware(ExposeViewMiddleware, view=self),
                     ],

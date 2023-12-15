@@ -1,3 +1,5 @@
+from starlette_babel import gettext_lazy as _
+import sqlalchemy as sa
 import wtforms
 from markupsafe import Markup
 from starlette.datastructures import URL
@@ -7,7 +9,7 @@ from starlette.responses import Response
 from examples.models import User
 from ohmyadmin.actions import actions, object_actions
 from ohmyadmin.datasources.datasource import DataSource
-from ohmyadmin.datasources.sqlalchemy import SADataSource
+from ohmyadmin.datasources.sqlalchemy import get_dbsession, SADataSource
 from ohmyadmin.filters import (
     ChoiceFilter,
     DateFilter,
@@ -28,6 +30,7 @@ from ohmyadmin.formatters import (
     NumberFormatter,
 )
 from ohmyadmin.htmx import response
+from ohmyadmin.metrics.partition import Partition, PartitionMetric
 from ohmyadmin.views.table import Column, TableView
 
 
@@ -84,11 +87,32 @@ async def delete_selected_callback(request: Request, query: DataSource, form: wt
     return response().toast(f"Rows deleted: {count}.").close_modal().refresh()
 
 
+class GenderDistributionMetric(PartitionMetric):
+    label = "Gender distribution"
+    colors = {
+        "male": "blue",
+        "female": "red",
+        "unknown": "gray",
+    }
+    labels = {
+        "male": _("Male"),
+        "female": _("Female"),
+        "unknown": _("Unknown"),
+    }
+
+    async def calculate(self, request: Request) -> list[Partition]:
+        stmt = sa.select(User.gender, sa.func.count("*").label("count")).group_by(User.gender)
+        result = await get_dbsession(request).execute(stmt)
+        rows = result.all()
+        return [Partition(label=row.gender, value=row.count) for row in rows]
+
+
 class UsersTable(TableView):
     label = "Users table"
     group = "Demos"
     description = "List all users."
     datasource = SADataSource(User)
+    metrics = (GenderDistributionMetric(),)
     filters = [
         StringFilter("last_name"),
         StringFilter("email"),

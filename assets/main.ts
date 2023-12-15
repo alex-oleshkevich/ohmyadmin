@@ -1,4 +1,5 @@
 import './components';
+import './metrics';
 import { modals, toasts } from './components';
 import { events } from './js/events';
 

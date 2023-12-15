@@ -1,0 +1,33 @@
+{% extends 'ohmyadmin/metrics/base.html' %}
+
+{% block subtitle %}
+    {% if metric.show_total %}
+        <span class="text-gray-500">{{ metric.total_format.format(total=value.total) }}</span>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="flex justify-between" id="{{ metric.slug }}">
+        <div data-test="partition-table" class="space-y-1">
+            {% for partition in value.series %}
+                <div class="flex items-center gap-2 text-xs text-gray-700 font-medium">
+                    <div class="dot dot-sm" style="background: {{ partition.color }}"></div>
+                    <div>
+                        {{ partition.label }}
+                        <span class="text-gray-500">
+                            {% if metric.show_values or metric.show_percents %}({% endif -%}
+                            {% if metric.show_values %}{{ partition.value }}{% endif %}
+                            {%- if metric.show_values and metric.show_percents %} - {% endif -%}
+                            {% if metric.show_percents %}{{ value.percent(partition.value) }}%{% endif %}
+                            {%- if metric.show_values or metric.show_percents %}){% endif %}
+                        </span>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div>
+            <o-metric-partition series="#series-{{ metric.slug }}"></o-metric-partition>
+            <script type="application/json" id="series-{{ metric.slug }}">{{ value.series|tojson }}</script>
+        </div>
+    </div>
+{% endblock %}

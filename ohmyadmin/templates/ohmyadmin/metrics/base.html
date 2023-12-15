@@ -1,0 +1,9 @@
+<div class="border border-gray-200 shadow-sm rounded-md p-4 bg-white" data-test="metric">
+    <header class="flex items-start justify-between mb-4">
+        <div class="font-semibold text-gray-600">{{ metric.label }}</div>
+        <div>{% block subtitle %}{% endblock %}</div>
+    </header>
+    <main class="flex flex-col">
+        {% block content %}{% endblock %}
+    </main>
+</div>

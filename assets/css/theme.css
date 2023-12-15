@@ -1,0 +1,16 @@
+:root {
+    --o-color-red: theme('colors.red.500');
+    --o-color-blue: theme('colors.blue.500');
+    --o-color-yellow: theme('colors.yellow.500');
+    --o-color-orange: theme('colors.orange.500');
+    --o-color-amber: theme('colors.amber.500');
+    --o-color-green: theme('colors.green.500');
+    --o-color-pink: theme('colors.pink.500');
+    --o-color-teal: theme('colors.teal.500');
+    --o-color-lime: theme('colors.lime.500');
+    --o-color-emerald: theme('colors.emerald.500');
+    --o-color-sky: theme('colors.sky.500');
+    --o-color-indigo: theme('colors.indigo.500');
+    --o-color-purple: theme('colors.purple.500');
+    --o-color-rose: theme('colors.rose.500');
+}
