@@ -1,0 +1,10 @@
+{% extends 'ohmyadmin/metrics/base.html' %}
+
+{% block content %}
+    <div class="text-2xl font-medium mb-5" data-test="progress-current">
+        {{ (value.percent / 100)|percent }}
+    </div>
+    <div class="progress progress-lg" data-test="progress-value" style="--o-progress-bar-color: {{ metric.color }}">
+        <div class="progress-bar" style="width: {{ value.percent }}%"></div>
+    </div>
+{% endblock %}

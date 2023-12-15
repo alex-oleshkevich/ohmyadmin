@@ -441,7 +441,9 @@
     }
 
     .progress {
-        @apply relative flex h-2 w-full overflow-hidden rounded-full bg-slate-200;
+        --o-progress-bar-color: theme('colors.blue.500');
+        background-color: var(--o-progress-bg-color, theme('colors.gray.200'));
+        @apply relative flex h-2 w-full overflow-hidden rounded-full;
     }
 
     .progress.progress-square {
@@ -460,7 +462,8 @@
     }
 
     .progress-bar {
-        @apply flex h-full bg-blue-500;
+        background-color: var(--o-progress-bar-color);
+        @apply flex h-full;
     }
 
     .progress.progress-xxs {

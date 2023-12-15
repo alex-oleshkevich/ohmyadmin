@@ -9,7 +9,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from examples.models import User
-from ohmyadmin import formatters
+from ohmyadmin import colors, formatters
 from ohmyadmin.actions import actions, object_actions
 from ohmyadmin.datasources.datasource import DataSource
 from ohmyadmin.datasources.sqlalchemy import get_dbsession, SADataSource
@@ -34,6 +34,7 @@ from ohmyadmin.formatters import (
 )
 from ohmyadmin.htmx import response
 from ohmyadmin.metrics.partition import Partition, PartitionMetric
+from ohmyadmin.metrics.progress import ProgressMetric
 from ohmyadmin.metrics.trend import TrendMetric, TrendValue
 from ohmyadmin.metrics.value import ValueMetric, ValueValue
 from ohmyadmin.views.table import Column, TableView
@@ -141,6 +142,21 @@ class RegistrationsByYearMetric(TrendMetric):
         return [TrendValue(label=str(row.date.year), value=row.count) for row in result.all()]
 
 
+class ActivationProgressMetric(ProgressMetric):
+    label = "Activation Progress"
+    color = colors.COLOR_EMERALD
+
+    async def calculate(self, request: Request) -> int | float:
+        stmt = sa.select(sa.func.count("*")).where(User.is_active == True)  # noqa: E712
+        result = await get_dbsession(request).execute(stmt)
+        return result.scalars().one()
+
+    async def calculate_target(self, request: Request) -> int | float:
+        stmt = sa.select(sa.func.count("*")).select_from(User)
+        result = await get_dbsession(request).execute(stmt)
+        return result.scalars().one()
+
+
 class UsersTable(TableView):
     label = "Users table"
     group = "Demos"
@@ -149,6 +165,7 @@ class UsersTable(TableView):
     metrics = (
         GenderDistributionMetric(),
         RegistrationsByYearMetric(),
+        ActivationProgressMetric(),
         AdultsMetric(),
     )
     filters = [
