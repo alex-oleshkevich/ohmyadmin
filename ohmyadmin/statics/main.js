@@ -16550,10 +16550,9 @@ var TrendMetricElement = class extends s4 {
     this.chart = null;
   }
   render() {
-    const height = this.showTicks ? "90px" : "106px";
     return y`
             <section>
-                <canvas style="height: ${height}"></canvas>
+                <canvas style="height: 80px"></canvas>
             </section>`;
   }
   getSeries() {
@@ -16581,8 +16580,6 @@ var TrendMetricElement = class extends s4 {
         layout: {
           autoPadding: false,
           padding: 0
-          // padding: { bottom: -8, left: -4, right: -4 },
-          // padding: { bottom: -8, left: -4, right: 0, top: 4 },
         },
         scales: {
           x: {

@@ -1,4 +1,5 @@
 import datetime
+import decimal
 
 import sqlalchemy as sa
 import wtforms
@@ -119,6 +120,15 @@ class AdultsMetric(ValueMetric):
 class RegistrationsByYearMetric(TrendMetric):
     label = "Registrations by year"
     size = 4
+    show_current_value = True
+    formatter = formatters.StringFormatter(suffix=" new users")
+
+    async def calculate_current_value(self, request: Request) -> int | float | decimal.Decimal:
+        stmt = sa.select(sa.func.count("*")).where(
+            User.created_at >= datetime.datetime.now() - datetime.timedelta(days=10 * 365)
+        )
+        result = await get_dbsession(request).execute(stmt)
+        return result.scalars().one()
 
     async def calculate(self, request: Request) -> list[TrendValue]:
         stmt = (

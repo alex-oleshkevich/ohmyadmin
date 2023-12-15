@@ -1,11 +1,11 @@
 {% extends 'ohmyadmin/metrics/base.html' %}
 
 {% block content %}
-    {% if metric.show_current_value %}
-        <div class="text-2xl font-medium mb-2" data-test="trend-current">
+    <div class="text-2xl h-10 font-medium mb-2" data-test="trend-current">
+        {% if metric.show_current_value %}
             {{ value.current_value }}
-        </div>
-    {% endif %}
+        {% endif %}
+    </div>
     <div class="{% if not metric.show_ticks %}-mx-4{% endif %} -mb-4">
         <o-metric-trend series="#trend-series-{{ metric.slug }}"
                         label="{{ metric.label }}"

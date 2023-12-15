@@ -18,7 +18,7 @@ class TrendValue(typing.TypedDict):
 
 @dataclasses.dataclass
 class _TrendViewModel:
-    value: str
+    current_value: str
     series: list[TrendValue]
 
 
@@ -48,6 +48,6 @@ class TrendMetric(Metric):
 
         view_model = _TrendViewModel(
             series=series,
-            value=self.formatter.format(request, current_value),
+            current_value=self.formatter.format(request, current_value),
         )
         return render_to_response(request, self.template, {"request": request, "metric": self, "value": view_model})

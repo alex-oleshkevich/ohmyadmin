@@ -22,7 +22,7 @@ class CellFormatter(typing.Protocol):  # pragma: no cover
 
 
 class BaseFormatter(typing.Generic[_T]):
-    template: str = "ohmyadmin/formatters/string.html"
+    template: str = "ohmyadmin/formatters/value.html"
 
     def format(self, request: Request, value: _T) -> str:
         return render_to_string(request, self.template, {"formatter": self, "value": value})
@@ -32,7 +32,11 @@ class BaseFormatter(typing.Generic[_T]):
 
 
 class StringFormatter(BaseFormatter[str]):
-    pass
+    template: str = "ohmyadmin/formatters/string.html"
+
+    def __init__(self, *, prefix: str = "", suffix: str = "") -> None:
+        self.prefix = prefix
+        self.suffix = suffix
 
 
 class DateTimeFormatter(BaseFormatter[datetime.datetime]):

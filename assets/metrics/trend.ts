@@ -38,10 +38,9 @@ export class TrendMetricElement extends LitElement {
     chart: Chart | null = null;
 
     override render() {
-        const height = this.showTicks ? '90px' : '106px';
         return html`
             <section>
-                <canvas style="height: ${ height }"></canvas>
+                <canvas style="height: 80px"></canvas>
             </section>`;
     }
 
@@ -71,8 +70,6 @@ export class TrendMetricElement extends LitElement {
                 layout: {
                     autoPadding: false,
                     padding: 0,
-                    // padding: { bottom: -8, left: -4, right: -4 },
-                    // padding: { bottom: -8, left: -4, right: 0, top: 4 },
                 },
                 scales: {
                     x: {

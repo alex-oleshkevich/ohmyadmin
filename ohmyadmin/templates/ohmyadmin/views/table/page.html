@@ -39,7 +39,7 @@
 
         <!-- metrics -->
         {% if table.metrics %}
-            <section class="grid grid-cols-12 gap-5 mb-10 h-40">
+            <section class="grid grid-cols-12 gap-5 mb-16 h-40">
                 {% for metric in table.metrics %}
                     <div class="col-span-{{ metric.size }}"
                          hx-trigger="load"
