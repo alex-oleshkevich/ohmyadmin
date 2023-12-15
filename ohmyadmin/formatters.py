@@ -1,6 +1,7 @@
 import datetime
 import decimal
 import typing
+
 from starlette.requests import Request
 from starlette_babel import gettext_lazy as _
 
@@ -139,3 +140,11 @@ class ProgressFormatter(BaseFormatter[int | float]):
         self.size = size
         self.color = color
         self.label = label
+
+
+class CallbackFormatter(BaseFormatter[typing.Any]):
+    def __init__(self, callback: typing.Callable[[Request, typing.Any], str]) -> None:
+        self.callback = callback
+
+    def format(self, request: Request, value: _T) -> str:
+        return self.callback(request, value)

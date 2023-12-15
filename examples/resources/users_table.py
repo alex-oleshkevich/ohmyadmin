@@ -28,10 +28,12 @@ from ohmyadmin.filters import (
 from ohmyadmin.formatters import (
     AvatarFormatter,
     BoolFormatter,
+    CallbackFormatter,
     DateFormatter,
     LinkFormatter,
     NumberFormatter,
 )
+from ohmyadmin.helpers import snake_to_sentence
 from ohmyadmin.htmx import response
 from ohmyadmin.metrics.partition import Partition, PartitionMetric
 from ohmyadmin.metrics.progress import ProgressMetric
@@ -255,6 +257,6 @@ class UsersTable(TableView):
         Column("rating"),
         Column("email", searchable=True),
         Column("is_active", sortable=True, formatter=BoolFormatter(as_text=True)),
-        Column("gender"),
+        Column("gender", formatter=CallbackFormatter(lambda r, v: snake_to_sentence(v))),
         Column("created_at", sortable=True, formatter=DateFormatter()),
     ]
