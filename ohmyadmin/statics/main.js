@@ -16552,7 +16552,7 @@ var TrendMetricElement = class extends s4 {
   render() {
     return y`
             <section>
-                <canvas style="height: 80px"></canvas>
+                <canvas style="height: 60px"></canvas>
             </section>`;
   }
   getSeries() {

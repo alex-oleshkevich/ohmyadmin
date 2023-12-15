@@ -106,7 +106,7 @@ class GenderDistributionMetric(PartitionMetric):
 class AdultsMetric(ValueMetric):
     label = "Adults"
     size = 2
-    formatter = formatters.NumberFormatter(suffix="%")
+    formatter = formatters.NumberFormatter(suffix=" users")
 
     async def calculate(self, request: Request) -> ValueValue:
         stmt = (
@@ -122,6 +122,7 @@ class RegistrationsByYearMetric(TrendMetric):
     label = "Registrations by year"
     size = 4
     show_current_value = True
+    update_interval = 2
     formatter = formatters.StringFormatter(suffix=" new users")
 
     async def calculate_current_value(self, request: Request) -> int | float | decimal.Decimal:

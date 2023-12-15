@@ -39,10 +39,11 @@
 
         <!-- metrics -->
         {% if table.metrics %}
-            <section class="grid grid-cols-12 gap-5 mb-16 h-40">
+            <section class="grid grid-cols-12 gap-5 mb-10 h-40">
                 {% for metric in table.metrics %}
+                    {% set update_interval = metric.update_interval %}
                     <div class="col-span-{{ metric.size }}"
-                         hx-trigger="load"
+                         hx-trigger="load{{ ', every:{interval}s'.format(interval=update_interval) if update_interval else '' }}"
                          hx-target="this"
                          hx-get="{{ url_for(metric.get_url_name(table.url_name)) }}">
                     </div>

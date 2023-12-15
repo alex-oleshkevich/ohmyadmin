@@ -40,7 +40,7 @@ export class TrendMetricElement extends LitElement {
     override render() {
         return html`
             <section>
-                <canvas style="height: 80px"></canvas>
+                <canvas style="height: 60px"></canvas>
             </section>`;
     }
 

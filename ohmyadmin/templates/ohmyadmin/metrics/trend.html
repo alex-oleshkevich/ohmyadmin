@@ -1,7 +1,7 @@
 {% extends 'ohmyadmin/metrics/base.html' %}
 
 {% block content %}
-    <div class="text-2xl h-10 font-medium mb-2" data-test="trend-current">
+    <div class="text-2xl h-10 font-medium mb-1.5" data-test="trend-current">
         {% if metric.show_current_value %}
             {{ value.current_value }}
         {% endif %}

@@ -2674,6 +2674,10 @@ body {
   margin-top: auto;
 }
 
+.mb-1\.5 {
+  margin-bottom: 0.375rem;
+}
+
 .block {
   display: block;
 }
@@ -2740,6 +2744,10 @@ body {
 
 .h-screen {
   height: 100vh;
+}
+
+.h-32 {
+  height: 8rem;
 }
 
 .max-h-screen {
