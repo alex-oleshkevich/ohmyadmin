@@ -1,3 +1,5 @@
+import datetime
+
 import sqlalchemy as sa
 import wtforms
 from markupsafe import Markup
@@ -31,6 +33,7 @@ from ohmyadmin.formatters import (
 )
 from ohmyadmin.htmx import response
 from ohmyadmin.metrics.partition import Partition, PartitionMetric
+from ohmyadmin.metrics.trend import TrendMetric, TrendValue
 from ohmyadmin.metrics.value import ValueMetric, ValueValue
 from ohmyadmin.views.table import Column, TableView
 
@@ -100,6 +103,7 @@ class GenderDistributionMetric(PartitionMetric):
 
 class AdultsMetric(ValueMetric):
     label = "Adults"
+    size = 2
     formatter = formatters.NumberFormatter(suffix="%")
 
     async def calculate(self, request: Request) -> ValueValue:
@@ -112,6 +116,21 @@ class AdultsMetric(ValueMetric):
         return result.scalars().one()
 
 
+class RegistrationsByYearMetric(TrendMetric):
+    label = "Registrations by year"
+    size = 4
+
+    async def calculate(self, request: Request) -> list[TrendValue]:
+        stmt = (
+            sa.select(sa.func.count("*").label("count"), sa.func.date_trunc("year", User.created_at).label("date"))
+            .group_by(sa.text("2"))
+            .order_by(sa.text("2"))
+            .where(User.created_at >= datetime.datetime.now() - datetime.timedelta(days=10 * 365))
+        )
+        result = await get_dbsession(request).execute(stmt)
+        return [TrendValue(label=str(row.date.year), value=row.count) for row in result.all()]
+
+
 class UsersTable(TableView):
     label = "Users table"
     group = "Demos"
@@ -119,6 +138,7 @@ class UsersTable(TableView):
     datasource = SADataSource(User)
     metrics = (
         GenderDistributionMetric(),
+        RegistrationsByYearMetric(),
         AdultsMetric(),
     )
     filters = [

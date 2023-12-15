@@ -16458,6 +16458,18 @@ var registerables = [
 Chart.register(...registerables);
 var auto_default = Chart;
 
+// assets/utils.ts
+var resolveColor = (value) => {
+  if (value.startsWith("var(")) {
+    const variable = value.match(/\((.*)\)/)[1];
+    return getComputedStyle(document.documentElement).getPropertyValue(variable);
+  }
+  if (value.startsWith("--")) {
+    return getComputedStyle(document.documentElement).getPropertyValue(value);
+  }
+  return value;
+};
+
 // assets/metrics/partition.ts
 var PartitionMetricElement = class extends s4 {
   constructor() {
@@ -16476,13 +16488,6 @@ var PartitionMetricElement = class extends s4 {
   }
   firstUpdated() {
     const series = this.getSeries();
-    const resolveColor = (value) => {
-      if (value.startsWith("var(")) {
-        const variable = value.match(/\((.*)\)/)[1];
-        return getComputedStyle(document.documentElement).getPropertyValue(variable);
-      }
-      return value;
-    };
     this.chart = new auto_default(this.canvasEl, {
       type: "doughnut",
       data: {
@@ -16530,6 +16535,126 @@ __decorateClass([
 PartitionMetricElement = __decorateClass([
   e4("o-metric-partition")
 ], PartitionMetricElement);
+
+// assets/metrics/trend.ts
+var TrendMetricElement = class extends s4 {
+  constructor() {
+    super(...arguments);
+    this.series = "";
+    this.label = "";
+    this.color = "";
+    this.backgroundColor = "";
+    this.showTicks = false;
+    this.showGrid = false;
+    this.showTooltip = false;
+    this.chart = null;
+  }
+  render() {
+    const height = this.showTicks ? "90px" : "106px";
+    return y`
+            <section>
+                <canvas style="height: ${height}"></canvas>
+            </section>`;
+  }
+  getSeries() {
+    return JSON.parse(document.querySelector(this.series)?.innerText);
+  }
+  firstUpdated() {
+    const series = this.getSeries();
+    this.chart = new auto_default(this.canvasEl, {
+      type: "line",
+      data: {
+        labels: series.map((v2) => v2.label),
+        datasets: [
+          {
+            tension: 0.1,
+            fill: true,
+            borderColor: resolveColor(this.color),
+            backgroundColor: resolveColor(this.backgroundColor),
+            data: series.map((v2) => v2.value)
+          }
+        ]
+      },
+      options: {
+        maintainAspectRatio: false,
+        interaction: { mode: "point", intersect: false },
+        layout: {
+          autoPadding: false,
+          padding: 0
+          // padding: { bottom: -8, left: -4, right: -4 },
+          // padding: { bottom: -8, left: -4, right: 0, top: 4 },
+        },
+        scales: {
+          x: {
+            title: { display: false, padding: 0 },
+            border: { display: false },
+            ticks: { display: this.showTicks, padding: 0 },
+            grid: {
+              display: this.showGrid,
+              drawTicks: this.showTicks,
+              color: resolveColor("--o-border-color")
+            }
+          },
+          y: {
+            title: { display: false, padding: 0 },
+            border: { display: false },
+            ticks: { display: this.showTicks, padding: 0 },
+            grid: {
+              display: this.showGrid,
+              drawTicks: this.showTicks,
+              color: resolveColor("--o-border-color")
+            }
+          }
+        },
+        plugins: {
+          tooltip: {
+            enabled: this.showTooltip,
+            padding: 12,
+            titleColor: "black",
+            titleFont: { size: 16 },
+            titleSpacing: 4,
+            titleMarginBottom: 8,
+            bodyColor: "black",
+            footerColor: "black",
+            bodyFont: { size: 16 },
+            borderColor: "rgb(203 213 225)",
+            borderWidth: 1,
+            backgroundColor: "white",
+            bodySpacing: 4
+          },
+          legend: { display: false }
+        }
+      }
+    });
+  }
+};
+__decorateClass([
+  e5()
+], TrendMetricElement.prototype, "series", 2);
+__decorateClass([
+  e5({ attribute: "label" })
+], TrendMetricElement.prototype, "label", 2);
+__decorateClass([
+  e5()
+], TrendMetricElement.prototype, "color", 2);
+__decorateClass([
+  e5({ attribute: "bg-color" })
+], TrendMetricElement.prototype, "backgroundColor", 2);
+__decorateClass([
+  e5({ type: Boolean, attribute: "ticks" })
+], TrendMetricElement.prototype, "showTicks", 2);
+__decorateClass([
+  e5({ type: Boolean, attribute: "grid" })
+], TrendMetricElement.prototype, "showGrid", 2);
+__decorateClass([
+  e5({ type: Boolean, attribute: "tooltip" })
+], TrendMetricElement.prototype, "showTooltip", 2);
+__decorateClass([
+  i4("canvas")
+], TrendMetricElement.prototype, "canvasEl", 2);
+TrendMetricElement = __decorateClass([
+  e4("o-metric-trend")
+], TrendMetricElement);
 
 // assets/js/events.ts
 var events = {

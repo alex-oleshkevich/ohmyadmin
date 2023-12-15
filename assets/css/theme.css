@@ -1,16 +1,43 @@
 :root {
     --o-color-red: theme('colors.red.500');
+    --o-color-red-light: theme('colors.red.50');
     --o-color-blue: theme('colors.blue.500');
+    --o-color-blue-light: theme('colors.blue.50');
     --o-color-yellow: theme('colors.yellow.500');
+    --o-color-yellow-light: theme('colors.yellow.50');
     --o-color-orange: theme('colors.orange.500');
+    --o-color-orange-light: theme('colors.orange.50');
     --o-color-amber: theme('colors.amber.500');
+    --o-color-amber-light: theme('colors.amber.50');
     --o-color-green: theme('colors.green.500');
+    --o-color-green-light: theme('colors.green.50');
     --o-color-pink: theme('colors.pink.500');
+    --o-color-pink-light: theme('colors.pink.50');
     --o-color-teal: theme('colors.teal.500');
+    --o-color-teal-light: theme('colors.teal.50');
     --o-color-lime: theme('colors.lime.500');
+    --o-color-lime-light: theme('colors.lime.50');
     --o-color-emerald: theme('colors.emerald.500');
+    --o-color-emerald-light: theme('colors.emerald.50');
     --o-color-sky: theme('colors.sky.500');
+    --o-color-sky-light: theme('colors.sky.50');
     --o-color-indigo: theme('colors.indigo.500');
+    --o-color-indigo-light: theme('colors.indigo.50');
     --o-color-purple: theme('colors.purple.500');
+    --o-color-purple-light: theme('colors.purple.50');
     --o-color-rose: theme('colors.rose.500');
+    --o-color-rose-light: theme('colors.rose.50');
+
+    --o-color-gray-50: theme('colors.gray.50');
+    --o-color-gray-100: theme('colors.gray.100');
+    --o-color-gray-200: theme('colors.gray.200');
+    --o-color-gray-300: theme('colors.gray.300');
+    --o-color-gray-400: theme('colors.gray.400');
+    --o-color-gray-500: theme('colors.gray.500');
+    --o-color-gray-600: theme('colors.gray.600');
+    --o-color-gray-700: theme('colors.gray.700');
+    --o-color-gray-800: theme('colors.gray.800');
+    --o-color-gray-900: theme('colors.gray.900');
+
+    --o-border-color: var(--o-color-gray-200);
 }

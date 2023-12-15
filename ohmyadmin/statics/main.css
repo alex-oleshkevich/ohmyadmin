@@ -2715,6 +2715,10 @@ body {
   height: 1rem;
 }
 
+.h-40 {
+  height: 10rem;
+}
+
 .h-5 {
   height: 1.25rem;
 }
@@ -2733,10 +2737,6 @@ body {
 
 .h-screen {
   height: 100vh;
-}
-
-.h-40 {
-  height: 10rem;
 }
 
 .max-h-screen {
@@ -4633,19 +4633,44 @@ body {
 
 :root {
   --o-color-red: #ef4444;
+  --o-color-red-light: #fef2f2;
   --o-color-blue: #3b82f6;
+  --o-color-blue-light: #eff6ff;
   --o-color-yellow: #eab308;
+  --o-color-yellow-light: #fefce8;
   --o-color-orange: #f97316;
+  --o-color-orange-light: #fff7ed;
   --o-color-amber: #f59e0b;
+  --o-color-amber-light: #fffbeb;
   --o-color-green: #22c55e;
+  --o-color-green-light: #f0fdf4;
   --o-color-pink: #ec4899;
+  --o-color-pink-light: #fdf2f8;
   --o-color-teal: #14b8a6;
+  --o-color-teal-light: #f0fdfa;
   --o-color-lime: #84cc16;
+  --o-color-lime-light: #f7fee7;
   --o-color-emerald: #10b981;
+  --o-color-emerald-light: #ecfdf5;
   --o-color-sky: #0ea5e9;
+  --o-color-sky-light: #f0f9ff;
   --o-color-indigo: #6366f1;
+  --o-color-indigo-light: #eef2ff;
   --o-color-purple: #a855f7;
+  --o-color-purple-light: #faf5ff;
   --o-color-rose: #f43f5e;
+  --o-color-rose-light: #fff1f2;
+  --o-color-gray-50: #f9fafb;
+  --o-color-gray-100: #f3f4f6;
+  --o-color-gray-200: #e5e7eb;
+  --o-color-gray-300: #d1d5db;
+  --o-color-gray-400: #9ca3af;
+  --o-color-gray-500: #6b7280;
+  --o-color-gray-600: #4b5563;
+  --o-color-gray-700: #374151;
+  --o-color-gray-800: #1f2937;
+  --o-color-gray-900: #111827;
+  --o-border-color: var(--o-color-gray-200);
 }
 
 /*@import "forms.css";*/

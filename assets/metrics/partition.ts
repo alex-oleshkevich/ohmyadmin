@@ -1,6 +1,7 @@
 import { html, LitElement } from 'lit';
 import { customElement, property, query } from 'lit/decorators.js';
 import Chart from 'chart.js/auto';
+import { resolveColor } from '../utils';
 
 type Slice = {
     color: string,
@@ -31,13 +32,6 @@ export class PartitionMetricElement extends LitElement {
 
     protected override firstUpdated() {
         const series = this.getSeries();
-        const resolveColor = (value: string) => {
-            if (value.startsWith('var(')) {
-                const variable = value.match(/\((.*)\)/)![1];
-                return getComputedStyle(document.documentElement).getPropertyValue(variable);
-            }
-            return value;
-        };
         this.chart = new Chart(this.canvasEl!, {
             type: 'doughnut',
             data: {
