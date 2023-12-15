@@ -25,9 +25,7 @@ class BaseFormatter(typing.Generic[_T]):
     template: str = "ohmyadmin/formatters/string.html"
 
     def format(self, request: Request, value: _T) -> str:
-        return render_to_string(
-            request, self.template, {"formatter": self, "value": value}
-        )
+        return render_to_string(request, self.template, {"formatter": self, "value": value})
 
     def __call__(self, request: Request, value: _T) -> str:
         return self.format(request, value)
@@ -40,27 +38,21 @@ class StringFormatter(BaseFormatter[str]):
 class DateTimeFormatter(BaseFormatter[datetime.datetime]):
     template: str = "ohmyadmin/formatters/datetime.html"
 
-    def __init__(
-        self, format: typing.Literal["short", "medium", "long", "full"] = "medium"
-    ) -> None:
+    def __init__(self, format: typing.Literal["short", "medium", "long", "full"] = "medium") -> None:
         self.value_format = format
 
 
 class DateFormatter(BaseFormatter[datetime.date | datetime.datetime]):
     template: str = "ohmyadmin/formatters/date.html"
 
-    def __init__(
-        self, format: typing.Literal["short", "medium", "long", "full"] = "medium"
-    ) -> None:
+    def __init__(self, format: typing.Literal["short", "medium", "long", "full"] = "medium") -> None:
         self.value_format = format
 
 
 class TimeFormatter(BaseFormatter[datetime.datetime | datetime.time]):
     template: str = "ohmyadmin/formatters/time.html"
 
-    def __init__(
-        self, format: typing.Literal["short", "medium", "long", "full"] = "short"
-    ) -> None:
+    def __init__(self, format: typing.Literal["short", "medium", "long", "full"] = "short") -> None:
         self.value_format = format
 
 
@@ -100,25 +92,19 @@ class LinkFormatter(BaseFormatter[str]):
         else:
             url = self.url
 
-        return render_to_string(
-            request, self.template, {"formatter": self, "value": value, "url": url}
-        )
+        return render_to_string(request, self.template, {"formatter": self, "value": value, "url": url})
 
 
 class NumberFormatter(BaseFormatter[int | float | decimal.Decimal]):
     template: str = "ohmyadmin/formatters/number.html"
 
-    def __init__(
-        self, *, prefix: str = "", suffix: str = "", align: TextAlign = "right"
-    ) -> None:
+    def __init__(self, *, prefix: str = "", suffix: str = "", align: TextAlign = "left") -> None:
         self.prefix = prefix
         self.suffix = suffix
         self.align = align
 
 
-BadgeColor: typing.TypeAlias = typing.Literal[
-    "gray", "red", "yellow", "green", "blue", "indigo", "purple", "pink"
-]
+BadgeColor: typing.TypeAlias = typing.Literal["gray", "red", "yellow", "green", "blue", "indigo", "purple", "pink"]
 
 
 class BadgeFormatter(BaseFormatter[str | int]):
@@ -129,15 +115,11 @@ class BadgeFormatter(BaseFormatter[str | int]):
 
     def format(self, request: Request, value: str | int) -> str:
         color = self.color_map.get(value, "gray")
-        return render_to_string(
-            request, self.template, {"formatter": self, "value": value, "color": color}
-        )
+        return render_to_string(request, self.template, {"formatter": self, "value": value, "color": color})
 
 
 ProgressSize = typing.Literal["xxs", "xs", "sm", "md", "lg"]
-ProgressColor = typing.Literal[
-    "accent", "gray", "red", "yellow", "green", "blue", "indigo", "purple", "pink"
-]
+ProgressColor = typing.Literal["accent", "gray", "red", "yellow", "green", "blue", "indigo", "purple", "pink"]
 
 
 class ProgressFormatter(BaseFormatter[int | float]):

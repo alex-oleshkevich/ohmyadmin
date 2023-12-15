@@ -21,7 +21,7 @@ class Partition(typing.TypedDict):
 
 
 @dataclasses.dataclass
-class PartitionViewModel:
+class _PartitionViewModel:
     series: list[Partition]
 
     @property
@@ -54,11 +54,11 @@ class PartitionMetric(Metric):
         color_generator = self.color_generator()
         labels = self.labels or {}
         colors = self.colors or {}
-        view_model = PartitionViewModel(
+        view_model = _PartitionViewModel(
             series=[
                 {
                     "label": str(labels.get(item["label"], snake_to_sentence(item["label"]))),
-                    "color": colors.get(item.get("color", ""), color_generator.next()),
+                    "color": colors.get(item.get("color", item.get("label", "")), color_generator.next()),
                     "value": item["value"],
                 }
                 for item in value

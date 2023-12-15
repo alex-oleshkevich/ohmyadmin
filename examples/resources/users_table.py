@@ -1,4 +1,3 @@
-from starlette_babel import gettext_lazy as _
 import sqlalchemy as sa
 import wtforms
 from markupsafe import Markup
@@ -7,6 +6,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from examples.models import User
+from ohmyadmin import formatters
 from ohmyadmin.actions import actions, object_actions
 from ohmyadmin.datasources.datasource import DataSource
 from ohmyadmin.datasources.sqlalchemy import get_dbsession, SADataSource
@@ -31,6 +31,7 @@ from ohmyadmin.formatters import (
 )
 from ohmyadmin.htmx import response
 from ohmyadmin.metrics.partition import Partition, PartitionMetric
+from ohmyadmin.metrics.value import ValueMetric, ValueValue
 from ohmyadmin.views.table import Column, TableView
 
 
@@ -89,16 +90,6 @@ async def delete_selected_callback(request: Request, query: DataSource, form: wt
 
 class GenderDistributionMetric(PartitionMetric):
     label = "Gender distribution"
-    colors = {
-        "male": "blue",
-        "female": "red",
-        "unknown": "gray",
-    }
-    labels = {
-        "male": _("Male"),
-        "female": _("Female"),
-        "unknown": _("Unknown"),
-    }
 
     async def calculate(self, request: Request) -> list[Partition]:
         stmt = sa.select(User.gender, sa.func.count("*").label("count")).group_by(User.gender)
@@ -107,12 +98,29 @@ class GenderDistributionMetric(PartitionMetric):
         return [Partition(label=row.gender, value=row.count) for row in rows]
 
 
+class AdultsMetric(ValueMetric):
+    label = "Adults"
+    formatter = formatters.NumberFormatter(suffix="%")
+
+    async def calculate(self, request: Request) -> ValueValue:
+        stmt = (
+            sa.select(sa.func.count("*").label("count"))
+            .select_from(User)
+            .where(sa.func.age(User.birthdate) > sa.text("interval '18 years'"))
+        )
+        result = await get_dbsession(request).execute(stmt)
+        return result.scalars().one()
+
+
 class UsersTable(TableView):
     label = "Users table"
     group = "Demos"
     description = "List all users."
     datasource = SADataSource(User)
-    metrics = (GenderDistributionMetric(),)
+    metrics = (
+        GenderDistributionMetric(),
+        AdultsMetric(),
+    )
     filters = [
         StringFilter("last_name"),
         StringFilter("email"),
