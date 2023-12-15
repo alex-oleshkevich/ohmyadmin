@@ -338,7 +338,7 @@ class ChoiceFilter(Filter[ChoiceFilterForm]):
     async def get_form(self, request: Request) -> ChoiceFilterForm:
         form: ChoiceFilterForm = await super().get_form(request)
         form.choice.coerce = self.coerce
-        form.choice.choices = self.choices
+        form.choice.choices = [("", ""), *self.choices]
         return form
 
     def apply(self, request: Request, query: DataSource, form: ChoiceFilterForm) -> DataSource:
