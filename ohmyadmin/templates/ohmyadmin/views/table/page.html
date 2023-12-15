@@ -16,13 +16,17 @@
                 .querySelectorAll('#datatable input[name="selected"]')
                 .forEach(el => {
                     el.checked = flag;
+                    el.dispatchEvent(new CustomEvent('input'));
                 });
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            document.querySelector('#batch-action-form').addEventListener('htmx:configRequest', (e) => {
-                e.detail.path = e.target.getAttribute('action');
-            });
+            document
+                .querySelector('#batch-action-form')
+                .addEventListener('htmx:configRequest', (e) => {
+                    e.detail.path = e.target.getAttribute('action');
+                    console.log(e);
+                });
         });
     </script>
 
@@ -52,14 +56,11 @@
             </div>
 
             <!-- batch actions -->
-            <div class="w-1/2 flex items-center justify-end" x-data="{action: ''}">
+            <div class="w-1/2 flex items-center justify-end">
                 {% if table.batch_actions %}
-                    <form class="flex items-center gap-2 justify-end max-w-xs w-full" id="batch-action-form"
-                          method="get"
-                          :action="action"
-                          hx-get="{{ request.url.path }}"
-                          hx-target="o-modals"
-                          hx-push-url="false"
+                    <form id="batch-action-form" class="flex items-center gap-2 justify-end max-w-xs w-full"
+                          method="get" :action="action" :hx-get="action" x-data="{action: ''}"
+                          hx-target="o-modals" hx-push-url="false" hx-boost="true"
                     >
                         <select x-model="action">
                             <option value=""></option>
@@ -75,10 +76,9 @@
                     </form>
                 {% endif %}
             </div>
-
         </section>
 
-        <!-- active filters -->
+        <!-- filters -->
         <section id="view-filters" class="flex items-center gap-1 flex-wrap border border-gray-200 p-1 rounded-md">
             {% include 'ohmyadmin/views/table/filters_bar.html' %}
         </section>

@@ -63,7 +63,8 @@ async def create_user_callback(request: Request, form: CreateUserForm) -> Respon
 
 
 async def object_toast_callback(request: Request, query: DataSource) -> Response:
-    return response().toast(f"Object selected: {query}.").close_modal()
+    count = await query.count(request)
+    return response().toast(f"Object selected: {count}.").close_modal()
 
 
 class RowObjectForm(wtforms.Form):
@@ -73,7 +74,8 @@ class RowObjectForm(wtforms.Form):
 
 async def object_form_callback(request: Request, query: DataSource, form: wtforms.Form) -> Response:
     print(form.data)
-    return response().toast(f"Form submitted: {query}.").close_modal().refresh()
+    count = await query.count(request)
+    return response().toast(f"Form submitted: {count}.").close_modal().refresh()
 
 
 async def delete_selected_callback(request: Request, query: DataSource, form: wtforms.Form) -> Response:

@@ -123,6 +123,7 @@ class TableView(View):
                 push_url = push_url.remove_query_params([f.name for f in filter_.form])
         if not request.query_params.get(self.search_param):
             push_url = push_url.remove_query_params(self.search_param)
+        setattr(request, "_url", push_url)  # TODO: fixme
 
         response = render_to_response(
             request,

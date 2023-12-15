@@ -64,7 +64,7 @@
                 {% set pk_value = table.datasource.get_pk(object) %}
                 <th>
                     <div class="flex items-center justify-start">
-                        <input type="checkbox" name="selected" :checked="selected" value="{{ pk_value }}">
+                        <input type="checkbox" name="selected" @input="selected = $el.checked" :checked="selected" value="{{ pk_value }}">
                     </div>
                 </th>
             {% endif %}

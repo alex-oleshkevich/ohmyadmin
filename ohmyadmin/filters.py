@@ -168,7 +168,7 @@ class StringFilterForm(wtforms.Form):
         choices=datasource.StringOperation.choices(),
         coerce=functools.partial(safe_enum_coerce, choices=datasource.StringOperation),
     )
-    query = wtforms.StringField(validators=[wtforms.validators.data_required()], render_kw={"autofocus": "on"})
+    query = wtforms.StringField(render_kw={"autofocus": "on"})
 
 
 class StringFilter(Filter[StringFilterForm]):
@@ -192,7 +192,7 @@ class IntegerFilterForm(wtforms.Form):
         choices=NumberOperation.choices(),
         coerce=functools.partial(safe_enum_coerce, choices=NumberOperation),
     )
-    query = wtforms.IntegerField(validators=[wtforms.validators.data_required()])
+    query = wtforms.IntegerField()
 
 
 class IntegerFilter(Filter[IntegerFilterForm]):
@@ -216,7 +216,7 @@ class FloatFilterForm(wtforms.Form):
         choices=NumberOperation.choices(),
         coerce=functools.partial(safe_enum_coerce, choices=NumberOperation),
     )
-    query = wtforms.FloatField(validators=[wtforms.validators.data_required()])
+    query = wtforms.FloatField()
 
 
 class FloatFilter(IntegerFilter, Filter[FloatFilterForm]):
@@ -228,7 +228,7 @@ class DecimalFilterForm(wtforms.Form):
         choices=NumberOperation.choices(),
         coerce=functools.partial(safe_enum_coerce, choices=NumberOperation),
     )
-    query = wtforms.DecimalField(validators=[wtforms.validators.data_required()])
+    query = wtforms.DecimalField()
 
 
 class DecimalFilter(IntegerFilter, Filter[FloatFilterForm]):
