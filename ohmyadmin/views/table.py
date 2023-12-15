@@ -56,7 +56,7 @@ class Column:
 class TableView(View):
     page_param: typing.ClassVar[str] = "page"
     page_size_param: typing.ClassVar[str] = "page_size"
-    page_size: typing.ClassVar[int] = 50
+    page_size: typing.ClassVar[int] = 25
     page_sizes: typing.ClassVar[typing.Sequence[int]] = [10, 25, 50, 100]
     ordering_param: typing.ClassVar[str] = "ordering"
     template = "ohmyadmin/views/table/page.html"

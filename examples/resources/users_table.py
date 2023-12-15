@@ -159,9 +159,9 @@ class ActivationProgressMetric(ProgressMetric):
 
 
 class UsersTable(TableView):
-    label = "Users table"
-    group = "Demos"
-    description = "List all users."
+    label = "Table view"
+    group = "Views"
+    description = "Demo of table view."
     datasource = SADataSource(User)
     metrics = (
         GenderDistributionMetric(),
