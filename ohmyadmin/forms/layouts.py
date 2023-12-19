@@ -16,10 +16,11 @@ class LayoutBuilder(typing.Protocol):
 
 class BaseLayoutBuilder(abc.ABC):
     def __call__(self, form: wtforms.Form) -> Layout:
-        raise NotImplementedError()
+        return self.build(form)
 
+    @abc.abstractmethod
     def build(self, form: wtforms.Form) -> Layout:
-        return self(form)
+        raise NotImplementedError()
 
 
 class Layout(abc.ABC):
@@ -116,14 +117,20 @@ class RepeatedFormInput(Layout):
         last_index = self.field.last_index
         self.field.pop_entry()
 
-        for subfield in template_field:
-            subfield.render_kw = subfield.render_kw or {}
-            subfield.render_kw.update(
+        def patch_field(field: wtforms.Field) -> None:
+            field.render_kw = field.render_kw or {}
+            field.render_kw.update(
                 {
-                    ":id": "`" + subfield.id.replace(str(last_index), "${index}") + "`",
-                    ":name": "`" + subfield.name.replace(str(last_index), "${index}") + "`",
+                    ":id": "`" + field.id.replace(str(last_index), "${index}") + "`",
+                    ":name": "`" + field.name.replace(str(last_index), "${index}") + "`",
                 }
             )
+
+        try:
+            for subfield in template_field:
+                patch_field(subfield)
+        except TypeError:
+            patch_field(template_field)
 
         return render_to_string(
             request,

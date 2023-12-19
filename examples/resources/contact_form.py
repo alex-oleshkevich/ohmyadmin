@@ -9,7 +9,7 @@ from ohmyadmin import htmx
 from ohmyadmin.actions import actions
 from ohmyadmin.datasources.sqlalchemy import load_choices
 from ohmyadmin.forms import layouts
-from ohmyadmin.forms.layouts import Layout, LayoutBuilder
+from ohmyadmin.forms.layouts import BaseLayoutBuilder, Layout
 from ohmyadmin.views.form import FormView
 
 
@@ -52,7 +52,7 @@ class ProductForm(wtforms.Form):
     attributes = wtforms.FieldList(wtforms.FormField(AttributeForm), min_entries=2)
 
 
-class FormLayout(LayoutBuilder):
+class FormLayout(BaseLayoutBuilder):
     def build(self, form: ProductForm) -> Layout:
         return layouts.GridLayout(
             children=[
@@ -74,7 +74,12 @@ class FormLayout(LayoutBuilder):
                         ),
                         layouts.GroupLayout(
                             label="Image",
-                            children=[layouts.FormInput(form.images)],
+                            children=[
+                                layouts.RepeatedFormInput(
+                                    field=form.images,
+                                    builder=lambda field: layouts.FormInput(field),
+                                ),
+                            ],
                         ),
                         layouts.GroupLayout(
                             label="Pricing",
