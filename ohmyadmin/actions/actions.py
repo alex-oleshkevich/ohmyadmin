@@ -29,6 +29,15 @@ class LinkAction(Action):
 
 
 @dataclasses.dataclass
+class SubmitAction(Action):
+    icon: str = ""
+    label: str = ""
+    name: str = ""
+    variant: ActionVariant = "default"
+    template: str = "ohmyadmin/actions/submit.html"
+
+
+@dataclasses.dataclass
 class EventAction(Action):
     event: str
     icon: str = ""

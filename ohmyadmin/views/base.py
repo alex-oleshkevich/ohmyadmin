@@ -1,3 +1,4 @@
+import abc
 import typing
 
 from starlette.datastructures import URL
@@ -10,7 +11,7 @@ from ohmyadmin.datasources.datasource import DataSource
 from ohmyadmin.menu import MenuItem
 
 
-class View:
+class View(abc.ABC):
     label: str = ""
     description: str = ""
     group: str = ""

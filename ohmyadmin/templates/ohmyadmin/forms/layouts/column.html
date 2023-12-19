@@ -1,0 +1,7 @@
+<!-- column -->
+<div class="column-layout flex flex-col gap-{{ layout.gap }} col-span-{{ layout.colspan }}">
+    {% for child in layout.children %}
+        {{ child.render(request) }}
+    {% endfor %}
+</div>
+<!-- end column -->

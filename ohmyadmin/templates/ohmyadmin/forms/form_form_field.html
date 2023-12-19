@@ -1,0 +1,6 @@
+{% import 'ohmyadmin/forms.html' as forms %}
+<div class="form_subform grid grid-cols-1 gap-5 p-3 bg-gray-50 border border-gray-200 rounded">
+    {% for subfield in field.form %}
+        {{ forms.form_group(subfield) }}
+    {% endfor %}
+</div>

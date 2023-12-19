@@ -1,0 +1,13 @@
+{% extends 'ohmyadmin/app.html' %}
+{% import 'ohmyadmin/icons.html' as icons %}
+
+{% block content %}
+    <form hx-boost="true" hx-include="this" method="post" enctype="multipart/form-data">
+        {% include 'ohmyadmin/views/form/form.html' %}
+        <div class="form-actions">
+            {% for action in form_actions %}
+                {% include action.template %}
+            {% endfor %}
+        </div>
+    </form>
+{% endblock %}

@@ -59,7 +59,6 @@ class TableView(View):
     page_size: typing.ClassVar[int] = 25
     page_sizes: typing.ClassVar[typing.Sequence[int]] = [10, 25, 50, 100]
     ordering_param: typing.ClassVar[str] = "ordering"
-    template = "ohmyadmin/views/table/page.html"
     datasource: typing.ClassVar[DataSource | None] = None
     columns: typing.Sequence[Column] = tuple()
     filters: typing.Sequence[Filter] = tuple()
@@ -70,6 +69,8 @@ class TableView(View):
 
     search_param: str = "search"
     search_placeholder: str = ""
+
+    template = "ohmyadmin/views/table/page.html"
 
     def __init__(self) -> None:
         self.columns = list(self.columns)

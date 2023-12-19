@@ -1,0 +1,17 @@
+<!-- group -->
+<section class="space-y-5">
+    {% if layout.label %}
+        <header>
+            <p class="font-medium text-lg mb-0">{{ layout.label }}</p>
+            {% if layout.description %}
+                <p class="text-gray-600">{{ layout.description }}</p>
+            {% endif %}
+        </header>
+    {% endif %}
+    <main>
+        {% for child in layout.children %}
+            {{ child.render(request) }}
+        {% endfor %}
+    </main>
+</section>
+<!-- end group -->

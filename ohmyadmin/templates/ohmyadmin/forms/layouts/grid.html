@@ -1,0 +1,7 @@
+<!-- grid -->
+<div class="grid-layout grid grid-cols-{{ layout.columns }} gap-{{ layout.gap }} col-span-{{ layout.colspan }}">
+    {% for child in layout.children %}
+        {{ child.render(request) }}
+    {% endfor %}
+</div>
+<!-- end grid -->

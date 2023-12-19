@@ -14,6 +14,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from examples import settings
 from examples.models import User
+from examples.resources.contact_form import ProductFormView
 from examples.resources.users_table import UsersTable
 from ohmyadmin.app import OhMyAdmin
 from ohmyadmin.authentication.policy import AuthPolicy
@@ -50,15 +51,11 @@ class DatabaseSessionMiddleware:
 
 
 class UserPolicy(AuthPolicy):
-    async def authenticate(
-        self, request: Request, identity: str, password: str
-    ) -> BaseUser | None:
+    async def authenticate(self, request: Request, identity: str, password: str) -> BaseUser | None:
         async with async_session() as session:
             stmt = sa.select(User).where(User.email == identity)
             result = await session.scalars(stmt)
-            if (user := result.one_or_none()) and pbkdf2_sha256.verify(
-                password, user.password
-            ):
+            if (user := result.one_or_none()) and pbkdf2_sha256.verify(password, user.password):
                 return user
             return None
 
@@ -81,6 +78,7 @@ admin = OhMyAdmin(
     ),
     views=[
         UsersTable(),
+        ProductFormView(),
     ],
 )
 

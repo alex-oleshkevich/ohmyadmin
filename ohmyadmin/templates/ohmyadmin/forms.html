@@ -26,6 +26,14 @@
     {% include 'ohmyadmin/forms/form_datetime.html' %}
 {% endmacro %}
 
+{% macro form_form_field(field) %}
+    {% include 'ohmyadmin/forms/form_form_field.html' %}
+{% endmacro %}
+
+{% macro form_list_field(field) %}
+    {% include 'ohmyadmin/forms/form_list_field.html' %}
+{% endmacro %}
+
 {% macro form_errors(field) %}
     <div class="form-errors">
         {% for error in field.errors %}
@@ -45,14 +53,24 @@
 {% endmacro %}
 
 {% macro form_field(field) %}
-    {{ form_input(field) }}
-    {{ form_help(field) }}
-    {{ form_errors(field) }}
+    {% if field.type == 'FormField' %}
+        {{ form_form_field(field) }}
+    {% elif field.type == 'FieldList' %}
+        {{ form_list_field(field) }}
+    {% elif field.type == 'BooleanField' %}
+        {{ form_checkbox(field) }}
+    {% else %}
+        {{ form_input(field) }}
+        {{ form_help(field) }}
+        {{ form_errors(field) }}
+    {% endif %}
 {% endmacro %}
 
 {% macro form_group(field, label='') %}
     <div class="form-group">
+        {% if field.type not in ['RadioField', 'BooleanField', 'FormField', 'FieldList'] %}
         {{ label or form_label(field) }}
+        {% endif %}
         {{ form_field(field) }}
     </div>
 {% endmacro %}

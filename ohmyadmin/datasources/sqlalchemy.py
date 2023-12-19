@@ -1,8 +1,10 @@
 import decimal
+import functools
 import typing
 import uuid
 
 import sqlalchemy as sa
+import wtforms
 from sqlalchemy import orm
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
@@ -204,3 +206,24 @@ class SADataSource(DataSource[T]):
 
     def __repr__(self) -> str:  # pragma: no cover
         return repr(self._stmt)
+
+
+async def load_choices(
+    dbsession: AsyncSession,
+    field: wtforms.SelectField,
+    stmt: sa.Select,
+    value_param: str | typing.Callable[[typing.Any], str] = "id",
+    label_param: str | typing.Callable[[typing.Any], str] = "name",
+    empty_choice: bool = True,
+    empty_choice_label: str = "",
+) -> None:
+    def callback(obj: object, attr: str) -> str:
+        return getattr(obj, attr)
+
+    value_getter = value_param if callable(value_param) else functools.partial(callback, attr=value_param)
+    label_getter = label_param if callable(label_param) else functools.partial(callback, attr=label_param)
+
+    rows = await dbsession.execute(stmt)
+    field.choices = [(value_getter(row), label_getter(row)) for row in rows.scalars()]
+    if empty_choice:
+        field.choices.insert(0, ("", empty_choice_label))
