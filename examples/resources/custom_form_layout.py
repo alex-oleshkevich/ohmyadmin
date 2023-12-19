@@ -158,8 +158,8 @@ class FormLayout(BaseLayoutBuilder):
         )
 
 
-class ProductFormView(FormView):
-    label = "Form view"
+class CustomProductFormView(FormView):
+    label = "Custom form layout"
     group = "Views"
     description = "Demo of form view."
     form_class = ProductForm

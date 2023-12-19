@@ -1,4 +1,5 @@
 import pathlib
+
 import sqlalchemy as sa
 from passlib.handlers.pbkdf2 import pbkdf2_sha256
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -14,7 +15,8 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from examples import settings
 from examples.models import User
-from examples.resources.contact_form import ProductFormView
+from examples.resources.custom_form_layout import CustomProductFormView
+from examples.resources.form_view import ProductFormView
 from examples.resources.users_table import UsersTable
 from ohmyadmin.app import OhMyAdmin
 from ohmyadmin.authentication.policy import AuthPolicy
@@ -79,6 +81,7 @@ admin = OhMyAdmin(
     views=[
         UsersTable(),
         ProductFormView(),
+        CustomProductFormView(),
     ],
 )
 
