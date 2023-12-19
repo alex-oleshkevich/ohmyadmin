@@ -1,8 +1,10 @@
+{% import 'ohmyadmin/icons.html' as icons %}
+
 {% macro icon_display(formatter, value) -%}
     {%- if value -%}
-        <span class="text-green-600" data-test="bool-true">{{ tabler_icon('circle-check', 24) }}</span>
+        <span class="text-green-600" data-test="bool-true">{{ icons.circle_check(24) }}</span>
     {%- else -%}
-        <span class="text-red-600" data-test="bool-false">{{ tabler_icon('circle-x', 24) }}</span>
+        <span class="text-red-600" data-test="bool-false">{{ icons.circle_x(24) }}</span>
     {% endif -%}
 {% endmacro -%}
 
@@ -14,7 +16,14 @@
     {% endif -%}
 {% endmacro -%}
 
-<div class="flex justify-center">
+{% set align = 'justify-center' %}
+{% if formatter.align == 'left' %}
+    {% set align = 'justify-start' %}
+{% elif formatter.align == 'right' %}
+    {% set align = 'justify-end' %}
+{% endif %}
+
+<div class="flex {{ align }}">
     {% if formatter.as_text -%}
         {{ badge_display(formatter, value) }}
     {% else -%}

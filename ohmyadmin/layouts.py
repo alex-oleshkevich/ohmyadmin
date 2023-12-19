@@ -6,21 +6,8 @@ import typing
 import wtforms
 from starlette.requests import Request
 
+from ohmyadmin import formatters
 from ohmyadmin.templating import render_to_string
-
-
-class LayoutBuilder(typing.Protocol):
-    def __call__(self, form: wtforms.Form | wtforms.Field) -> Layout:
-        ...
-
-
-class BaseLayoutBuilder(abc.ABC):
-    def __call__(self, form: wtforms.Form) -> Layout:
-        return self.build(form)
-
-    @abc.abstractmethod
-    def build(self, form: wtforms.Form | wtforms.Field) -> Layout:
-        raise NotImplementedError()
 
 
 class Layout(abc.ABC):
@@ -29,7 +16,7 @@ class Layout(abc.ABC):
 
 
 class FormInput(Layout):
-    template: str = "ohmyadmin/forms/layouts/field.html"
+    template: str = "ohmyadmin/layouts/field.html"
 
     def __init__(self, field: wtforms.Field, colspan: int = 1) -> None:
         self.field = field
@@ -47,12 +34,11 @@ class FormInput(Layout):
 
 
 class ColumnLayout(Layout):
-    template: str = "ohmyadmin/forms/layouts/column.html"
+    template: str = "ohmyadmin/layouts/column.html"
 
-    def __init__(self, children: list[Layout], columns: int = 1, gap: int = 5, colspan: int = 12) -> None:
+    def __init__(self, children: list[Layout], gap: int = 3, colspan: int = 12) -> None:
         self.gap = gap
         self.colspan = colspan
-        self.columns = columns
         self.children = children
 
     def render(self, request: Request) -> str:
@@ -67,7 +53,7 @@ class ColumnLayout(Layout):
 
 
 class GridLayout(Layout):
-    template: str = "ohmyadmin/forms/layouts/grid.html"
+    template: str = "ohmyadmin/layouts/grid.html"
 
     def __init__(self, children: list[Layout], columns: int = 12, gap: int = 5, colspan: int = 12) -> None:
         self.gap = gap
@@ -87,7 +73,7 @@ class GridLayout(Layout):
 
 
 class GroupLayout(Layout):
-    template: str = "ohmyadmin/forms/layouts/group.html"
+    template: str = "ohmyadmin/layouts/group.html"
 
     def __init__(
         self,
@@ -113,9 +99,9 @@ class GroupLayout(Layout):
 
 
 class RepeatedFormInput(Layout):
-    template: str = "ohmyadmin/forms/layouts/repeated_form_input.html"
+    template: str = "ohmyadmin/layouts/repeated_form_input.html"
 
-    def __init__(self, field: wtforms.FieldList, builder: LayoutBuilder) -> None:
+    def __init__(self, field: wtforms.FieldList, builder: FormLayoutBuilder) -> None:
         self.field = field
         self.builder = builder
 
@@ -152,9 +138,9 @@ class RepeatedFormInput(Layout):
 
 
 class NestedFormLayout(Layout):
-    template: str = "ohmyadmin/forms/layouts/nested_form.html"
+    template: str = "ohmyadmin/layouts/nested_form.html"
 
-    def __init__(self, field: wtforms.FormField, builder: LayoutBuilder) -> None:
+    def __init__(self, field: wtforms.FormField, builder: FormLayoutBuilder) -> None:
         self.field = field
         self.builder = builder
 
@@ -170,7 +156,66 @@ class NestedFormLayout(Layout):
         )
 
 
-class AutoLayout(BaseLayoutBuilder):
+class TextLayout(Layout):
+    template: str = "ohmyadmin/layouts/text.html"
+
+    def __init__(
+        self,
+        value: typing.Any,
+        formatter: formatters.CellFormatter = formatters.StringFormatter(),
+    ) -> None:
+        self.value = value
+        self.formatter = formatter
+
+    def render(self, request: Request) -> str:
+        return render_to_string(
+            request,
+            self.template,
+            {
+                "layout": self,
+                "value": self.value,
+                "formatted_value": self.formatter(request, self.value),
+            },
+        )
+
+
+class DisplayValueLayout(Layout):
+    def __init__(
+        self,
+        label: str,
+        value: typing.Any,
+        formatter: formatters.CellFormatter = formatters.StringFormatter(),
+    ) -> None:
+        self.label = label
+        self.value = value
+        self.formatter = formatter
+
+    def render(self, request: Request) -> str:
+        layout = GridLayout(
+            columns=12,
+            children=[
+                ColumnLayout(children=[TextLayout(value=self.label)], colspan=4),
+                ColumnLayout(children=[TextLayout(value=self.value, formatter=self.formatter)], colspan=8),
+            ],
+        )
+        return layout.render(request)
+
+
+class FormLayoutBuilder(typing.Protocol):
+    def __call__(self, form: wtforms.Form | wtforms.Field) -> Layout:
+        ...
+
+
+class BaseFormLayoutBuilder(abc.ABC):
+    def __call__(self, form: wtforms.Form) -> Layout:
+        return self.build(form)
+
+    @abc.abstractmethod
+    def build(self, form: wtforms.Form | wtforms.Field) -> Layout:
+        raise NotImplementedError()
+
+
+class AutoLayout(BaseFormLayoutBuilder):
     def build(self, form: wtforms.Form | wtforms.Field) -> Layout:
         return GridLayout(
             columns=12,

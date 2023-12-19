@@ -69,10 +69,12 @@ class BoolFormatter(BaseFormatter[bool]):
         as_text: bool = False,
         true_text: str = _("Yes", domain="ohmyadmin"),
         false_text: str = _("No", domain="ohmyadmin"),
+        align: typing.Literal["left", "center", "right"] = "center",
     ) -> None:
         self.true_text = true_text
         self.false_text = false_text
         self.as_text = as_text
+        self.align = align
 
 
 class AvatarFormatter(BaseFormatter[str]):

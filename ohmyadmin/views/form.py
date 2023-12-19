@@ -9,7 +9,7 @@ from starlette.routing import BaseRoute, Mount, Route
 
 from ohmyadmin.actions import actions
 from ohmyadmin.actions.actions import WithRoute
-from ohmyadmin.forms.layouts import LayoutBuilder, AutoLayout
+from ohmyadmin.layouts import FormLayoutBuilder, AutoLayout
 from ohmyadmin.forms.utils import create_form, validate_on_submit
 from ohmyadmin.templating import render_to_response
 from ohmyadmin.views.base import ExposeViewMiddleware, View
@@ -17,7 +17,7 @@ from ohmyadmin.views.base import ExposeViewMiddleware, View
 
 class FormView(View):
     form_class: typing.Type[wtforms.Form] = wtforms.Form
-    form_layout_class: typing.Type[LayoutBuilder] = AutoLayout
+    layout_class: typing.Type[FormLayoutBuilder] = AutoLayout
     form_actions: typing.Sequence[actions.Action] | None = None
     template = "ohmyadmin/views/form/page.html"
 
@@ -41,7 +41,7 @@ class FormView(View):
         if await validate_on_submit(request, form):
             return await self.handle(request, form)
 
-        form_layout = self.form_layout_class()
+        form_layout = self.layout_class()
         return render_to_response(
             request,
             self.template,

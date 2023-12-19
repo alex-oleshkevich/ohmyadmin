@@ -5,11 +5,10 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from examples.models import Brand, Country
-from ohmyadmin import htmx
+from ohmyadmin import htmx, layouts
 from ohmyadmin.actions import actions
 from ohmyadmin.datasources.sqlalchemy import load_choices
-from ohmyadmin.forms import layouts
-from ohmyadmin.forms.layouts import BaseLayoutBuilder, Layout
+from ohmyadmin.layouts import BaseFormLayoutBuilder, Layout
 from ohmyadmin.views.form import FormView
 
 
@@ -52,7 +51,7 @@ class ProductForm(wtforms.Form):
     attributes = wtforms.FieldList(wtforms.FormField(AttributeForm), min_entries=2)
 
 
-class FormLayout(BaseLayoutBuilder):
+class FormLayout(BaseFormLayoutBuilder):
     def build(self, form: ProductForm) -> Layout:
         return layouts.GridLayout(
             children=[
@@ -163,7 +162,7 @@ class CustomProductFormView(FormView):
     group = "Views"
     description = "Demo of form view."
     form_class = ProductForm
-    form_layout_class = FormLayout
+    layout_class = FormLayout
     form_actions = [
         actions.SubmitAction(label="Submit", variant="accent", name="_save"),
         actions.SubmitAction(label="Submit and continue", name="_save_edit"),
