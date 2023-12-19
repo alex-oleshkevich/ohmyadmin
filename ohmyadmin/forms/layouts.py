@@ -144,6 +144,25 @@ class RepeatedFormInput(Layout):
         )
 
 
+class NestedFormLayout(Layout):
+    template: str = "ohmyadmin/forms/layouts/nested_form.html"
+
+    def __init__(self, field: wtforms.FormField, builder: LayoutBuilder) -> None:
+        self.field = field
+        self.builder = builder
+
+    def render(self, request: Request) -> str:
+        return render_to_string(
+            request,
+            self.template,
+            {
+                "layout": self,
+                "field": self.field,
+                "builder": self.builder,
+            },
+        )
+
+
 class VerticalLayout(BaseLayoutBuilder):
     def build(self, form: wtforms.Form) -> Layout:
         return GridLayout(

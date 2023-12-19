@@ -141,7 +141,15 @@ class FormLayout(BaseLayoutBuilder):
                         layouts.GroupLayout(
                             label="Manufacturer",
                             children=[
-                                layouts.FormInput(form.manufacturer),
+                                layouts.NestedFormLayout(
+                                    field=form.manufacturer,
+                                    builder=lambda field: layouts.ColumnLayout(
+                                        children=[
+                                            layouts.FormInput(field.form.name),
+                                            layouts.FormInput(field.form.country),
+                                        ]
+                                    ),
+                                ),
                             ],
                         ),
                     ],
