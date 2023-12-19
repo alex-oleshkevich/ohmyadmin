@@ -31,7 +31,7 @@ class FormView(View):
         return self.form_actions or []
 
     @abc.abstractmethod
-    async def handle(self, request: Request) -> Response:
+    async def handle(self, request: Request, form: wtforms.Form) -> Response:
         raise NotImplementedError()
 
     async def dispatch(self, request: Request) -> Response:
@@ -39,7 +39,7 @@ class FormView(View):
         form = await create_form(request, self.form_class, instance)
         await self.init_form(request, form)
         if await validate_on_submit(request, form):
-            return await self.handle(request)
+            return await self.handle(request, form)
 
         form_layout = self.form_layout_class()
         return render_to_response(
@@ -50,8 +50,8 @@ class FormView(View):
                 "instance": instance,
                 "page_title": self.label,
                 "page_description": self.description,
+                "form_layout": form_layout(form),
                 "form_actions": self.get_form_actions(),
-                "form_layout": form_layout.build(request, form),
             },
         )
 

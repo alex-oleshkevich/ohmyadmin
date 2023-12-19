@@ -40,6 +40,7 @@ class OhMyAdmin(Router):
         self.jinja_env = jinja2.Environment(
             autoescape=True,
             undefined=jinja2.StrictUndefined,
+            extensions=["jinja2.ext.do"],
             loader=jinja2.ChoiceLoader([jinja2.PackageLoader("ohmyadmin")]),
         )
         self.jinja_env.filters.update({"object_id": id})

@@ -53,7 +53,7 @@ class ProductForm(wtforms.Form):
 
 
 class FormLayout(LayoutBuilder):
-    def build(self, request: Request, form: ProductForm) -> Layout:
+    def build(self, form: ProductForm) -> Layout:
         return layouts.GridLayout(
             children=[
                 layouts.ColumnLayout(
@@ -108,7 +108,16 @@ class FormLayout(LayoutBuilder):
                         layouts.GroupLayout(
                             label="Attributes",
                             children=[
-                                layouts.FormInput(form.attributes),
+                                layouts.RepeatedFormInput(
+                                    form.attributes,
+                                    builder=lambda field: layouts.GridLayout(
+                                        columns=2,
+                                        children=[
+                                            layouts.FormInput(field.form.name),
+                                            layouts.FormInput(field.form.value),
+                                        ],
+                                    ),
+                                ),
                             ],
                         ),
                     ],
@@ -153,5 +162,6 @@ class ProductFormView(FormView):
             tg.start_soon(load_choices, request.state.dbsession, form.brand_id, sa.select(Brand))
             tg.start_soon(load_choices, request.state.dbsession, form.manufacturer.country, sa.select(Country), "code")
 
-    async def handle(self, request: Request) -> Response:
+    async def handle(self, request: Request, form: wtforms.Form) -> Response:
+        print(form.data)
         return htmx.response().toast("Submitted!")
