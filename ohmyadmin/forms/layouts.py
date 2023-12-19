@@ -10,7 +10,7 @@ from ohmyadmin.templating import render_to_string
 
 
 class LayoutBuilder(typing.Protocol):
-    def __call__(self, form: wtforms.Form) -> Layout:
+    def __call__(self, form: wtforms.Form | wtforms.Field) -> Layout:
         ...
 
 
@@ -19,7 +19,7 @@ class BaseLayoutBuilder(abc.ABC):
         return self.build(form)
 
     @abc.abstractmethod
-    def build(self, form: wtforms.Form) -> Layout:
+    def build(self, form: wtforms.Form | wtforms.Field) -> Layout:
         raise NotImplementedError()
 
 
@@ -89,10 +89,17 @@ class GridLayout(Layout):
 class GroupLayout(Layout):
     template: str = "ohmyadmin/forms/layouts/group.html"
 
-    def __init__(self, children: list[Layout], label: str = "", description: str = "") -> None:
+    def __init__(
+        self,
+        children: list[Layout],
+        label: str = "",
+        description: str = "",
+        colspan: int = 12,
+    ) -> None:
         self.label = label
-        self.description = description
+        self.colspan = colspan
         self.children = children
+        self.description = description
 
     def render(self, request: Request) -> str:
         return render_to_string(
@@ -163,14 +170,56 @@ class NestedFormLayout(Layout):
         )
 
 
-class VerticalLayout(BaseLayoutBuilder):
-    def build(self, form: wtforms.Form) -> Layout:
+class AutoLayout(BaseLayoutBuilder):
+    def build(self, form: wtforms.Form | wtforms.Field) -> Layout:
         return GridLayout(
-            children=[
-                ColumnLayout(
-                    colspan=6,
-                    children=[FormInput(field) for field in form],
-                )
-            ],
             columns=12,
+            children=[self.build_for_field(field) for field in form],
         )
+
+    def build_listfield_item(self, field: wtforms.Form) -> Layout:
+        match field:
+            case wtforms.FormField() as form_field:
+                field_count = len(list(form_field))
+                if field_count > 4:
+                    return ColumnLayout(children=[FormInput(subfield) for subfield in form_field])
+                return GridLayout(columns=field_count, children=[FormInput(subfield) for subfield in form_field])
+            case _:
+                return FormInput(field)
+
+    def build_for_field(self, field: wtforms.Field) -> Layout:
+        match field:
+            case wtforms.FieldList() as list_field:
+                return ColumnLayout(
+                    colspan=8,
+                    children=[
+                        GroupLayout(
+                            label=list_field.label.text,
+                            description=list_field.description,
+                            children=[
+                                RepeatedFormInput(
+                                    field=list_field,
+                                    builder=lambda field: self.build_listfield_item(field),
+                                )
+                            ],
+                        )
+                    ],
+                )
+            case wtforms.TextAreaField():
+                return GridLayout(children=[FormInput(field, colspan=6)])
+            case wtforms.IntegerField() | wtforms.FloatField() | wtforms.DecimalField():
+                return GridLayout(children=[FormInput(field, colspan=2)])
+            case wtforms.FormField() as form_field:
+                field_count = len(list(form_field))
+                layout: Layout
+                if field_count > 4:
+                    layout = ColumnLayout(children=[FormInput(subfield) for subfield in form_field])
+                layout = GridLayout(columns=field_count, children=[FormInput(subfield) for subfield in form_field])
+                return GroupLayout(
+                    colspan=8,
+                    label=form_field.label.text,
+                    description=form_field.description,
+                    children=[NestedFormLayout(field=form_field, builder=lambda field: layout)],
+                )
+            case _:
+                return GridLayout(children=[FormInput(field, colspan=4)])
