@@ -4,10 +4,10 @@
     </div>
 {% endmacro %}
 
-{% macro action_button(request, action, view) %}
+{% macro action_button(request, action, view, object_id='') %}
     {% include action.button_template %}
 {% endmacro %}
 
-{% macro action_menu_item(request, action, view) %}
+{% macro action_menu_item(request, action, view, object_id='') %}
     {% include action.dropdown_template %}
 {% endmacro %}

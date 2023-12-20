@@ -1,5 +1,6 @@
 {% import 'ohmyadmin/pagination.html' as pagination %}
 {% import 'ohmyadmin/icons.html' as icons %}
+{% import 'ohmyadmin/actions.html' as actions %}
 
 {% macro render_head_cell(request, column) %}
     {% include 'ohmyadmin/views/table/table_head_cell.html' %}
@@ -80,11 +81,9 @@
                     </div>
                     <o-popover trigger="#object-menu-{{ loop.index0 }}" placement="bottom-end">
                         <div class="dropdown absolute hidden">
-                            <div class="list-menu">
+                            <div class="list-menu" hx-include="this">
                                 {% for row_action in table.row_actions %}
-                                    {% with action=row_action %}
-                                        {% include row_action.template %}
-                                    {% endwith %}
+                                    {{ actions.action_menu_item(request, row_action, view, object.get_pk()) }}
                                 {% endfor %}
                             </div>
                         </div>

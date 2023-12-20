@@ -1,9 +1,10 @@
-{% set confirmation = action.get_confirmation(request, object) %}
-{% set pk_value = object.get_pk() %}
-<button type="button" hx-target="o-modals"
+{% set url = url_for(view.get_action_route_name(action)) %}
+{% if object_id %}
+    {% set url = url.include_query_params(selected=object_id) %}
+{% endif %}
+<button type="button" hx-target="o-modals" hx-push-url="false"
         class="list-menu-item {{ 'danger' if action.dangerous else '' }}"
-        hx-get="{{ url_for(action.get_url_name(view.url_name)).include_query_params(selected=pk_value) }}"
-        {% if confirmation %}hx-confirm="{{ confirmation }}"{% endif %}>
-    {{ action.get_icon(request, object) }}
-    {{ action.get_label(request, object) }}
+        hx-get="{{ url }}">
+    {{ action.icon }}
+    {{ action.label }}
 </button>

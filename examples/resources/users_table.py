@@ -11,7 +11,7 @@ from starlette.responses import Response
 from examples.models import User
 from ohmyadmin import colors, formatters
 from ohmyadmin.actions import actions
-from ohmyadmin.datasources.datasource import DataSource, InFilter
+from ohmyadmin.datasources.datasource import InFilter
 from ohmyadmin.datasources.sqlalchemy import get_dbsession, SADataSource
 from ohmyadmin.filters import (
     ChoiceFilter,
@@ -73,7 +73,9 @@ async def create_user_callback(request: Request, form: CreateUserForm) -> Respon
     return response().toast("New user created!").close_modal()
 
 
-async def object_toast_callback(request: Request, query: DataSource) -> Response:
+async def object_toast_callback(request: Request) -> Response:
+    view: TableView = request.state.view
+    query = view.get_query(request).filter(InFilter("id", request.query_params.get("selected")))
     count = await query.count(request)
     return response().toast(f"Object selected: {count}.").close_modal()
 
@@ -213,6 +215,29 @@ class UsersTable(TableView):
             icon=PLUS_ICON,
         ),
     ]
+    row_actions = [
+        actions.LinkAction(url="/admin", label="Show details"),
+        actions.CallbackAction(label="Show toast", callback=object_toast_callback),
+        actions.CallbackAction(
+            dangerous=True,
+            label="Show toast with confirmation",
+            callback=object_toast_callback,
+            confirmation="Call this dangerous action?",
+        ),
+        actions.ModalAction(
+            label="Form action",
+            callback=object_form_callback,
+            form_class=RowObjectForm,
+            icon=PLUS_ICON,
+        ),
+        actions.ModalAction(
+            label="Dangerous form action",
+            dangerous=True,
+            callback=object_form_callback,
+            form_class=RowObjectForm,
+            icon=PLUS_ICON,
+        ),
+    ]
     actions = [
         actions.LinkAction(url="/admin", label="To Main page"),
         actions.CallbackAction("Show toast", callback=show_toast_callback),
@@ -225,30 +250,6 @@ class UsersTable(TableView):
             callback=create_user_callback,
             modal_description="Create a new user right now!",
         ),
-    ]
-    row_actions = [
-        # object_actions.LinkAction(url="/admin", label="Show details"),
-        # object_actions.LinkAction(url=lambda r, o: f"/admin?id={o.id}", label="Generated URL"),
-        # object_actions.CallbackAction(label="Show toast", callback=object_toast_callback),
-        # object_actions.CallbackAction(
-        #     dangerous=True,
-        #     label="Show toast with confirmation",
-        #     callback=object_toast_callback,
-        #     confirmation="Call this dangerous action?",
-        # ),
-        # object_actions.FormAction(
-        #     label="Form action",
-        #     callback=object_form_callback,
-        #     form_class=RowObjectForm,
-        #     icon=PLUS_ICON,
-        # ),
-        # object_actions.FormAction(
-        #     label="Dangerous form action",
-        #     dangerous=True,
-        #     callback=object_form_callback,
-        #     form_class=RowObjectForm,
-        #     icon=PLUS_ICON,
-        # ),
     ]
 
     columns = [

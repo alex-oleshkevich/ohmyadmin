@@ -59,6 +59,7 @@ ActionCallback: typing.TypeAlias = typing.Callable[[Request], typing.Awaitable[R
 
 class CallbackAction(Action):
     confirmation: str = ""
+    dangerous: bool = False
     button_template: str = "ohmyadmin/actions/callback.html"
     dropdown_template: str = "ohmyadmin/actions/callback_menu.html"
 
@@ -66,7 +67,9 @@ class CallbackAction(Action):
         self,
         label: str = "",
         callback: ActionCallback | None = None,
+        dangerous: bool | None = None,
         icon: str = "",
+        confirmation: str = "",
         variant: ActionVariant = "default",
     ) -> None:
         self.slug = random_slug()
@@ -74,6 +77,8 @@ class CallbackAction(Action):
         self.callback = callback
         self.icon = icon or self.icon
         self.label = label or self.label
+        self.confirmation = confirmation or self.confirmation
+        self.dangerous = self.dangerous if dangerous is None else dangerous
 
     async def dispatch(self, request: Request) -> Response:
         if request.method == "POST":
