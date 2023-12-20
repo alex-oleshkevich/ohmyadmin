@@ -8,7 +8,6 @@ from starlette.responses import Response
 from starlette.routing import BaseRoute, Mount, Route
 
 from ohmyadmin.actions import actions
-from ohmyadmin.actions.actions import WithRoute
 from ohmyadmin.layouts import FormLayoutBuilder, AutoLayout
 from ohmyadmin.forms.utils import create_form, validate_on_submit
 from ohmyadmin.templating import render_to_response
@@ -63,9 +62,10 @@ class FormView(View):
                 Mount(
                     "/actions",
                     routes=[
-                        action.get_route(self.url_name)
+                        Route(
+                            "/" + action.slug, action, name=self.get_action_route_name(action), methods=["get", "post"]
+                        )
                         for action in self.get_form_actions()
-                        if isinstance(action, WithRoute)
                     ],
                     middleware=[
                         Middleware(ExposeViewMiddleware, view=self),
@@ -73,3 +73,6 @@ class FormView(View):
                 ),
             ],
         )
+
+    def get_action_route_name(self, action: actions.Action) -> str:
+        return f"{self.url_name}.actions.{action.slug}"

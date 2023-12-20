@@ -7,7 +7,7 @@ from starlette.responses import Response
 from starlette.routing import BaseRoute, Mount, Route
 
 from ohmyadmin import layouts
-from ohmyadmin.actions.actions import Action, WithRoute
+from ohmyadmin.actions.actions import Action
 from ohmyadmin.actions.object_actions import ObjectAction
 from ohmyadmin.templating import render_to_response
 from ohmyadmin.views.base import ExposeViewMiddleware, View
@@ -28,7 +28,7 @@ class BaseDisplayLayoutBuilder(abc.ABC):
 
 
 class DisplayView(View):
-    actions: typing.Sequence[Action | ObjectAction] = tuple()
+    object_actions: typing.Sequence[Action | ObjectAction] = tuple()
     layout_class: typing.Type[DisplayLayoutBuilder]
     template = "ohmyadmin/views/display/page.html"
 
@@ -37,7 +37,7 @@ class DisplayView(View):
         raise NotImplementedError()
 
     def get_actions(self) -> typing.Sequence[Action]:
-        return [action for action in self.actions]
+        return [action for action in self.object_actions]
 
     async def dispatch(self, request: Request) -> Response:
         instance = await self.get_object(request)
@@ -63,7 +63,10 @@ class DisplayView(View):
                 Mount(
                     "/actions",
                     routes=[
-                        action.get_route(self.url_name) for action in self.actions if isinstance(action, WithRoute)
+                        Route(
+                            "/" + action.slug, action, name=self.get_action_route_name(action), methods=["get", "post"]
+                        )
+                        for action in self.object_actions
                     ],
                     middleware=[
                         Middleware(ExposeViewMiddleware, view=self),
@@ -71,3 +74,6 @@ class DisplayView(View):
                 ),
             ],
         )
+
+    def get_action_route_name(self, action: Action) -> str:
+        return f"{self.url_name}.actions.{action.slug}"

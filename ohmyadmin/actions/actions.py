@@ -54,6 +54,16 @@ class LinkAction(Action):
         return self.url
 
 
+class SubmitAction(Action):
+    def __init__(self, label: str = "", icon: str = "", name: str = "", variant: ActionVariant = "default") -> None:
+        self.name = name
+        self.variant = variant
+        self.icon = icon or self.icon
+        self.label = label or self.label
+
+    button_template: str = "ohmyadmin/actions/submit.html"
+
+
 ActionCallback: typing.TypeAlias = typing.Callable[[Request], typing.Awaitable[Response]]
 
 
