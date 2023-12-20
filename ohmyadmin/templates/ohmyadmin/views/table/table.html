@@ -65,7 +65,7 @@
                 {% set pk_value = object.get_pk() %}
                 <th>
                     <div class="flex items-center justify-start">
-                        <input type="checkbox" name="selected" @input="selected = $el.checked" :checked="selected" value="{{ pk_value }}">
+                        <input type="checkbox" name="object_id" @input="selected = $el.checked" :checked="selected" value="{{ pk_value }}">
                     </div>
                 </th>
             {% endif %}

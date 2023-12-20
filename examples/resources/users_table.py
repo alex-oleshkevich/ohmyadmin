@@ -75,7 +75,7 @@ async def create_user_callback(request: Request, form: CreateUserForm) -> Respon
 
 async def object_toast_callback(request: Request) -> Response:
     view: TableView = request.state.view
-    query = view.get_query(request).filter(InFilter("id", request.query_params.get("selected")))
+    query = view.get_query(request).filter(InFilter("id", request.query_params.get("object_id")))
     count = await query.count(request)
     return response().toast(f"Object selected: {count}.").close_modal()
 
@@ -96,7 +96,7 @@ async def delete_selected_callback(request: Request, form: wtforms.Form) -> Resp
     query = view.get_query(request)
     query = await view.apply_filters(request, query)
     if "__all__" not in request.query_params:
-        query = query.filter(InFilter("id", request.query_params.getlist("selected")))
+        query = query.filter(InFilter("id", request.query_params.getlist("object_id")))
     count = await query.count(request)
     return response().toast(f"Rows deleted: {count}.").close_modal().refresh()
 

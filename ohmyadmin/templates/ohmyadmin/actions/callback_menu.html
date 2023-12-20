@@ -1,7 +1,7 @@
 {% set confirmation = action.confirmation %}
 {% set url = url_for(view.get_action_route_name(action)) %}
 {% if object_id %}
-    {% set url = url.include_query_params(selected=object_id) %}
+    {% set url = url.include_query_params(object_id=object_id) %}
 {% endif %}
 <button type="button" hx-target="o-modals" hx-push-url="false"
         class="list-menu-item {{ 'danger' if action.dangerous else '' }}"
