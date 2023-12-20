@@ -5,7 +5,9 @@ from sqlalchemy.orm import joinedload, selectinload
 from starlette.requests import Request
 
 from examples.models import Product
+from examples.resources.users_table import create_user_callback, CreateUserForm, PLUS_ICON, show_toast_callback
 from ohmyadmin import formatters, layouts
+from ohmyadmin.actions import actions
 from ohmyadmin.views.display import BaseDisplayLayoutBuilder, DisplayView
 
 
@@ -17,6 +19,13 @@ class ProductLayout(BaseDisplayLayoutBuilder):
                     colspan=6,
                     children=[
                         layouts.DisplayValueLayout(label="Name", value=instance.name),
+                        layouts.DisplayValueLayout(
+                            label="Brand",
+                            value=instance.brand.name,
+                            formatter=formatters.LinkFormatter(
+                                url="/admin",
+                            ),
+                        ),
                         layouts.DisplayValueLayout(
                             label="Categories", value=", ".join([c.name for c in instance.categories]) or "-"
                         ),
@@ -33,6 +42,7 @@ class ProductLayout(BaseDisplayLayoutBuilder):
                             value=instance.can_be_returned,
                             formatter=formatters.BoolFormatter(align="left"),
                         ),
+                        layouts.SeparatorLayout(),
                         layouts.DisplayValueLayout(
                             label="Availability",
                             value=instance.availability,
@@ -48,13 +58,7 @@ class ProductLayout(BaseDisplayLayoutBuilder):
                             value=instance.updated_at,
                             formatter=formatters.DateFormatter(),
                         ),
-                        layouts.DisplayValueLayout(
-                            label="Brand",
-                            value=instance.brand.name,
-                            formatter=formatters.LinkFormatter(
-                                url="/admin",
-                            ),
-                        ),
+                        layouts.SeparatorLayout(),
                         layouts.GroupLayout(
                             label="Pricing",
                             children=[
@@ -102,6 +106,42 @@ class ProductView(DisplayView):
     group = "Views"
     description = "Demo of display view."
     layout_class = ProductLayout
+    actions = [
+        actions.LinkAction(url="/admin", label="To Main page"),
+        actions.CallFunctionAction(function="alert", args=["kek"], label="Show alert"),
+        actions.EventAction(event="refresh", variant="text", label="Refresh data"),
+        actions.CallbackAction(show_toast_callback, label="Show toast", variant="danger"),
+        actions.FormAction(
+            icon=PLUS_ICON,
+            label="New User",
+            variant="accent",
+            modal_title="Create user",
+            form_class=CreateUserForm,
+            callback=create_user_callback,
+            modal_description="Create a new user right now!",
+        ),
+        # object_actions.LinkAction(url=lambda r, o: f"/admin?id={o.id}", label="Generated URL"),
+        # object_actions.CallbackAction(label="Show toast", callback=object_toast_callback),
+        # object_actions.CallbackAction(
+        #     dangerous=True,
+        #     label="Show toast with confirmation",
+        #     callback=object_toast_callback,
+        #     confirmation="Call this dangerous action?",
+        # ),
+        # object_actions.FormAction(
+        #     label="Form action",
+        #     callback=object_form_callback,
+        #     form_class=RowObjectForm,
+        #     icon=PLUS_ICON,
+        # ),
+        # object_actions.FormAction(
+        #     label="Dangerous form action",
+        #     dangerous=True,
+        #     callback=object_form_callback,
+        #     form_class=RowObjectForm,
+        #     icon=PLUS_ICON,
+        # ),
+    ]
 
     async def get_object(self, request: Request) -> typing.Any:
         stmt = sa.select(Product).limit(1).options(joinedload(Product.brand), selectinload(Product.categories))

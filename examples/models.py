@@ -43,6 +43,9 @@ class User(BaseUser, Base):
     def display_name(self) -> str:
         return f"{self.first_name} {self.last_name}"
 
+    def get_pk(self) -> int:
+        return self.id
+
     def __str__(self) -> str:
         return self.display_name
 
@@ -180,6 +183,9 @@ class Product(Base):
     images: Mapped[list[Image]] = relationship("Image", cascade="all, delete-orphan")
     comments: Mapped[list[Comment]] = relationship("Comment", cascade="all, delete-orphan")
     categories: Mapped[list[Category]] = relationship("Category", secondary=product_categories)
+
+    def get_pk(self) -> int:
+        return self.id
 
     def __str__(self) -> str:
         return self.name or "n/a"

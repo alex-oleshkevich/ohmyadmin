@@ -52,7 +52,7 @@
         </aside>
         <article class="h-screen flex-grow-0 overflow-y-auto w-full p-10">
             <header class="flex justify-between gap-5 mb-10">
-                <div>
+                <div class="flex-shrink-0">
                     <h1 class="text-2xl font-semibold mb-1">
                         {% block page_title %}{% if page_title is defined %}{{ page_title }}{% endif %}{% endblock %}
                     </h1>
@@ -60,7 +60,7 @@
                         <div>{{ page_description }}</div>
                     {% endif %}
                 </div>
-                <div class="flex items-center gap-2 justify-end">
+                <div class="flex items-center gap-2 justify-end flex-wrap">
                     {% block page_actions %}{% endblock %}
                 </div>
             </header>

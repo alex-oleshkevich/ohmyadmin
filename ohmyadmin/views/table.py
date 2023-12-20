@@ -133,6 +133,7 @@ class TableView(View):
             template,
             {
                 "table": self,
+                "view": self,
                 "objects": rows,
                 "sorting": sorting,
                 "page_title": self.label,

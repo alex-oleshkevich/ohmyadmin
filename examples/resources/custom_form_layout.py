@@ -130,6 +130,7 @@ class FormLayout(BaseFormLayoutBuilder):
                     colspan=4,
                     children=[
                         layouts.GroupLayout(label="Brand", children=[layouts.FormInput(form.brand_id)]),
+                        layouts.SeparatorLayout(),
                         layouts.GroupLayout(
                             label="",
                             children=[
@@ -137,6 +138,7 @@ class FormLayout(BaseFormLayoutBuilder):
                                 layouts.FormInput(form.can_be_returned),
                             ],
                         ),
+                        layouts.SeparatorLayout(),
                         layouts.GroupLayout(
                             label="Manufacturer",
                             children=[

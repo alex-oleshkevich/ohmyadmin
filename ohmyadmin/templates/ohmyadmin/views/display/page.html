@@ -1,6 +1,14 @@
 {% extends 'ohmyadmin/app.html' %}
 {% import 'ohmyadmin/icons.html' as icons %}
 
+{% block page_actions %}
+    {% for action in view.get_actions() %}
+        {% with action=action, object=object %}
+            {% include action.template %}
+        {% endwith %}
+    {% endfor %}
+{% endblock %}
+
 {% block content %}
     {{ layout.render(request) }}
 {% endblock %}

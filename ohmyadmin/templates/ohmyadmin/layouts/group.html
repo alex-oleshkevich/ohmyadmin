@@ -1,10 +1,10 @@
 <!-- group -->
-<section class="space-y-5 col-span-{{ layout.colspan }}">
+<section class="mt-4 col-span-{{ layout.colspan }}">
     {% if layout.label %}
-        <header>
-            <p class="font-medium text-lg mb-0">{{ layout.label }}</p>
+        <header class="space-y-3 mb-3">
+            <div class="font-medium text-lg">{{ layout.label }}</div>
             {% if layout.description %}
-                <p class="text-gray-600">{{ layout.description }}</p>
+                <div class="text-gray-600">{{ layout.description }}</div>
             {% endif %}
         </header>
     {% endif %}

@@ -2917,6 +2917,14 @@ body {
   flex-grow: 0;
 }
 
+.basis-auto {
+  flex-basis: auto;
+}
+
+.basis-\[max-content\] {
+  flex-basis: max-content;
+}
+
 .translate-y-12 {
   --tw-translate-y: 3rem;
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));

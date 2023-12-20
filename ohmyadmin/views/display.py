@@ -36,6 +36,9 @@ class DisplayView(View):
     async def get_object(self, request: Request) -> typing.Any:
         raise NotImplementedError()
 
+    def get_actions(self) -> typing.Sequence[Action]:
+        return [action for action in self.actions]
+
     async def dispatch(self, request: Request) -> Response:
         instance = await self.get_object(request)
         layout_builder = self.layout_class()
@@ -44,10 +47,11 @@ class DisplayView(View):
             self.template,
             {
                 "view": self,
-                "instance": instance,
+                "object": instance,
                 "page_title": self.label,
                 "page_description": self.description,
                 "layout": layout_builder(instance),
+                "is_object_action": lambda action: isinstance(action, ObjectAction),
             },
         )
 

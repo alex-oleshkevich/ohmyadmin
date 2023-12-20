@@ -4,6 +4,7 @@ import abc
 import typing
 
 import wtforms
+from markupsafe import Markup
 from starlette.requests import Request
 
 from ohmyadmin import formatters
@@ -177,6 +178,19 @@ class TextLayout(Layout):
                 "formatted_value": self.formatter(request, self.value),
             },
         )
+
+
+class RawHTMLLayout(Layout):
+    def __init__(self, content: str) -> None:
+        self.content = Markup(content)
+
+    def render(self, request: Request) -> str:
+        return self.content
+
+
+class SeparatorLayout(Layout):
+    def render(self, request: Request) -> str:
+        return RawHTMLLayout("<hr>").render(request)
 
 
 class DisplayValueLayout(Layout):
