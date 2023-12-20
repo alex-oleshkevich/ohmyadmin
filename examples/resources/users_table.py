@@ -10,7 +10,7 @@ from starlette.responses import Response
 
 from examples.models import User
 from ohmyadmin import colors, formatters
-from ohmyadmin.actions import actions, object_actions
+from ohmyadmin.actions import actions
 from ohmyadmin.datasources.datasource import DataSource
 from ohmyadmin.datasources.sqlalchemy import get_dbsession, SADataSource
 from ohmyadmin.filters import (
@@ -202,10 +202,8 @@ class UsersTable(TableView):
     ]
     actions = [
         actions.LinkAction(url="/admin", label="To Main page"),
-        actions.CallFunctionAction(function="alert", args=["kek"], label="Show alert"),
-        actions.EventAction(event="refresh", variant="text", label="Refresh data"),
-        actions.CallbackAction(show_toast_callback, label="Show toast", variant="danger"),
-        actions.FormAction(
+        actions.CallbackAction("Show toast", callback=show_toast_callback),
+        actions.ModalAction(
             icon=PLUS_ICON,
             label="New User",
             variant="accent",
@@ -216,37 +214,37 @@ class UsersTable(TableView):
         ),
     ]
     row_actions = [
-        object_actions.LinkAction(url="/admin", label="Show details"),
-        object_actions.LinkAction(url=lambda r, o: f"/admin?id={o.id}", label="Generated URL"),
-        object_actions.CallbackAction(label="Show toast", callback=object_toast_callback),
-        object_actions.CallbackAction(
-            dangerous=True,
-            label="Show toast with confirmation",
-            callback=object_toast_callback,
-            confirmation="Call this dangerous action?",
-        ),
-        object_actions.FormAction(
-            label="Form action",
-            callback=object_form_callback,
-            form_class=RowObjectForm,
-            icon=PLUS_ICON,
-        ),
-        object_actions.FormAction(
-            label="Dangerous form action",
-            dangerous=True,
-            callback=object_form_callback,
-            form_class=RowObjectForm,
-            icon=PLUS_ICON,
-        ),
+        # object_actions.LinkAction(url="/admin", label="Show details"),
+        # object_actions.LinkAction(url=lambda r, o: f"/admin?id={o.id}", label="Generated URL"),
+        # object_actions.CallbackAction(label="Show toast", callback=object_toast_callback),
+        # object_actions.CallbackAction(
+        #     dangerous=True,
+        #     label="Show toast with confirmation",
+        #     callback=object_toast_callback,
+        #     confirmation="Call this dangerous action?",
+        # ),
+        # object_actions.FormAction(
+        #     label="Form action",
+        #     callback=object_form_callback,
+        #     form_class=RowObjectForm,
+        #     icon=PLUS_ICON,
+        # ),
+        # object_actions.FormAction(
+        #     label="Dangerous form action",
+        #     dangerous=True,
+        #     callback=object_form_callback,
+        #     form_class=RowObjectForm,
+        #     icon=PLUS_ICON,
+        # ),
     ]
     batch_actions = [
-        object_actions.BatchAction(label="Delete selected row", dangerous=True, callback=delete_selected_callback),
-        object_actions.BatchAction(
-            label="Batch Update",
-            callback=object_form_callback,
-            form_class=RowObjectForm,
-            icon=PLUS_ICON,
-        ),
+        # object_actions.BatchAction(label="Delete selected row", dangerous=True, callback=delete_selected_callback),
+        # object_actions.BatchAction(
+        #     label="Batch Update",
+        #     callback=object_form_callback,
+        #     form_class=RowObjectForm,
+        #     icon=PLUS_ICON,
+        # ),
     ]
     columns = [
         Column("photo", formatter=AvatarFormatter()),

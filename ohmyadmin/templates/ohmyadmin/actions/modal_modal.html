@@ -1,0 +1,22 @@
+{% import 'ohmyadmin/forms.html' as forms %}
+{% set button_class = 'danger' if action.dangerous else 'accent' %}
+
+<dialog class="modal" data-autoopen hx-swap="outerHTML" hx-target="this">
+    <form class="modal-dialog">
+        <header>{{ action.modal_title or action.label }}</header>
+        <main>
+            {% if action.modal_description %}
+                <p>{{ action.modal_description }}</p>
+            {% endif %}
+            {{ form_layout.render(request) }}
+        </main>
+        <footer>
+            <button type="submit" class="btn btn-{{ button_class }}" hx-post="{{ request.url }}">
+                {{ _('Submit') }}
+            </button>
+            <button type="button" @click="ohmyadmin.modals.closeActive;" class="btn btn-text">
+                {{ _('Cancel') }}
+            </button>
+        </footer>
+    </form>
+</dialog>

@@ -5,9 +5,7 @@ from sqlalchemy.orm import joinedload, selectinload
 from starlette.requests import Request
 
 from examples.models import Product
-from examples.resources.users_table import create_user_callback, CreateUserForm, PLUS_ICON, show_toast_callback
 from ohmyadmin import formatters, layouts
-from ohmyadmin.actions import actions
 from ohmyadmin.views.display import BaseDisplayLayoutBuilder, DisplayView
 
 
@@ -107,19 +105,19 @@ class ProductView(DisplayView):
     description = "Demo of display view."
     layout_class = ProductLayout
     actions = [
-        actions.LinkAction(url="/admin", label="To Main page"),
-        actions.CallFunctionAction(function="alert", args=["kek"], label="Show alert"),
-        actions.EventAction(event="refresh", variant="text", label="Refresh data"),
-        actions.CallbackAction(show_toast_callback, label="Show toast", variant="danger"),
-        actions.FormAction(
-            icon=PLUS_ICON,
-            label="New User",
-            variant="accent",
-            modal_title="Create user",
-            form_class=CreateUserForm,
-            callback=create_user_callback,
-            modal_description="Create a new user right now!",
-        ),
+        # actions.LinkAction(url="/admin", label="To Main page"),
+        # actions.CallFunctionAction(function="alert", args=["kek"], label="Show alert"),
+        # actions.EventAction(event="refresh", variant="text", label="Refresh data"),
+        # actions.CallbackAction(show_toast_callback, label="Show toast", variant="danger"),
+        # actions.FormAction(
+        #     icon=PLUS_ICON,
+        #     label="New User",
+        #     variant="accent",
+        #     modal_title="Create user",
+        #     form_class=CreateUserForm,
+        #     callback=create_user_callback,
+        #     modal_description="Create a new user right now!",
+        # ),
         # object_actions.LinkAction(url=lambda r, o: f"/admin?id={o.id}", label="Generated URL"),
         # object_actions.CallbackAction(label="Show toast", callback=object_toast_callback),
         # object_actions.CallbackAction(

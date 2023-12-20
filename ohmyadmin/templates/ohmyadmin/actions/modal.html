@@ -1,6 +1,7 @@
 <button type="button" class="btn btn-{{ action.variant }}"
+        hx-target="o-modals"
         hx-push-url="false"
-        hx-post="{{ url_for(view.get_action_route_name(action)) }}">
+        hx-get="{{ url_for(view.get_action_route_name(action)) }}">
     {{ action.icon }}
     {{ action.label }}
 </button>

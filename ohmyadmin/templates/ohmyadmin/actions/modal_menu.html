@@ -1,0 +1,9 @@
+{% set confirmation = action.get_confirmation(request, object) %}
+{% set pk_value = object.get_pk() %}
+<button type="button" hx-target="o-modals"
+        class="list-menu-item {{ 'danger' if action.dangerous else '' }}"
+        hx-get="{{ url_for(action.get_url_name(view.url_name)).include_query_params(selected=pk_value) }}"
+        {% if confirmation %}hx-confirm="{{ confirmation }}"{% endif %}>
+    {{ action.get_icon(request, object) }}
+    {{ action.get_label(request, object) }}
+</button>

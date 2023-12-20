@@ -8,8 +8,7 @@ from starlette.routing import BaseRoute, Mount, Route
 from starlette_babel import gettext_lazy as _
 
 from ohmyadmin import htmx
-from ohmyadmin.actions.actions import Action, WithRoute
-from ohmyadmin.actions.object_actions import FormAction, ObjectAction
+from ohmyadmin.actions.actions import Action, ModalAction
 from ohmyadmin.datasources.datasource import DataSource
 from ohmyadmin.filters import Filter, OrderingFilter, SearchFilter
 from ohmyadmin.formatters import CellFormatter, StringFormatter
@@ -63,8 +62,8 @@ class TableView(View):
     columns: typing.Sequence[Column] = tuple()
     filters: typing.Sequence[Filter] = tuple()
     actions: typing.Sequence[Action] = tuple()
-    row_actions: typing.Sequence[ObjectAction] = tuple()
-    batch_actions: typing.Sequence[FormAction] = tuple()
+    row_actions: typing.Sequence[Action] = tuple()
+    batch_actions: typing.Sequence[ModalAction] = tuple()
     metrics: typing.Sequence[Metric] = tuple()
 
     search_param: str = "search"
@@ -152,18 +151,10 @@ class TableView(View):
                 Mount(
                     "/actions",
                     routes=[
-                        action.get_route(self.url_name) for action in self.actions if isinstance(action, WithRoute)
-                    ],
-                    middleware=[
-                        Middleware(ExposeViewMiddleware, view=self),
-                    ],
-                ),
-                Mount(
-                    "/object-actions",
-                    routes=[
-                        action.get_route(self.url_name)
-                        for action in [*self.row_actions, *self.batch_actions]
-                        if isinstance(action, WithRoute)
+                        Route(
+                            "/" + action.slug, action, name=self.get_action_route_name(action), methods=["get", "post"]
+                        )
+                        for action in [*self.actions, *self.row_actions, *self.batch_actions]
                     ],
                     middleware=[
                         Middleware(ExposeViewMiddleware, view=self),
@@ -178,3 +169,6 @@ class TableView(View):
                 ),
             ],
         )
+
+    def get_action_route_name(self, action: Action) -> str:
+        return f"{self.url_name}.actions.{action.slug}"

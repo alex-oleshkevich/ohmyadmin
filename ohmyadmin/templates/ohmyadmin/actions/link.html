@@ -1,4 +1,4 @@
-<a href="{{ action.url }}" class="btn btn-link" target="{{ action.target }}" >
+<a href="{{ action.get_url(request) }}" class="btn btn-link" target="{{ action.target }}">
     {{ action.icon }}
     {{ action.label }}
 </a>

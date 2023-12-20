@@ -6,7 +6,6 @@ from starlette.responses import Response
 
 from examples.models import Brand, Country
 from ohmyadmin import htmx, layouts
-from ohmyadmin.actions import actions
 from ohmyadmin.datasources.sqlalchemy import load_choices
 from ohmyadmin.layouts import BaseFormLayoutBuilder, Layout
 from ohmyadmin.views.form import FormView
@@ -166,9 +165,9 @@ class CustomProductFormView(FormView):
     form_class = ProductForm
     layout_class = FormLayout
     form_actions = [
-        actions.SubmitAction(label="Submit", variant="accent", name="_save"),
-        actions.SubmitAction(label="Submit and continue", name="_save_edit"),
-        actions.LinkAction(url="/admin/", label="Cancel"),
+        # actions.SubmitAction(label="Submit", variant="accent", name="_save"),
+        # actions.SubmitAction(label="Submit and continue", name="_save_edit"),
+        # actions.LinkAction(url="/admin/", label="Cancel"),
     ]
 
     async def init_form(self, request: Request, form: ProductForm) -> None:

@@ -1,0 +1,13 @@
+{% macro action_toolbar() %}
+    <div class="flex items-center gap-2 justify-end flex-wrap">
+        {{ caller() }}
+    </div>
+{% endmacro %}
+
+{% macro action_button(request, action, view) %}
+    {% include action.button_template %}
+{% endmacro %}
+
+{% macro action_menu_item(request, action, view) %}
+    {% include action.dropdown_template %}
+{% endmacro %}

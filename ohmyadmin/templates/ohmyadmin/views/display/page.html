@@ -1,12 +1,13 @@
 {% extends 'ohmyadmin/app.html' %}
 {% import 'ohmyadmin/icons.html' as icons %}
+{% import 'ohmyadmin/actions.html' as actions %}
 
 {% block page_actions %}
-    {% for action in view.get_actions() %}
-        {% with action=action, object=object %}
-            {% include action.template %}
-        {% endwith %}
-    {% endfor %}
+    {% call actions.action_toolbar() %}
+        {% for action in view.get_actions() %}
+            {% actions. %}
+        {% endfor %}
+    {% endcall %}
 {% endblock %}
 
 {% block content %}

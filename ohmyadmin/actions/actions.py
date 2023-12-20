@@ -1,145 +1,170 @@
 import abc
-import dataclasses
+import random
 import typing
 
 import wtforms
-from slugify import slugify
+from starlette.exceptions import HTTPException
 from starlette.requests import Request
 from starlette.responses import Response
-from starlette.routing import BaseRoute, Route
 from starlette.types import Receive, Scope, Send
-from starlette_babel import gettext_lazy as _
 
+from ohmyadmin import htmx, layouts
+from ohmyadmin.forms.utils import create_form, validate_on_submit
+from ohmyadmin.layouts import BaseFormLayoutBuilder, FormLayoutBuilder, Layout
 from ohmyadmin.templating import render_to_response
 
 ActionVariant = typing.Literal["accent", "default", "text", "danger"]
 
 
+def random_slug() -> str:
+    return "action-{id}".format(id=random.randint(100_000, 999_999))
+
+
 class Action:
-    ...
-
-
-@dataclasses.dataclass
-class LinkAction(Action):
-    url: str
-    icon: str = ""
-    target: typing.Literal["", "_blank"] = ""
-    label: str = dataclasses.field(default_factory=lambda: _("Unlabeled"))
-    template: str = "ohmyadmin/actions/link.html"
-
-
-@dataclasses.dataclass
-class SubmitAction(Action):
     icon: str = ""
     label: str = ""
-    name: str = ""
-    variant: ActionVariant = "default"
-    template: str = "ohmyadmin/actions/submit.html"
-
-
-@dataclasses.dataclass
-class EventAction(Action):
-    event: str
-    icon: str = ""
-    trigger_from: str = "body"
-    label: str = dataclasses.field(default_factory=lambda: _("Unlabeled"))
-    data: typing.Any = None
-    variant: ActionVariant = "default"
-    template: str = "ohmyadmin/actions/event.html"
-
-
-@dataclasses.dataclass
-class CallFunctionAction(Action):
-    function: str
-    icon: str = ""
-    label: str = dataclasses.field(default_factory=lambda: _("Unlabeled"))
-    args: list[typing.Any] = dataclasses.field(default_factory=list)
-    variant: ActionVariant = "default"
-    template: str = "ohmyadmin/actions/call_function.html"
-
-
-CallbackActionHandler = typing.Callable[[Request], typing.Awaitable[Response]]
-
-
-class WithRoute(abc.ABC):
-    @abc.abstractmethod
-    def get_slug(self) -> str:
-        raise NotImplementedError()
-
-    def get_url_name(self, url_name_prefix: str) -> str:
-        return url_name_prefix + ".action." + self.get_slug()
-
-    def get_route(self, url_name_prefix: str) -> BaseRoute:
-        return Route(
-            "/" + self.get_slug(),
-            self,
-            name=self.get_url_name(url_name_prefix),
-            methods=["get", "post", "put", "patch", "delete"],
-        )
-
-    @abc.abstractmethod
-    async def dispatch(self, request: Request) -> Response:
-        raise NotImplementedError()
+    slug: str = ""
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         request = Request(scope, receive, send)
         response = await self.dispatch(request)
         await response(scope, receive, send)
 
+    async def dispatch(self, request: Request) -> Response:
+        raise NotImplementedError()
 
-@dataclasses.dataclass
-class CallbackAction(Action, WithRoute):
-    callback: CallbackActionHandler
-    icon: str = ""
-    request_method: typing.Literal["GET", "POST", "PUT", "PATCH", "DELETE"] = "GET"
-    label: str = dataclasses.field(default_factory=lambda: _("Unlabeled"))
-    variant: ActionVariant = "default"
-    slug: str = ""
-    template: str = "ohmyadmin/actions/callback.html"
+
+class LinkAction(Action):
+    button_template: str = "ohmyadmin/actions/link.html"
+    dropdown_template: str = "ohmyadmin/actions/link_menu.html"
+
+    def __init__(
+        self,
+        url: str = "",
+        target: typing.Literal["", "_blank"] = "",
+        label: str = "",
+        icon: str = "",
+    ) -> None:
+        self.url = url
+        self.target = target
+        self.icon = icon or self.icon
+        self.label = label or self.label
+
+    def get_url(self, request: Request) -> str:
+        return self.url
+
+
+ActionCallback: typing.TypeAlias = typing.Callable[[Request], typing.Awaitable[Response]]
+
+
+class CallbackAction(Action):
+    confirmation: str = ""
+    button_template: str = "ohmyadmin/actions/callback.html"
+    dropdown_template: str = "ohmyadmin/actions/callback_menu.html"
+
+    def __init__(
+        self,
+        label: str = "",
+        callback: ActionCallback | None = None,
+        icon: str = "",
+        variant: ActionVariant = "default",
+    ) -> None:
+        self.slug = random_slug()
+        self.variant = variant
+        self.callback = callback
+        self.icon = icon or self.icon
+        self.label = label or self.label
 
     async def dispatch(self, request: Request) -> Response:
-        return await self.callback(request)
+        if request.method == "POST":
+            return await self.handle(request)
+        raise HTTPException(405, "Method not allowed")
 
-    def get_slug(self) -> str:
-        return self.slug or slugify(self.label or str(id(self)))
+    async def handle(self, request: Request) -> Response:
+        if self.callback:
+            return await self.callback(request)
+        raise NotImplementedError()
 
 
-F = typing.TypeVar("F", bound=wtforms.Form)
-FormActionHandler = typing.Callable[[Request, F], typing.Awaitable[Response]]
+ModalActionCallback: typing.TypeAlias = typing.Callable[[Request, wtforms.Form], typing.Awaitable[Response]]
 
 
-@dataclasses.dataclass
-class FormAction(Action, WithRoute):
-    callback: FormActionHandler
-    form_class: typing.Type[wtforms.Form]
-    icon: str = ""
-    slug: str = ""
+class ModalFormLayout(BaseFormLayoutBuilder):
+    def build(self, form: wtforms.Form | wtforms.Field) -> Layout:
+        return layouts.ColumnLayout([layouts.FormInput(field) for field in form])
+
+
+class ModalAction(Action):
+    dangerous: bool = False
     variant: ActionVariant = "default"
-    template: str = "ohmyadmin/actions/form.html"
+    form_class: type[wtforms.Form] = wtforms.Form
+    form_builder_class: type[FormLayoutBuilder] = ModalFormLayout
     modal_title: str = ""
-    label: str = dataclasses.field(default_factory=lambda: _("Unlabeled"))
-
     modal_description: str = ""
-    modal_template: str = "ohmyadmin/actions/form_modal.html"
+    button_template: str = "ohmyadmin/actions/modal.html"
+    modal_template: str = "ohmyadmin/actions/modal_modal.html"
+    dropdown_template: str = "ohmyadmin/actions/modal_menu.html"
 
-    def get_slug(self) -> str:
-        return self.slug or slugify(self.label or str(id(self)))
-
-    async def create_form(self, request: Request) -> wtforms.Form:
-        form = self.form_class(formdata=await request.form() if request.method == "POST" else None)
-        await self.initialize_form(request, form)
-        return form
+    def __init__(
+        self,
+        label: str = "",
+        callback: ModalActionCallback | None = None,
+        form_class: type[wtforms.Form] | None = None,
+        dangerous: bool | None = None,
+        icon: str = "",
+        variant: ActionVariant = "default",
+        form_builder_class: type[FormLayoutBuilder] | None = None,
+        modal_title: str = "",
+        modal_description: str = "",
+    ) -> None:
+        self.slug = random_slug()
+        self.variant = variant
+        self.callback = callback
+        self.modal_title = modal_title
+        self.modal_description = modal_description
+        self.icon = icon or self.icon
+        self.label = label or self.label
+        self.form_class = form_class or self.form_class
+        self.dangerous = self.dangerous if dangerous is None else dangerous
+        self.form_builder_class = form_builder_class or self.form_builder_class
 
     async def initialize_form(self, request: Request, form: wtforms.Form) -> None:
         pass
 
-    async def validate_form(self, request: Request, form: wtforms.Form) -> None:
-        form.validate()
+    async def get_form_object(self, request: Request) -> typing.Any:
+        return None
+
+    def all_selected(self, request: Request) -> bool:
+        return "__all__" in request.query_params
+
+    def get_object_ids(self, request: Request) -> typing.Sequence[str]:
+        return request.query_params.getlist("object_id")
 
     async def dispatch(self, request: Request) -> Response:
-        form = await self.create_form(request)
-        if request.method == "POST":
-            await self.validate_form(request, form)
-            return await self.callback(request, form)
+        instance = await self.get_form_object(request)
+        form = await create_form(request, self.form_class, instance)
+        await self.initialize_form(request, form)
+        if await validate_on_submit(request, form):
+            response = await self.handle(request, form)
+            return htmx.close_modal(response)
 
-        return render_to_response(request, self.modal_template, {"form": form, "action": self})
+        form_builder = self.form_builder_class()
+        return render_to_response(
+            request,
+            self.modal_template,
+            {
+                "action": self,
+                "object": instance,
+                "form": form,
+                "form_layout": form_builder(form),
+            },
+        )
+
+    async def handle(self, request: Request, form: wtforms.Form) -> Response:
+        if self.callback:
+            return await self.callback(request, form)
+        raise NotImplementedError()
+
+
+class WithRoute(abc.ABC):
+    pass
