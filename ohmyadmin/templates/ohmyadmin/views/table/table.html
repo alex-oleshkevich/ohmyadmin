@@ -32,7 +32,7 @@
                         <div class="list-menu">
                             <button type="button" class="list-menu-item"
                                     @click="selectedAll = !selectedAll; selectedMatched = false; setSelectedFlag(selectedAll || selectedMatched)">
-                                <input type="checkbox" name="select_all" onclick="return false"
+                                <input type="checkbox" name="__all__" onclick="return false"
                                        onmousedown="return false" x-model="selectedAll">
                                 {{ _('Select all ({count})').format(count=objects.total_rows) }}
                             </button>

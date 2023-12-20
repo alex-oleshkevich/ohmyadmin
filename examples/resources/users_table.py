@@ -11,7 +11,7 @@ from starlette.responses import Response
 from examples.models import User
 from ohmyadmin import colors, formatters
 from ohmyadmin.actions import actions
-from ohmyadmin.datasources.datasource import DataSource
+from ohmyadmin.datasources.datasource import DataSource, InFilter
 from ohmyadmin.datasources.sqlalchemy import get_dbsession, SADataSource
 from ohmyadmin.filters import (
     ChoiceFilter,
@@ -83,14 +83,18 @@ class RowObjectForm(wtforms.Form):
     last_name = wtforms.StringField(validators=[wtforms.validators.data_required()])
 
 
-async def object_form_callback(request: Request, query: DataSource, form: wtforms.Form) -> Response:
+async def object_form_callback(request: Request, form: wtforms.Form) -> Response:
     print(form.data)
-    count = await query.count(request)
-    return response().toast(f"Form submitted: {count}.").close_modal().refresh()
+    return response().toast("Form submitted").close_modal().refresh()
 
 
-async def delete_selected_callback(request: Request, query: DataSource, form: wtforms.Form) -> Response:
+async def delete_selected_callback(request: Request, form: wtforms.Form) -> Response:
     print(form.data)
+    view: TableView = request.state.view
+    query = view.get_query(request)
+    query = await view.apply_filters(request, query)
+    if "__all__" not in request.query_params:
+        query = query.filter(InFilter("id", request.query_params.getlist("selected")))
     count = await query.count(request)
     return response().toast(f"Rows deleted: {count}.").close_modal().refresh()
 
@@ -200,6 +204,15 @@ class UsersTable(TableView):
             ],
         ),
     ]
+    batch_actions = [
+        actions.ModalAction(label="Delete selected row", dangerous=True, callback=delete_selected_callback),
+        actions.ModalAction(
+            label="Batch Update",
+            callback=object_form_callback,
+            form_class=RowObjectForm,
+            icon=PLUS_ICON,
+        ),
+    ]
     actions = [
         actions.LinkAction(url="/admin", label="To Main page"),
         actions.CallbackAction("Show toast", callback=show_toast_callback),
@@ -237,15 +250,7 @@ class UsersTable(TableView):
         #     icon=PLUS_ICON,
         # ),
     ]
-    batch_actions = [
-        # object_actions.BatchAction(label="Delete selected row", dangerous=True, callback=delete_selected_callback),
-        # object_actions.BatchAction(
-        #     label="Batch Update",
-        #     callback=object_form_callback,
-        #     form_class=RowObjectForm,
-        #     icon=PLUS_ICON,
-        # ),
-    ]
+
     columns = [
         Column("photo", formatter=AvatarFormatter()),
         Column("first_name", formatter=LinkFormatter(url="/admin")),

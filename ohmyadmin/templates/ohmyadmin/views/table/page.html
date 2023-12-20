@@ -77,7 +77,7 @@
                         <select x-model="action">
                             <option value=""></option>
                             {% for batch_action in table.batch_actions %}
-                                <option value="{{ url_for(batch_action.get_url_name(table.url_name)) }}">
+                                <option value="{{ url_for(view.get_action_route_name(batch_action)) }}">
                                     {{ batch_action.label }}
                                 </option>
                             {% endfor %}
