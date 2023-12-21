@@ -8,9 +8,9 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.types import Receive, Scope, Send
 
-from ohmyadmin import htmx, layouts
+from ohmyadmin import components, htmx
 from ohmyadmin.forms.utils import create_form, validate_on_submit
-from ohmyadmin.layouts import BaseFormLayoutBuilder, FormLayoutBuilder, Layout
+from ohmyadmin.components import BaseFormLayoutBuilder, FormLayoutBuilder, Component
 from ohmyadmin.templating import render_to_response
 
 ActionVariant = typing.Literal["accent", "default", "text", "danger"]
@@ -105,8 +105,8 @@ ModalActionCallback: typing.TypeAlias = typing.Callable[[Request, wtforms.Form],
 
 
 class ModalFormLayout(BaseFormLayoutBuilder):
-    def build(self, form: wtforms.Form | wtforms.Field) -> Layout:
-        return layouts.ColumnLayout([layouts.FormInput(field) for field in form])
+    def build(self, form: wtforms.Form | wtforms.Field) -> Component:
+        return components.ColumnComponent([components.FormInput(field) for field in form])
 
 
 class ModalAction(Action):

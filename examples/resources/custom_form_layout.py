@@ -5,10 +5,10 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from examples.models import Brand, Country
-from ohmyadmin import htmx, layouts
+from ohmyadmin import htmx, components
 from ohmyadmin.actions import actions
 from ohmyadmin.datasources.sqlalchemy import load_choices
-from ohmyadmin.layouts import BaseFormLayoutBuilder, Layout
+from ohmyadmin.components import BaseFormLayoutBuilder, Component
 from ohmyadmin.views.form import FormView
 
 
@@ -52,73 +52,73 @@ class ProductForm(wtforms.Form):
 
 
 class FormLayout(BaseFormLayoutBuilder):
-    def build(self, form: ProductForm) -> Layout:
-        return layouts.GridLayout(
+    def build(self, form: ProductForm) -> Component:
+        return components.GridComponent(
             children=[
-                layouts.ColumnLayout(
+                components.ColumnComponent(
                     colspan=8,
                     children=[
-                        layouts.GroupLayout(
+                        components.GroupComponent(
                             label="Product info",
                             children=[
-                                layouts.GridLayout(
+                                components.GridComponent(
                                     columns=2,
                                     children=[
-                                        layouts.FormInput(form.name),
-                                        layouts.FormInput(form.slug),
-                                        layouts.FormInput(form.description, colspan=2),
+                                        components.FormInput(form.name),
+                                        components.FormInput(form.slug),
+                                        components.FormInput(form.description, colspan=2),
                                     ],
                                 ),
                             ],
                         ),
-                        layouts.GroupLayout(
+                        components.GroupComponent(
                             label="Image",
                             children=[
-                                layouts.RepeatedFormInput(
+                                components.RepeatedFormInput(
                                     field=form.images,
-                                    builder=lambda field: layouts.FormInput(field),
+                                    builder=lambda field: components.FormInput(field),
                                 ),
                             ],
                         ),
-                        layouts.GroupLayout(
+                        components.GroupComponent(
                             label="Pricing",
                             description="Decide which communications you'd like to receive and how.",
                             children=[
-                                layouts.GridLayout(
+                                components.GridComponent(
                                     columns=3,
                                     children=[
-                                        layouts.FormInput(form.price),
-                                        layouts.FormInput(form.compare_at_price),
-                                        layouts.FormInput(form.cost_per_item),
+                                        components.FormInput(form.price),
+                                        components.FormInput(form.compare_at_price),
+                                        components.FormInput(form.cost_per_item),
                                     ],
                                 ),
                             ],
                         ),
-                        layouts.GroupLayout(
+                        components.GroupComponent(
                             label="Inventory",
                             description="Decide which communications you'd like to receive and how.",
                             children=[
-                                layouts.GridLayout(
+                                components.GridComponent(
                                     columns=3,
                                     children=[
-                                        layouts.FormInput(form.sku),
-                                        layouts.FormInput(form.barcode),
-                                        layouts.FormInput(form.quantity),
-                                        layouts.FormInput(form.security_stock, colspan=3),
+                                        components.FormInput(form.sku),
+                                        components.FormInput(form.barcode),
+                                        components.FormInput(form.quantity),
+                                        components.FormInput(form.security_stock, colspan=3),
                                     ],
                                 )
                             ],
                         ),
-                        layouts.GroupLayout(
+                        components.GroupComponent(
                             label="Attributes",
                             children=[
-                                layouts.RepeatedFormInput(
+                                components.RepeatedFormInput(
                                     form.attributes,
-                                    builder=lambda field: layouts.GridLayout(
+                                    builder=lambda field: components.GridComponent(
                                         columns=2,
                                         children=[
-                                            layouts.FormInput(field.form.name),
-                                            layouts.FormInput(field.form.value),
+                                            components.FormInput(field.form.name),
+                                            components.FormInput(field.form.value),
                                         ],
                                     ),
                                 ),
@@ -126,28 +126,28 @@ class FormLayout(BaseFormLayoutBuilder):
                         ),
                     ],
                 ),
-                layouts.ColumnLayout(
+                components.ColumnComponent(
                     colspan=4,
                     children=[
-                        layouts.GroupLayout(label="Brand", children=[layouts.FormInput(form.brand_id)]),
-                        layouts.SeparatorLayout(),
-                        layouts.GroupLayout(
+                        components.GroupComponent(label="Brand", children=[components.FormInput(form.brand_id)]),
+                        components.SeparatorComponent(),
+                        components.GroupComponent(
                             label="",
                             children=[
-                                layouts.FormInput(form.can_be_shipped),
-                                layouts.FormInput(form.can_be_returned),
+                                components.FormInput(form.can_be_shipped),
+                                components.FormInput(form.can_be_returned),
                             ],
                         ),
-                        layouts.SeparatorLayout(),
-                        layouts.GroupLayout(
+                        components.SeparatorComponent(),
+                        components.GroupComponent(
                             label="Manufacturer",
                             children=[
-                                layouts.NestedFormLayout(
+                                components.NestedFormComponent(
                                     field=form.manufacturer,
-                                    builder=lambda field: layouts.ColumnLayout(
+                                    builder=lambda field: components.ColumnComponent(
                                         children=[
-                                            layouts.FormInput(field.form.name),
-                                            layouts.FormInput(field.form.country),
+                                            components.FormInput(field.form.name),
+                                            components.FormInput(field.form.country),
                                         ]
                                     ),
                                 ),

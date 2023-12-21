@@ -6,29 +6,28 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import BaseRoute, Mount, Route
 
-from ohmyadmin import layouts
+from ohmyadmin import components
 from ohmyadmin.actions.actions import Action
-from ohmyadmin.actions.object_actions import ObjectAction
 from ohmyadmin.templating import render_to_response
 from ohmyadmin.views.base import ExposeViewMiddleware, View
 
 
 class DisplayLayoutBuilder(typing.Protocol):
-    def __call__(self, instance: typing.Any) -> layouts.Layout:
+    def __call__(self, instance: typing.Any) -> components.Component:
         ...
 
 
 class BaseDisplayLayoutBuilder(abc.ABC):
-    def __call__(self, instance: typing.Any) -> layouts.Layout:
+    def __call__(self, instance: typing.Any) -> components.Component:
         return self.build(instance)
 
     @abc.abstractmethod
-    def build(self, instance: typing.Any) -> layouts.Layout:
+    def build(self, instance: typing.Any) -> components.Component:
         raise NotImplementedError()
 
 
 class DisplayView(View):
-    object_actions: typing.Sequence[Action | ObjectAction] = tuple()
+    object_actions: typing.Sequence[Action] = tuple()
     layout_class: typing.Type[DisplayLayoutBuilder]
     template = "ohmyadmin/views/display/page.html"
 
@@ -51,7 +50,6 @@ class DisplayView(View):
                 "page_title": self.label,
                 "page_description": self.description,
                 "layout": layout_builder(instance),
-                "is_object_action": lambda action: isinstance(action, ObjectAction),
             },
         )
 

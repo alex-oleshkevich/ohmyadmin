@@ -8,7 +8,7 @@ from starlette.responses import Response
 from starlette.routing import BaseRoute, Mount, Route
 
 from ohmyadmin.actions import actions
-from ohmyadmin.layouts import FormLayoutBuilder, AutoLayout
+from ohmyadmin.components import FormLayoutBuilder, AutoLayout
 from ohmyadmin.forms.utils import create_form, validate_on_submit
 from ohmyadmin.templating import render_to_response
 from ohmyadmin.views.base import ExposeViewMiddleware, View

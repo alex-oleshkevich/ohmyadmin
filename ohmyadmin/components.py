@@ -11,13 +11,13 @@ from ohmyadmin import formatters
 from ohmyadmin.templating import render_to_string
 
 
-class Layout(abc.ABC):
+class Component(abc.ABC):
     def render(self, request: Request) -> str:
         raise NotImplementedError()
 
 
-class FormInput(Layout):
-    template: str = "ohmyadmin/layouts/field.html"
+class FormInput(Component):
+    template: str = "ohmyadmin/components/field.html"
 
     def __init__(self, field: wtforms.Field, colspan: int = 1) -> None:
         self.field = field
@@ -34,10 +34,10 @@ class FormInput(Layout):
         )
 
 
-class ColumnLayout(Layout):
-    template: str = "ohmyadmin/layouts/column.html"
+class ColumnComponent(Component):
+    template: str = "ohmyadmin/components/column.html"
 
-    def __init__(self, children: list[Layout], gap: int = 3, colspan: int = 12) -> None:
+    def __init__(self, children: list[Component], gap: int = 3, colspan: int = 12) -> None:
         self.gap = gap
         self.colspan = colspan
         self.children = children
@@ -53,10 +53,10 @@ class ColumnLayout(Layout):
         )
 
 
-class GridLayout(Layout):
-    template: str = "ohmyadmin/layouts/grid.html"
+class GridComponent(Component):
+    template: str = "ohmyadmin/components/grid.html"
 
-    def __init__(self, children: list[Layout], columns: int = 12, gap: int = 5, colspan: int = 12) -> None:
+    def __init__(self, children: list[Component], columns: int = 12, gap: int = 5, colspan: int = 12) -> None:
         self.gap = gap
         self.colspan = colspan
         self.columns = columns
@@ -73,12 +73,12 @@ class GridLayout(Layout):
         )
 
 
-class GroupLayout(Layout):
-    template: str = "ohmyadmin/layouts/group.html"
+class GroupComponent(Component):
+    template: str = "ohmyadmin/components/group.html"
 
     def __init__(
         self,
-        children: list[Layout],
+        children: list[Component],
         label: str = "",
         description: str = "",
         colspan: int = 12,
@@ -99,8 +99,8 @@ class GroupLayout(Layout):
         )
 
 
-class RepeatedFormInput(Layout):
-    template: str = "ohmyadmin/layouts/repeated_form_input.html"
+class RepeatedFormInput(Component):
+    template: str = "ohmyadmin/components/repeated_form_input.html"
 
     def __init__(self, field: wtforms.FieldList, builder: FormLayoutBuilder) -> None:
         self.field = field
@@ -138,8 +138,8 @@ class RepeatedFormInput(Layout):
         )
 
 
-class NestedFormLayout(Layout):
-    template: str = "ohmyadmin/layouts/nested_form.html"
+class NestedFormComponent(Component):
+    template: str = "ohmyadmin/components/nested_form.html"
 
     def __init__(self, field: wtforms.FormField, builder: FormLayoutBuilder) -> None:
         self.field = field
@@ -157,8 +157,8 @@ class NestedFormLayout(Layout):
         )
 
 
-class TextLayout(Layout):
-    template: str = "ohmyadmin/layouts/text.html"
+class TextComponent(Component):
+    template: str = "ohmyadmin/components/text.html"
 
     def __init__(
         self,
@@ -180,7 +180,7 @@ class TextLayout(Layout):
         )
 
 
-class RawHTMLLayout(Layout):
+class RawHTMLComponent(Component):
     def __init__(self, content: str) -> None:
         self.content = Markup(content)
 
@@ -188,12 +188,12 @@ class RawHTMLLayout(Layout):
         return self.content
 
 
-class SeparatorLayout(Layout):
+class SeparatorComponent(Component):
     def render(self, request: Request) -> str:
-        return RawHTMLLayout("<hr>").render(request)
+        return RawHTMLComponent("<hr>").render(request)
 
 
-class DisplayValueLayout(Layout):
+class DisplayValueComponent(Component):
     def __init__(
         self,
         label: str,
@@ -205,54 +205,54 @@ class DisplayValueLayout(Layout):
         self.formatter = formatter
 
     def render(self, request: Request) -> str:
-        layout = GridLayout(
+        layout = GridComponent(
             columns=12,
             children=[
-                ColumnLayout(children=[TextLayout(value=self.label)], colspan=4),
-                ColumnLayout(children=[TextLayout(value=self.value, formatter=self.formatter)], colspan=8),
+                ColumnComponent(children=[TextComponent(value=self.label)], colspan=4),
+                ColumnComponent(children=[TextComponent(value=self.value, formatter=self.formatter)], colspan=8),
             ],
         )
         return layout.render(request)
 
 
 class FormLayoutBuilder(typing.Protocol):
-    def __call__(self, form: wtforms.Form | wtforms.Field) -> Layout:
+    def __call__(self, form: wtforms.Form | wtforms.Field) -> Component:
         ...
 
 
 class BaseFormLayoutBuilder(abc.ABC):
-    def __call__(self, form: wtforms.Form) -> Layout:
+    def __call__(self, form: wtforms.Form) -> Component:
         return self.build(form)
 
     @abc.abstractmethod
-    def build(self, form: wtforms.Form | wtforms.Field) -> Layout:
+    def build(self, form: wtforms.Form | wtforms.Field) -> Component:
         raise NotImplementedError()
 
 
 class AutoLayout(BaseFormLayoutBuilder):
-    def build(self, form: wtforms.Form | wtforms.Field) -> Layout:
-        return GridLayout(
+    def build(self, form: wtforms.Form | wtforms.Field) -> Component:
+        return GridComponent(
             columns=12,
             children=[self.build_for_field(field) for field in form],
         )
 
-    def build_listfield_item(self, field: wtforms.Form) -> Layout:
+    def build_listfield_item(self, field: wtforms.Form) -> Component:
         match field:
             case wtforms.FormField() as form_field:
                 field_count = len(list(form_field))
                 if field_count > 4:
-                    return ColumnLayout(children=[FormInput(subfield) for subfield in form_field])
-                return GridLayout(columns=field_count, children=[FormInput(subfield) for subfield in form_field])
+                    return ColumnComponent(children=[FormInput(subfield) for subfield in form_field])
+                return GridComponent(columns=field_count, children=[FormInput(subfield) for subfield in form_field])
             case _:
                 return FormInput(field)
 
-    def build_for_field(self, field: wtforms.Field) -> Layout:
+    def build_for_field(self, field: wtforms.Field) -> Component:
         match field:
             case wtforms.FieldList() as list_field:
-                return ColumnLayout(
+                return ColumnComponent(
                     colspan=8,
                     children=[
-                        GroupLayout(
+                        GroupComponent(
                             label=list_field.label.text,
                             description=list_field.description,
                             children=[
@@ -265,20 +265,20 @@ class AutoLayout(BaseFormLayoutBuilder):
                     ],
                 )
             case wtforms.TextAreaField():
-                return GridLayout(children=[FormInput(field, colspan=6)])
+                return GridComponent(children=[FormInput(field, colspan=6)])
             case wtforms.IntegerField() | wtforms.FloatField() | wtforms.DecimalField():
-                return GridLayout(children=[FormInput(field, colspan=2)])
+                return GridComponent(children=[FormInput(field, colspan=2)])
             case wtforms.FormField() as form_field:
                 field_count = len(list(form_field))
-                layout: Layout
+                layout: Component
                 if field_count > 4:
-                    layout = ColumnLayout(children=[FormInput(subfield) for subfield in form_field])
-                layout = GridLayout(columns=field_count, children=[FormInput(subfield) for subfield in form_field])
-                return GroupLayout(
+                    layout = ColumnComponent(children=[FormInput(subfield) for subfield in form_field])
+                layout = GridComponent(columns=field_count, children=[FormInput(subfield) for subfield in form_field])
+                return GroupComponent(
                     colspan=8,
                     label=form_field.label.text,
                     description=form_field.description,
-                    children=[NestedFormLayout(field=form_field, builder=lambda field: layout)],
+                    children=[NestedFormComponent(field=form_field, builder=lambda field: layout)],
                 )
             case _:
-                return GridLayout(children=[FormInput(field, colspan=4)])
+                return GridComponent(children=[FormInput(field, colspan=4)])

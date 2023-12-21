@@ -1,7 +1,6 @@
 import wtforms
 from starlette.requests import Request
 
-from ohmyadmin import layouts
 from ohmyadmin.testing import MarkupSelector
 
 
@@ -31,9 +30,7 @@ def test_row_layout(http_request: Request) -> None:
 
 
 def test_card_layout(http_request: Request) -> None:
-    layout = layouts.Card(
-        children=[layouts.Text("CONTENT")], label="TITLE", description="DESCRIPTION"
-    )
+    layout = layouts.Card(children=[layouts.Text("CONTENT")], label="TITLE", description="DESCRIPTION")
     content = layout.render(http_request)
     selector = MarkupSelector(content)
     assert selector.get_text(".card header h3") == "TITLE"
@@ -65,9 +62,7 @@ def test_card_layout_no_label_and_no_description(http_request: Request) -> None:
 
 
 def test_side_section_layout(http_request: Request) -> None:
-    layout = layouts.SideSection(
-        children=[layouts.Text("CONTENT")], label="TITLE", description="DESCRIPTION"
-    )
+    layout = layouts.SideSection(children=[layouts.Text("CONTENT")], label="TITLE", description="DESCRIPTION")
     content = layout.render(http_request)
     selector = MarkupSelector(content)
     assert selector.get_text(".side-section aside h3") == "TITLE"
@@ -100,9 +95,7 @@ def test_row_form_layout(http_request: Request) -> None:
         name = wtforms.StringField()
 
     form = MyForm()
-    layout = layouts.RowFormLayout(
-        children=[layouts.Input(form.name)], label="TITLE", description="DESCRIPTION"
-    )
+    layout = layouts.RowFormLayout(children=[layouts.Input(form.name)], label="TITLE", description="DESCRIPTION")
     content = layout.render(http_request)
     selector = MarkupSelector(content)
     assert selector.get_text(".row-form-layout header h3") == "TITLE"
@@ -127,9 +120,7 @@ def test_stacked_form_layout(http_request: Request) -> None:
         name = wtforms.StringField()
 
     form = MyForm()
-    layout = layouts.StackedForm(
-        children=[layouts.Input(form.name)], label="TITLE", description="DESCRIPTION"
-    )
+    layout = layouts.StackedForm(children=[layouts.Input(form.name)], label="TITLE", description="DESCRIPTION")
     content = layout.render(http_request)
     selector = MarkupSelector(content)
     assert selector.get_text(".stacked-form header h3") == "TITLE"

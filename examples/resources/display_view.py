@@ -6,48 +6,48 @@ from starlette.requests import Request
 
 from examples.models import Product
 from examples.resources.users_table import create_user_callback, CreateUserForm, PLUS_ICON, show_toast_callback
-from ohmyadmin import formatters, layouts
+from ohmyadmin import formatters, components
 from ohmyadmin.actions import actions
 from ohmyadmin.views.display import BaseDisplayLayoutBuilder, DisplayView
 
 
 class ProductLayout(BaseDisplayLayoutBuilder):
-    def build(self, instance: Product) -> layouts.Layout:
-        return layouts.GridLayout(
+    def build(self, instance: Product) -> components.Component:
+        return components.GridComponent(
             children=[
-                layouts.GridLayout(
+                components.GridComponent(
                     columns=12,
                     children=[
-                        layouts.ColumnLayout(
+                        components.ColumnComponent(
                             colspan=6,
                             children=[
-                                layouts.DisplayValueLayout(label="Name", value=instance.name),
-                                layouts.DisplayValueLayout(
+                                components.DisplayValueComponent(label="Name", value=instance.name),
+                                components.DisplayValueComponent(
                                     label="Brand",
                                     value=instance.brand.name,
                                     formatter=formatters.LinkFormatter(
                                         url="/admin",
                                     ),
                                 ),
-                                layouts.DisplayValueLayout(
+                                components.DisplayValueComponent(
                                     label="Categories", value=", ".join([c.name for c in instance.categories]) or "-"
                                 ),
-                                layouts.GroupLayout(
+                                components.GroupComponent(
                                     label="Pricing",
                                     children=[
-                                        layouts.ColumnLayout(
+                                        components.ColumnComponent(
                                             children=[
-                                                layouts.DisplayValueLayout(
+                                                components.DisplayValueComponent(
                                                     "Price",
                                                     instance.price,
                                                     formatter=formatters.NumberFormatter(prefix="$"),
                                                 ),
-                                                layouts.DisplayValueLayout(
+                                                components.DisplayValueComponent(
                                                     "Compare at price",
                                                     instance.compare_at_price,
                                                     formatter=formatters.NumberFormatter(prefix="$"),
                                                 ),
-                                                layouts.DisplayValueLayout(
+                                                components.DisplayValueComponent(
                                                     "Cost per item",
                                                     instance.cost_per_item,
                                                     formatter=formatters.NumberFormatter(prefix="$"),
@@ -56,52 +56,54 @@ class ProductLayout(BaseDisplayLayoutBuilder):
                                         )
                                     ],
                                 ),
-                                layouts.GroupLayout(
+                                components.GroupComponent(
                                     label="Inventory",
                                     children=[
-                                        layouts.ColumnLayout(
+                                        components.ColumnComponent(
                                             children=[
-                                                layouts.DisplayValueLayout("SKU", instance.sku),
-                                                layouts.DisplayValueLayout("Quantity", instance.quantity),
-                                                layouts.DisplayValueLayout("Security stock", instance.security_stock),
-                                                layouts.DisplayValueLayout("Barcode", instance.barcode),
+                                                components.DisplayValueComponent("SKU", instance.sku),
+                                                components.DisplayValueComponent("Quantity", instance.quantity),
+                                                components.DisplayValueComponent(
+                                                    "Security stock", instance.security_stock
+                                                ),
+                                                components.DisplayValueComponent("Barcode", instance.barcode),
                                             ]
                                         ),
                                     ],
                                 ),
-                                layouts.DisplayValueLayout(label="Description", value=instance.description),
+                                components.DisplayValueComponent(label="Description", value=instance.description),
                             ],
                         ),
-                        layouts.ColumnLayout(
+                        components.ColumnComponent(
                             colspan=6,
                             children=[
-                                layouts.DisplayValueLayout(
+                                components.DisplayValueComponent(
                                     label="Visible",
                                     value=instance.visible,
                                     formatter=formatters.BoolFormatter(align="left"),
                                 ),
-                                layouts.DisplayValueLayout(
+                                components.DisplayValueComponent(
                                     label="Can be shipped",
                                     value=instance.can_be_shipped,
                                     formatter=formatters.BoolFormatter(align="left"),
                                 ),
-                                layouts.DisplayValueLayout(
+                                components.DisplayValueComponent(
                                     label="Can be returned",
                                     value=instance.can_be_returned,
                                     formatter=formatters.BoolFormatter(align="left"),
                                 ),
-                                layouts.SeparatorLayout(),
-                                layouts.DisplayValueLayout(
+                                components.SeparatorComponent(),
+                                components.DisplayValueComponent(
                                     label="Availability",
                                     value=instance.availability,
                                     formatter=formatters.DateFormatter(),
                                 ),
-                                layouts.DisplayValueLayout(
+                                components.DisplayValueComponent(
                                     label="Created at",
                                     value=instance.created_at,
                                     formatter=formatters.DateFormatter(),
                                 ),
-                                layouts.DisplayValueLayout(
+                                components.DisplayValueComponent(
                                     label="Updated at",
                                     value=instance.updated_at,
                                     formatter=formatters.DateFormatter(),
