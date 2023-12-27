@@ -8,7 +8,7 @@ from starlette.responses import Response
 from starlette.routing import BaseRoute, Mount, Route
 
 from ohmyadmin.actions import actions
-from ohmyadmin.components import FormLayoutBuilder, AutoLayout
+from ohmyadmin.components import AutoLayout, FormLayoutBuilder
 from ohmyadmin.forms.utils import create_form, validate_on_submit
 from ohmyadmin.templating import render_to_response
 from ohmyadmin.views.base import ExposeViewMiddleware, View
@@ -30,7 +30,7 @@ class FormView(View):
         return self.form_actions or []
 
     @abc.abstractmethod
-    async def handle(self, request: Request, form: wtforms.Form) -> Response:
+    async def handle(self, request: Request, form: wtforms.Form, instance: typing.Any) -> Response:
         raise NotImplementedError()
 
     async def dispatch(self, request: Request) -> Response:
@@ -38,7 +38,7 @@ class FormView(View):
         form = await create_form(request, self.form_class, instance)
         await self.init_form(request, form)
         if await validate_on_submit(request, form):
-            return await self.handle(request, form)
+            return await self.handle(request, form, instance)
 
         form_layout = self.layout_class()
         return render_to_response(
@@ -47,16 +47,16 @@ class FormView(View):
             {
                 "form": self,
                 "instance": instance,
-                "page_title": self.label,
-                "page_description": self.description,
                 "form_layout": form_layout(form),
+                "page_description": self.description,
                 "form_actions": self.get_form_actions(),
+                "page_title": self.label,
             },
         )
 
     def get_route(self) -> BaseRoute:
         return Mount(
-            "/" + self.slug,
+            "/",
             routes=[
                 Route("/", self.dispatch, name=self.url_name, methods=["get", "post"]),
                 Mount(

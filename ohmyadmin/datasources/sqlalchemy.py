@@ -6,6 +6,7 @@ import uuid
 import sqlalchemy as sa
 import wtforms
 from sqlalchemy import orm
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
 
@@ -15,14 +16,15 @@ from ohmyadmin.datasources.datasource import (
     DateFilter,
     DateOperation,
     DateTimeFilter,
+    DuplicateError,
     InFilter,
+    NumberFilter,
     NumberOperation,
     OrFilter,
     QueryFilter,
     StringFilter,
     StringOperation,
     ValueFilter,
-    NumberFilter,
 )
 from ohmyadmin.ordering import SortingType
 from ohmyadmin.pagination import Pagination
@@ -182,6 +184,34 @@ class SADataSource(DataSource[T]):
         stmt = sa.select(sa.func.count("*")).select_from(self._stmt)
         result = await get_dbsession(request).scalars(stmt)
         return result.one()
+
+    async def one(self, request: Request) -> int:
+        result = await get_dbsession(request).scalars(self._stmt)
+        return result.one()
+
+    async def update(self, request: Request, instance: T) -> None:
+        await get_dbsession(request).commit()
+
+    async def create(self, request: Request, instance: T) -> None:
+        try:
+            get_dbsession(request).add(instance)
+            await get_dbsession(request).commit()
+        except IntegrityError as ex:
+            if "duplicate key" in str(ex):
+                raise DuplicateError()
+            raise
+
+    async def delete(self, request: Request, instance: T) -> None:
+        await get_dbsession(request).delete(instance)
+        await get_dbsession(request).commit([instance])
+
+    async def delete_all(self, request: Request) -> None:
+        delete_stmt = sa.delete(self.model_class).where(self._stmt.whereclause)
+        await get_dbsession(request).execute(delete_stmt)
+        await get_dbsession(request).commit()
+
+    async def new(self) -> T:
+        return self.model_class()
 
     async def paginate(self, request: Request, page: int, page_size: int) -> Pagination[T]:
         row_count = await self.count(request)

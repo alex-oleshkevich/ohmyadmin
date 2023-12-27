@@ -1,19 +1,19 @@
-import abc
 import random
 import typing
 
 import wtforms
+from starlette.datastructures import URL
 from starlette.exceptions import HTTPException
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.types import Receive, Scope, Send
 
 from ohmyadmin import components, htmx
+from ohmyadmin.components import BaseFormLayoutBuilder, Component, FormLayoutBuilder
 from ohmyadmin.forms.utils import create_form, validate_on_submit
-from ohmyadmin.components import BaseFormLayoutBuilder, FormLayoutBuilder, Component
 from ohmyadmin.templating import render_to_response
 
-ActionVariant = typing.Literal["accent", "default", "text", "danger"]
+ActionVariant = typing.Literal["accent", "default", "text", "danger", "link", "primary"]
 
 
 def random_slug() -> str:
@@ -40,17 +40,19 @@ class LinkAction(Action):
 
     def __init__(
         self,
-        url: str = "",
+        url: str | URL = "",
         target: typing.Literal["", "_blank"] = "",
         label: str = "",
         icon: str = "",
+        variant: ActionVariant = "link",
     ) -> None:
-        self.url = url
+        self.url = url if isinstance(url, URL) else URL(url)
         self.target = target
         self.icon = icon or self.icon
         self.label = label or self.label
+        self.variant = variant
 
-    def get_url(self, request: Request) -> str:
+    def get_url(self, request: Request, model: typing.Any | None = None) -> URL:
         return self.url
 
 
@@ -179,7 +181,3 @@ class ModalAction(Action):
         if self.callback:
             return await self.callback(request, form)
         raise NotImplementedError()
-
-
-class WithRoute(abc.ABC):
-    pass

@@ -1,0 +1,19 @@
+<dialog class="modal" data-autoopen hx-swap="outerHTML" hx-target="this">
+    <form class="modal-dialog">
+        <header>{{ _('Confirm delete operation', domain='ohmyadmin') }}</header>
+        <main>
+            {% trans count=count -%}
+                You are going to delete {{ count }} objects.
+                This operation can not be undone.
+            {%- endtrans %}
+        </main>
+        <footer>
+            <button type="submit" class="btn btn-danger" hx-post="{{ request.url }}">
+                {{ _('Delete') }}
+            </button>
+            <button type="button" @click="ohmyadmin.modals.closeActive;" class="btn btn-text">
+                {{ _('Cancel') }}
+            </button>
+        </footer>
+    </form>
+</dialog>

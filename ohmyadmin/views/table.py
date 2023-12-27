@@ -135,9 +135,9 @@ class TableView(View):
                 "view": self,
                 "objects": rows,
                 "sorting": sorting,
-                "page_title": self.label,
                 "page_description": self.description,
                 "oob_filters": should_refresh_filters,
+                "page_title": self.label,
                 "search_term": request.query_params.get(self.search_param, ""),
             },
         )
@@ -145,7 +145,7 @@ class TableView(View):
 
     def get_route(self) -> BaseRoute:
         return Mount(
-            "/" + self.slug,
+            "",
             routes=[
                 Route("/", self.dispatch, name=self.url_name),
                 Mount(

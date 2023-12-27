@@ -1,6 +1,7 @@
 import abc
 import typing
 
+import slugify
 from starlette.datastructures import URL
 from starlette.requests import Request
 from starlette.responses import Response
@@ -19,9 +20,7 @@ class View(abc.ABC):
 
     @property
     def slug(self) -> str:
-        group = self.group.lower().replace(" ", "-")
-        label = self.label.lower().replace(" ", "-")
-        return "/".join([group, label])
+        return slugify.slugify(self.label)
 
     @property
     def url_name(self) -> str:
@@ -48,13 +47,15 @@ class View(abc.ABC):
 
 
 class ExposeViewMiddleware:
-    def __init__(self, app: ASGIApp, view: View) -> None:
+    def __init__(self, app: ASGIApp, **views: View) -> None:
         self.app = app
-        self.view = view
+        self.views = views
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         request = Request(scope, receive, send)
-        request.state.view = self.view
+        for name, view in self.views.items():
+            setattr(request.state, name, view)
+
         await self.app(scope, receive, send)
 
 

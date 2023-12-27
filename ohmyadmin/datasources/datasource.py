@@ -18,6 +18,14 @@ T = typing.TypeVar("T")
 SearchPredicate = typing.Literal["startswith", "endswith", "exact", "matches", "like"]
 
 
+class DataSourceError(Exception):
+    ...
+
+
+class DuplicateError(DataSourceError):
+    """Should be raised when datasource tries to insert a duplicate resource."""
+
+
 class StringOperation(enum.Enum):
     CONTAINS = _("contains", domain="ohmyadmin")
     STARTSWITH = _("starts with", domain="ohmyadmin")
@@ -124,6 +132,30 @@ class DataSource(abc.ABC, typing.Generic[T]):
 
     @abc.abstractmethod
     async def count(self, request: Request) -> int:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    async def one(self, request: Request) -> None:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    async def update(self, request: Request, instance: T) -> None:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    async def create(self, request: Request, instance: T) -> None:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    async def delete(self, request: Request, instance: T) -> None:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    async def delete_all(self, request: Request) -> None:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    async def new(self) -> T:
         raise NotImplementedError()
 
     def get_query_for_list(self) -> typing.Self:

@@ -58,6 +58,9 @@ class Country(Base):
     code: Mapped[str] = mapped_column(sa.Text, primary_key=True)
     name: Mapped[str] = mapped_column(sa.Text)
 
+    def get_pk(self) -> str:
+        return self.code
+
     def __str__(self) -> str:
         return self.name or "n/a"
 

@@ -3,6 +3,8 @@ import itertools
 import jinja2
 import operator
 import typing
+
+import slugify
 from starlette import templating
 from starlette.middleware import Middleware
 from starlette.middleware.authentication import AuthenticationMiddleware
@@ -76,7 +78,16 @@ class OhMyAdmin(Router):
                         app=StaticFiles(packages=["ohmyadmin"]),
                         name="ohmyadmin.static",
                     ),
-                    *[view.get_route() for view in self.views],
+                    *[
+                        Mount(
+                            "/{group_slug}/{view_slug}".format(
+                                group_slug=slugify.slugify(view.group),
+                                view_slug=view.slug,
+                            ),
+                            routes=[view.get_route()],
+                        )
+                        for view in self.views
+                    ],
                 ],
                 middleware=[
                     Middleware(

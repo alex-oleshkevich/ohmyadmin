@@ -23,10 +23,11 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             document
-                .querySelector('#batch-action-form')
-                .addEventListener('htmx:configRequest', (e) => {
-                    e.detail.path = e.target.getAttribute('action');
-                    console.log(e);
+                .querySelectorAll('#batch-action-form')
+                .forEach(el => {
+                    el.addEventListener('htmx:configRequest', (e) => {
+                        e.detail.path = e.target.getAttribute('action');
+                    });
                 });
         });
     </script>

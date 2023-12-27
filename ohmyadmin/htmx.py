@@ -1,5 +1,6 @@
 import json
 import typing
+
 from starlette.background import BackgroundTask
 from starlette.datastructures import URL
 from starlette.requests import Request
@@ -19,6 +20,16 @@ def matches_target(request: Request, target: str) -> bool:
 
 def push_url(response: R, url: str | URL) -> R:
     response.headers["hx-push-url"] = str(url)
+    return response
+
+
+def redirect(response: R, url: str | URL) -> R:
+    response.headers["hx-redirect"] = str(url)
+    return response
+
+
+def location(response: R, url: str | URL) -> R:
+    response.headers["hx-location"] = str(url)
     return response
 
 
@@ -51,6 +62,15 @@ class HXResponse(Response):
 
     def refresh(self) -> typing.Self:
         return refresh(self)
+
+    def redirect(self, url: str | URL) -> typing.Self:
+        return redirect(self, url)
+
+    def push_url(self, url: str | URL) -> typing.Self:
+        return push_url(self, url)
+
+    def location(self, url: str | URL) -> typing.Self:
+        return location(self, url)
 
 
 def response(
