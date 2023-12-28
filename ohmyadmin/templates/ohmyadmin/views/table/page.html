@@ -14,7 +14,7 @@
     <script>
         function setSelectedFlag(flag) {
             document
-                .querySelectorAll('#datatable input[name="selected"]')
+                .querySelectorAll('#datatable input[name="object_id"]')
                 .forEach(el => {
                     el.checked = flag;
                     el.dispatchEvent(new CustomEvent('input'));
@@ -92,9 +92,11 @@
         </section>
 
         <!-- filters -->
-        <section id="view-filters" class="flex items-center gap-1 flex-wrap border border-gray-200 p-1 rounded-md">
-            {% include 'ohmyadmin/views/table/filters_bar.html' %}
-        </section>
+        {% if table.filters|length > 2 %}
+            <section id="view-filters" class="flex items-center gap-1 flex-wrap border border-gray-200 p-1 rounded-md">
+                {% include 'ohmyadmin/views/table/filters_bar.html' %}
+            </section>
+        {% endif %}
 
         <section class="overflow-x-auto">
             <div class="-mb-[1px] htmx-indicator" id="load-indicator">

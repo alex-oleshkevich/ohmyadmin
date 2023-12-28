@@ -6,8 +6,12 @@ from starlette.datastructures import URL
 from starlette.requests import Request
 from starlette.responses import Response
 
-ToastCategory = typing.Literal["error", "success"]
 R = typing.TypeVar("R", bound=Response)
+ToastCategory = typing.Literal["error", "success"]
+TriggerStage: typing.TypeAlias = typing.Literal["immediate", "after-swap", "after-settle"]
+SwapTarget: typing.TypeAlias = typing.Literal[
+    "innerHTML", "outerHTML", "beforebegin", "afterbegin", "beforeend", "afterend", "delete", "none"
+]
 
 
 def is_htmx_request(request: Request) -> bool:
@@ -28,15 +32,53 @@ def redirect(response: R, url: str | URL) -> R:
     return response
 
 
-def location(response: R, url: str | URL) -> R:
-    response.headers["hx-location"] = str(url)
+class LocationOptions(typing.TypedDict):
+    path: typing.NotRequired[str]
+
+    target: typing.NotRequired[str]
+    """the target to swap the response into"""
+
+    swap: typing.NotRequired[SwapTarget]
+    """how the response will be swapped in relative to the target"""
+
+    select: typing.NotRequired[str]
+    """ allows you to select the content you want swapped from a response"""
+
+
+def location(response: R, url: str | URL, options: LocationOptions | None = None) -> R:
+    params = str(url)
+    if options is not None:
+        options["path"] = str(url)
+        params = json.dumps(options)
+    response.headers["hx-location"] = params
     return response
 
 
-def trigger(response: R, event: str, data: typing.Any = None) -> R:
-    triggers = json.loads(response.headers.get("hx-trigger", "{}"))
+def reselect(response: R, selector: str) -> R:
+    response.headers["hx-reselect"] = selector
+    return response
+
+
+def reswap(response: R, target: SwapTarget) -> R:
+    response.headers["hx-reswap"] = target
+    return response
+
+
+def retarget(response: R, target: str) -> R:
+    response.headers["hx-retarget"] = target
+    return response
+
+
+def trigger(response: R, event: str, data: typing.Any = None, stage: TriggerStage = "immediate") -> R:
+    hx_event = {
+        "immediate": "hx-trigger",
+        "after-swap": "hx-trigger-after-swap",
+        "after-settle": "hx-trigger-after-settle",
+    }.get(stage, "hx-trigger")
+
+    triggers = json.loads(response.headers.get(hx_event, "{}"))
     triggers[event] = data
-    response.headers["hx-trigger"] = json.dumps(triggers)
+    response.headers[hx_event] = json.dumps(triggers)
     return response
 
 
@@ -49,13 +91,18 @@ def refresh(response: R) -> R:
     return trigger(response, "refresh")
 
 
-def toast(response: R, message: str, category: ToastCategory = "success") -> R:
-    return trigger(response, "toast", {"message": message, "category": category})
+def toast(response: R, message: str, category: ToastCategory = "success", stage: TriggerStage = "immediate") -> R:
+    return trigger(response, "toast", {"message": message, "category": category}, stage=stage)
 
 
 class HXResponse(Response):
-    def toast(self, message: str, category: ToastCategory = "success") -> typing.Self:
-        return toast(self, str(message), category)
+    def toast(
+        self,
+        message: str,
+        category: ToastCategory = "success",
+        stage: TriggerStage = "immediate",
+    ) -> typing.Self:
+        return toast(self, str(message), category, stage=stage)
 
     def close_modal(self) -> typing.Self:
         return close_modal(self)
@@ -69,8 +116,20 @@ class HXResponse(Response):
     def push_url(self, url: str | URL) -> typing.Self:
         return push_url(self, url)
 
-    def location(self, url: str | URL) -> typing.Self:
-        return location(self, url)
+    def location(self, url: str | URL, options: LocationOptions | None = None) -> typing.Self:
+        return location(self, url, options)
+
+    def reselect(self, selector: str) -> typing.Self:
+        return reselect(self, selector)
+
+    def retarget(self, selector: str) -> typing.Self:
+        return retarget(self, selector)
+
+    def reswap(self, target: SwapTarget) -> typing.Self:
+        return reswap(self, target)
+
+    def trigger(self, event: str, data: typing.Any = None, stage: TriggerStage = "immediate") -> typing.Self:
+        return trigger(self, event, data, stage)
 
 
 def response(

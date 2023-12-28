@@ -14,7 +14,7 @@
 
 {% if oob_filters %}
     <div hx-swap-oob="innerHTML" id="view-filters">
-    {% include 'ohmyadmin/views/table/filters_bar.html' %}
+        {% include 'ohmyadmin/views/table/filters_bar.html' %}
     </div>
 {% endif %}
 
@@ -22,30 +22,33 @@
     <thead>
     <tr>
         {% if table.batch_actions %}
-            <th class="flex items-center justify-start w-auto">
-                <button class="p-0 h-full w-auto hover:bg-gray-50 flex items-center gap-1 bg-transparent cursor-pointer"
+            <th class="w-4">
+                <div class="flex items-center justify-start w-auto">
+                    <button
+                        class="p-0 h-full w-auto hover:bg-gray-50 flex items-center gap-1 bg-transparent cursor-pointer"
                         id="batch-all">
-                    <input type="checkbox" onclick="return false" onmousedown="return false">
-                    {{ icons.chevron_down() }}
-                </button>
-                <o-popover trigger="#batch-all" placement="bottom-start">
-                    <div class="dropdown absolute hidden z-10">
-                        <div class="list-menu">
-                            <button type="button" class="list-menu-item"
-                                    @click="selectedAll = !selectedAll; selectedMatched = false; setSelectedFlag(selectedAll || selectedMatched)">
-                                <input type="checkbox" name="__all__" onclick="return false"
-                                       onmousedown="return false" x-model="selectedAll">
-                                {{ _('Select all ({count})').format(count=objects.total_rows) }}
-                            </button>
-                            <button type="button" class="list-menu-item"
-                                    @click="selectedMatched = !selectedMatched; selectedAll = false; setSelectedFlag(selectedAll || selectedMatched)">
-                                <input type="checkbox" name="select_matched" onclick="return false"
-                                       onmousedown="return false" x-model="selectedMatched">
-                                {{ _('Select all matching') }}
-                            </button>
+                        <input type="checkbox" onclick="return false" onmousedown="return false">
+                        {{ icons.chevron_down() }}
+                    </button>
+                    <o-popover trigger="#batch-all" placement="bottom-start">
+                        <div class="dropdown absolute hidden z-10">
+                            <div class="list-menu">
+                                <button type="button" class="list-menu-item"
+                                        @click="selectedAll = !selectedAll; selectedMatched = false; setSelectedFlag(selectedAll || selectedMatched)">
+                                    <input type="checkbox" name="__all__" onclick="return false"
+                                           onmousedown="return false" x-model="selectedAll">
+                                    {{ _('Select all ({count})').format(count=objects.total_rows) }}
+                                </button>
+                                <button type="button" class="list-menu-item"
+                                        @click="selectedMatched = !selectedMatched; selectedAll = false; setSelectedFlag(selectedAll || selectedMatched)">
+                                    <input type="checkbox" name="select_matched" onclick="return false"
+                                           onmousedown="return false" x-model="selectedMatched">
+                                    {{ _('Select all matching') }}
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                </o-popover>
+                    </o-popover>
+                </div>
             </th>
         {% endif %}
         {% for column in table.columns %}
@@ -65,12 +68,13 @@
                 {% set pk_value = object.get_pk() %}
                 <th>
                     <div class="flex items-center justify-start">
-                        <input type="checkbox" name="object_id" @input="selected = $el.checked" :checked="selected" value="{{ pk_value }}">
+                        <input type="checkbox" name="object_id" @input="selected = $el.checked" :checked="selected"
+                               value="{{ pk_value }}">
                     </div>
                 </th>
             {% endif %}
-            {% for columm in table.columns %}
-                <td>{{ render_cell(request, columm, object) }}</td>
+            {% for column in table.columns %}
+                <td>{{ render_cell(request, column, object) }}</td>
             {% endfor %}
             {% if table.row_actions %}
                 <td>

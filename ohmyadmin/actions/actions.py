@@ -135,7 +135,6 @@ class ModalAction(Action):
         modal_description: str = "",
     ) -> None:
         self.slug = random_slug()
-        self.variant = variant
         self.callback = callback
         self.modal_title = modal_title
         self.modal_description = modal_description
@@ -143,6 +142,7 @@ class ModalAction(Action):
         self.label = label or self.label
         self.form_class = form_class or self.form_class
         self.dangerous = self.dangerous if dangerous is None else dangerous
+        self.variant = "danger" if self.dangerous else variant
         self.form_builder_class = form_builder_class or self.form_builder_class
 
     async def initialize_form(self, request: Request, form: wtforms.Form) -> None:

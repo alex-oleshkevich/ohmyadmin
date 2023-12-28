@@ -6,13 +6,14 @@ from starlette.requests import Request
 
 from examples.models import Product
 from examples.resources.users_table import create_user_callback, CreateUserForm, PLUS_ICON, show_toast_callback
-from ohmyadmin import formatters, components
+from ohmyadmin import components, formatters
 from ohmyadmin.actions import actions
 from ohmyadmin.views.display import BaseDisplayLayoutBuilder, DisplayView
+from ohmyadmin.views.table import Column
 
 
 class ProductLayout(BaseDisplayLayoutBuilder):
-    def build(self, instance: Product) -> components.Component:
+    def build(self, instance: Product, fields: typing.Sequence[Column]) -> components.Component:
         return components.GridComponent(
             children=[
                 components.GridComponent(

@@ -6,7 +6,7 @@ import uuid
 import sqlalchemy as sa
 import wtforms
 from sqlalchemy import orm
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.requests import Request
 
@@ -18,6 +18,7 @@ from ohmyadmin.datasources.datasource import (
     DateTimeFilter,
     DuplicateError,
     InFilter,
+    NoObjectError,
     NumberFilter,
     NumberOperation,
     OrFilter,
@@ -186,8 +187,11 @@ class SADataSource(DataSource[T]):
         return result.one()
 
     async def one(self, request: Request) -> int:
-        result = await get_dbsession(request).scalars(self._stmt)
-        return result.one()
+        try:
+            result = await get_dbsession(request).scalars(self._stmt)
+            return result.one()
+        except NoResultFound:
+            raise NoObjectError()
 
     async def update(self, request: Request, instance: T) -> None:
         await get_dbsession(request).commit()

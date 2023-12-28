@@ -89,3 +89,10 @@ def safe_enum_coerce(value: typing.Any, choices: type[enum.Enum]) -> typing.Any:
         return choices[value]
     except KeyError:
         return None
+
+
+def safe_int_coerce(value: typing.Any) -> int | None:
+    try:
+        return int(value)
+    except ValueError:
+        return None

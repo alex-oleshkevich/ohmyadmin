@@ -7,6 +7,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import BaseRoute, Mount
 from starlette_babel import gettext_lazy as _
+from starlette_flash import flash
 
 from ohmyadmin import filters, htmx, metrics, views
 from ohmyadmin.actions import actions
@@ -22,6 +23,7 @@ from ohmyadmin.resources.actions import (
     SaveResourceAction,
     SaveResourceAndReturnAction,
     SubmitActionType,
+    ViewResourceAction,
 )
 from ohmyadmin.resources.policy import AccessPolicy, PermissiveAccessPolicy
 from ohmyadmin.views.base import ExposeViewMiddleware, View
@@ -44,6 +46,7 @@ class ResourceView(View):
     # menus
     create_resource_label: str = _("Add {label}", domain="ohmyadmin")
     edit_resource_label: str = _("Edit", domain="ohmyadmin")
+    display_resource_label: str = _("View", domain="ohmyadmin")
     delete_resource_label: str = _("Edit", domain="ohmyadmin")
     create_resource_form_label: str = _("Create")
     create_and_return_resource_form_label: str = _("Create and return to list")
@@ -54,13 +57,15 @@ class ResourceView(View):
     # permissions
     access_policy: AccessPolicy = PermissiveAccessPolicy()
 
+    # data
+    datasource: typing.ClassVar[DataSource | None] = None
+
     # index page
     page_param: typing.ClassVar[str] = "page"
     page_size_param: typing.ClassVar[str] = "page_size"
     page_size: typing.ClassVar[int] = 25
     page_sizes: typing.ClassVar[typing.Sequence[int]] = [10, 25, 50, 100]
     ordering_param: typing.ClassVar[str] = "ordering"
-    datasource: typing.ClassVar[DataSource | None] = None
     columns: typing.Sequence[Column] = tuple()
     page_filters: typing.Sequence[filters.Filter] = tuple()
     page_actions: typing.Sequence[actions.Action] = tuple()
@@ -80,6 +85,11 @@ class ResourceView(View):
     create_form_layout_class: type[FormLayoutBuilder] | None = None
     create_form_actions: typing.Sequence[actions.Action] | None = None
 
+    # display page
+    display_layout_class: type[views.DisplayLayoutBuilder] = views.AutoDisplayLayout
+    display_object_actions: typing.Sequence[actions.Action] = tuple()
+    display_fields: list[Column] = tuple()
+
     def __init__(self) -> None:
         assert self.datasource, f"Class {self.__class__.__name__} must have a datasource."
         self.label = self.label or snake_to_sentence(self.__class__.__name__.removesuffix("Resource"))
@@ -87,6 +97,7 @@ class ResourceView(View):
         self.index_view = self.create_index_view_class()()
         self.edit_view = self.create_edit_view_class()()
         self.create_view = self.create_create_view_class()()
+        self.display_view = self.create_display_view_class()()
 
     @property
     def slug(self) -> str:
@@ -104,7 +115,16 @@ class ResourceView(View):
     def get_object_actions(self) -> list[actions.Action]:
         return [
             *self.object_actions,
+            ViewResourceAction(
+                label=self.display_resource_label.format(label=self.label, label_plural=self.label_plural)
+            ),
             EditResourceAction(label=self.edit_resource_label.format(label=self.label, label_plural=self.label_plural)),
+            DeleteResourceAction(),
+        ]
+
+    def get_batch_actions(self) -> list[actions.Action]:
+        return [
+            *self.batch_actions,
             DeleteResourceAction(),
         ]
 
@@ -121,6 +141,9 @@ class ResourceView(View):
             SaveResourceAndReturnAction(label=self.update_and_return_resource_form_label),
             ReturnToResourceIndexAction(label=self.cancel_resource_form_label),
         ]
+
+    def get_display_actions(self) -> list[actions.Action]:
+        return [*self.display_object_actions, DeleteResourceAction()]
 
     def create_index_view_class(self) -> type[View]:
         view = type(
@@ -140,7 +163,7 @@ class ResourceView(View):
                 actions=self.get_index_page_actions(),
                 metrics=self.page_metrics,
                 row_actions=self.get_object_actions(),
-                batch_actions=self.batch_actions,
+                batch_actions=self.get_batch_actions(),
                 search_param=self.search_param,
                 search_placeholder=self.search_placeholder,
                 url_name=self.get_index_route_name(),
@@ -184,6 +207,22 @@ class ResourceView(View):
         )
         return typing.cast(type[View], view)
 
+    def create_display_view_class(self) -> type[View]:
+        view = type(
+            "{label}ResourceDisplayView".format(label=self.label),
+            (views.DisplayView,),
+            dict(
+                label=self.display_label.format(label=self.label, label_plural=self.label_plural),
+                group=self.group,
+                url_name=self.get_display_route_name(),
+                layout_class=self.display_layout_class,
+                object_actions=self.get_display_actions(),
+                get_object=self.get_form_object,
+                fields=self.display_fields or self.columns,
+            ),
+        )
+        return typing.cast(type[View], view)
+
     def get_index_route_name(self) -> str:
         return "ohmyadmin.resource.{resource}.index".format(resource=self.slug)
 
@@ -217,6 +256,12 @@ class ResourceView(View):
                     "/{object_id}/edit",
                     routes=[
                         self.edit_view.get_route(),
+                    ],
+                ),
+                Mount(
+                    "/{object_id}/view",
+                    routes=[
+                        self.display_view.get_route(),
                     ],
                 ),
                 self.index_view.get_route(),
@@ -264,12 +309,11 @@ class ResourceView(View):
         await self.datasource.update(request, instance)
 
         toast_message = self.update_message.format(object=instance, label=self.label, label_plural=self.label_plural)
-        response = htmx.response().toast(toast_message)
+        response = htmx.response()
 
         form_data = await request.form()
         if SubmitActionType.SAVE_RETURN in form_data:
-            return response.location(request.url_for(self.get_index_route_name()))
+            flash(request).success(toast_message)
+            return response.location(request.url_for(self.get_index_route_name()), {"select": "#datatable"})
 
-        pk = self.datasource.get_pk(instance)
-        target_url = request.url_for(self.get_edit_route_name(), object_id=pk)
-        return response.location(target_url)
+        return response.toast(toast_message)

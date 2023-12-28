@@ -157,6 +157,9 @@ class Category(Base):
 
     parent: Mapped[Category | None] = relationship("Category")
 
+    def get_pk(self) -> int:
+        return self.id
+
     def __str__(self) -> str:
         return self.name or "n/a"
 

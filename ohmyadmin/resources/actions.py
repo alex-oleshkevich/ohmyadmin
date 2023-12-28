@@ -5,12 +5,13 @@ from starlette.datastructures import URL
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette_babel import gettext_lazy as _
+from starlette_flash import flash
 
 from ohmyadmin import htmx
 from ohmyadmin.actions import actions, ActionVariant
 from ohmyadmin.datasources.datasource import InFilter
 from ohmyadmin.templating import render_to_response
-from ohmyadmin.views import TableView
+from ohmyadmin.views import DisplayView, TableView
 
 if typing.TYPE_CHECKING:
     from ohmyadmin.resources.resource import ResourceView
@@ -44,6 +45,16 @@ class EditResourceAction(actions.LinkAction):
         assert object_id, f"{self.__class__.__name__} can be used in model context only."
         resource: ResourceView = request.state.resource
         return request.url_for(resource.get_edit_route_name(), object_id=object_id)
+
+
+class ViewResourceAction(actions.LinkAction):
+    def __init__(self, label: str = _("View")) -> None:
+        super().__init__(label=label, variant="default")
+
+    def get_url(self, request: Request, object_id: typing.Any | None = None) -> URL:
+        assert object_id, f"{self.__class__.__name__} can be used in model context only."
+        resource: ResourceView = request.state.resource
+        return request.url_for(resource.get_display_route_name(), object_id=object_id)
 
 
 class SaveResourceAction(actions.SubmitAction):
@@ -93,6 +104,10 @@ class DeleteResourceAction(actions.ModalAction):
         if request.method == "POST":
             message = self.message.format(count=total)
             await query.delete_all(request)
+            if isinstance(request.state.view, DisplayView):
+                flash(request).success(message)
+                redirect_to = request.url_for(resource.get_index_route_name())
+                return htmx.response().location(redirect_to)
             return htmx.response().close_modal().toast(message).refresh()
 
         return render_to_response(

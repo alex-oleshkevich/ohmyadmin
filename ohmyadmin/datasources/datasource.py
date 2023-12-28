@@ -26,6 +26,10 @@ class DuplicateError(DataSourceError):
     """Should be raised when datasource tries to insert a duplicate resource."""
 
 
+class NoObjectError(DataSourceError):
+    """Should be raised when datasource returned zero values but at least one expected."""
+
+
 class StringOperation(enum.Enum):
     CONTAINS = _("contains", domain="ohmyadmin")
     STARTSWITH = _("starts with", domain="ohmyadmin")
