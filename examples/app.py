@@ -15,8 +15,9 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from examples import settings
 from examples.models import User
-from examples.resources.categories.resource import CategoryResource
-from examples.resources.countries.resource import CountriesResource
+from examples.resources.brands import BrandsResource
+from examples.resources.categories import CategoryResource
+from examples.resources.countries import CountriesResource
 from examples.resources.custom_form_layout import CustomProductFormView
 from examples.resources.display_view import ProductView
 from examples.resources.form_view import ProductFormView
@@ -88,6 +89,7 @@ admin = OhMyAdmin(
         CustomProductFormView(),
         CountriesResource(),
         CategoryResource(),
+        BrandsResource(),
     ],
 )
 

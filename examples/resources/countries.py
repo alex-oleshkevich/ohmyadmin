@@ -1,18 +1,22 @@
-from ohmyadmin.views.form import FormView
-from ohmyadmin.views.resource import ResourceView
-from ohmyadmin.views.table import TableView
+import wtforms
+
+from examples.models import Country
+from ohmyadmin.datasources.sqlalchemy import SADataSource
+from ohmyadmin.resources.resource import ResourceView
+from ohmyadmin.views.table import Column
 
 
-class CountriesTable(TableView):
-    label = "Countries"
-
-
-class EditCountryView(FormView):
-    label = "Edit Country"
-    create_label = "Create country"
+class CountryForm(wtforms.Form):
+    code = wtforms.StringField(validators=[wtforms.validators.data_required()])
+    name = wtforms.StringField(validators=[wtforms.validators.data_required()])
 
 
 class CountriesResource(ResourceView):
-    index_view = CountriesTable
-    form_view = EditCountryView
-    create_form_view = EditCountryView
+    label = "Country"
+    group = "Shop"
+    datasource = SADataSource(Country)
+    form_class = CountryForm
+    columns = [
+        Column("code", searchable=True),
+        Column("name", searchable=True, sortable=True),
+    ]
