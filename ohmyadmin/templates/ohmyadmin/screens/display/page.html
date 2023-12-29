@@ -4,8 +4,8 @@
 
 {% block page_actions %}
     {% call actions.action_toolbar() %}
-        {% for action in view.object_actions %}
-            {{ actions.action_button(request, action, view, model) }}
+        {% for action in screen.object_actions %}
+            {{ actions.action_button(request, action, screen, model) }}
         {% endfor %}
     {% endcall %}
 {% endblock %}

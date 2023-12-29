@@ -11,8 +11,8 @@ from ohmyadmin import components
 from ohmyadmin.actions.actions import Action
 from ohmyadmin.datasources.datasource import NoObjectError
 from ohmyadmin.templating import render_to_response
-from ohmyadmin.views.base import ExposeViewMiddleware, View
-from ohmyadmin.views.table import Column
+from ohmyadmin.screens.base import ExposeViewMiddleware, Screen
+from ohmyadmin.screens.table import Column
 
 
 class DisplayLayoutBuilder(typing.Protocol):
@@ -49,7 +49,7 @@ class AutoDisplayLayout(BaseDisplayLayoutBuilder):
         )
 
 
-class DisplayView(View):
+class DisplayScreen(Screen):
     fields: typing.Sequence[Column] = tuple()
     object_actions: typing.Sequence[Action] = tuple()
     layout_class: typing.Type[DisplayLayoutBuilder] = AutoDisplayLayout
@@ -73,7 +73,7 @@ class DisplayView(View):
             request,
             self.template,
             {
-                "view": self,
+                "screen": self,
                 "model": instance,
                 "page_title": self.label,
                 "page_description": self.description,
@@ -95,7 +95,7 @@ class DisplayView(View):
                         for action in self.object_actions
                     ],
                     middleware=[
-                        Middleware(ExposeViewMiddleware, view=self),
+                        Middleware(ExposeViewMiddleware, screen=self),
                     ],
                 ),
             ],

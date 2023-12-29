@@ -5,8 +5,8 @@ from examples.models import Brand
 from ohmyadmin import components, filters, formatters
 from ohmyadmin.components import BaseFormLayoutBuilder
 from ohmyadmin.datasources.sqlalchemy import SADataSource
-from ohmyadmin.resources.resource import ResourceView
-from ohmyadmin.views.table import Column
+from ohmyadmin.resources.resource import ResourceScreen
+from ohmyadmin.screens.table import Column
 
 
 class BrandForm(wtforms.Form):
@@ -39,7 +39,7 @@ class _FormLayout(BaseFormLayoutBuilder):
         )
 
 
-class BrandsResource(ResourceView):
+class BrandsResource(ResourceScreen):
     label = _("Brand")
     datasource = SADataSource(Brand)
     form_class = BrandForm

@@ -9,13 +9,11 @@ from ohmyadmin import actions
 from ohmyadmin.datasources.datasource import InMemoryDataSource
 from ohmyadmin.pages.table import TablePage
 from ohmyadmin.testing import MarkupSelector
-from ohmyadmin.views.table import TableColumn
+from ohmyadmin.screens.table import TableColumn
 from tests.conftest import CreateTestAppFactory
 from tests.models import Post
 
-datasource = InMemoryDataSource(
-    Post, [Post(title="Title 1"), Post(title="Title 2"), Post(title="Title 3")]
-)
+datasource = InMemoryDataSource(Post, [Post(title="Title 1"), Post(title="Title 2"), Post(title="Title 3")])
 
 
 class ExamplePageAction(actions.BasePageAction):
@@ -35,9 +33,7 @@ class ExampleFormAction(actions.BaseFormPageAction):
     label = "Form Action"
     form_class = ExampleForm
 
-    async def handle(
-        self, request: Request, form: wtforms.Form, model: typing.Any
-    ) -> Response:
+    async def handle(self, request: Request, form: wtforms.Form, model: typing.Any) -> Response:
         return Response("FORM SUBMIT")
 
 
@@ -70,9 +66,7 @@ def test_renders_dispatchable_page_actions(
 
 
 @pytest.mark.parametrize("http_method", ["get", "post", "put", "patch", "delete"])
-def test_dispatches_page_actions(
-    create_test_app: CreateTestAppFactory, http_method: str
-) -> None:
+def test_dispatches_page_actions(create_test_app: CreateTestAppFactory, http_method: str) -> None:
     class DummyTable(TablePage):
         slug = "dummy"
         datasource = datasource
@@ -108,8 +102,6 @@ def test_undefined_action(create_test_app: CreateTestAppFactory) -> None:
         datasource = datasource
         columns = [TableColumn(name="title")]
 
-    with pytest.raises(
-        actions.UndefinedActionError, match='Action "undefined" is not defined.'
-    ):
+    with pytest.raises(actions.UndefinedActionError, match='Action "undefined" is not defined.'):
         client = TestClient(create_test_app(pages=[DummyTable()]))
         client.get("/admin/dummy?_action=undefined")

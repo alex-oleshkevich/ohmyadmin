@@ -1,5 +1,5 @@
 {% set confirmation = action.confirmation %}
-{% set url = url_for(view.get_action_route_name(action)) %}
+{% set url = url_for(screen.get_action_route_name(action)) %}
 {% if model %}
     {% set url = url.include_query_params(object_id=model|model_pk) %}
 {% endif %}

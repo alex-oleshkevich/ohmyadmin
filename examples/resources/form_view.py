@@ -8,7 +8,7 @@ from examples.models import Brand, Country
 from ohmyadmin import htmx
 from ohmyadmin.actions import actions
 from ohmyadmin.datasources.sqlalchemy import load_choices
-from ohmyadmin.views.form import FormView
+from ohmyadmin.screens.form import FormScreen
 
 
 class AttributeForm(wtforms.Form):
@@ -50,7 +50,7 @@ class ProductForm(wtforms.Form):
     attributes = wtforms.FieldList(wtforms.FormField(AttributeForm), min_entries=2)
 
 
-class ProductFormView(FormView):
+class ProductFormView(FormScreen):
     label = "Form view"
     group = "Views"
     description = "Demo of form view."

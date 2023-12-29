@@ -6,12 +6,10 @@ from ohmyadmin import actions, filters
 from ohmyadmin.datasources.datasource import InMemoryDataSource
 from ohmyadmin.metrics import ValueMetric
 from ohmyadmin.resources import Resource
-from ohmyadmin.views.table import TableColumn
+from ohmyadmin.screens.table import TableColumn
 from tests.models import Post
 
-datasource = InMemoryDataSource(
-    Post, [Post(id=x, title=f"Title {x}") for x in range(1, 100)]
-)
+datasource = InMemoryDataSource(Post, [Post(id=x, title=f"Title {x}") for x in range(1, 100)])
 
 
 class ExampleForm(wtforms.Form):
@@ -38,9 +36,7 @@ class ExampleBatchAction(actions.BaseBatchAction):
     slug = "example"
     label = "Toast"
 
-    async def apply(
-        self, request: Request, object_ids: list[str], form: wtforms.Form
-    ) -> Response:
+    async def apply(self, request: Request, object_ids: list[str], form: wtforms.Form) -> Response:
         return Response("ok")
 
 

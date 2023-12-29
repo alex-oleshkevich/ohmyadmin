@@ -11,10 +11,10 @@ from ohmyadmin import htmx
 from ohmyadmin.actions import actions, ActionVariant
 from ohmyadmin.datasources.datasource import InFilter
 from ohmyadmin.templating import render_to_response
-from ohmyadmin.views import DisplayView, TableView
+from ohmyadmin.screens import DisplayScreen, TableScreen
 
 if typing.TYPE_CHECKING:
-    from ohmyadmin.resources.resource import ResourceView
+    from ohmyadmin.resources.resource import ResourceScreen
 
 
 class SubmitActionType(enum.StrEnum):
@@ -33,7 +33,7 @@ class CreateResourceAction(actions.Action):
         self.variant = variant
 
     def get_url(self, request: Request, model: typing.Any | None = None) -> URL:
-        resource: ResourceView = request.state.resource
+        resource: ResourceScreen = request.state.resource
         return request.url_for(resource.get_create_route_name())
 
 
@@ -43,7 +43,7 @@ class EditResourceAction(actions.LinkAction):
 
     def get_url(self, request: Request, object_id: typing.Any | None = None) -> URL:
         assert object_id, f"{self.__class__.__name__} can be used in model context only."
-        resource: ResourceView = request.state.resource
+        resource: ResourceScreen = request.state.resource
         return request.url_for(resource.get_edit_route_name(), object_id=object_id)
 
 
@@ -53,7 +53,7 @@ class ViewResourceAction(actions.LinkAction):
 
     def get_url(self, request: Request, object_id: typing.Any | None = None) -> URL:
         assert object_id, f"{self.__class__.__name__} can be used in model context only."
-        resource: ResourceView = request.state.resource
+        resource: ResourceScreen = request.state.resource
         return request.url_for(resource.get_display_route_name(), object_id=object_id)
 
 
@@ -78,7 +78,7 @@ class ReturnToResourceIndexAction(actions.Action):
         self.variant = variant
 
     def get_url(self, request: Request) -> URL:
-        resource: ResourceView = request.state.resource
+        resource: ResourceScreen = request.state.resource
         return request.url_for(resource.get_index_route_name())
 
 
@@ -92,11 +92,11 @@ class DeleteResourceAction(actions.ModalAction):
         super().__init__(label=label, dangerous=True)
 
     async def dispatch(self, request: Request) -> Response:
-        resource: ResourceView = request.state.resource
-        index_view: TableView = resource.index_view
+        resource: ResourceScreen = request.state.resource
+        index_screen: TableScreen = resource.index_screen
         pk_field = resource.datasource.get_id_field()
-        query = index_view.get_query(request)
-        query = await index_view.apply_filters(request, query)
+        query = index_screen.get_query(request)
+        query = await index_screen.apply_filters(request, query)
         if not self.all_selected(request):
             query = query.filter(InFilter(pk_field, self.get_object_ids(request)))
         total = await query.count(request)
@@ -104,7 +104,7 @@ class DeleteResourceAction(actions.ModalAction):
         if request.method == "POST":
             message = self.message.format(count=total)
             await query.delete_all(request)
-            if isinstance(request.state.view, DisplayView):
+            if isinstance(request.state.view, DisplayScreen):
                 flash(request).success(message)
                 redirect_to = request.url_for(resource.get_index_route_name())
                 return htmx.response().location(redirect_to)

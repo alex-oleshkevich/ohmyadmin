@@ -9,7 +9,7 @@ from starlette.routing import BaseRoute, Mount
 from starlette_babel import gettext_lazy as _
 from starlette_flash import flash
 
-from ohmyadmin import filters, htmx, metrics, views
+from ohmyadmin import filters, htmx, metrics, screens
 from ohmyadmin.actions import actions
 from ohmyadmin.components import AutoLayout, FormLayoutBuilder
 from ohmyadmin.datasources.datasource import DataSource, DuplicateError, InFilter
@@ -26,11 +26,11 @@ from ohmyadmin.resources.actions import (
     ViewResourceAction,
 )
 from ohmyadmin.resources.policy import AccessPolicy, PermissiveAccessPolicy
-from ohmyadmin.views.base import ExposeViewMiddleware, View
-from ohmyadmin.views.table import Column
+from ohmyadmin.screens.base import ExposeViewMiddleware, Screen
+from ohmyadmin.screens.table import Column
 
 
-class ResourceView(View):
+class ResourceScreen(Screen):
     label: str = ""
     label_plural: str = ""
     index_label: str = _("{label_plural}", domain="ohmyadmin")
@@ -86,7 +86,7 @@ class ResourceView(View):
     create_form_actions: typing.Sequence[actions.Action] | None = None
 
     # display page
-    display_layout_class: type[views.DisplayLayoutBuilder] = views.AutoDisplayLayout
+    display_layout_class: type[screens.DisplayLayoutBuilder] = screens.AutoDisplayLayout
     display_object_actions: typing.Sequence[actions.Action] = tuple()
     display_fields: list[Column] = tuple()
 
@@ -94,10 +94,10 @@ class ResourceView(View):
         assert self.datasource, f"Class {self.__class__.__name__} must have a datasource."
         self.label = self.label or snake_to_sentence(self.__class__.__name__.removesuffix("Resource"))
         self.label_plural = self.label_plural or pluralize(self.label)
-        self.index_view = self.create_index_view_class()()
-        self.edit_view = self.create_edit_view_class()()
-        self.create_view = self.create_create_view_class()()
-        self.display_view = self.create_display_view_class()()
+        self.index_screen = self.create_index_screen_class()()
+        self.edit_screen = self.create_edit_screen_class()()
+        self.create_screen = self.create_create_screen_class()()
+        self.display_screen = self.create_display_screen_class()()
 
     @property
     def slug(self) -> str:
@@ -145,10 +145,10 @@ class ResourceView(View):
     def get_display_actions(self) -> list[actions.Action]:
         return [*self.display_object_actions, DeleteResourceAction()]
 
-    def create_index_view_class(self) -> type[View]:
-        view = type(
-            "{label}ResourceIndexView".format(label=self.label),
-            (views.TableView,),
+    def create_index_screen_class(self) -> type[Screen]:
+        screen = type(
+            "{label}ResourceIndexScreen".format(label=self.label),
+            (screens.TableScreen,),
             dict(
                 label=self.index_label.format(label=self.label, label_plural=self.label_plural),
                 group=self.group,
@@ -169,12 +169,12 @@ class ResourceView(View):
                 url_name=self.get_index_route_name(),
             ),
         )
-        return typing.cast(type[View], view)
+        return typing.cast(type[Screen], screen)
 
-    def create_edit_view_class(self) -> type[View]:
-        view = type(
-            "{label}ResourceEditView".format(label=self.label),
-            (views.FormView,),
+    def create_edit_screen_class(self) -> type[Screen]:
+        screen = type(
+            "{label}ResourceEditScreen".format(label=self.label),
+            (screens.FormScreen,),
             dict(
                 label=self.edit_label.format(label=self.label, label_plural=self.label_plural),
                 group=self.group,
@@ -187,12 +187,12 @@ class ResourceView(View):
                 handle=self.perform_update,
             ),
         )
-        return typing.cast(type[View], view)
+        return typing.cast(type[Screen], screen)
 
-    def create_create_view_class(self) -> type[View]:
-        view = type(
-            "{label}ResourceCreateView".format(label=self.label),
-            (views.FormView,),
+    def create_create_screen_class(self) -> type[Screen]:
+        screen = type(
+            "{label}ResourceCreateScreen".format(label=self.label),
+            (screens.FormScreen,),
             dict(
                 label=self.create_label.format(label=self.label, label_plural=self.label_plural),
                 group=self.group,
@@ -205,12 +205,12 @@ class ResourceView(View):
                 handle=self.perform_create,
             ),
         )
-        return typing.cast(type[View], view)
+        return typing.cast(type[Screen], screen)
 
-    def create_display_view_class(self) -> type[View]:
-        view = type(
-            "{label}ResourceDisplayView".format(label=self.label),
-            (views.DisplayView,),
+    def create_display_screen_class(self) -> type[Screen]:
+        screen = type(
+            "{label}ResourceDisplayScreen".format(label=self.label),
+            (screens.DisplayScreen,),
             dict(
                 label=self.display_label.format(label=self.label, label_plural=self.label_plural),
                 group=self.group,
@@ -221,7 +221,7 @@ class ResourceView(View):
                 fields=self.display_fields or self.columns,
             ),
         )
-        return typing.cast(type[View], view)
+        return typing.cast(type[Screen], screen)
 
     def get_index_route_name(self) -> str:
         return "ohmyadmin.resource.{resource}.index".format(resource=self.slug)
@@ -249,24 +249,24 @@ class ResourceView(View):
                 Mount(
                     "/new",
                     routes=[
-                        self.create_view.get_route(),
+                        self.create_screen.get_route(),
                     ],
                 ),
                 Mount(
                     "/{object_id}/edit",
                     routes=[
-                        self.edit_view.get_route(),
+                        self.edit_screen.get_route(),
                     ],
                 ),
                 Mount(
                     "/{object_id}/view",
                     routes=[
-                        self.display_view.get_route(),
+                        self.display_screen.get_route(),
                     ],
                 ),
-                self.index_view.get_route(),
+                self.index_screen.get_route(),
             ],
-            middleware=[Middleware(ExposeViewMiddleware, view=self, resource=self)],
+            middleware=[Middleware(ExposeViewMiddleware, screen=self, resource=self)],
         )
 
     async def init_form(self, request: Request, form: wtforms.Form) -> None:

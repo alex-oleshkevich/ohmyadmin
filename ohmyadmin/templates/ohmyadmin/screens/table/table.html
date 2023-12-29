@@ -3,25 +3,25 @@
 {% import 'ohmyadmin/actions.html' as actions %}
 
 {% macro render_head_cell(request, column) %}
-    {% include 'ohmyadmin/views/table/table_head_cell.html' %}
+    {% include 'ohmyadmin/screens/table/table_head_cell.html' %}
 {% endmacro %}
 
 {% macro render_cell(request, column, object) %}
     {% set value = column.get_value(object) %}
     {% set value = column.format_value(request, value) %}
-    {% include 'ohmyadmin/views/table/table_cell.html' %}
+    {% include 'ohmyadmin/screens/table/table_cell.html' %}
 {% endmacro %}
 
 {% if oob_filters %}
     <div hx-swap-oob="innerHTML" id="view-filters">
-        {% include 'ohmyadmin/views/table/filters_bar.html' %}
+        {% include 'ohmyadmin/screens/table/filters_bar.html' %}
     </div>
 {% endif %}
 
 <table data-test="datatable">
     <thead>
     <tr>
-        {% if table.batch_actions %}
+        {% if screen.batch_actions %}
             <th class="w-4">
                 <div class="flex items-center justify-start w-auto">
                     <button
@@ -51,12 +51,12 @@
                 </div>
             </th>
         {% endif %}
-        {% for column in table.columns %}
+        {% for column in screen.columns %}
             <th class="whitespace-nowrap">
                 {{ render_head_cell(request, column) }}
             </th>
         {% endfor %}
-        {% if table.row_actions %}
+        {% if screen.row_actions %}
             <th></th>
         {% endif %}
     </tr>
@@ -64,7 +64,7 @@
     <tbody>
     {% for object in objects %}
         <tr x-data="{selected: false}" :class="{selected}">
-            {% if table.batch_actions %}
+            {% if screen.batch_actions %}
                 <th>
                     <div class="flex items-center justify-start">
                         <input type="checkbox" name="object_id" @input="selected = $el.checked" :checked="selected"
@@ -72,10 +72,10 @@
                     </div>
                 </th>
             {% endif %}
-            {% for column in table.columns %}
+            {% for column in screen.columns %}
                 <td>{{ render_cell(request, column, object) }}</td>
             {% endfor %}
-            {% if table.row_actions %}
+            {% if screen.row_actions %}
                 <td>
                     <div class="flex items-center justify-end gap-2">
                         <button class="btn btn-icon" id="object-menu-{{ loop.index0 }}">
@@ -85,8 +85,8 @@
                     <o-popover trigger="#object-menu-{{ loop.index0 }}" placement="bottom-end">
                         <div class="dropdown absolute hidden">
                             <div class="list-menu" hx-include="this">
-                                {% for row_action in table.row_actions %}
-                                    {{ actions.action_menu_item(request, row_action, view, object) }}
+                                {% for row_action in screen.row_actions %}
+                                    {{ actions.action_menu_item(request, row_action, screen, object) }}
                                 {% endfor %}
                             </div>
                         </div>

@@ -10,13 +10,11 @@ from ohmyadmin.actions import BaseObjectAction
 from ohmyadmin.datasources.datasource import InMemoryDataSource
 from ohmyadmin.pages.table import TablePage
 from ohmyadmin.testing import MarkupSelector
-from ohmyadmin.views.table import TableColumn
+from ohmyadmin.screens.table import TableColumn
 from tests.conftest import CreateTestAppFactory
 from tests.models import Post
 
-datasource = InMemoryDataSource(
-    Post, [Post(title="Title 1"), Post(title="Title 2"), Post(title="Title 3")]
-)
+datasource = InMemoryDataSource(Post, [Post(title="Title 1"), Post(title="Title 2"), Post(title="Title 3")])
 
 
 class ExampleObjectAction(BaseObjectAction):
@@ -36,9 +34,7 @@ class ExampleFormAction(actions.BaseFormObjectAction):
     label = "Form Action"
     form_class = ExampleForm
 
-    async def handle(
-        self, request: Request, form: wtforms.Form, model: typing.Any
-    ) -> Response:
+    async def handle(self, request: Request, form: wtforms.Form, model: typing.Any) -> Response:
         return Response("FORM SUBMIT")
 
 
@@ -65,15 +61,11 @@ def test_renders_object_actions(create_test_app: CreateTestAppFactory) -> None:
     client = TestClient(create_test_app(pages=[DummyTable()]))
     response = client.get("/admin/dummy")
     page = MarkupSelector(response.text)
-    assert (
-        page.get_text('td[data-test="table-object-actions"]') == "Example Object Action"
-    )
+    assert page.get_text('td[data-test="table-object-actions"]') == "Example Object Action"
 
 
 @pytest.mark.parametrize("http_method", ["get", "post", "put", "patch", "delete"])
-def test_dispatches_object_action(
-    create_test_app: CreateTestAppFactory, http_method: str
-) -> None:
+def test_dispatches_object_action(create_test_app: CreateTestAppFactory, http_method: str) -> None:
     class DummyTable(TablePage):
         slug = "dummy"
         datasource = datasource
@@ -123,8 +115,6 @@ def test_undefined_action(create_test_app: CreateTestAppFactory) -> None:
         datasource = datasource
         columns = [TableColumn(name="title")]
 
-    with pytest.raises(
-        actions.UndefinedActionError, match='Object action "undefined" is not defined.'
-    ):
+    with pytest.raises(actions.UndefinedActionError, match='Object action "undefined" is not defined.'):
         client = TestClient(create_test_app(pages=[DummyTable()]))
         client.get("/admin/dummy?_object_action=undefined")

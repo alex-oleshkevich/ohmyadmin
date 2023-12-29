@@ -1,5 +1,4 @@
 import abc
-import typing
 
 import slugify
 from starlette.datastructures import URL
@@ -8,11 +7,10 @@ from starlette.responses import Response
 from starlette.routing import BaseRoute, Route
 from starlette.types import ASGIApp, Receive, Scope, Send
 
-from ohmyadmin.datasources.datasource import DataSource
 from ohmyadmin.menu import MenuItem
 
 
-class View(abc.ABC):
+class Screen(abc.ABC):
     label: str = ""
     description: str = ""
     group: str = ""
@@ -25,7 +23,7 @@ class View(abc.ABC):
     @property
     def url_name(self) -> str:
         view_name = self.slug.replace("/", "_")
-        return f"ohmyadmin.view.{view_name}"
+        return f"ohmyadmin.screen.{view_name}"
 
     def get_url(self, request: Request) -> URL:
         return request.url_for(self.url_name)
@@ -47,19 +45,13 @@ class View(abc.ABC):
 
 
 class ExposeViewMiddleware:
-    def __init__(self, app: ASGIApp, **views: View) -> None:
+    def __init__(self, app: ASGIApp, **variables: Screen) -> None:
         self.app = app
-        self.views = views
+        self.variables = variables
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         request = Request(scope, receive, send)
-        for name, view in self.views.items():
-            setattr(request.state, name, view)
+        for name, value in self.variables.items():
+            setattr(request.state, name, value)
 
         await self.app(scope, receive, send)
-
-
-@typing.runtime_checkable
-class HasFilters(typing.Protocol):
-    def apply_filters(self, request: Request, query: DataSource) -> typing.Awaitable[DataSource]:
-        ...

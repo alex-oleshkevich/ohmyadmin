@@ -82,7 +82,7 @@ admin = OhMyAdmin(
         logo="https://jelpy.io/static/logo.svg",
         title="Jelpy",
     ),
-    views=[
+    screens=[
         UsersTable(),
         ProductView(),
         ProductFormView(),

@@ -4,7 +4,7 @@
 
 {% block content %}
     <form hx-boost="true" hx-include="this" method="post" enctype="multipart/form-data">
-        {% include 'ohmyadmin/views/form/form.html' %}
+        {% include 'ohmyadmin/screens/form/form.html' %}
         <div class="form-actions mt-10">
             {% for action in form_actions %}
                 {{ actions.action_button(request, action, view, model) }}

@@ -6,8 +6,8 @@ from examples.models import Category
 from ohmyadmin import formatters
 from ohmyadmin.datasources.sqlalchemy import load_choices, SADataSource
 from ohmyadmin.forms.utils import safe_int_coerce
-from ohmyadmin.resources.resource import ResourceView
-from ohmyadmin.views.table import Column
+from ohmyadmin.resources.resource import ResourceScreen
+from ohmyadmin.screens.table import Column
 
 
 class CategoryForm(wtforms.Form):
@@ -18,7 +18,7 @@ class CategoryForm(wtforms.Form):
     description = wtforms.TextAreaField()
 
 
-class CategoryResource(ResourceView):
+class CategoryResource(ResourceScreen):
     group = "Shop"
     form_class = CategoryForm
     datasource = SADataSource(Category)

@@ -39,7 +39,7 @@ from ohmyadmin.metrics.partition import Partition, PartitionMetric
 from ohmyadmin.metrics.progress import ProgressMetric
 from ohmyadmin.metrics.trend import TrendMetric, TrendValue
 from ohmyadmin.metrics.value import ValueMetric, ValueValue
-from ohmyadmin.views.table import Column, TableView
+from ohmyadmin.screens.table import Column, TableScreen
 
 
 def user_edit_url(request: Request) -> URL:
@@ -74,7 +74,7 @@ async def create_user_callback(request: Request, form: CreateUserForm) -> Respon
 
 
 async def object_toast_callback(request: Request) -> Response:
-    view: TableView = request.state.view
+    view: TableScreen = request.state.screen
     query = view.get_query(request).filter(InFilter("id", request.query_params.get("object_id")))
     count = await query.count(request)
     return response().toast(f"Object selected: {count}.").close_modal()
@@ -92,7 +92,7 @@ async def object_form_callback(request: Request, form: wtforms.Form) -> Response
 
 async def delete_selected_callback(request: Request, form: wtforms.Form) -> Response:
     print(form.data)
-    view: TableView = request.state.view
+    view: TableScreen = request.state.view
     query = view.get_query(request)
     query = await view.apply_filters(request, query)
     if "__all__" not in request.query_params:
@@ -166,7 +166,7 @@ class ActivationProgressMetric(ProgressMetric):
         return result.scalars().one()
 
 
-class UsersTable(TableView):
+class UsersTable(TableScreen):
     label = "Table view"
     group = "Views"
     description = "Demo of table view."

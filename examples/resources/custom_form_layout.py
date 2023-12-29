@@ -9,7 +9,7 @@ from ohmyadmin import htmx, components
 from ohmyadmin.actions import actions
 from ohmyadmin.datasources.sqlalchemy import load_choices
 from ohmyadmin.components import BaseFormLayoutBuilder, Component
-from ohmyadmin.views.form import FormView
+from ohmyadmin.screens.form import FormScreen
 
 
 class AttributeForm(wtforms.Form):
@@ -159,7 +159,7 @@ class FormLayout(BaseFormLayoutBuilder):
         )
 
 
-class CustomProductFormView(FormView):
+class CustomProductFormView(FormScreen):
     label = "Custom form layout"
     group = "Views"
     description = "Demo of form view."

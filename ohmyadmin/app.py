@@ -23,19 +23,19 @@ from ohmyadmin.middleware import LoginRequiredMiddleware
 from ohmyadmin.storages.storage import FileStorage
 from ohmyadmin.templating import model_pk, static_url, url_matches
 from ohmyadmin.theme import Theme
-from ohmyadmin.views.base import View
+from ohmyadmin.screens.base import Screen
 
 
 class OhMyAdmin(Router):
     def __init__(
         self,
-        views: list[View] | None = None,
+        screens: list[Screen] | None = None,
         theme: Theme = Theme(),
         file_storage: FileStorage | None = None,
         auth_policy: AuthPolicy | None = None,
     ) -> None:
         self.theme = theme
-        self.views = views or []
+        self.screens = screens or []
         self.auth_policy = auth_policy or AnonymousAuthPolicy()
         self.file_storage = file_storage
 
@@ -81,12 +81,12 @@ class OhMyAdmin(Router):
                     *[
                         Mount(
                             "/{group_slug}/{view_slug}".format(
-                                group_slug=slugify.slugify(view.group),
-                                view_slug=view.slug,
+                                group_slug=slugify.slugify(screen.group),
+                                view_slug=screen.slug,
                             ),
-                            routes=[view.get_route()],
+                            routes=[screen.get_route()],
                         )
-                        for view in self.views
+                        for screen in self.screens
                     ],
                 ],
                 middleware=[
@@ -129,11 +129,11 @@ class OhMyAdmin(Router):
         return RedirectResponse(request.url_for("ohmyadmin.login"), status_code=302)
 
     async def generate_menu(self, request: Request) -> list[MenuItem]:
-        groups = itertools.groupby(self.views, key=operator.attrgetter("group"))
+        groups = itertools.groupby(self.screens, key=operator.attrgetter("group"))
         return [
             MenuItem(
                 label=group[0],
-                children=[await view.get_menu_item(request) for view in group[1]],
+                children=[await screen.get_menu_item(request) for screen in group[1]],
             )
             for group in groups
         ]

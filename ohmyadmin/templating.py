@@ -39,13 +39,13 @@ def model_pk(context: jinja2.runtime.Context, obj: typing.Any) -> str:
         return resource.datasource.get_pk(obj)
     except AttributeError:
         try:
-            view = request.state.view
-            return view.datasource.get_pk(obj)
+            screen = request.state.screen
+            return screen.datasource.get_pk(obj)
         except AttributeError:
             # still no luck? let's iterate over all registered resources and  may be some of them can parse it
-            for view in request.state.ohmyadmin.views:
-                if hasattr(view, "datasource"):
-                    return view.datasource.get_pk(obj)
+            for screen in request.state.ohmyadmin.screens:
+                if hasattr(screen, "datasource"):
+                    return screen.datasource.get_pk(obj)
 
             raise ValueError(f"Can't infer primary key. No datasource found for {type(obj).__name__}")
 

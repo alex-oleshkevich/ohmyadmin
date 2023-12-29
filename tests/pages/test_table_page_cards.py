@@ -5,7 +5,7 @@ from starlette.testclient import TestClient
 from ohmyadmin.datasources.datasource import InMemoryDataSource
 from ohmyadmin.metrics import UndefinedCardError, ValueMetric
 from ohmyadmin.pages.table import TablePage
-from ohmyadmin.views.table import TableColumn
+from ohmyadmin.screens.table import TableColumn
 from tests.conftest import CreateTestAppFactory
 from tests.models import Post
 
@@ -20,9 +20,7 @@ class ExampleCard(ValueMetric):
 def test_renders_cards(create_test_app: CreateTestAppFactory) -> None:
     class DummyTable(TablePage):
         slug = "dummy"
-        datasource = InMemoryDataSource(
-            Post, [Post(title="Title 1"), Post(title="Title 2"), Post(title="Title 3")]
-        )
+        datasource = InMemoryDataSource(Post, [Post(title="Title 1"), Post(title="Title 2"), Post(title="Title 3")])
         columns = [TableColumn(name="title")]
         metrics = [ExampleCard]
 
@@ -34,9 +32,7 @@ def test_renders_cards(create_test_app: CreateTestAppFactory) -> None:
 def test_dispatches_cards(create_test_app: CreateTestAppFactory) -> None:
     class DummyTable(TablePage):
         slug = "dummy"
-        datasource = InMemoryDataSource(
-            Post, [Post(title="Title 1"), Post(title="Title 2"), Post(title="Title 3")]
-        )
+        datasource = InMemoryDataSource(Post, [Post(title="Title 1"), Post(title="Title 2"), Post(title="Title 3")])
         columns = [TableColumn(name="title")]
         metrics = [ExampleCard]
 
@@ -48,9 +44,7 @@ def test_dispatches_cards(create_test_app: CreateTestAppFactory) -> None:
 def test_undefined_card(create_test_app: CreateTestAppFactory) -> None:
     class DummyTable(TablePage):
         slug = "dummy"
-        datasource = InMemoryDataSource(
-            Post, [Post(title="Title 1"), Post(title="Title 2"), Post(title="Title 3")]
-        )
+        datasource = InMemoryDataSource(Post, [Post(title="Title 1"), Post(title="Title 2"), Post(title="Title 3")])
         columns = [TableColumn(name="title")]
 
     with pytest.raises(UndefinedCardError, match='Metric "example" is not defined.'):

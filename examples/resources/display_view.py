@@ -8,8 +8,8 @@ from examples.models import Product
 from examples.resources.users_table import create_user_callback, CreateUserForm, PLUS_ICON, show_toast_callback
 from ohmyadmin import components, formatters
 from ohmyadmin.actions import actions
-from ohmyadmin.views.display import BaseDisplayLayoutBuilder, DisplayView
-from ohmyadmin.views.table import Column
+from ohmyadmin.screens.display import BaseDisplayLayoutBuilder, DisplayScreen
+from ohmyadmin.screens.table import Column
 
 
 class ProductLayout(BaseDisplayLayoutBuilder):
@@ -117,7 +117,7 @@ class ProductLayout(BaseDisplayLayoutBuilder):
         )
 
 
-class ProductView(DisplayView):
+class ProductView(DisplayScreen):
     label = "Display view"
     group = "Views"
     description = "Demo of display view."

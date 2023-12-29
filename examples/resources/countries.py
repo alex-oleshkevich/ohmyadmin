@@ -2,8 +2,8 @@ import wtforms
 
 from examples.models import Country
 from ohmyadmin.datasources.sqlalchemy import SADataSource
-from ohmyadmin.resources.resource import ResourceView
-from ohmyadmin.views.table import Column
+from ohmyadmin.resources.resource import ResourceScreen
+from ohmyadmin.screens.table import Column
 
 
 class CountryForm(wtforms.Form):
@@ -11,7 +11,7 @@ class CountryForm(wtforms.Form):
     name = wtforms.StringField(validators=[wtforms.validators.data_required()])
 
 
-class CountriesResource(ResourceView):
+class CountriesResource(ResourceScreen):
     label = "Country"
     group = "Shop"
     datasource = SADataSource(Country)

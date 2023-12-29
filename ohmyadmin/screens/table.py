@@ -17,7 +17,7 @@ from ohmyadmin.metrics.base import Metric
 from ohmyadmin.ordering import SortingHelper
 from ohmyadmin.pagination import get_page_size_value, get_page_value
 from ohmyadmin.templating import render_to_response
-from ohmyadmin.views.base import ExposeViewMiddleware, View
+from ohmyadmin.screens.base import ExposeViewMiddleware, Screen
 
 
 def default_value_getter(obj: typing.Any, attr: str) -> typing.Any:
@@ -52,7 +52,7 @@ class Column:
         return self.formatter(request, value)
 
 
-class TableView(View):
+class TableScreen(Screen):
     page_param: typing.ClassVar[str] = "page"
     page_size_param: typing.ClassVar[str] = "page_size"
     page_size: typing.ClassVar[int] = 25
@@ -69,7 +69,7 @@ class TableView(View):
     search_param: str = "search"
     search_placeholder: str = ""
 
-    template = "ohmyadmin/views/table/page.html"
+    template = "ohmyadmin/screens/table/page.html"
 
     def __init__(self) -> None:
         self.columns = list(self.columns)
@@ -112,7 +112,7 @@ class TableView(View):
         rows = await query.paginate(request, page, page_size)
         template = self.template
         if htmx.matches_target(request, "datatable"):
-            template = "ohmyadmin/views/table/table.html"
+            template = "ohmyadmin/screens/table/table.html"
 
         should_refresh_filters = htmx.matches_target(request, "datatable") and any(
             ["x-ohmyadmin-force-filter-refresh" in request.headers, any([f.is_active(request) for f in self.filters])]
@@ -131,8 +131,7 @@ class TableView(View):
             request,
             template,
             {
-                "table": self,
-                "view": self,
+                "screen": self,
                 "objects": rows,
                 "sorting": sorting,
                 "page_description": self.description,
@@ -157,14 +156,14 @@ class TableView(View):
                         for action in [*self.actions, *self.row_actions, *self.batch_actions]
                     ],
                     middleware=[
-                        Middleware(ExposeViewMiddleware, view=self),
+                        Middleware(ExposeViewMiddleware, screen=self),
                     ],
                 ),
                 Mount(
                     "/metrics",
                     routes=[metric.get_route(self.url_name) for metric in self.metrics],
                     middleware=[
-                        Middleware(ExposeViewMiddleware, view=self),
+                        Middleware(ExposeViewMiddleware, screen=self),
                     ],
                 ),
             ],

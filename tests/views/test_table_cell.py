@@ -7,7 +7,7 @@ from ohmyadmin.helpers import LazyObjectURL, LazyURL
 from ohmyadmin.ordering import SortingHelper
 from ohmyadmin.pages.table import TablePage
 from ohmyadmin.testing import MarkupSelector
-from ohmyadmin.views.table import TableColumn
+from ohmyadmin.screens.table import TableColumn
 from tests.conftest import CreateTestAppFactory
 from tests.models import Post
 
@@ -66,14 +66,10 @@ def test_cell_renders_sortable_head_cell(http_request: Request) -> None:
     selector = MarkupSelector(cell.render_head_cell(http_request))
     assert selector.has_node("svg")
     assert selector.has_node("a")
-    assert (
-        selector.get_attribute("a", "href") == "http://testserver/admin/?ordering=title"
-    )
+    assert selector.get_attribute("a", "href") == "http://testserver/admin/?ordering=title"
 
 
-def test_cell_renders_link(
-    create_test_app: CreateTestAppFactory, datasource: DataSource
-) -> None:
+def test_cell_renders_link(create_test_app: CreateTestAppFactory, datasource: DataSource) -> None:
     dataset = datasource
 
     class MyPage(TablePage):
@@ -86,71 +82,47 @@ def test_cell_renders_link(
     response = client.get("/admin/mypage")
     selector = MarkupSelector(response.text)
     assert selector.has_node('[data-test="datatable"] tbody tr td:first-child a')
+    assert selector.get_text('[data-test="datatable"] tbody tr td:first-child a') == "Title 1"
     assert (
-        selector.get_text('[data-test="datatable"] tbody tr td:first-child a')
-        == "Title 1"
-    )
-    assert (
-        selector.get_attribute(
-            '[data-test="datatable"] tbody tr td:first-child a', "href"
-        )
+        selector.get_attribute('[data-test="datatable"] tbody tr td:first-child a', "href")
         == "http://testserver/admin/mypage/"
     )
 
 
-def test_cell_renders_lazy_link(
-    create_test_app: CreateTestAppFactory, datasource: DataSource
-) -> None:
+def test_cell_renders_lazy_link(create_test_app: CreateTestAppFactory, datasource: DataSource) -> None:
     dataset = datasource
 
     class MyPage(TablePage):
         slug = "mypage"
         datasource = dataset
-        columns = [
-            TableColumn("title", link=LazyURL("posts", path_params={"id": "100"}))
-        ]
+        columns = [TableColumn("title", link=LazyURL("posts", path_params={"id": "100"}))]
 
     app = create_test_app(pages=[MyPage()])
     client = TestClient(app)
     response = client.get("/admin/mypage")
     selector = MarkupSelector(response.text)
     assert (
-        selector.get_attribute(
-            '[data-test="datatable"] tbody tr td:first-child a', "href"
-        )
+        selector.get_attribute('[data-test="datatable"] tbody tr td:first-child a', "href")
         == "http://testserver/posts/100"
     )
 
 
-def test_cell_renders_lazy_object_link(
-    create_test_app: CreateTestAppFactory, datasource: DataSource
-) -> None:
+def test_cell_renders_lazy_object_link(create_test_app: CreateTestAppFactory, datasource: DataSource) -> None:
     dataset = datasource
 
     class MyPage(TablePage):
         slug = "mypage"
         datasource = dataset
-        columns = [
-            TableColumn(
-                "title", link=LazyObjectURL(factory=lambda r, o: URL("/to-object"))
-            )
-        ]
+        columns = [TableColumn("title", link=LazyObjectURL(factory=lambda r, o: URL("/to-object")))]
 
     app = create_test_app(pages=[MyPage()])
     client = TestClient(app)
     response = client.get("/admin/mypage")
     selector = MarkupSelector(response.text)
-    assert (
-        selector.get_attribute(
-            '[data-test="datatable"] tbody tr td:first-child a', "href"
-        )
-        == "/to-object"
-    )
+    assert selector.get_attribute('[data-test="datatable"] tbody tr td:first-child a', "href") == "/to-object"
 
 
-def test_cell_renders_simple_link(
-    create_test_app: CreateTestAppFactory, datasource: DataSource
-) -> None:
+def test_cell_renders_simple_link(create_test_app: CreateTestAppFactory, datasource: DataSource) -> None:
     dataset = datasource
 
     class MyPage(TablePage):
@@ -162,9 +134,4 @@ def test_cell_renders_simple_link(
     client = TestClient(app)
     response = client.get("/admin/mypage")
     selector = MarkupSelector(response.text)
-    assert (
-        selector.get_attribute(
-            '[data-test="datatable"] tbody tr td:first-child a', "href"
-        )
-        == "http://example.com"
-    )
+    assert selector.get_attribute('[data-test="datatable"] tbody tr td:first-child a', "href") == "http://example.com"
