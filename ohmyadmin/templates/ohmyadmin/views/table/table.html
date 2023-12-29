@@ -68,7 +68,7 @@
                 <th>
                     <div class="flex items-center justify-start">
                         <input type="checkbox" name="object_id" @input="selected = $el.checked" :checked="selected"
-                               value="{{ table.datasource.get_pk(object) }}">
+                               value="{{ object|model_pk }}">
                     </div>
                 </th>
             {% endif %}
