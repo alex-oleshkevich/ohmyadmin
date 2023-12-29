@@ -53,7 +53,7 @@ class DisplayScreen(Screen):
     fields: typing.Sequence[Column] = tuple()
     object_actions: typing.Sequence[Action] = tuple()
     layout_class: typing.Type[DisplayLayoutBuilder] = AutoDisplayLayout
-    template = "ohmyadmin/views/display/page.html"
+    template = "ohmyadmin/screens/display/page.html"
 
     @abc.abstractmethod
     async def get_object(self, request: Request) -> typing.Any:

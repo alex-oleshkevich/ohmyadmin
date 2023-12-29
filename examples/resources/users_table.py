@@ -171,6 +171,8 @@ class UsersTable(TableScreen):
     group = "Views"
     description = "Demo of table view."
     datasource = SADataSource(User)
+    searchable_fields = ["last_name", "email"]
+    ordering_fields = "last_name", "email", "rating", "birthdate", "created_at"
     metrics = (
         GenderDistributionMetric(),
         RegistrationsByYearMetric(),
@@ -215,7 +217,7 @@ class UsersTable(TableScreen):
             icon=PLUS_ICON,
         ),
     ]
-    row_actions = [
+    object_actions = [
         actions.LinkAction(url="/admin", label="Show details"),
         actions.CallbackAction(label="Show toast", callback=object_toast_callback),
         actions.CallbackAction(
@@ -238,7 +240,7 @@ class UsersTable(TableScreen):
             icon=PLUS_ICON,
         ),
     ]
-    actions = [
+    page_actions = [
         actions.LinkAction(url="/admin", label="To Main page"),
         actions.CallbackAction("Show toast", callback=show_toast_callback),
         actions.ModalAction(
@@ -255,12 +257,12 @@ class UsersTable(TableScreen):
     columns = [
         Column("photo", formatter=AvatarFormatter()),
         Column("first_name", formatter=LinkFormatter(url="/admin")),
-        Column("last_name", searchable=True, sortable=True),
+        Column("last_name"),
         Column("birthdate", formatter=DateFormatter()),
         Column("balance", formatter=NumberFormatter(prefix="$", align="right")),
         Column("rating"),
-        Column("email", searchable=True),
-        Column("is_active", sortable=True, formatter=BoolFormatter(as_text=True)),
+        Column("email"),
+        Column("is_active", formatter=BoolFormatter(as_text=True)),
         Column("gender", formatter=CallbackFormatter(lambda r, v: snake_to_sentence(v))),
-        Column("created_at", sortable=True, formatter=DateFormatter()),
+        Column("created_at", formatter=DateFormatter()),
     ]

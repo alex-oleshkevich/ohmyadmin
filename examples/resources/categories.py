@@ -8,6 +8,7 @@ from ohmyadmin.datasources.sqlalchemy import load_choices, SADataSource
 from ohmyadmin.forms.utils import safe_int_coerce
 from ohmyadmin.resources.resource import ResourceScreen
 from ohmyadmin.screens.table import Column
+from ohmyadmin.views.table import TableView
 
 
 class CategoryForm(wtforms.Form):
@@ -22,11 +23,13 @@ class CategoryResource(ResourceScreen):
     group = "Shop"
     form_class = CategoryForm
     datasource = SADataSource(Category)
-    columns = [
-        Column("name"),
-        Column("parent_id"),
-        Column("visible_to_customers", formatter=formatters.BoolFormatter()),
-    ]
+    index_view = TableView(
+        columns=[
+            Column("name"),
+            Column("parent_id"),
+            Column("visible_to_customers", formatter=formatters.BoolFormatter()),
+        ]
+    )
 
     async def init_form(self, request: Request, form: CategoryForm) -> None:
         await load_choices(request.state.dbsession, form.parent_id, sa.select(Category).order_by(Category.name))

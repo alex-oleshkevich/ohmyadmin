@@ -66,9 +66,9 @@ class Filter(abc.ABC, typing.Generic[F]):
 class SearchFilter(Filter):
     visible_in_toolbar = False
 
-    def __init__(self, field_name: str, searchable_fields: list[str]) -> None:
+    def __init__(self, model_fields: typing.Sequence[str], field_name: str = "search") -> None:
         super().__init__(field_name=field_name)
-        self.searchable_fields = searchable_fields
+        self.model_fields = model_fields
 
     def apply(self, request: Request, query: DataSource, form: wtforms.Form) -> DataSource:
         value = request.query_params.get(self.field_name, "")
@@ -85,7 +85,7 @@ class SearchFilter(Filter):
                             predicate=datasource.StringOperation.STARTSWITH,
                             case_insensitive=True,
                         )
-                        for field in self.searchable_fields
+                        for field in self.model_fields
                     ]
                 )
             )
@@ -99,7 +99,7 @@ class SearchFilter(Filter):
                             predicate=datasource.StringOperation.EXACT,
                             case_insensitive=True,
                         )
-                        for field in self.searchable_fields
+                        for field in self.model_fields
                     ]
                 )
             )
@@ -113,7 +113,7 @@ class SearchFilter(Filter):
                             predicate=datasource.StringOperation.ENDSWITH,
                             case_insensitive=True,
                         )
-                        for field in self.searchable_fields
+                        for field in self.model_fields
                     ]
                 )
             )
@@ -127,7 +127,7 @@ class SearchFilter(Filter):
                             predicate=datasource.StringOperation.MATCHES,
                             case_insensitive=True,
                         )
-                        for field in self.searchable_fields
+                        for field in self.model_fields
                     ]
                 )
             )
@@ -138,7 +138,7 @@ class SearchFilter(Filter):
                     datasource.StringFilter(
                         field=field, value=value, predicate=datasource.StringOperation.CONTAINS, case_insensitive=True
                     )
-                    for field in self.searchable_fields
+                    for field in self.model_fields
                 ]
             )
         )
@@ -150,13 +150,13 @@ class SearchFilter(Filter):
 class OrderingFilter(Filter):
     visible_in_toolbar = False
 
-    def __init__(self, field_name: str, orderable_fields: list[str]) -> None:
+    def __init__(self, model_fields: typing.Sequence[str], field_name: str = "ordering") -> None:
         super().__init__(field_name=field_name)
-        self.orderable_fields = orderable_fields
+        self.model_fields = model_fields
 
     def apply(self, request: Request, query: DataSource, form: wtforms.Form) -> DataSource:
         ordering = get_ordering_value(request, self.field_name)
-        return query.order_by({k: v for k, v in ordering.items() if k in self.orderable_fields})
+        return query.order_by({k: v for k, v in ordering.items() if k in self.model_fields})
 
     def is_active(self, request: Request) -> bool:
         return False

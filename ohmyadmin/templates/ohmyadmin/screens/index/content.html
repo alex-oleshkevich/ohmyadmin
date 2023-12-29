@@ -1,0 +1,13 @@
+{% import 'ohmyadmin/pagination.html' as pagination %}
+
+{% if oob_filters %}
+    <div hx-swap-oob="innerHTML" id="view-filters">
+        {% include 'ohmyadmin/screens/index/filters_bar.html' %}
+    </div>
+{% endif %}
+
+{{ view.render(request, screen, models) }}
+
+<div class="mt-5" hx-boost="true">
+    {{ pagination.pagination(request, models) }}
+</div>

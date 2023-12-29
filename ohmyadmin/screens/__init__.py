@@ -2,6 +2,7 @@ from ohmyadmin.screens.base import ExposeViewMiddleware, Screen
 from ohmyadmin.screens.display import AutoDisplayLayout, DisplayLayoutBuilder, DisplayScreen
 from ohmyadmin.screens.form import FormLayoutBuilder, FormScreen
 from ohmyadmin.screens.table import TableScreen
+from ohmyadmin.screens.index import IndexScreen
 
 __all__ = [
     "Screen",
@@ -9,6 +10,7 @@ __all__ = [
     "AutoDisplayLayout",
     "TableScreen",
     "FormScreen",
+    "IndexScreen",
     "FormLayoutBuilder",
     "DisplayScreen",
     "DisplayLayoutBuilder",

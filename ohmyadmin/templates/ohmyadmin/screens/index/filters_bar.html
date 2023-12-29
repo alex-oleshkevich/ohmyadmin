@@ -1,0 +1,12 @@
+{% import 'ohmyadmin/icons.html' as icons %}
+{% for filter in screen.filters %}
+    {% if filter.visible_in_toolbar %}
+        {% if filter.is_active(request) %}
+            {% with indicator = filter.get_indicator_context() %}
+                {% include filter.indicator_template %}
+            {% endwith %}
+        {% else %}
+            {% include filter.template %}
+        {% endif %}
+    {% endif %}
+{% endfor %}

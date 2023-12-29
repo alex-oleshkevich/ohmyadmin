@@ -29,9 +29,9 @@ def url_matches(request: Request, url: URL | str) -> bool:
 
 
 @jinja2.pass_context
-def model_pk(context: jinja2.runtime.Context, obj: typing.Any) -> str:
+def model_pk(context: jinja2.runtime.Context, obj: typing.Any, request: Request | None = None) -> str:
     """Try to infer the model's primary key value."""
-    request: Request = context["request"]
+    request: Request = request or context["request"]
 
     # try to get from current resource
     try:

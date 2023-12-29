@@ -1,0 +1,11 @@
+{% import 'ohmyadmin/icons.html' as icons %}
+{% import 'ohmyadmin/views/table/table.macro.html' as table %}
+
+<th class="whitespace-nowrap">
+    {% if column.sortable -%}
+        {% set control = sorting.get_control(column.name) %}
+        {{ table.sortable_cell(column, control) }}
+    {%- else -%}
+        {{ table.simple_cell(column) }}
+    {%- endif %}
+</th>

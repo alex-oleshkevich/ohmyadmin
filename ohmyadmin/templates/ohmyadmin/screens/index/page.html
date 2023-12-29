@@ -1,0 +1,117 @@
+{% extends 'ohmyadmin/app.html' %}
+{% import 'ohmyadmin/icons.html' as icons %}
+{% import 'ohmyadmin/actions.html' as actions %}
+
+{% block page_actions %}
+    {% call actions.action_toolbar() %}
+        {% for action in screen.get_page_actions() %}
+            {{ actions.action_button(request, action, screen) }}
+        {% endfor %}
+    {% endcall %}
+{% endblock %}
+
+
+{% block content %}
+    <script>
+        function setSelectedFlag(flag) {
+            document
+                .querySelectorAll('#datatable input[name="object_id"]')
+                .forEach(el => {
+                    el.checked = flag;
+                    el.dispatchEvent(new CustomEvent('input'));
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document
+                .querySelectorAll('#batch-action-form')
+                .forEach(el => {
+                    el.addEventListener('htmx:configRequest', (e) => {
+                        e.detail.path = e.target.getAttribute('action');
+                    });
+                });
+        });
+    </script>
+
+    <div class="space-y-5"
+         x-data="{selectedAll: false, selectedMatched: false}"
+         hx-target="#datatable"
+         hx-indicator="#load-indicator"
+         hx-include="#search-form, #view-filters, #datatable"
+    >
+
+        <!-- metrics -->
+        {% if screen.metrics %}
+            <section class="grid grid-cols-12 gap-5 mb-10 h-40">
+                {% for metric in screen.metrics %}
+                    {% set update_interval = metric.update_interval %}
+                    <div class="col-span-{{ metric.size }}"
+                         hx-trigger="load{{ ', every:{interval}s'.format(interval=update_interval) if update_interval else '' }}"
+                         hx-target="this"
+                         hx-get="{{ url_for(metric.get_url_name(screen.url_name)) }}">
+                    </div>
+                {% endfor %}
+            </section>
+        {% endif %}
+
+        <section class="flex items-center justify-between">
+            <!-- search -->
+            <div class="w-1/2 flex items-center justify-start">
+                {% if screen.searchable %}
+                    <form method="get" role="search" id="search-form" class="w-full max-w-md">
+                        <input type="search" role="searchbox" class="w-full" value="{{ search_term }}"
+                               name="{{ screen.search_param }}"
+                               hx-get="{{ request.url.path }}"
+                               hx-push-url="true"
+                               hx-trigger="keyup changed delay:300ms, search delay:300ms"
+                               placeholder="{{ screen.search_placeholder }}">
+                    </form>
+                {% endif %}
+            </div>
+
+            <!-- batch actions -->
+            <div class="w-1/2 flex items-center justify-end">
+                {% if screen.batch_actions %}
+                    <form id="batch-action-form" class="flex items-center gap-2 justify-end max-w-xs w-full"
+                          method="get" :action="action" :hx-get="action" x-data="{action: ''}"
+                          hx-target="o-modals" hx-push-url="false" hx-boost="true"
+                    >
+                        <select x-model="action">
+                            <option value=""></option>
+                            {% for batch_action in screen.batch_actions %}
+                                <option value="{{ url_for(screen.get_action_route_name(batch_action)) }}">
+                                    {{ batch_action.label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <button class="btn btn-accent" :disabled="!action">
+                            {{ icons.play() }}
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- filters -->
+        {% if screen.filters %}
+            <section id="view-filters" class="flex items-center gap-1 flex-wrap border border-gray-200 p-1 rounded-md">
+                {% include 'ohmyadmin/screens/table/filters_bar.html' %}
+            </section>
+        {% endif %}
+
+        <section class="overflow-x-auto">
+            <div class="-mb-[1px] htmx-indicator" id="load-indicator">
+                <div class="progress progress-indeterminate progress-square progress-xs">
+                    <div class="progress-bar"></div>
+                </div>
+            </div>
+
+            <div id="datatable"
+                 hx-get="{{ request.url.path }}"
+                 hx-trigger="refresh from:body"
+                 hx-push-url="true">
+                {% include 'ohmyadmin/screens/index/content.html' %}
+            </div>
+        </section>
+    </div>
+{% endblock %}

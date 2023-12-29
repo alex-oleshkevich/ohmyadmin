@@ -18,7 +18,7 @@ class FormScreen(Screen):
     form_class: typing.Type[wtforms.Form] = wtforms.Form
     layout_class: typing.Type[FormLayoutBuilder] = AutoLayout
     form_actions: typing.Sequence[actions.Action] | None = None
-    template = "ohmyadmin/views/form/page.html"
+    template = "ohmyadmin/screens/form/page.html"
 
     async def init_form(self, request: Request, form: wtforms.Form) -> None:
         pass

@@ -28,6 +28,7 @@ from ohmyadmin.resources.actions import (
 from ohmyadmin.resources.policy import AccessPolicy, PermissiveAccessPolicy
 from ohmyadmin.screens.base import ExposeViewMiddleware, Screen
 from ohmyadmin.screens.table import Column
+from ohmyadmin.views.base import IndexView
 
 
 class ResourceScreen(Screen):
@@ -61,19 +62,26 @@ class ResourceScreen(Screen):
     datasource: typing.ClassVar[DataSource | None] = None
 
     # index page
+    index_view: IndexView
     page_param: typing.ClassVar[str] = "page"
     page_size_param: typing.ClassVar[str] = "page_size"
     page_size: typing.ClassVar[int] = 25
     page_sizes: typing.ClassVar[typing.Sequence[int]] = [10, 25, 50, 100]
+
     ordering_param: typing.ClassVar[str] = "ordering"
-    columns: typing.Sequence[Column] = tuple()
+    ordering_fields: typing.Sequence[str] = tuple()
+    ordering_filter: filters.Filter | None = None
+
     page_filters: typing.Sequence[filters.Filter] = tuple()
     page_actions: typing.Sequence[actions.Action] = tuple()
     page_metrics: typing.Sequence[metrics.Metric] = tuple()
     object_actions: typing.Sequence[actions.Action] = tuple()
     batch_actions: typing.Sequence[actions.ModalAction] = tuple()
+
     search_param: str = "search"
     search_placeholder: str = ""
+    searchable_fields: typing.Sequence[str] = tuple()
+    search_filter: filters.Filter | None = None
 
     # edit page
     form_class: type[wtforms.Form] = wtforms.Form
@@ -148,7 +156,7 @@ class ResourceScreen(Screen):
     def create_index_screen_class(self) -> type[Screen]:
         screen = type(
             "{label}ResourceIndexScreen".format(label=self.label),
-            (screens.TableScreen,),
+            (screens.IndexScreen,),
             dict(
                 label=self.index_label.format(label=self.label, label_plural=self.label_plural),
                 group=self.group,
@@ -157,16 +165,20 @@ class ResourceScreen(Screen):
                 page_size=self.page_size,
                 page_sizes=self.page_sizes,
                 ordering_param=self.ordering_param,
+                ordering_fields=self.ordering_fields,
+                ordering_filter=self.ordering_filter,
                 datasource=self.datasource,
-                columns=self.columns,
                 filters=self.page_filters,
-                actions=self.get_index_page_actions(),
+                page_actions=self.get_index_page_actions(),
                 metrics=self.page_metrics,
-                row_actions=self.get_object_actions(),
+                object_actions=self.get_object_actions(),
                 batch_actions=self.get_batch_actions(),
                 search_param=self.search_param,
                 search_placeholder=self.search_placeholder,
+                searchable_fields=self.searchable_fields,
+                search_filter=self.search_filter,
                 url_name=self.get_index_route_name(),
+                view=self.index_view,
             ),
         )
         return typing.cast(type[Screen], screen)
@@ -218,7 +230,7 @@ class ResourceScreen(Screen):
                 layout_class=self.display_layout_class,
                 object_actions=self.get_display_actions(),
                 get_object=self.get_form_object,
-                fields=self.display_fields or self.columns,
+                fields=self.display_fields,
             ),
         )
         return typing.cast(type[Screen], screen)

@@ -4,6 +4,7 @@ from examples.models import Country
 from ohmyadmin.datasources.sqlalchemy import SADataSource
 from ohmyadmin.resources.resource import ResourceScreen
 from ohmyadmin.screens.table import Column
+from ohmyadmin.views.table import TableView
 
 
 class CountryForm(wtforms.Form):
@@ -16,7 +17,9 @@ class CountriesResource(ResourceScreen):
     group = "Shop"
     datasource = SADataSource(Country)
     form_class = CountryForm
-    columns = [
-        Column("code", searchable=True),
-        Column("name", searchable=True, sortable=True),
-    ]
+    index_view = TableView(
+        columns=[
+            Column("code"),
+            Column("name"),
+        ]
+    )

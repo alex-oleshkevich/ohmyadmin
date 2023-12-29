@@ -7,6 +7,7 @@ from ohmyadmin.components import BaseFormLayoutBuilder
 from ohmyadmin.datasources.sqlalchemy import SADataSource
 from ohmyadmin.resources.resource import ResourceScreen
 from ohmyadmin.screens.table import Column
+from ohmyadmin.views.table import TableView
 
 
 class BrandForm(wtforms.Form):
@@ -43,6 +44,7 @@ class BrandsResource(ResourceScreen):
     label = _("Brand")
     datasource = SADataSource(Brand)
     form_class = BrandForm
+    searchable_fields = ["name"]
     page_filters = [
         filters.ChoiceFilter(
             "website",
@@ -53,17 +55,11 @@ class BrandsResource(ResourceScreen):
             ],
         ),
     ]
-    columns = [
-        Column("name", searchable=True, sortable=True),
-        Column("website"),
-        Column("visible_to_customers", _("Visibility"), formatter=formatters.BoolFormatter(as_text=True)),
-        Column("updated_at", formatter=formatters.DateTimeFormatter()),
-    ]
-    # index_view = TableView(
-    #     columns=[
-    #         Column('name', searchable=True, sortable=True),
-    #         Column('website'),
-    #         Column('visible_to_customers', _('Visibility'), formatter=formatters.BoolFormatter(as_text=True)),
-    #         Column('updated_at', formatter=formatters.DateTimeFormatter()),
-    #     ]
-    # )
+    index_view = TableView(
+        [
+            Column("name"),
+            Column("website"),
+            Column("visible_to_customers", _("Visibility"), formatter=formatters.BoolFormatter(as_text=True)),
+            Column("updated_at", formatter=formatters.DateTimeFormatter()),
+        ]
+    )
