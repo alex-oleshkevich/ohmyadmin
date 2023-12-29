@@ -1,6 +1,8 @@
 import functools
 import time
 import typing
+
+import jinja2
 from markupsafe import Markup
 from starlette.datastructures import URL
 from starlette.requests import Request
@@ -26,6 +28,28 @@ def url_matches(request: Request, url: URL | str) -> bool:
     return request.url.path.startswith(value)
 
 
+@jinja2.pass_context
+def model_pk(context: jinja2.runtime.Context, obj: typing.Any) -> str:
+    """Try to infer the model's primary key value."""
+    request: Request = context["request"]
+
+    # try to get from current resource
+    try:
+        resource = request.state.resource
+        return resource.datasource.get_pk(obj)
+    except AttributeError:
+        try:
+            view = request.state.view
+            return view.datasource.get_pk(obj)
+        except AttributeError:
+            # still no luck? let's iterate over all registered resources and  may be some of them can parse it
+            for view in request.state.ohmyadmin.views:
+                if hasattr(view, "datasource"):
+                    return view.datasource.get_pk(obj)
+
+            raise ValueError(f"Can't infer primary key. No datasource found for {type(obj).__name__}")
+
+
 def render_to_response(
     request: Request,
     name: str,
@@ -42,9 +66,7 @@ def render_to_response(
     )
 
 
-def render_to_string(
-    request: Request, name: str, context: typing.Mapping[str, typing.Any] | None = None
-) -> str:
+def render_to_string(request: Request, name: str, context: typing.Mapping[str, typing.Any] | None = None) -> str:
     context = dict(context or {})
     context.update(
         {

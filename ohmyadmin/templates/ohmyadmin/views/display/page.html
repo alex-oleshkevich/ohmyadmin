@@ -5,7 +5,7 @@
 {% block page_actions %}
     {% call actions.action_toolbar() %}
         {% for action in view.object_actions %}
-            {{ actions.action_button(request, action, view, object.get_pk()) }}
+            {{ actions.action_button(request, action, view, model) }}
         {% endfor %}
     {% endcall %}
 {% endblock %}

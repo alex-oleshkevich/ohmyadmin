@@ -74,7 +74,7 @@ class DisplayView(View):
             self.template,
             {
                 "view": self,
-                "object": instance,
+                "model": instance,
                 "page_title": self.label,
                 "page_description": self.description,
                 "layout": layout_builder(instance, self.fields),

@@ -7,7 +7,7 @@
         {% include 'ohmyadmin/views/form/form.html' %}
         <div class="form-actions mt-10">
             {% for action in form_actions %}
-                {{ actions.action_button(request, action, view, instance.get_pk() if instance else '') }}
+                {{ actions.action_button(request, action, view, model) }}
             {% endfor %}
         </div>
     </form>

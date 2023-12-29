@@ -21,7 +21,7 @@ from ohmyadmin.authentication.policy import AnonymousAuthPolicy, AuthPolicy
 from ohmyadmin.menu import MenuItem
 from ohmyadmin.middleware import LoginRequiredMiddleware
 from ohmyadmin.storages.storage import FileStorage
-from ohmyadmin.templating import static_url, url_matches
+from ohmyadmin.templating import model_pk, static_url, url_matches
 from ohmyadmin.theme import Theme
 from ohmyadmin.views.base import View
 
@@ -45,7 +45,7 @@ class OhMyAdmin(Router):
             extensions=["jinja2.ext.do"],
             loader=jinja2.ChoiceLoader([jinja2.PackageLoader("ohmyadmin")]),
         )
-        self.jinja_env.filters.update({"object_id": id})
+        self.jinja_env.filters.update({"object_id": id, "model_pk": model_pk})
         self.templating = templating.Jinja2Templates(
             env=self.jinja_env,
             context_processors=[

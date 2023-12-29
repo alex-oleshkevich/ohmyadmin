@@ -63,13 +63,12 @@
     </thead>
     <tbody>
     {% for object in objects %}
-        {% set pk_value = table.datasource.get_pk(object) %}
         <tr x-data="{selected: false}" :class="{selected}">
             {% if table.batch_actions %}
                 <th>
                     <div class="flex items-center justify-start">
                         <input type="checkbox" name="object_id" @input="selected = $el.checked" :checked="selected"
-                               value="{{ pk_value }}">
+                               value="{{ table.datasource.get_pk(object) }}">
                     </div>
                 </th>
             {% endif %}
@@ -87,7 +86,7 @@
                         <div class="dropdown absolute hidden">
                             <div class="list-menu" hx-include="this">
                                 {% for row_action in table.row_actions %}
-                                    {{ actions.action_menu_item(request, row_action, view, pk_value) }}
+                                    {{ actions.action_menu_item(request, row_action, view, object) }}
                                 {% endfor %}
                             </div>
                         </div>

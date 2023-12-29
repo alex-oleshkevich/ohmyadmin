@@ -1,3 +1,4 @@
+{% set object_id = model|model_pk %}
 <a href="{{ action.get_url(request, object_id) }}" class="list-menu-item" target="{{ action.target }}">
     {{ action.icon }}
     {{ action.label }}
