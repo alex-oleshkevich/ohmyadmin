@@ -15,7 +15,7 @@ MetricSize: typing.TypeAlias = typing.Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
 class Metric(abc.ABC):
     label: str = ""
     update_interval: float = 0
-    size: MetricSize = 3
+    size: MetricSize = 4
     template: str = ""
 
     def __init__(self) -> None:

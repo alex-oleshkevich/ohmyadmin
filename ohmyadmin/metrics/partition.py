@@ -22,6 +22,7 @@ class Partition(typing.TypedDict):
 
 @dataclasses.dataclass
 class _PartitionViewModel:
+    percent_decimals: int
     series: list[Partition]
 
     @property
@@ -31,7 +32,7 @@ class _PartitionViewModel:
     def percent(self, value: float) -> float:
         if self.total == 0:
             return 0
-        return 100 * value / self.total
+        return round(100 * value / self.total, self.percent_decimals)
 
 
 class PartitionMetric(Metric):
@@ -40,6 +41,7 @@ class PartitionMetric(Metric):
     show_total: bool = True
     show_percents: bool = True
     show_values: bool = True
+    percent_decimals: int = 2
     total_format: str = _("({total} total)", domain="ohmyadmin")
 
     color_generator: type[ColorGenerator] = TailwindColors
@@ -55,6 +57,7 @@ class PartitionMetric(Metric):
         labels = self.labels or {}
         colors = self.colors or {}
         view_model = _PartitionViewModel(
+            percent_decimals=self.percent_decimals,
             series=[
                 {
                     "label": str(labels.get(item["label"], snake_to_sentence(item["label"]))),

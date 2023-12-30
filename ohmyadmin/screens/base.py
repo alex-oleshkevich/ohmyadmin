@@ -13,6 +13,7 @@ from ohmyadmin.menu import MenuItem
 class Screen(abc.ABC):
     label: str = ""
     description: str = ""
+    icon: str = ""
     group: str = ""
     show_in_menu: bool = True
 
@@ -33,7 +34,7 @@ class Screen(abc.ABC):
 
     async def get_menu_item(self, request: Request) -> MenuItem:
         """Generate a menu item."""
-        return MenuItem(label=self.label, group=self.group, url=self.get_url(request))
+        return MenuItem(label=self.label, group=self.group, url=self.get_url(request), icon=self.icon)
 
     async def dispatch(self, request: Request) -> Response:
         raise NotImplementedError()

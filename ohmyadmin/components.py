@@ -210,7 +210,7 @@ class DisplayValueComponent(Component):
             columns=12,
             children=[
                 ColumnComponent(children=[TextComponent(value=self.label)], colspan=4),
-                ColumnComponent(children=[TextComponent(value=self.value)], colspan=8),
+                ColumnComponent(children=[TextComponent(value=self.formatter(request, self.value))], colspan=8),
             ],
         )
         return layout.render(request)

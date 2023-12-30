@@ -221,6 +221,8 @@ class Comment(Base):
     customer_id: Mapped[int] = mapped_column(sa.ForeignKey("customers.id"))
     created_at: Mapped[datetime.datetime] = mapped_column(sa.DateTime, default=datetime.datetime.now)
 
+    product: Mapped[Product] = relationship(Product)
+
     def __str__(self) -> str:
         return self.title or ""
 
@@ -257,8 +259,9 @@ class Order(Base):
 
     total_price: Mapped[float] = query_expression()
     customer: Mapped[Customer] = relationship("Customer", cascade="all", back_populates="orders")
-    items: Mapped[OrderItem] = relationship("OrderItem")
+    items: Mapped[list[OrderItem]] = relationship("OrderItem")
     currency: Mapped[Currency] = relationship("Currency")
+    country: Mapped[Currency] = relationship("Country")
 
     def __str__(self) -> str:
         return self.number or "n/a"

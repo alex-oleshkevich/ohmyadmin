@@ -9,5 +9,6 @@ from starlette.datastructures import URL
 class MenuItem:
     label: str
     group: str = ""
+    icon: str = ""
     url: URL | None = None
     children: list[MenuItem] | None = None

@@ -1,6 +1,7 @@
 import wtforms
 from starlette_babel import gettext_lazy as _
 
+from examples import icons
 from examples.models import Brand
 from ohmyadmin import components, filters, formatters
 from ohmyadmin.components import BaseFormLayoutBuilder
@@ -40,8 +41,9 @@ class _FormLayout(BaseFormLayoutBuilder):
         )
 
 
-class BrandsResource(ResourceScreen):
-    label = _("Brand")
+class BrandResource(ResourceScreen):
+    group = "Shop"
+    icon = icons.ICON_BASKET
     datasource = SADataSource(Brand)
     form_class = BrandForm
     searchable_fields = ["name"]

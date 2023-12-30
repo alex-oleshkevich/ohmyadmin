@@ -15,12 +15,16 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 from examples import settings
 from examples.models import User
-from examples.resources.brands import BrandsResource
+from examples.resources.brands import BrandResource
 from examples.resources.categories import CategoryResource
-from examples.resources.countries import CountriesResource
+from examples.resources.countries import CountryResource
+from examples.resources.currencies import CurrencyResource
 from examples.resources.custom_form_layout import CustomProductFormView
+from examples.resources.customers import CustomerResource
 from examples.resources.display_view import ProductView
 from examples.resources.form_view import ProductFormView
+from examples.resources.orders import OrdersResource
+from examples.resources.products import ProductResource
 from examples.resources.users_table import UsersTable
 from ohmyadmin.app import OhMyAdmin
 from ohmyadmin.authentication.policy import AuthPolicy
@@ -87,9 +91,13 @@ admin = OhMyAdmin(
         ProductView(),
         ProductFormView(),
         CustomProductFormView(),
-        CountriesResource(),
+        CountryResource(),
         CategoryResource(),
-        BrandsResource(),
+        BrandResource(),
+        CurrencyResource(),
+        CustomerResource(),
+        OrdersResource(),
+        ProductResource(),
     ],
 )
 

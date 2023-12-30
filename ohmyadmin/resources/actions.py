@@ -41,9 +41,10 @@ class EditResourceAction(actions.LinkAction):
     def __init__(self, label: str = _("Edit")) -> None:
         super().__init__(label=label, variant="default")
 
-    def get_url(self, request: Request, object_id: typing.Any | None = None) -> URL:
-        assert object_id, f"{self.__class__.__name__} can be used in model context only."
+    def get_url(self, request: Request, model: typing.Any | None = None) -> URL:
+        assert model, f"{self.__class__.__name__} can be used in model context only."
         resource: ResourceScreen = request.state.resource
+        object_id = resource.datasource.get_pk(model)
         return request.url_for(resource.get_edit_route_name(), object_id=object_id)
 
 
@@ -51,9 +52,10 @@ class ViewResourceAction(actions.LinkAction):
     def __init__(self, label: str = _("View")) -> None:
         super().__init__(label=label, variant="default")
 
-    def get_url(self, request: Request, object_id: typing.Any | None = None) -> URL:
-        assert object_id, f"{self.__class__.__name__} can be used in model context only."
+    def get_url(self, request: Request, model: typing.Any | None = None) -> URL:
+        assert model, f"{self.__class__.__name__} can be used in model context only."
         resource: ResourceScreen = request.state.resource
+        object_id = resource.datasource.get_pk(model)
         return request.url_for(resource.get_display_route_name(), object_id=object_id)
 
 
@@ -67,17 +69,8 @@ class SaveResourceAndReturnAction(actions.SubmitAction):
         super().__init__(label=label, icon=icon, variant=variant, name=SubmitActionType.SAVE_RETURN)
 
 
-class ReturnToResourceIndexAction(actions.Action):
-    button_template: str = "ohmyadmin/actions/link.html"
-    dropdown_template: str = "ohmyadmin/actions/link_menu.html"
-
-    def __init__(self, label: str = _("Cancel"), icon: str = "", variant: ActionVariant = "link") -> None:
-        self.icon = icon or self.icon
-        self.label = label or self.label
-        self.target = ""
-        self.variant = variant
-
-    def get_url(self, request: Request) -> URL:
+class ReturnToResourceIndexAction(actions.LinkAction):
+    def get_url(self, request: Request, model: typing.Any | None = None) -> URL:
         resource: ResourceScreen = request.state.resource
         return request.url_for(resource.get_index_route_name())
 
@@ -104,7 +97,7 @@ class DeleteResourceAction(actions.ModalAction):
         if request.method == "POST":
             message = self.message.format(count=total)
             await query.delete_all(request)
-            if isinstance(request.state.view, DisplayScreen):
+            if isinstance(request.state.screen, DisplayScreen):
                 flash(request).success(message)
                 redirect_to = request.url_for(resource.get_index_route_name())
                 return htmx.response().location(redirect_to)

@@ -79,7 +79,7 @@ class ResourceScreen(Screen):
     batch_actions: typing.Sequence[actions.ModalAction] = tuple()
 
     search_param: str = "search"
-    search_placeholder: str = ""
+    search_placeholder: str = _("Start typing to search...")
     searchable_fields: typing.Sequence[str] = tuple()
     search_filter: filters.Filter | None = None
 
@@ -151,7 +151,7 @@ class ResourceScreen(Screen):
         ]
 
     def get_display_actions(self) -> list[actions.Action]:
-        return [*self.display_object_actions, DeleteResourceAction()]
+        return [*self.display_object_actions, EditResourceAction(), DeleteResourceAction()]
 
     def create_index_screen_class(self) -> type[Screen]:
         screen = type(
@@ -195,7 +195,7 @@ class ResourceScreen(Screen):
                 layout_class=self.form_layout_class,
                 form_actions=self.get_edit_form_actions(),
                 init_form=self.init_form,
-                get_object=self.get_form_object,
+                get_object=self.get_object_for_form,
                 handle=self.perform_update,
             ),
         )
@@ -229,7 +229,7 @@ class ResourceScreen(Screen):
                 url_name=self.get_display_route_name(),
                 layout_class=self.display_layout_class,
                 object_actions=self.get_display_actions(),
-                get_object=self.get_form_object,
+                get_object=self.get_object_for_display,
                 fields=self.display_fields,
             ),
         )
@@ -249,7 +249,12 @@ class ResourceScreen(Screen):
 
     async def get_menu_item(self, request: Request) -> MenuItem:
         """Generate a menu item."""
-        return MenuItem(label=self.label_plural, group=self.group, url=request.url_for(self.get_index_route_name()))
+        return MenuItem(
+            label=self.label_plural,
+            group=self.group,
+            icon=self.icon,
+            url=request.url_for(self.get_index_route_name()),
+        )
 
     def get_route(self) -> BaseRoute:
         return Mount(
@@ -284,7 +289,12 @@ class ResourceScreen(Screen):
     async def init_create_form(self, request: Request, form: wtforms.Form) -> None:
         return await self.init_form(request, form)
 
-    async def get_form_object(self, request: Request) -> typing.Any:
+    async def get_object_for_form(self, request: Request) -> typing.Any:
+        object_id = request.path_params.get("object_id", "")
+        pk_field = self.datasource.get_id_field()
+        return await self.datasource.filter(InFilter(pk_field, [object_id])).one(request)
+
+    async def get_object_for_display(self, request: Request) -> typing.Any:
         object_id = request.path_params.get("object_id", "")
         pk_field = self.datasource.get_id_field()
         return await self.datasource.filter(InFilter(pk_field, [object_id])).one(request)

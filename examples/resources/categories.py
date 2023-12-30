@@ -3,6 +3,7 @@ import wtforms
 from sqlalchemy.orm import joinedload
 from starlette.requests import Request
 
+from examples import icons
 from examples.models import Category
 from ohmyadmin import formatters
 from ohmyadmin.datasources.sqlalchemy import load_choices, SADataSource
@@ -22,6 +23,7 @@ class CategoryForm(wtforms.Form):
 
 class CategoryResource(ResourceScreen):
     group = "Shop"
+    icon = icons.ICON_CATEGORY
     form_class = CategoryForm
     datasource = SADataSource(
         Category, query=(sa.select(Category).options(joinedload(Category.parent)).order_by(Category.name.asc()))

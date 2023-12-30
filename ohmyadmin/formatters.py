@@ -109,10 +109,14 @@ class LinkFormatter(BaseFormatter[str]):
 class NumberFormatter(BaseFormatter[int | float | decimal.Decimal]):
     template: str = "ohmyadmin/formatters/number.html"
 
-    def __init__(self, *, prefix: str = "", suffix: str = "", align: TextAlign = "left") -> None:
+    def __init__(self, *, prefix: str = "", suffix: str = "", align: TextAlign = "left", decimals: int = 2) -> None:
         self.prefix = prefix
         self.suffix = suffix
         self.align = align
+        self.decimals = decimals
+
+    def round_value(self, value: _T) -> _T:
+        return round(value, self.decimals)
 
 
 BadgeColor: typing.TypeAlias = typing.Literal["gray", "red", "yellow", "green", "blue", "indigo", "purple", "pink"]
