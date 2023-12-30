@@ -55,9 +55,15 @@ class BrandsResource(ResourceScreen):
             ],
         ),
     ]
+    display_fields = (
+        DisplayField("name"),
+        DisplayField("website"),
+        DisplayField("visible_to_customers", _("Visibility"), formatter=formatters.BoolFormatter(as_text=True)),
+        DisplayField("updated_at", formatter=formatters.DateTimeFormatter()),
+    )
     index_view = TableView(
         [
-            DisplayField("name"),
+            DisplayField("name", link=True),
             DisplayField("website"),
             DisplayField("visible_to_customers", _("Visibility"), formatter=formatters.BoolFormatter(as_text=True)),
             DisplayField("updated_at", formatter=formatters.DateTimeFormatter()),

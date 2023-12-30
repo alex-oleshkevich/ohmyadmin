@@ -19,7 +19,11 @@ class CountriesResource(ResourceScreen):
     form_class = CountryForm
     index_view = TableView(
         columns=[
-            DisplayField("code"),
+            DisplayField("code", link=True),
             DisplayField("name"),
         ]
+    )
+    display_fields = (
+        DisplayField("code"),
+        DisplayField("name"),
     )
