@@ -3,6 +3,8 @@ from starlette.requests import Request
 
 from ohmyadmin.testing import MarkupSelector
 
+import ohmyadmin.display_fields
+
 
 def test_grid_layout(http_request: Request) -> None:
     layout = layouts.Grid(children=[layouts.Text("CONTENT")], columns=2, gap=5)
@@ -13,7 +15,7 @@ def test_grid_layout(http_request: Request) -> None:
 
 
 def test_column_layout(http_request: Request) -> None:
-    layout = layouts.Column(children=[layouts.Text("CONTENT")], gap=5, colspan=5)
+    layout = ohmyadmin.display_fields.DisplayField(children=[layouts.Text("CONTENT")], gap=5, colspan=5)
 
     content = layout.render(http_request)
     selector = MarkupSelector(content)

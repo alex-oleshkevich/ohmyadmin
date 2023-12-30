@@ -27,7 +27,7 @@ from ohmyadmin.resources.actions import (
 )
 from ohmyadmin.resources.policy import AccessPolicy, PermissiveAccessPolicy
 from ohmyadmin.screens.base import ExposeViewMiddleware, Screen
-from ohmyadmin.screens.table import Column
+from ohmyadmin.display_fields import DisplayField
 from ohmyadmin.views.base import IndexView
 
 
@@ -96,7 +96,7 @@ class ResourceScreen(Screen):
     # display page
     display_layout_class: type[screens.DisplayLayoutBuilder] = screens.AutoDisplayLayout
     display_object_actions: typing.Sequence[actions.Action] = tuple()
-    display_fields: list[Column] = tuple()
+    display_fields: list[DisplayField] = tuple()
 
     def __init__(self) -> None:
         assert self.datasource, f"Class {self.__class__.__name__} must have a datasource."
@@ -243,9 +243,6 @@ class ResourceScreen(Screen):
 
     def get_edit_route_name(self) -> str:
         return "ohmyadmin.resource.{resource}.edit".format(resource=self.slug)
-
-    def get_delete_route_name(self) -> str:
-        return "ohmyadmin.resource.{resource}.delete".format(resource=self.slug)
 
     def get_display_route_name(self) -> str:
         return "ohmyadmin.resource.{resource}.show".format(resource=self.slug)

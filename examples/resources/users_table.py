@@ -39,7 +39,8 @@ from ohmyadmin.metrics.partition import Partition, PartitionMetric
 from ohmyadmin.metrics.progress import ProgressMetric
 from ohmyadmin.metrics.trend import TrendMetric, TrendValue
 from ohmyadmin.metrics.value import ValueMetric, ValueValue
-from ohmyadmin.screens.table import Column, TableScreen
+from ohmyadmin.screens.table import TableScreen
+from ohmyadmin.display_fields import DisplayField
 
 
 def user_edit_url(request: Request) -> URL:
@@ -255,14 +256,14 @@ class UsersTable(TableScreen):
     ]
 
     columns = [
-        Column("photo", formatter=AvatarFormatter()),
-        Column("first_name", formatter=LinkFormatter(url="/admin")),
-        Column("last_name"),
-        Column("birthdate", formatter=DateFormatter()),
-        Column("balance", formatter=NumberFormatter(prefix="$", align="right")),
-        Column("rating"),
-        Column("email"),
-        Column("is_active", formatter=BoolFormatter(as_text=True)),
-        Column("gender", formatter=CallbackFormatter(lambda r, v: snake_to_sentence(v))),
-        Column("created_at", formatter=DateFormatter()),
+        DisplayField("photo", formatter=AvatarFormatter()),
+        DisplayField("first_name", formatter=LinkFormatter(url="/admin")),
+        DisplayField("last_name"),
+        DisplayField("birthdate", formatter=DateFormatter()),
+        DisplayField("balance", formatter=NumberFormatter(prefix="$", align="right")),
+        DisplayField("rating"),
+        DisplayField("email"),
+        DisplayField("is_active", formatter=BoolFormatter(as_text=True)),
+        DisplayField("gender", formatter=CallbackFormatter(lambda r, v: snake_to_sentence(v))),
+        DisplayField("created_at", formatter=DateFormatter()),
     ]

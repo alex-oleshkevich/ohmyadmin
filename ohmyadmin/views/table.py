@@ -1,13 +1,11 @@
 from __future__ import annotations
 import dataclasses
-import functools
 import typing
 
 from starlette.requests import Request
 
-from ohmyadmin import formatters
 from ohmyadmin.actions import actions
-from ohmyadmin.helpers import snake_to_sentence
+from ohmyadmin.display_fields import DisplayField
 from ohmyadmin.markers import HasObjectActions, HasOrderingFields, HasOrderingParam, HasBatchActions
 from ohmyadmin.ordering import SortingHelper
 from ohmyadmin.screens import Screen
@@ -32,35 +30,8 @@ class TableContext:
         return len(self.object_actions) > 0
 
 
-def default_value_getter(obj: typing.Any, attr: str) -> typing.Any:
-    return getattr(obj, attr, "undefined!")
-
-
-ValueGetter: typing.TypeAlias = typing.Callable[[typing.Any], typing.Any]
-
-
-class Column:
-    def __init__(
-        self,
-        name: str,
-        label: str | None = None,
-        formatter: formatters.CellFormatter = formatters.StringFormatter(),
-        value_getter: ValueGetter | None = None,
-    ) -> None:
-        self.name = name
-        self.formatter = formatter
-        self.label = label or snake_to_sentence(name)
-        self.value_getter = value_getter or functools.partial(default_value_getter, attr=name)
-
-    def get_value(self, obj: typing.Any) -> typing.Any:
-        return self.value_getter(obj)
-
-    def format_value(self, request: Request, value: typing.Any) -> str:
-        return self.formatter(request, value)
-
-
 class DecoratedColumn:
-    def __init__(self, column: Column, sortable: bool) -> None:
+    def __init__(self, column: DisplayField, sortable: bool) -> None:
         self.column = column
         self.sortable = sortable
 
@@ -71,7 +42,7 @@ class DecoratedColumn:
 class TableView(IndexView):
     template = "ohmyadmin/views/table/table.html"
 
-    def __init__(self, columns: typing.Sequence[Column]) -> None:
+    def __init__(self, columns: typing.Sequence[DisplayField]) -> None:
         self.columns = columns
 
     def render(self, request: Request, screen: Screen, models: typing.Sequence[typing.Any]) -> str:

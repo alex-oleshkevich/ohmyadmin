@@ -94,13 +94,20 @@ class SADataSource(DataSource[T]):
         query_for_list: sa.Select[tuple[T]] | None = None,
         pk_column: str | None = None,
         pk_cast: typing.Callable[[typing.Any], typing.Any] | None = None,
+        ordering: typing.Any | None = None,
         _stmt: sa.Select[tuple[T]] | None = None,
     ) -> None:
         self.pk_column = pk_column or guess_pk_field(model_class)
         self.pk_cast = pk_cast or guess_field_type(model_class, self.pk_column)
         self.model_class = model_class
+        self.ordering = ordering
+
         self.query = query if query is not None else sa.select(model_class)
         self.query_for_list = query_for_list if query_for_list is not None else self.query
+        if ordering is not None:
+            self.query = self.query.order_by(ordering)
+            self.query_for_list = self.query_for_list.order_by(ordering)
+
         self._stmt = _stmt if _stmt is not None else self.query
 
     def get_id_field(self) -> str:
@@ -233,6 +240,7 @@ class SADataSource(DataSource[T]):
     def _clone(self, stmt: sa.Select | None = None) -> typing.Self:
         return self.__class__(
             query=self.query,
+            ordering=self.ordering,
             model_class=self.model_class,
             query_for_list=self.query_for_list,
             _stmt=stmt if stmt is not None else self._stmt,

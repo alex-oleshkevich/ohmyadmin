@@ -8,6 +8,7 @@ from markupsafe import Markup
 from starlette.requests import Request
 
 from ohmyadmin import formatters
+from ohmyadmin.display_fields import DisplayField
 from ohmyadmin.templating import render_to_string
 
 
@@ -163,7 +164,7 @@ class TextComponent(Component):
     def __init__(
         self,
         value: typing.Any,
-        formatter: formatters.CellFormatter = formatters.StringFormatter(),
+        formatter: formatters.FieldValueFormatter = formatters.StringFormatter(),
     ) -> None:
         self.value = value
         self.formatter = formatter
@@ -198,7 +199,7 @@ class DisplayValueComponent(Component):
         self,
         label: str,
         value: typing.Any,
-        formatter: formatters.CellFormatter = formatters.StringFormatter(),
+        formatter: formatters.FieldValueFormatter = formatters.StringFormatter(),
     ) -> None:
         self.label = label
         self.value = value
@@ -209,10 +210,23 @@ class DisplayValueComponent(Component):
             columns=12,
             children=[
                 ColumnComponent(children=[TextComponent(value=self.label)], colspan=4),
-                ColumnComponent(children=[TextComponent(value=self.value, formatter=self.formatter)], colspan=8),
+                ColumnComponent(children=[TextComponent(value=self.value)], colspan=8),
             ],
         )
         return layout.render(request)
+
+
+class DisplayFieldComponent(Component):
+    def __init__(self, field: DisplayField, model: typing.Any) -> None:
+        self.field = field
+        self.model = model
+
+    def render(self, request: Request) -> str:
+        component = DisplayValueComponent(
+            label=self.field.label,
+            value=self.field.get_field_value(request, self.model),
+        )
+        return component.render(request)
 
 
 class FormLayoutBuilder(typing.Protocol):

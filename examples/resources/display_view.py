@@ -9,11 +9,11 @@ from examples.resources.users_table import create_user_callback, CreateUserForm,
 from ohmyadmin import components, formatters
 from ohmyadmin.actions import actions
 from ohmyadmin.screens.display import BaseDisplayLayoutBuilder, DisplayScreen
-from ohmyadmin.screens.table import Column
+from ohmyadmin.display_fields import DisplayField
 
 
 class ProductLayout(BaseDisplayLayoutBuilder):
-    def build(self, instance: Product, fields: typing.Sequence[Column]) -> components.Component:
+    def build(self, model: Product, fields: typing.Sequence[DisplayField]) -> components.Component:
         return components.GridComponent(
             children=[
                 components.GridComponent(
@@ -22,16 +22,16 @@ class ProductLayout(BaseDisplayLayoutBuilder):
                         components.ColumnComponent(
                             colspan=6,
                             children=[
-                                components.DisplayValueComponent(label="Name", value=instance.name),
+                                components.DisplayValueComponent(label="Name", value=model.name),
                                 components.DisplayValueComponent(
                                     label="Brand",
-                                    value=instance.brand.name,
+                                    value=model.brand.name,
                                     formatter=formatters.LinkFormatter(
                                         url="/admin",
                                     ),
                                 ),
                                 components.DisplayValueComponent(
-                                    label="Categories", value=", ".join([c.name for c in instance.categories]) or "-"
+                                    label="Categories", value=", ".join([c.name for c in model.categories]) or "-"
                                 ),
                                 components.GroupComponent(
                                     label="Pricing",
@@ -40,17 +40,17 @@ class ProductLayout(BaseDisplayLayoutBuilder):
                                             children=[
                                                 components.DisplayValueComponent(
                                                     "Price",
-                                                    instance.price,
+                                                    model.price,
                                                     formatter=formatters.NumberFormatter(prefix="$"),
                                                 ),
                                                 components.DisplayValueComponent(
                                                     "Compare at price",
-                                                    instance.compare_at_price,
+                                                    model.compare_at_price,
                                                     formatter=formatters.NumberFormatter(prefix="$"),
                                                 ),
                                                 components.DisplayValueComponent(
                                                     "Cost per item",
-                                                    instance.cost_per_item,
+                                                    model.cost_per_item,
                                                     formatter=formatters.NumberFormatter(prefix="$"),
                                                 ),
                                             ]
@@ -62,17 +62,17 @@ class ProductLayout(BaseDisplayLayoutBuilder):
                                     children=[
                                         components.ColumnComponent(
                                             children=[
-                                                components.DisplayValueComponent("SKU", instance.sku),
-                                                components.DisplayValueComponent("Quantity", instance.quantity),
+                                                components.DisplayValueComponent("SKU", model.sku),
+                                                components.DisplayValueComponent("Quantity", model.quantity),
                                                 components.DisplayValueComponent(
-                                                    "Security stock", instance.security_stock
+                                                    "Security stock", model.security_stock
                                                 ),
-                                                components.DisplayValueComponent("Barcode", instance.barcode),
+                                                components.DisplayValueComponent("Barcode", model.barcode),
                                             ]
                                         ),
                                     ],
                                 ),
-                                components.DisplayValueComponent(label="Description", value=instance.description),
+                                components.DisplayValueComponent(label="Description", value=model.description),
                             ],
                         ),
                         components.ColumnComponent(
@@ -80,33 +80,33 @@ class ProductLayout(BaseDisplayLayoutBuilder):
                             children=[
                                 components.DisplayValueComponent(
                                     label="Visible",
-                                    value=instance.visible,
+                                    value=model.visible,
                                     formatter=formatters.BoolFormatter(align="left"),
                                 ),
                                 components.DisplayValueComponent(
                                     label="Can be shipped",
-                                    value=instance.can_be_shipped,
+                                    value=model.can_be_shipped,
                                     formatter=formatters.BoolFormatter(align="left"),
                                 ),
                                 components.DisplayValueComponent(
                                     label="Can be returned",
-                                    value=instance.can_be_returned,
+                                    value=model.can_be_returned,
                                     formatter=formatters.BoolFormatter(align="left"),
                                 ),
                                 components.SeparatorComponent(),
                                 components.DisplayValueComponent(
                                     label="Availability",
-                                    value=instance.availability,
+                                    value=model.availability,
                                     formatter=formatters.DateFormatter(),
                                 ),
                                 components.DisplayValueComponent(
                                     label="Created at",
-                                    value=instance.created_at,
+                                    value=model.created_at,
                                     formatter=formatters.DateFormatter(),
                                 ),
                                 components.DisplayValueComponent(
                                     label="Updated at",
-                                    value=instance.updated_at,
+                                    value=model.updated_at,
                                     formatter=formatters.DateFormatter(),
                                 ),
                             ],

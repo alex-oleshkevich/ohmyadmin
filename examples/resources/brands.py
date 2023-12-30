@@ -6,7 +6,7 @@ from ohmyadmin import components, filters, formatters
 from ohmyadmin.components import BaseFormLayoutBuilder
 from ohmyadmin.datasources.sqlalchemy import SADataSource
 from ohmyadmin.resources.resource import ResourceScreen
-from ohmyadmin.screens.table import Column
+from ohmyadmin.display_fields import DisplayField
 from ohmyadmin.views.table import TableView
 
 
@@ -57,9 +57,9 @@ class BrandsResource(ResourceScreen):
     ]
     index_view = TableView(
         [
-            Column("name"),
-            Column("website"),
-            Column("visible_to_customers", _("Visibility"), formatter=formatters.BoolFormatter(as_text=True)),
-            Column("updated_at", formatter=formatters.DateTimeFormatter()),
+            DisplayField("name"),
+            DisplayField("website"),
+            DisplayField("visible_to_customers", _("Visibility"), formatter=formatters.BoolFormatter(as_text=True)),
+            DisplayField("updated_at", formatter=formatters.DateTimeFormatter()),
         ]
     )

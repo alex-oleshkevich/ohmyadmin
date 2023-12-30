@@ -12,45 +12,39 @@ from ohmyadmin.actions.actions import Action
 from ohmyadmin.datasources.datasource import NoObjectError
 from ohmyadmin.templating import render_to_response
 from ohmyadmin.screens.base import ExposeViewMiddleware, Screen
-from ohmyadmin.screens.table import Column
+from ohmyadmin.display_fields import DisplayField
 
 
 class DisplayLayoutBuilder(typing.Protocol):
-    def __call__(self, instance: typing.Any) -> components.Component:
+    def __call__(self, request: Request, model: typing.Any) -> components.Component:
         ...
 
 
 class BaseDisplayLayoutBuilder(abc.ABC):
-    def __call__(self, instance: typing.Any, fields: typing.Sequence[Column]) -> components.Component:
-        return self.build(instance, fields)
+    def __call__(self, request: Request, model: typing.Any) -> components.Component:
+        return self.build(request, model)
 
     @abc.abstractmethod
-    def build(self, instance: typing.Any, fields: typing.Sequence[Column]) -> components.Component:
+    def build(self, request: Request, model: typing.Any) -> components.Component:
         raise NotImplementedError()
 
 
 class AutoDisplayLayout(BaseDisplayLayoutBuilder):
-    def build(self, instance: typing.Any, fields: typing.Sequence[Column]) -> components.Component:
+    def build(self, request: Request, model: typing.Any) -> components.Component:
+        fields = request.state.resource.display_fields
         return components.GridComponent(
             columns=12,
             children=[
                 components.ColumnComponent(
                     colspan=6,
-                    children=[
-                        components.DisplayValueComponent(
-                            label=field.label,
-                            value=field.get_value(instance),
-                            formatter=field.formatter,
-                        )
-                        for field in fields
-                    ],
+                    children=[components.DisplayFieldComponent(field=field, model=model) for field in fields],
                 )
             ],
         )
 
 
 class DisplayScreen(Screen):
-    fields: typing.Sequence[Column] = tuple()
+    fields: typing.Sequence[DisplayField] = tuple()
     object_actions: typing.Sequence[Action] = tuple()
     layout_class: typing.Type[DisplayLayoutBuilder] = AutoDisplayLayout
     template = "ohmyadmin/screens/display/page.html"
@@ -77,7 +71,7 @@ class DisplayScreen(Screen):
                 "model": instance,
                 "page_title": self.label,
                 "page_description": self.description,
-                "layout": layout_builder(instance, self.fields),
+                "layout": layout_builder(request, instance),
             },
         )
 

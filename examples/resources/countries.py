@@ -3,7 +3,7 @@ import wtforms
 from examples.models import Country
 from ohmyadmin.datasources.sqlalchemy import SADataSource
 from ohmyadmin.resources.resource import ResourceScreen
-from ohmyadmin.screens.table import Column
+from ohmyadmin.display_fields import DisplayField
 from ohmyadmin.views.table import TableView
 
 
@@ -19,7 +19,7 @@ class CountriesResource(ResourceScreen):
     form_class = CountryForm
     index_view = TableView(
         columns=[
-            Column("code"),
-            Column("name"),
+            DisplayField("code"),
+            DisplayField("name"),
         ]
     )

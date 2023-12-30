@@ -2,6 +2,7 @@ import datetime
 import decimal
 import typing
 
+from starlette.datastructures import URL
 from starlette.requests import Request
 from starlette_babel import gettext_lazy as _
 
@@ -11,7 +12,7 @@ TextAlign = typing.Literal["left", "right", "center"]
 _T = typing.TypeVar("_T")
 
 
-class CellFormatter(typing.Protocol):  # pragma: no cover
+class FieldValueFormatter(typing.Protocol):  # pragma: no cover
     """
     Data formatter is a utility that renders object field value into a different way.
 
@@ -69,7 +70,7 @@ class BoolFormatter(BaseFormatter[bool]):
         as_text: bool = False,
         true_text: str = _("Yes", domain="ohmyadmin"),
         false_text: str = _("No", domain="ohmyadmin"),
-        align: typing.Literal["left", "center", "right"] = "center",
+        align: typing.Literal["left", "center", "right"] = "left",
     ) -> None:
         self.true_text = true_text
         self.false_text = false_text
@@ -81,13 +82,16 @@ class AvatarFormatter(BaseFormatter[str]):
     template: str = "ohmyadmin/formatters/avatar.html"
 
 
+LinkFactory: typing.TypeAlias = typing.Callable[[Request, typing.Any], URL]
+
+
 class LinkFormatter(BaseFormatter[str]):
     template: str = "ohmyadmin/formatters/link.html"
 
     def __init__(
         self,
         *,
-        url: str | typing.Callable[[Request], str],
+        url: str | URL | LinkFactory,
         target: typing.Literal["_blank", ""] = "",
     ) -> None:
         self.url = url
@@ -95,7 +99,7 @@ class LinkFormatter(BaseFormatter[str]):
 
     def format(self, request: Request, value: str) -> str:
         if callable(self.url):
-            url = self.url(request)
+            url = self.url(request, value)
         else:
             url = self.url
 

@@ -6,8 +6,7 @@
 {% endmacro %}
 
 {% macro render_cell(request, column, object) %}
-    {% set value = column.get_value(object) %}
-    {% set value = column.format_value(request, value) %}
+    {% set value = column.get_field_value(request, object) %}
     {% include 'ohmyadmin/views/table/table_cell.html' %}
 {% endmacro %}
 
