@@ -248,18 +248,46 @@ async def load_choices(
     dbsession: AsyncSession,
     field: wtforms.SelectField,
     stmt: sa.Select,
-    value_param: str | typing.Callable[[typing.Any], str] = "id",
-    label_param: str | typing.Callable[[typing.Any], str] = "name",
+    value_attr: str | typing.Callable[[typing.Any], str] = "id",
+    label_attr: str | typing.Callable[[typing.Any], str] = str,
     empty_choice: bool = True,
     empty_choice_label: str = "",
 ) -> None:
     def callback(obj: object, attr: str) -> str:
         return getattr(obj, attr)
 
-    value_getter = value_param if callable(value_param) else functools.partial(callback, attr=value_param)
-    label_getter = label_param if callable(label_param) else functools.partial(callback, attr=label_param)
+    value_getter = value_attr if callable(value_attr) else functools.partial(callback, attr=value_attr)
+    label_getter = label_attr if callable(label_attr) else functools.partial(callback, attr=label_attr)
 
     rows = await dbsession.execute(stmt)
     field.choices = [(value_getter(row), label_getter(row)) for row in rows.scalars()]
     if empty_choice:
         field.choices.insert(0, ("", empty_choice_label))
+
+
+def form_choices_from(
+    model_class: typing.Any,
+    value_attr: str | typing.Callable[[typing.Any], str] = "id",
+    label_attr: str | typing.Callable[[typing.Any], str] = str,
+    query: sa.Select | None = None,
+    empty_choice: bool = True,
+    empty_choice_label: str = "",
+) -> typing.Any:
+    query = query or sa.select(model_class)
+
+    def callback(obj: object, attr: str) -> str:
+        return getattr(obj, attr)
+
+    value_getter = value_attr if callable(value_attr) else functools.partial(callback, attr=value_attr)
+    label_getter = label_attr if callable(label_attr) else functools.partial(callback, attr=label_attr)
+
+    async def loader(request: Request) -> typing.Sequence[tuple[typing.Any, str]]:
+        result = await request.state.dbsession.scalars(query)
+        choices: list[tuple[typing.Any, str]] = []
+        if empty_choice:
+            choices.append(("", empty_choice_label))
+        for row in result:
+            choices.append((value_getter(row), label_getter(row)))
+        return choices
+
+    return loader

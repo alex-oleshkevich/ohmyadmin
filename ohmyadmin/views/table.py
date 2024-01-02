@@ -6,7 +6,7 @@ from starlette.requests import Request
 
 from ohmyadmin.actions import actions
 from ohmyadmin.display_fields import DisplayField
-from ohmyadmin.markers import HasObjectActions, HasOrderingFields, HasOrderingParam, HasBatchActions
+from ohmyadmin.contracts import HasObjectActions, HasOrderingFields, HasOrderingParam, HasBatchActions
 from ohmyadmin.ordering import SortingHelper
 from ohmyadmin.screens import Screen
 from ohmyadmin.templating import render_to_string

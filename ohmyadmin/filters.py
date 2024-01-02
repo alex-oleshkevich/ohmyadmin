@@ -317,6 +317,9 @@ class ChoiceFilterForm(wtforms.Form):
     choice = wtforms.SelectField(label=_("Choices", domain="ohmyadmin"), choices=[])
 
 
+ChoiceLoader: typing.TypeAlias = typing.Callable[[Request], typing.Awaitable[list[tuple[typing.Any, str]]]]
+
+
 class ChoiceFilter(Filter[ChoiceFilterForm]):
     form_class = ChoiceFilterForm
     indicator_template = "ohmyadmin/filters/choice_indicator.html"
@@ -327,7 +330,7 @@ class ChoiceFilter(Filter[ChoiceFilterForm]):
         label: str = "",
         filter_id: str = "",
         *,
-        choices: typing.Any,
+        choices: typing.Any | ChoiceLoader,
         coerce: type[str | int | float | decimal.Decimal] = str,
         **kwargs: typing.Any,
     ) -> None:
@@ -336,9 +339,13 @@ class ChoiceFilter(Filter[ChoiceFilterForm]):
         self.choices = choices
 
     async def get_form(self, request: Request) -> ChoiceFilterForm:
+        choices = self.choices
+        if callable(self.choices):
+            choices = await self.choices(request)
+
         form: ChoiceFilterForm = await super().get_form(request)
         form.choice.coerce = self.coerce
-        form.choice.choices = [("", ""), *self.choices]
+        form.choice.choices = [("", ""), *choices]
         return form
 
     def apply(self, request: Request, query: DataSource, form: ChoiceFilterForm) -> DataSource:
@@ -353,7 +360,7 @@ class ChoiceFilter(Filter[ChoiceFilterForm]):
     def get_indicator_context(self) -> dict[str, typing.Any]:
         value = self.form.data
         by_key = {choice[0]: choice[1] for choice in self.form.choice.choices}
-        choice = by_key.get(value["choice"], "")
+        choice = by_key.get(self.coerce(value["choice"]), "")
         return {"value": choice}
 
 

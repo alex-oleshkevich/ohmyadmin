@@ -10,10 +10,13 @@
 8. improve Customer display page -> need components to display nested items
 9. remove colspan from components ?
 10. table object actions as buttons + row actions builder
+11. file uploads
+12. search in joined tables
+13. order by joined tables
+14. global search
+15. screen get_route should be static to generate routes w/o instances (eg. menu builder)
 
 # BUGS
 1. "refresh" not triggered after batch delete
 2. "refresh" not triggered after row delete
-3. choices not loaded for new subform in list (orders form)
 5. images component for product display page
-6. submit product form does not work

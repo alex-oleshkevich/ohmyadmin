@@ -15,6 +15,7 @@ from ohmyadmin.actions import actions
 from ohmyadmin.breadcrumbs import Breadcrumb
 from ohmyadmin.components import AutoFormLayout, FormLayoutBuilder
 from ohmyadmin.datasources.datasource import DataSource, DuplicateError, InFilter
+from ohmyadmin.forms.utils import populate_object
 from ohmyadmin.helpers import pluralize, snake_to_sentence
 from ohmyadmin.menu import MenuItem
 from ohmyadmin.resources.actions import (
@@ -357,3 +358,6 @@ class ResourceScreen(Screen):
             return response.location(request.url_for(self.get_index_route_name()), {"select": "#datatable"})
 
         return response.toast(toast_message)
+
+    async def sync_for_to_model(self, request: Request, form: wtforms.Form, model: object) -> None:
+        await populate_object(request, form, model)

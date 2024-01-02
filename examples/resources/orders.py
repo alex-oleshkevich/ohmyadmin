@@ -170,8 +170,8 @@ class OrdersResource(ResourceScreen):
 
     async def init_form(self, request: Request, form: OrderForm) -> None:
         await load_choices(request.state.dbsession, form.customer_id, sa.select(Customer))
-        await load_choices(request.state.dbsession, form.currency_code, sa.select(Currency), value_param="code")
-        await load_choices(request.state.dbsession, form.country_code, sa.select(Country), value_param="code")
+        await load_choices(request.state.dbsession, form.currency_code, sa.select(Currency), value_attr="code")
+        await load_choices(request.state.dbsession, form.country_code, sa.select(Country), value_attr="code")
 
         for item_form in form.items:
             await load_choices(request.state.dbsession, item_form.product_id, sa.select(Product))

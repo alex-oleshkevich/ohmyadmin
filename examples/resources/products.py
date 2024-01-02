@@ -8,7 +8,7 @@ from examples import icons
 from examples.models import Brand, Product
 from ohmyadmin import components, filters, formatters
 from ohmyadmin.components import BaseDisplayLayoutBuilder, BaseFormLayoutBuilder, Component
-from ohmyadmin.datasources.sqlalchemy import load_choices, SADataSource
+from ohmyadmin.datasources.sqlalchemy import form_choices_from, load_choices, SADataSource
 from ohmyadmin.display_fields import DisplayField
 from ohmyadmin.forms.utils import safe_int_coerce
 from ohmyadmin.metrics import ProgressMetric, TrendMetric, TrendValue, ValueMetric, ValueValue
@@ -26,7 +26,7 @@ class ProductForm(wtforms.Form):
     cost_per_item = wtforms.DecimalField(
         description="Customers won't see this price.", validators=[wtforms.validators.data_required()]
     )
-    images = wtforms.FieldList(wtforms.FileField())
+    images = wtforms.FieldList(wtforms.FileField(render_kw={"accept": "image/jpeg"}))
     quantity = wtforms.IntegerField(default=0)
     sku = wtforms.IntegerField(default=0)
     security_stock = wtforms.IntegerField(
@@ -269,7 +269,7 @@ class ProductResource(ResourceScreen):
     page_filters = [
         filters.StringFilter("name"),
         # FIXME: load choices
-        # filters.ChoiceFilter('brand_id', label='Brand', coerce=int, choices=choices_from(Brand)),
+        filters.ChoiceFilter("brand_id", label="Brand", coerce=safe_int_coerce, choices=form_choices_from(Brand)),
         filters.IntegerFilter("sku"),
         filters.DecimalFilter("price"),
         filters.DecimalFilter("cost_per_item"),
@@ -303,3 +303,6 @@ class ProductResource(ResourceScreen):
 
     async def init_form(self, request: Request, form: ProductForm) -> None:
         await load_choices(request.state.dbsession, form.brand_id, sa.select(Brand))
+
+    async def sync_for_to_model(self, request: Request, form: wtforms.Form, model: object) -> None:
+        pass
