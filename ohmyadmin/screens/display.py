@@ -49,7 +49,7 @@ class DisplayScreen(Screen):
 
     def get_route(self) -> BaseRoute:
         return Mount(
-            "/" + self.slug,
+            "",
             routes=[
                 Route("/", self.dispatch, name=self.url_name),
                 Mount(
