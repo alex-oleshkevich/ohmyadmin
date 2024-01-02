@@ -105,10 +105,7 @@
                 </div>
             </div>
 
-            <div id="datatable"
-                 hx-get="{{ request.url.path }}"
-                 hx-trigger="refresh from:body"
-                 hx-push-url="true">
+            <div id="datatable" hx-get="{{ request.url.path }}" hx-trigger="refresh from:body" hx-push-url="true">
                 {% include 'ohmyadmin/screens/table/table.html' %}
             </div>
         </section>
