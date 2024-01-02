@@ -59,7 +59,7 @@ class Screen(abc.ABC):
         return Mount(
             "",
             routes=[
-                Route(path="/", endpoint=self.dispatch, name=self.url_name),
+                Route(path="/", endpoint=self.dispatch, name=self.url_name, methods=["get", "post"]),
                 Mount("/actions", routes=self.get_action_routes()),
                 Mount("/metrics", routes=self.get_metrics_routes()),
             ],

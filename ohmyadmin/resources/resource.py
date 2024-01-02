@@ -96,7 +96,6 @@ class ResourceScreen(Screen):
     create_form_actions: typing.Sequence[actions.Action] | None = None
 
     # display page
-    # display_layout_class: type[ohmyadmin.components.DisplayLayoutBuilder] = ohmyadmin.components.AutoDisplayLayout
     display_object_actions: typing.Sequence[actions.Action] = tuple()
     display_view: DisplayView | None = None
 

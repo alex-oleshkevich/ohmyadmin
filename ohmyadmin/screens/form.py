@@ -2,22 +2,20 @@ import abc
 import typing
 
 import wtforms
-from starlette.middleware import Middleware
 from starlette.requests import Request
 from starlette.responses import Response
-from starlette.routing import BaseRoute, Mount, Route
 
 from ohmyadmin.actions import actions
 from ohmyadmin.components import AutoFormLayout, FormLayoutBuilder
 from ohmyadmin.forms.utils import create_form, validate_on_submit
 from ohmyadmin.templating import render_to_response
-from ohmyadmin.screens.base import ExposeViewMiddleware, Screen
+from ohmyadmin.screens.base import Screen
 
 
 class FormScreen(Screen):
     form_class: typing.Type[wtforms.Form] = wtforms.Form
     layout_class: typing.Type[FormLayoutBuilder] = AutoFormLayout
-    form_actions: typing.Sequence[actions.Action] | None = None
+    form_actions: typing.Sequence[actions.Action] = tuple()
     template = "ohmyadmin/screens/form/page.html"
 
     async def init_form(self, request: Request, form: wtforms.Form) -> None:
@@ -27,7 +25,7 @@ class FormScreen(Screen):
         return None
 
     def get_form_actions(self) -> typing.Sequence[actions.Action]:
-        return self.form_actions or []
+        return self.form_actions
 
     @abc.abstractmethod
     async def handle(self, request: Request, form: wtforms.Form, instance: typing.Any) -> Response:
@@ -54,25 +52,5 @@ class FormScreen(Screen):
             },
         )
 
-    def get_route(self) -> BaseRoute:
-        return Mount(
-            "/",
-            routes=[
-                Route("/", self.dispatch, name=self.url_name, methods=["get", "post"]),
-                Mount(
-                    "/actions",
-                    routes=[
-                        Route(
-                            "/" + action.slug, action, name=self.get_action_route_name(action), methods=["get", "post"]
-                        )
-                        for action in self.get_form_actions()
-                    ],
-                    middleware=[
-                        Middleware(ExposeViewMiddleware, screen=self),
-                    ],
-                ),
-            ],
-        )
-
-    def get_action_route_name(self, action: actions.Action) -> str:
-        return f"{self.url_name}.actions.{action.slug}"
+    def get_action_handlers(self) -> typing.Sequence[actions.Action]:
+        return [*super().get_action_handlers(), *self.get_form_actions()]

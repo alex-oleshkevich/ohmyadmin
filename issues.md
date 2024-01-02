@@ -1,7 +1,5 @@
 # FEATURES
 1. implement relations
-2. add display_view: autoview that accepts list[DisplayView] and BuilderView to build custom layouts
-    * display view can be templates
 5. add profile settings (change name, reset password)
 6. permissions & access control
 7. improve ui
@@ -16,5 +14,6 @@
 16. actions should have static urls - pass route name and path prefix via args
 17. add image display and form component
 18. simplify datasource -> django-like?
+19. implement table component and use in TableView. just like display view
 
 # BUGS
