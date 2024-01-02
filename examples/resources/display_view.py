@@ -8,7 +8,8 @@ from examples.models import Product
 from examples.resources.users_table import create_user_callback, CreateUserForm, PLUS_ICON, show_toast_callback
 from ohmyadmin import components, formatters
 from ohmyadmin.actions import actions
-from ohmyadmin.screens.display import BaseDisplayLayoutBuilder, DisplayScreen
+from ohmyadmin.screens.display import DisplayScreen
+from ohmyadmin.components import BaseDisplayLayoutBuilder
 from ohmyadmin.display_fields import DisplayField
 
 

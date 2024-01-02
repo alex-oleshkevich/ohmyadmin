@@ -243,7 +243,7 @@ class BaseFormLayoutBuilder(abc.ABC):
         raise NotImplementedError()
 
 
-class AutoLayout(BaseFormLayoutBuilder):
+class AutoFormLayout(BaseFormLayoutBuilder):
     def build(self, form: wtforms.Form | wtforms.Field) -> Component:
         return GridComponent(
             columns=12,
@@ -296,3 +296,31 @@ class AutoLayout(BaseFormLayoutBuilder):
                 )
             case _:
                 return GridComponent(children=[FormInput(field, colspan=4)])
+
+
+class DisplayLayoutBuilder(typing.Protocol):
+    def __call__(self, request: Request, model: typing.Any) -> Component:
+        ...
+
+
+class BaseDisplayLayoutBuilder(abc.ABC):
+    def __call__(self, request: Request, model: typing.Any) -> Component:
+        return self.build(request, model)
+
+    @abc.abstractmethod
+    def build(self, request: Request, model: typing.Any) -> Component:
+        raise NotImplementedError()
+
+
+class AutoDisplayLayout(BaseDisplayLayoutBuilder):
+    def build(self, request: Request, model: typing.Any) -> Component:
+        fields = request.state.resource.display_fields
+        return GridComponent(
+            columns=12,
+            children=[
+                ColumnComponent(
+                    colspan=6,
+                    children=[DisplayFieldComponent(field=field, model=model) for field in fields],
+                )
+            ],
+        )

@@ -7,40 +7,12 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.routing import BaseRoute, Mount, Route
 
-from ohmyadmin import components
 from ohmyadmin.actions.actions import Action
+from ohmyadmin.components import AutoDisplayLayout, DisplayLayoutBuilder
 from ohmyadmin.datasources.datasource import NoObjectError
 from ohmyadmin.templating import render_to_response
 from ohmyadmin.screens.base import ExposeViewMiddleware, Screen
 from ohmyadmin.display_fields import DisplayField
-
-
-class DisplayLayoutBuilder(typing.Protocol):
-    def __call__(self, request: Request, model: typing.Any) -> components.Component:
-        ...
-
-
-class BaseDisplayLayoutBuilder(abc.ABC):
-    def __call__(self, request: Request, model: typing.Any) -> components.Component:
-        return self.build(request, model)
-
-    @abc.abstractmethod
-    def build(self, request: Request, model: typing.Any) -> components.Component:
-        raise NotImplementedError()
-
-
-class AutoDisplayLayout(BaseDisplayLayoutBuilder):
-    def build(self, request: Request, model: typing.Any) -> components.Component:
-        fields = request.state.resource.display_fields
-        return components.GridComponent(
-            columns=12,
-            children=[
-                components.ColumnComponent(
-                    colspan=6,
-                    children=[components.DisplayFieldComponent(field=field, model=model) for field in fields],
-                )
-            ],
-        )
 
 
 class DisplayScreen(Screen):

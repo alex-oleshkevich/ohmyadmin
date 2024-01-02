@@ -13,7 +13,7 @@ from ohmyadmin.display_fields import DisplayField
 from ohmyadmin.forms.utils import safe_int_coerce
 from ohmyadmin.metrics import Partition, PartitionMetric, TrendMetric, TrendValue, ValueMetric, ValueValue
 from ohmyadmin.resources.resource import ResourceScreen
-from ohmyadmin.screens.display import BaseDisplayLayoutBuilder
+from ohmyadmin.components import BaseDisplayLayoutBuilder
 from ohmyadmin.views.table import TableView
 
 STATUS_COLORS: dict[str, str] = {

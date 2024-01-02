@@ -9,10 +9,11 @@ from starlette.routing import BaseRoute, Mount
 from starlette_babel import gettext_lazy as _
 from starlette_flash import flash
 
+import ohmyadmin.components
 from ohmyadmin import filters, htmx, metrics, screens
 from ohmyadmin.actions import actions
 from ohmyadmin.breadcrumbs import Breadcrumb
-from ohmyadmin.components import AutoLayout, FormLayoutBuilder
+from ohmyadmin.components import AutoFormLayout, FormLayoutBuilder
 from ohmyadmin.datasources.datasource import DataSource, DuplicateError, InFilter
 from ohmyadmin.helpers import pluralize, snake_to_sentence
 from ohmyadmin.menu import MenuItem
@@ -86,7 +87,7 @@ class ResourceScreen(Screen):
 
     # edit page
     form_class: type[wtforms.Form] = wtforms.Form
-    form_layout_class: type[FormLayoutBuilder] = AutoLayout
+    form_layout_class: type[FormLayoutBuilder] = AutoFormLayout
     form_actions: typing.Sequence[actions.Action] = tuple()
 
     # create page
@@ -95,7 +96,7 @@ class ResourceScreen(Screen):
     create_form_actions: typing.Sequence[actions.Action] | None = None
 
     # display page
-    display_layout_class: type[screens.DisplayLayoutBuilder] = screens.AutoDisplayLayout
+    display_layout_class: type[ohmyadmin.components.DisplayLayoutBuilder] = ohmyadmin.components.AutoDisplayLayout
     display_object_actions: typing.Sequence[actions.Action] = tuple()
     display_fields: list[DisplayField] = tuple()
 

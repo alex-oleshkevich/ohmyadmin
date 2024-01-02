@@ -10,7 +10,7 @@ from ohmyadmin import components, filters, formatters
 from ohmyadmin.datasources.sqlalchemy import SADataSource
 from ohmyadmin.display_fields import DisplayField
 from ohmyadmin.resources.resource import ResourceScreen
-from ohmyadmin.screens.display import BaseDisplayLayoutBuilder
+from ohmyadmin.components import BaseDisplayLayoutBuilder
 from ohmyadmin.views.table import TableView
 
 

@@ -7,12 +7,11 @@ from wtforms.fields.choices import SelectField
 from examples import icons
 from examples.models import Brand, Product
 from ohmyadmin import components, filters, formatters
-from ohmyadmin.components import BaseFormLayoutBuilder, Component
+from ohmyadmin.components import BaseDisplayLayoutBuilder, BaseFormLayoutBuilder, Component
 from ohmyadmin.datasources.sqlalchemy import load_choices, SADataSource
 from ohmyadmin.display_fields import DisplayField
 from ohmyadmin.metrics import ProgressMetric, TrendMetric, TrendValue, ValueMetric, ValueValue
 from ohmyadmin.resources.resource import ResourceScreen
-from ohmyadmin.screens.display import BaseDisplayLayoutBuilder
 from ohmyadmin.views.table import TableView
 
 

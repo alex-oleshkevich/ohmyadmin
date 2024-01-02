@@ -8,7 +8,7 @@ from starlette.responses import Response
 from starlette.routing import BaseRoute, Mount, Route
 
 from ohmyadmin.actions import actions
-from ohmyadmin.components import AutoLayout, FormLayoutBuilder
+from ohmyadmin.components import AutoFormLayout, FormLayoutBuilder
 from ohmyadmin.forms.utils import create_form, validate_on_submit
 from ohmyadmin.templating import render_to_response
 from ohmyadmin.screens.base import ExposeViewMiddleware, Screen
@@ -16,7 +16,7 @@ from ohmyadmin.screens.base import ExposeViewMiddleware, Screen
 
 class FormScreen(Screen):
     form_class: typing.Type[wtforms.Form] = wtforms.Form
-    layout_class: typing.Type[FormLayoutBuilder] = AutoLayout
+    layout_class: typing.Type[FormLayoutBuilder] = AutoFormLayout
     form_actions: typing.Sequence[actions.Action] | None = None
     template = "ohmyadmin/screens/form/page.html"
 
