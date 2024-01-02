@@ -10,6 +10,7 @@ from ohmyadmin import components, filters, formatters
 from ohmyadmin.components import BaseDisplayLayoutBuilder, BaseFormLayoutBuilder, Component
 from ohmyadmin.datasources.sqlalchemy import load_choices, SADataSource
 from ohmyadmin.display_fields import DisplayField
+from ohmyadmin.forms.utils import safe_int_coerce
 from ohmyadmin.metrics import ProgressMetric, TrendMetric, TrendValue, ValueMetric, ValueValue
 from ohmyadmin.resources.resource import ResourceScreen
 from ohmyadmin.views.table import TableView
@@ -18,7 +19,7 @@ from ohmyadmin.views.table import TableView
 class ProductForm(wtforms.Form):
     name = wtforms.StringField(validators=[wtforms.validators.data_required()])
     slug = wtforms.StringField(validators=[wtforms.validators.data_required()])
-    brand_id = SelectField(validators=[wtforms.validators.data_required()])
+    brand_id = SelectField(validators=[wtforms.validators.data_required()], coerce=safe_int_coerce)
     description = wtforms.TextAreaField()
     price = wtforms.DecimalField(validators=[wtforms.validators.data_required()])
     compare_at_price = wtforms.DecimalField(validators=[wtforms.validators.data_required()])
@@ -39,7 +40,7 @@ class ProductForm(wtforms.Form):
     can_be_returned = wtforms.BooleanField(label="This product can be returned")
     can_be_shipped = wtforms.BooleanField(label="This product can be shipped")
     visible = wtforms.BooleanField(label="This product will be hidden from all sales channels.")
-    availability = wtforms.BooleanField()
+    availability = wtforms.DateField()
 
 
 class TotalProducts(ValueMetric):
@@ -237,6 +238,7 @@ class FormLayout(BaseFormLayoutBuilder):
                         components.GroupComponent(
                             label="Shipment",
                             children=[
+                                components.FormInput(form.availability),
                                 components.FormInput(form.can_be_shipped),
                                 components.FormInput(form.can_be_returned),
                             ],
