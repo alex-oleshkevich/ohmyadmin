@@ -1,19 +1,16 @@
 import typing
 
-from starlette.middleware import Middleware
 from starlette.requests import Request
 from starlette.responses import Response
-from starlette.routing import BaseRoute, Mount, Route
 from starlette_babel import gettext_lazy as _
 
 from ohmyadmin import htmx
 from ohmyadmin.actions.actions import Action, ModalAction
 from ohmyadmin.datasources.datasource import DataSource
 from ohmyadmin.filters import Filter, OrderingFilter, SearchFilter
-from ohmyadmin.metrics.base import Metric
 from ohmyadmin.pagination import get_page_size_value, get_page_value
 from ohmyadmin.templating import render_to_response
-from ohmyadmin.screens.base import ExposeViewMiddleware, Screen
+from ohmyadmin.screens.base import Screen
 from ohmyadmin.views.base import IndexView
 
 
@@ -26,10 +23,8 @@ class IndexScreen(Screen):
     page_sizes: typing.ClassVar[typing.Sequence[int]] = [10, 25, 50, 100]
 
     filters: typing.Sequence[Filter] = tuple()
-    page_actions: typing.Sequence[Action] = tuple()
     object_actions: typing.Sequence[Action] = tuple()
     batch_actions: typing.Sequence[ModalAction] = tuple()
-    metrics: typing.Sequence[Metric] = tuple()
 
     search_param: str = "search"
     search_placeholder: str = _("Start typing to search...")
@@ -71,9 +66,6 @@ class IndexScreen(Screen):
 
     def get_object_actions(self) -> typing.Sequence[Action]:
         return self.object_actions
-
-    def get_page_actions(self) -> typing.Sequence[Action]:
-        return self.page_actions
 
     def get_ordering_fields(self) -> typing.Sequence[str]:
         return self.ordering_fields
@@ -144,32 +136,9 @@ class IndexScreen(Screen):
         )
         return htmx.push_url(response, push_url)
 
-    def get_route(self) -> BaseRoute:
-        return Mount(
-            "",
-            routes=[
-                Route("/", self.dispatch, name=self.url_name),
-                Mount(
-                    "/actions",
-                    routes=[
-                        Route(
-                            "/" + action.slug, action, name=self.get_action_route_name(action), methods=["get", "post"]
-                        )
-                        for action in [*self.page_actions, *self.get_object_actions(), *self.get_batch_actions()]
-                    ],
-                    middleware=[
-                        Middleware(ExposeViewMiddleware, screen=self),
-                    ],
-                ),
-                Mount(
-                    "/metrics",
-                    routes=[metric.get_route(self.url_name) for metric in self.metrics],
-                    middleware=[
-                        Middleware(ExposeViewMiddleware, screen=self),
-                    ],
-                ),
-            ],
-        )
-
-    def get_action_route_name(self, action: Action) -> str:
-        return f"{self.url_name}.actions.{action.slug}"
+    def get_action_handlers(self) -> typing.Sequence[Action]:
+        return [
+            *self.page_actions,
+            *self.object_actions,
+            *self.batch_actions,
+        ]

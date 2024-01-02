@@ -10,11 +10,10 @@ from ohmyadmin import components, formatters
 from ohmyadmin.actions import actions
 from ohmyadmin.screens.display import DisplayScreen
 from ohmyadmin.components import BaseDisplayLayoutBuilder
-from ohmyadmin.display_fields import DisplayField
 
 
 class ProductLayout(BaseDisplayLayoutBuilder):
-    def build(self, model: Product, fields: typing.Sequence[DisplayField]) -> components.Component:
+    def build(self, request: Request, model: Product) -> components.Component:
         return components.GridComponent(
             children=[
                 components.GridComponent(
@@ -123,7 +122,7 @@ class ProductView(DisplayScreen):
     group = "Views"
     description = "Demo of display view."
     layout_class = ProductLayout
-    object_actions = [
+    page_actions = [
         actions.LinkAction(url="/admin", label="To Main page"),
         actions.CallbackAction(callback=show_toast_callback, label="Show toast", variant="danger"),
         actions.ModalAction(

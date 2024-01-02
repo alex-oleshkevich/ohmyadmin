@@ -2,14 +2,6 @@
 {% import 'ohmyadmin/icons.html' as icons %}
 {% import 'ohmyadmin/actions.html' as actions %}
 
-{% block page_actions %}
-    {% call actions.action_toolbar() %}
-        {% for action in screen.object_actions %}
-            {{ actions.action_button(request, action, screen, model) }}
-        {% endfor %}
-    {% endcall %}
-{% endblock %}
-
 {% block content %}
     {{ layout.render(request) }}
 {% endblock %}

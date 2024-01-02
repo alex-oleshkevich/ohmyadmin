@@ -179,7 +179,7 @@ class UsersTable(TableScreen):
         Breadcrumb(_("Home"), url="/admin"),
         Breadcrumb(label),
     ]
-    metrics = (
+    page_metrics = (
         GenderDistributionMetric(),
         RegistrationsByYearMetric(),
         ActivationProgressMetric(),

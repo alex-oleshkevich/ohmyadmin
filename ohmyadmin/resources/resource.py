@@ -173,7 +173,7 @@ class ResourceScreen(Screen):
                 datasource=self.datasource,
                 filters=self.page_filters,
                 page_actions=self.get_index_page_actions(),
-                metrics=self.page_metrics,
+                page_metrics=self.page_metrics,
                 object_actions=self.get_object_actions(),
                 batch_actions=self.get_batch_actions(),
                 search_param=self.search_param,
@@ -245,7 +245,7 @@ class ResourceScreen(Screen):
                 group=self.group,
                 url_name=self.get_display_route_name(),
                 layout_class=self.display_layout_class,
-                object_actions=self.get_display_actions(),
+                page_actions=self.get_display_actions(),
                 get_object=self.get_object_for_display,
                 fields=self.display_fields,
                 breadcrumbs=[

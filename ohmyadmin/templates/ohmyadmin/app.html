@@ -1,4 +1,5 @@
 {% extends 'ohmyadmin/base.html' %}
+{% import 'ohmyadmin/actions.html' as actions %}
 
 {% macro menu_heading(label) %}
     <div class="text-xs uppercase text-gray-500 font-medium px-3 pt-2">{{ label }}</div>
@@ -67,11 +68,34 @@
                         {% endif %}
                     </div>
                     <div class="flex items-center gap-2 justify-end flex-wrap">
-                        {% block page_actions %}{% endblock %}
+                        {% block page_actions %}
+                            {% call actions.action_toolbar() %}
+                                {% if model is undefined %}
+                                {% set model = none %}
+                                {% endif %}
+                                {% for action in screen.get_page_actions() %}
+                                    {{ actions.action_button(request, action, screen, model) }}
+                                {% endfor %}
+                            {% endcall %}
+                        {% endblock %}
                     </div>
                 </div>
             </header>
             <main>
+                <!-- metrics -->
+                {% if screen.get_page_metrics() %}
+                    <section class="grid grid-cols-12 gap-5 mb-10">
+                        {% for metric in screen.get_page_metrics() %}
+                            {% set update_interval = metric.update_interval %}
+                            <div class="col-span-{{ metric.size }} h-40"
+                                 hx-trigger="load{{ ', every:{interval}s'.format(interval=update_interval) if update_interval else '' }}"
+                                 hx-target="this"
+                                 hx-get="{{ url_for(metric.get_url_name(screen.url_name)) }}">
+                            </div>
+                        {% endfor %}
+                    </section>
+                {% endif %}
+
                 {% block content %}{% endblock %}
             </main>
         </article>

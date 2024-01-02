@@ -16,6 +16,6 @@
 14. global search
 15. screen get_route should be static to generate routes w/o instances (eg. menu builder)
 16. actions should have static urls - pass route name and path prefix via args
+17. images component for product display page
 
 # BUGS
-5. images component for product display page

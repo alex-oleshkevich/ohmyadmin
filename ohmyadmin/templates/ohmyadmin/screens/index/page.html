@@ -1,15 +1,5 @@
 {% extends 'ohmyadmin/app.html' %}
 {% import 'ohmyadmin/icons.html' as icons %}
-{% import 'ohmyadmin/actions.html' as actions %}
-
-{% block page_actions %}
-    {% call actions.action_toolbar() %}
-        {% for action in screen.get_page_actions() %}
-            {{ actions.action_button(request, action, screen) }}
-        {% endfor %}
-    {% endcall %}
-{% endblock %}
-
 
 {% block content %}
     <script>
@@ -39,20 +29,6 @@
          hx-indicator="#load-indicator"
          hx-include="#search-form, #view-filters, #datatable"
     >
-
-        <!-- metrics -->
-        {% if screen.metrics %}
-            <section class="grid grid-cols-12 gap-5 mb-10">
-                {% for metric in screen.metrics %}
-                    {% set update_interval = metric.update_interval %}
-                    <div class="col-span-{{ metric.size }} h-40"
-                         hx-trigger="load{{ ', every:{interval}s'.format(interval=update_interval) if update_interval else '' }}"
-                         hx-target="this"
-                         hx-get="{{ url_for(metric.get_url_name(screen.url_name)) }}">
-                    </div>
-                {% endfor %}
-            </section>
-        {% endif %}
 
         <section class="flex items-center justify-between">
             <!-- search -->
