@@ -15,5 +15,6 @@
 15. screen get_route should be static to generate routes w/o instances (eg. menu builder)
 16. actions should have static urls - pass route name and path prefix via args
 17. add image display and form component
+18. simplify datasource -> django-like?
 
 # BUGS
