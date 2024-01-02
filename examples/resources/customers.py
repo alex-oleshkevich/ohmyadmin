@@ -11,6 +11,7 @@ from ohmyadmin.datasources.sqlalchemy import SADataSource
 from ohmyadmin.display_fields import DisplayField
 from ohmyadmin.resources.resource import ResourceScreen
 from ohmyadmin.components import BaseDisplayLayoutBuilder
+from ohmyadmin.views.display import BuilderDisplayView
 from ohmyadmin.views.table import TableView
 
 
@@ -185,7 +186,6 @@ class CustomerResource(ResourceScreen):
     form_class = CustomerForm
     ordering_fields = "name", "email"
     searchable_fields = "name", "email", "phone"
-    display_layout_class = DisplayLayout
     page_filters = [
         filters.DateFilter("created_at"),
         filters.DateFilter("birthday"),
@@ -197,3 +197,4 @@ class CustomerResource(ResourceScreen):
             DisplayField("phone"),
         ]
     )
+    display_view = BuilderDisplayView(builder=DisplayLayout())

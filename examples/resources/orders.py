@@ -14,6 +14,7 @@ from ohmyadmin.forms.utils import safe_int_coerce
 from ohmyadmin.metrics import Partition, PartitionMetric, TrendMetric, TrendValue, ValueMetric, ValueValue
 from ohmyadmin.resources.resource import ResourceScreen
 from ohmyadmin.components import BaseDisplayLayoutBuilder
+from ohmyadmin.views.display import AutoDisplayView
 from ohmyadmin.views.table import TableView
 
 STATUS_COLORS: dict[str, str] = {
@@ -122,30 +123,6 @@ class OrdersResource(ResourceScreen):
     ]
     searchable_fields = ("number",)
     ordering_fields = ("status",)
-    display_fields = [
-        DisplayField(
-            "status",
-            formatter=formatters.BadgeFormatter(
-                color_map={
-                    Order.Status.NEW: "blue",
-                    Order.Status.SHIPPED: "green",
-                    Order.Status.PROCESSING: "yellow",
-                    Order.Status.DELIVERED: "green",
-                    Order.Status.CANCELLED: "red",
-                }
-            ),
-        ),
-        DisplayField("currency"),
-        DisplayField("total_price", formatter=formatters.NumberFormatter(suffix="USD")),
-        DisplayField("created_at", label="Order date", formatter=formatters.DateFormatter()),
-        DisplayField("updated_at", label="Update date", formatter=formatters.DateFormatter()),
-        DisplayField("address"),
-        DisplayField("city"),
-        DisplayField("zip"),
-        DisplayField("notes"),
-        DisplayField("currency"),
-        DisplayField("country"),
-    ]
     index_view = TableView(
         columns=[
             DisplayField("number", link=True),
@@ -165,6 +142,32 @@ class OrdersResource(ResourceScreen):
             DisplayField("currency"),
             DisplayField("total_price", formatter=formatters.NumberFormatter(suffix="USD")),
             DisplayField("created_at", label="Order date", formatter=formatters.DateFormatter()),
+        ]
+    )
+    display_view = AutoDisplayView(
+        fields=[
+            DisplayField(
+                "status",
+                formatter=formatters.BadgeFormatter(
+                    color_map={
+                        Order.Status.NEW: "blue",
+                        Order.Status.SHIPPED: "green",
+                        Order.Status.PROCESSING: "yellow",
+                        Order.Status.DELIVERED: "green",
+                        Order.Status.CANCELLED: "red",
+                    }
+                ),
+            ),
+            DisplayField("currency"),
+            DisplayField("total_price", formatter=formatters.NumberFormatter(suffix="USD")),
+            DisplayField("created_at", label="Order date", formatter=formatters.DateFormatter()),
+            DisplayField("updated_at", label="Update date", formatter=formatters.DateFormatter()),
+            DisplayField("address"),
+            DisplayField("city"),
+            DisplayField("zip"),
+            DisplayField("notes"),
+            DisplayField("currency"),
+            DisplayField("country"),
         ]
     )
 

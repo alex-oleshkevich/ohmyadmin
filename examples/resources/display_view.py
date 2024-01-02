@@ -10,6 +10,7 @@ from ohmyadmin import components, formatters
 from ohmyadmin.actions import actions
 from ohmyadmin.screens.display import DisplayScreen
 from ohmyadmin.components import BaseDisplayLayoutBuilder
+from ohmyadmin.views.display import BuilderDisplayView
 
 
 class ProductLayout(BaseDisplayLayoutBuilder):
@@ -121,7 +122,6 @@ class ProductView(DisplayScreen):
     label = "Display view"
     group = "Views"
     description = "Demo of display view."
-    layout_class = ProductLayout
     page_actions = [
         actions.LinkAction(url="/admin", label="To Main page"),
         actions.CallbackAction(callback=show_toast_callback, label="Show toast", variant="danger"),
@@ -135,6 +135,7 @@ class ProductView(DisplayScreen):
             modal_description="Create a new user right now!",
         ),
     ]
+    view = BuilderDisplayView(ProductLayout())
 
     async def get_object(self, request: Request) -> typing.Any:
         stmt = sa.select(Product).limit(1).options(joinedload(Product.brand), selectinload(Product.categories))

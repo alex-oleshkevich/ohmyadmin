@@ -3,5 +3,5 @@
 {% import 'ohmyadmin/actions.html' as actions %}
 
 {% block content %}
-    {{ layout.render(request) }}
+    {{ view(request, model) }}
 {% endblock %}

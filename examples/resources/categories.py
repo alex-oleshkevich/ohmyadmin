@@ -10,6 +10,7 @@ from ohmyadmin.datasources.sqlalchemy import load_choices, SADataSource
 from ohmyadmin.forms.utils import safe_int_coerce
 from ohmyadmin.resources.resource import ResourceScreen
 from ohmyadmin.display_fields import DisplayField
+from ohmyadmin.views.display import AutoDisplayView
 from ohmyadmin.views.table import TableView
 
 
@@ -41,18 +42,20 @@ class CategoryResource(ResourceScreen):
             DisplayField("visible_to_customers", label="Visibility", formatter=formatters.BoolFormatter()),
         ]
     )
-    display_fields = [
-        DisplayField("name"),
-        DisplayField(
-            "parent",
-            label="Parent",
-            formatter=formatters.LinkFormatter(
-                url=lambda r, v: r.url_for(r.state.resource.get_display_route_name(), object_id=v.id),
+    display_view = AutoDisplayView(
+        fields=[
+            DisplayField("name"),
+            DisplayField(
+                "parent",
+                label="Parent",
+                formatter=formatters.LinkFormatter(
+                    url=lambda r, v: r.url_for(r.state.resource.get_display_route_name(), object_id=v.id),
+                ),
             ),
-        ),
-        DisplayField("visible_to_customers", formatter=formatters.BoolFormatter()),
-        DisplayField("description"),
-    ]
+            DisplayField("visible_to_customers", formatter=formatters.BoolFormatter()),
+            DisplayField("description"),
+        ]
+    )
 
     async def init_form(self, request: Request, form: CategoryForm) -> None:
         await load_choices(request.state.dbsession, form.parent_id, sa.select(Category).order_by(Category.name))

@@ -13,6 +13,7 @@ from ohmyadmin.display_fields import DisplayField
 from ohmyadmin.forms.utils import safe_int_coerce
 from ohmyadmin.metrics import ProgressMetric, TrendMetric, TrendValue, ValueMetric, ValueValue
 from ohmyadmin.resources.resource import ResourceScreen
+from ohmyadmin.views.display import BuilderDisplayView
 from ohmyadmin.views.table import TableView
 
 
@@ -298,11 +299,8 @@ class ProductResource(ResourceScreen):
             DisplayField("visible", formatter=formatters.BoolFormatter()),
         ]
     )
-    display_layout_class = DisplayLayout
+    display_view = BuilderDisplayView(builder=DisplayLayout())
     form_layout_class = FormLayout
 
     async def init_form(self, request: Request, form: ProductForm) -> None:
         await load_choices(request.state.dbsession, form.brand_id, sa.select(Brand))
-
-    async def sync_for_to_model(self, request: Request, form: wtforms.Form, model: object) -> None:
-        pass

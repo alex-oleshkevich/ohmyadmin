@@ -5,21 +5,23 @@ from starlette.exceptions import HTTPException
 from starlette.requests import Request
 from starlette.responses import Response
 
-from ohmyadmin.components import AutoDisplayLayout, DisplayLayoutBuilder
 from ohmyadmin.datasources.datasource import NoObjectError
 from ohmyadmin.templating import render_to_response
 from ohmyadmin.screens.base import Screen
-from ohmyadmin.display_fields import DisplayField
+from ohmyadmin.views.display import DisplayView
 
 
 class DisplayScreen(Screen):
-    fields: typing.Sequence[DisplayField] = tuple()
-    layout_class: typing.Type[DisplayLayoutBuilder] = AutoDisplayLayout
+    view: DisplayView | None = None
     template = "ohmyadmin/screens/display/page.html"
 
     @abc.abstractmethod
     async def get_object(self, request: Request) -> typing.Any:
         raise NotImplementedError()
+
+    def get_view(self) -> DisplayView:
+        assert self.view, "No view is defined"
+        return self.view
 
     async def dispatch(self, request: Request) -> Response:
         try:
@@ -27,7 +29,6 @@ class DisplayScreen(Screen):
         except NoObjectError:
             raise HTTPException(404, "Page not found")
 
-        layout_builder = self.layout_class()
         return render_to_response(
             request,
             self.template,
@@ -35,7 +36,7 @@ class DisplayScreen(Screen):
                 "screen": self,
                 "model": instance,
                 "page_title": self.label,
+                "view": self.get_view(),
                 "page_description": self.description,
-                "layout": layout_builder(request, instance),
             },
         )

@@ -6,6 +6,7 @@ from examples.models import Currency
 from ohmyadmin.datasources.sqlalchemy import SADataSource
 from ohmyadmin.display_fields import DisplayField
 from ohmyadmin.resources.resource import ResourceScreen
+from ohmyadmin.views.display import AutoDisplayView
 from ohmyadmin.views.table import TableView
 
 
@@ -27,13 +28,15 @@ class CurrencyResource(ResourceScreen):
         "name",
         "code",
     )
-    display_fields = (
-        DisplayField("name"),
-        DisplayField("code"),
-    )
     index_view = TableView(
         columns=[
             DisplayField(name="name", link=True),
             DisplayField(name="code"),
+        ]
+    )
+    display_view = AutoDisplayView(
+        fields=[
+            DisplayField("name"),
+            DisplayField("code"),
         ]
     )

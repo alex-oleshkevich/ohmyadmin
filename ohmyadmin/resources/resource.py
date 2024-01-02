@@ -9,7 +9,6 @@ from starlette.routing import BaseRoute, Mount
 from starlette_babel import gettext_lazy as _
 from starlette_flash import flash
 
-import ohmyadmin.components
 from ohmyadmin import filters, htmx, metrics, screens
 from ohmyadmin.actions import actions
 from ohmyadmin.breadcrumbs import Breadcrumb
@@ -30,8 +29,8 @@ from ohmyadmin.resources.actions import (
 )
 from ohmyadmin.resources.policy import AccessPolicy, PermissiveAccessPolicy
 from ohmyadmin.screens.base import ExposeViewMiddleware, Screen
-from ohmyadmin.display_fields import DisplayField
 from ohmyadmin.views.base import IndexView
+from ohmyadmin.views.display import DisplayView
 
 
 class ResourceScreen(Screen):
@@ -97,9 +96,9 @@ class ResourceScreen(Screen):
     create_form_actions: typing.Sequence[actions.Action] | None = None
 
     # display page
-    display_layout_class: type[ohmyadmin.components.DisplayLayoutBuilder] = ohmyadmin.components.AutoDisplayLayout
+    # display_layout_class: type[ohmyadmin.components.DisplayLayoutBuilder] = ohmyadmin.components.AutoDisplayLayout
     display_object_actions: typing.Sequence[actions.Action] = tuple()
-    display_fields: list[DisplayField] = tuple()
+    display_view: DisplayView | None = None
 
     def __init__(self) -> None:
         assert self.datasource, f"Class {self.__class__.__name__} must have a datasource."
@@ -244,10 +243,9 @@ class ResourceScreen(Screen):
                 label=self.display_label.format(label=self.label, label_plural=self.label_plural),
                 group=self.group,
                 url_name=self.get_display_route_name(),
-                layout_class=self.display_layout_class,
                 page_actions=self.get_display_actions(),
                 get_object=self.get_object_for_display,
-                fields=self.display_fields,
+                view=self.display_view,
                 breadcrumbs=[
                     Breadcrumb(label=_("Home", domain="ohmyadmin"), url=lambda r: r.url_for("ohmyadmin.welcome")),
                     Breadcrumb(label=self.label_plural, url=lambda r: r.url_for(self.get_index_route_name())),
