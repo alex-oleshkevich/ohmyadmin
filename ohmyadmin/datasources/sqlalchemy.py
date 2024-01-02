@@ -224,7 +224,6 @@ class SADataSource(DataSource[T]):
 
         offset = (page - 1) * page_size
         stmt = self._stmt.limit(page_size).offset(offset)
-        print(stmt)
         result = await get_dbsession(request).scalars(stmt)
         rows = result.all()
         return Pagination(rows=list(rows), total_rows=row_count, page=page, page_size=page_size)

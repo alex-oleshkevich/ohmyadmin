@@ -36,13 +36,13 @@ class LocationOptions(typing.TypedDict):
     path: typing.NotRequired[str]
 
     target: typing.NotRequired[str]
-    """the target to swap the response into"""
+    """The target to swap the response into."""
 
     swap: typing.NotRequired[SwapTarget]
-    """how the response will be swapped in relative to the target"""
+    """How the response will be swapped in relative to the target."""
 
     select: typing.NotRequired[str]
-    """ allows you to select the content you want swapped from a response"""
+    """Allows you to select the content you want swapped from a response."""
 
 
 def location(response: R, url: str | URL, options: LocationOptions | None = None) -> R:
@@ -77,7 +77,7 @@ def trigger(response: R, event: str, data: typing.Any = None, stage: TriggerStag
     }.get(stage, "hx-trigger")
 
     triggers = json.loads(response.headers.get(hx_event, "{}"))
-    triggers[event] = data
+    triggers[event] = data or {}
     response.headers[hx_event] = json.dumps(triggers)
     return response
 

@@ -2346,7 +2346,9 @@ var ModalsElement = class extends s4 {
     });
   }
   closeActiveModal() {
-    this.dialogs.forEach((el) => el.remove());
+    setTimeout(() => {
+      this.dialogs.forEach((el) => el.remove());
+    }, 0);
   }
 };
 ModalsElement.styles = i`:host {

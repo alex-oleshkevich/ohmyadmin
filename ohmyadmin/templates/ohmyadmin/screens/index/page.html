@@ -108,7 +108,7 @@
 
             <div id="datatable"
                  hx-get="{{ request.url.path }}"
-                 hx-trigger="refresh from:body"
+                 hx-trigger="refresh from:window"
                  hx-push-url="true">
                 {% include 'ohmyadmin/screens/index/content.html' %}
             </div>

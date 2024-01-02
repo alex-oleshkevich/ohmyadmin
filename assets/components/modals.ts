@@ -49,7 +49,9 @@ export class ModalsElement extends LitElement {
     }
 
     closeActiveModal() {
-        this.dialogs.forEach(el => el.remove());
+        setTimeout(() => {
+            this.dialogs.forEach(el => el.remove());
+        }, 0);
     }
 }
 

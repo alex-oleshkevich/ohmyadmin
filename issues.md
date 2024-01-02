@@ -15,8 +15,7 @@
 13. order by joined tables
 14. global search
 15. screen get_route should be static to generate routes w/o instances (eg. menu builder)
+16. actions should have static urls - pass route name and path prefix via args
 
 # BUGS
-1. "refresh" not triggered after batch delete
-2. "refresh" not triggered after row delete
 5. images component for product display page
