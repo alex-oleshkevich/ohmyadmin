@@ -1,0 +1,17 @@
+{% macro breadcrumbs(request, breadcrumbs) %}
+    <div class="breadcrumbs">
+    <ul>
+    {% for item in breadcrumbs %}
+        <li>{{ breadcrumb(item.label, item.get_url(request)) }}</li>
+    {% endfor %}
+    </ul>
+    </div>
+{% endmacro %}
+
+{% macro breadcrumb(label, url) %}
+    {% if url %}
+        <a href="{{ url }}">{{ label }}</a>
+    {% else %}
+        <span>{{ label }}</span>
+    {% endif %}
+{% endmacro %}

@@ -599,11 +599,16 @@
     }
 
     .breadcrumbs ul {
-        @apply inline-flex items-center space-x-4 py-2 text-sm font-medium;
+        @apply inline-flex items-center py-2 text-sm font-medium;
     }
 
     .breadcrumbs ul li {
-        @apply inline-flex items-center space-x-4;
+        @apply inline-flex items-center text-sm;
+    }
+
+    .breadcrumbs ul li:not(:last-child)::after {
+        content: ' / ';
+        @apply px-2 text-slate-500;
     }
 
     .breadcrumbs ul li a {

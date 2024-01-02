@@ -1,6 +1,6 @@
 import datetime
 import decimal
-
+from starlette_babel import gettext_lazy as _
 import sqlalchemy as sa
 import wtforms
 from markupsafe import Markup
@@ -11,6 +11,7 @@ from starlette.responses import Response
 from examples.models import User
 from ohmyadmin import colors, formatters
 from ohmyadmin.actions import actions
+from ohmyadmin.breadcrumbs import Breadcrumb
 from ohmyadmin.datasources.datasource import InFilter
 from ohmyadmin.datasources.sqlalchemy import get_dbsession, SADataSource
 from ohmyadmin.filters import (
@@ -174,6 +175,10 @@ class UsersTable(TableScreen):
     datasource = SADataSource(User)
     searchable_fields = ["last_name", "email"]
     ordering_fields = "last_name", "email", "rating", "birthdate", "created_at"
+    breadcrumbs = [
+        Breadcrumb(_("Home"), url="/admin"),
+        Breadcrumb(label),
+    ]
     metrics = (
         GenderDistributionMetric(),
         RegistrationsByYearMetric(),

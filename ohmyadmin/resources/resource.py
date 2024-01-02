@@ -11,6 +11,7 @@ from starlette_flash import flash
 
 from ohmyadmin import filters, htmx, metrics, screens
 from ohmyadmin.actions import actions
+from ohmyadmin.breadcrumbs import Breadcrumb
 from ohmyadmin.components import AutoLayout, FormLayoutBuilder
 from ohmyadmin.datasources.datasource import DataSource, DuplicateError, InFilter
 from ohmyadmin.helpers import pluralize, snake_to_sentence
@@ -179,6 +180,10 @@ class ResourceScreen(Screen):
                 search_filter=self.search_filter,
                 url_name=self.get_index_route_name(),
                 view=self.index_view,
+                breadcrumbs=[
+                    Breadcrumb(label=_("Home", domain="ohmyadmin"), url=lambda r: r.url_for("ohmyadmin.welcome")),
+                    Breadcrumb(label=self.label_plural, url=lambda r: r.url_for(self.get_index_route_name())),
+                ],
             ),
         )
         return typing.cast(type[Screen], screen)
@@ -197,6 +202,11 @@ class ResourceScreen(Screen):
                 init_form=self.init_form,
                 get_object=self.get_object_for_form,
                 handle=self.perform_update,
+                breadcrumbs=[
+                    Breadcrumb(label=_("Home", domain="ohmyadmin"), url=lambda r: r.url_for("ohmyadmin.welcome")),
+                    Breadcrumb(label=self.label_plural, url=lambda r: r.url_for(self.get_index_route_name())),
+                    Breadcrumb(label=_("Edit", domain="ohmyadmin")),
+                ],
             ),
         )
         return typing.cast(type[Screen], screen)
@@ -215,6 +225,11 @@ class ResourceScreen(Screen):
                 init_form=self.init_create_form,
                 get_object=self.get_new_object,
                 handle=self.perform_create,
+                breadcrumbs=[
+                    Breadcrumb(label=_("Home", domain="ohmyadmin"), url=lambda r: r.url_for("ohmyadmin.welcome")),
+                    Breadcrumb(label=self.label_plural, url=lambda r: r.url_for(self.get_index_route_name())),
+                    Breadcrumb(label=_("Create", domain="ohmyadmin")),
+                ],
             ),
         )
         return typing.cast(type[Screen], screen)
@@ -231,6 +246,11 @@ class ResourceScreen(Screen):
                 object_actions=self.get_display_actions(),
                 get_object=self.get_object_for_display,
                 fields=self.display_fields,
+                breadcrumbs=[
+                    Breadcrumb(label=_("Home", domain="ohmyadmin"), url=lambda r: r.url_for("ohmyadmin.welcome")),
+                    Breadcrumb(label=self.label_plural, url=lambda r: r.url_for(self.get_index_route_name())),
+                    Breadcrumb(label=_("View", domain="ohmyadmin")),
+                ],
             ),
         )
         return typing.cast(type[Screen], screen)

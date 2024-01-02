@@ -2295,15 +2295,6 @@ body {
 .breadcrumbs ul {
   display: inline-flex;
   align-items: center;
-}
-
-.breadcrumbs ul > :not([hidden]) ~ :not([hidden]) {
-  --tw-space-x-reverse: 0;
-  margin-right: calc(1rem * var(--tw-space-x-reverse));
-  margin-left: calc(1rem * calc(1 - var(--tw-space-x-reverse)));
-}
-
-.breadcrumbs ul {
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
   font-size: 0.875rem;
@@ -2314,12 +2305,16 @@ body {
 .breadcrumbs ul li {
   display: inline-flex;
   align-items: center;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
 }
 
-.breadcrumbs ul li > :not([hidden]) ~ :not([hidden]) {
-  --tw-space-x-reverse: 0;
-  margin-right: calc(1rem * var(--tw-space-x-reverse));
-  margin-left: calc(1rem * calc(1 - var(--tw-space-x-reverse)));
+.breadcrumbs ul li:not(:last-child)::after {
+  content: ' / ';
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  --tw-text-opacity: 1;
+  color: rgb(100 116 139 / var(--tw-text-opacity));
 }
 
 .breadcrumbs ul li a {

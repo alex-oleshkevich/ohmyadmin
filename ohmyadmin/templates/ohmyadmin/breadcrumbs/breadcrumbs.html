@@ -1,0 +1,7 @@
+{% import 'ohmyadmin/breadcrumbs/breadcrumbs.macro.html' as breadcrumbs %}
+
+{% if screen.breadcrumbs %}
+<div>
+{{ breadcrumbs.breadcrumbs(request, screen.breadcrumbs) }}
+</div>
+{% endif %}

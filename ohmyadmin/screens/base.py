@@ -7,6 +7,7 @@ from starlette.responses import Response
 from starlette.routing import BaseRoute, Route
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+from ohmyadmin.breadcrumbs import Breadcrumb
 from ohmyadmin.menu import MenuItem
 
 
@@ -16,6 +17,7 @@ class Screen(abc.ABC):
     icon: str = ""
     group: str = ""
     show_in_menu: bool = True
+    breadcrumbs: list[Breadcrumb] | None = None
 
     @property
     def slug(self) -> str:
