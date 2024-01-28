@@ -89,7 +89,7 @@ class OrdersByYear(TrendMetric):
 
 class DisplayLayout(BaseDisplayLayoutBuilder):
     def build(self, request: Request, model: Customer) -> components.Component:
-        return components.GridComponent()
+        return components.Grid()
 
 
 class OrdersResource(ResourceScreen):

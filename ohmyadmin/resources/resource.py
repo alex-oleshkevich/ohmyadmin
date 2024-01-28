@@ -321,32 +321,35 @@ class ResourceScreen(Screen):
     def get_new_object(self, request: Request) -> typing.Any:
         return self.datasource.new()
 
-    async def perform_create(self, request: Request, form: wtforms.Form, instance: object) -> Response:
+    async def populate_object(self, request: Request, form: wtforms.Form, model: object) -> None:
+        await populate_object(request, form, model)
+
+    async def perform_create(self, request: Request, form: wtforms.Form, model: object) -> Response:
         try:
-            form.populate_obj(instance)
-            await self.datasource.create(request, instance)
+            await self.populate_object(request, form, model)
+            await self.datasource.create(request, model)
         except DuplicateError:
             message = _("Duplicate resource. There is another {label} like this already.", domain="ohmyadmin").format(
                 label=self.label.lower(),
             )
             return htmx.response(409).toast(message, "error")
 
-        toast_message = self.create_message.format(object=instance, label=self.label, label_plural=self.label_plural)
+        toast_message = self.create_message.format(object=model, label=self.label, label_plural=self.label_plural)
         response = htmx.response().toast(toast_message)
 
         form_data = await request.form()
         if SubmitActionType.SAVE_RETURN in form_data:
             return response.location(request.url_for(self.get_index_route_name()))
 
-        pk = self.datasource.get_pk(instance)
+        pk = self.datasource.get_pk(model)
         target_url = request.url_for(self.get_edit_route_name(), object_id=pk)
         return response.location(target_url)
 
-    async def perform_update(self, request: Request, form: wtforms.Form, instance: object) -> Response:
-        form.populate_obj(instance)
-        await self.datasource.update(request, instance)
+    async def perform_update(self, request: Request, form: wtforms.Form, model: object) -> Response:
+        await self.populate_object(request, form, model)
+        await self.datasource.update(request, model)
 
-        toast_message = self.update_message.format(object=instance, label=self.label, label_plural=self.label_plural)
+        toast_message = self.update_message.format(object=model, label=self.label, label_plural=self.label_plural)
         response = htmx.response()
 
         form_data = await request.form()

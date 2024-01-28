@@ -27,7 +27,7 @@ class Screen(abc.ABC):
 
     @property
     def slug(self) -> str:
-        return slugify.slugify(self.label)
+        return slugify.slugify(str(self.label))
 
     @property
     def url_name(self) -> str:

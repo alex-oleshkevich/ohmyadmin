@@ -108,7 +108,7 @@ ModalActionCallback: typing.TypeAlias = typing.Callable[[Request, wtforms.Form],
 
 class ModalFormLayout(BaseFormLayoutBuilder):
     def build(self, form: wtforms.Form | wtforms.Field) -> Component:
-        return components.ColumnComponent([components.FormInput(field) for field in form])
+        return components.Column([components.FormInput(field) for field in form])
 
 
 class ModalAction(Action):

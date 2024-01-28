@@ -21,10 +21,10 @@ class BrandForm(wtforms.Form):
 
 class _FormLayout(BaseFormLayoutBuilder):
     def build(self, form: BrandForm) -> components.Component:
-        return components.GridComponent(
+        return components.Grid(
             colspan=2,
             children=[
-                components.ColumnComponent(
+                components.Column(
                     children=[
                         components.FormInput(form.name),
                         components.FormInput(form.slug),
@@ -32,7 +32,7 @@ class _FormLayout(BaseFormLayoutBuilder):
                         components.FormInput(form.description, colspan=12),
                     ]
                 ),
-                components.ColumnComponent(
+                components.Column(
                     children=[
                         components.FormInput(form.visible_to_customers),
                     ]

@@ -24,9 +24,9 @@ class CustomerForm(wtforms.Form):
 
 class DisplayLayout(BaseDisplayLayoutBuilder):
     def build(self, request: Request, model: Customer) -> components.Component:
-        return components.GridComponent(
+        return components.Grid(
             children=[
-                components.ColumnComponent(
+                components.Column(
                     colspan=6,
                     children=[
                         components.DisplayFieldComponent(DisplayField("name"), model),
@@ -52,21 +52,19 @@ class DisplayLayout(BaseDisplayLayoutBuilder):
                             DisplayField("birthday", formatter=formatters.DateFormatter()),
                             model,
                         ),
-                        components.GroupComponent(
+                        components.Group(
                             label="Addresses",
                             children=[
-                                components.GridComponent(
+                                components.Grid(
                                     columns=4,
                                     children=[
-                                        components.ColumnComponent(
+                                        components.Column(
                                             colspan=1,
                                             children=[
-                                                components.DisplayValueComponent(
-                                                    label="Country", value=address.country
-                                                ),
-                                                components.DisplayValueComponent(label="City", value=address.city),
-                                                components.DisplayValueComponent(label="ZIP", value=address.zip),
-                                                components.DisplayValueComponent(label="Street", value=address.street),
+                                                components.DisplayValue(label="Country", value=address.country),
+                                                components.DisplayValue(label="City", value=address.city),
+                                                components.DisplayValue(label="ZIP", value=address.zip),
+                                                components.DisplayValue(label="Street", value=address.street),
                                             ],
                                         ),
                                     ],
@@ -74,28 +72,22 @@ class DisplayLayout(BaseDisplayLayoutBuilder):
                                 for address in model.addresses
                             ],
                         ),
-                        components.GroupComponent(
+                        components.Group(
                             label="Payments",
                             children=[
-                                components.GridComponent(
+                                components.Grid(
                                     children=[
-                                        components.ColumnComponent(
+                                        components.Column(
                                             children=[
-                                                components.DisplayValueComponent(
-                                                    label="Reference", value=payment.reference
-                                                ),
-                                                components.DisplayValueComponent(
+                                                components.DisplayValue(label="Reference", value=payment.reference),
+                                                components.DisplayValue(
                                                     label="Amount",
                                                     value=payment.amount,
                                                     formatter=formatters.NumberFormatter(prefix="$"),
                                                 ),
-                                                components.DisplayValueComponent(
-                                                    label="Currency", value=payment.currency_code
-                                                ),
-                                                components.DisplayValueComponent(
-                                                    label="Provider", value=payment.provider
-                                                ),
-                                                components.DisplayValueComponent(label="Method", value=payment.method),
+                                                components.DisplayValue(label="Currency", value=payment.currency_code),
+                                                components.DisplayValue(label="Provider", value=payment.provider),
+                                                components.DisplayValue(label="Method", value=payment.method),
                                                 components.SeparatorComponent(),
                                             ]
                                         ),
@@ -104,22 +96,20 @@ class DisplayLayout(BaseDisplayLayoutBuilder):
                                 for payment in model.payments
                             ],
                         ),
-                        components.GroupComponent(
+                        components.Group(
                             label="Orders",
                             children=[
-                                components.GridComponent(
+                                components.Grid(
                                     children=[
-                                        components.ColumnComponent(
+                                        components.Column(
                                             children=[
-                                                components.DisplayValueComponent(label="Number", value=order.number),
-                                                components.DisplayValueComponent(label="Status", value=order.status),
-                                                components.DisplayValueComponent(
+                                                components.DisplayValue(label="Number", value=order.number),
+                                                components.DisplayValue(label="Status", value=order.status),
+                                                components.DisplayValue(
                                                     label="Items",
                                                     value=", ".join([str(item.product) for item in order.items]),
                                                 ),
-                                                components.DisplayValueComponent(
-                                                    label="Total price", value=order.total_price
-                                                ),
+                                                components.DisplayValue(label="Total price", value=order.total_price),
                                                 components.SeparatorComponent(),
                                             ]
                                         ),
@@ -128,26 +118,22 @@ class DisplayLayout(BaseDisplayLayoutBuilder):
                                 for order in model.orders
                             ],
                         ),
-                        components.GroupComponent(
+                        components.Group(
                             label="Comments",
                             children=[
-                                components.GridComponent(
+                                components.Grid(
                                     children=[
-                                        components.ColumnComponent(
+                                        components.Column(
                                             children=[
-                                                components.DisplayValueComponent(label="Title", value=comments.title),
-                                                components.DisplayValueComponent(
-                                                    label="Content", value=comments.content
-                                                ),
-                                                components.DisplayValueComponent(
+                                                components.DisplayValue(label="Title", value=comments.title),
+                                                components.DisplayValue(label="Content", value=comments.content),
+                                                components.DisplayValue(
                                                     label="Public",
                                                     value=comments.public,
                                                     formatter=formatters.BoolFormatter(),
                                                 ),
-                                                components.DisplayValueComponent(
-                                                    label="Product", value=comments.product
-                                                ),
-                                                components.DisplayValueComponent(
+                                                components.DisplayValue(label="Product", value=comments.product),
+                                                components.DisplayValue(
                                                     label="Created at",
                                                     value=comments.created_at,
                                                     formatter=formatters.DateTimeFormatter(),

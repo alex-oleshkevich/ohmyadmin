@@ -1,0 +1,10 @@
+{% import 'ohmyadmin/forms.html' as forms %}
+<div class="col-span-{{ layout.colspan }}">
+    {% if layout.media_url %}
+        <div class=" h-20 w-full">
+            <img src="{{ media_url(layout.media_url) }}" class="max-h-20">
+        </div>
+    {% else %}
+        {{ forms.form_group(field) }}
+    {% endif %}
+</div>

@@ -78,6 +78,11 @@ class OhMyAdmin(Router):
                         app=StaticFiles(packages=["ohmyadmin"]),
                         name="ohmyadmin.static",
                     ),
+                    Route(
+                        "/media/{path:path}",
+                        self.media_view,
+                        name="ohmyadmin.media",
+                    ),
                     *[
                         Mount(
                             "/{group_slug}/{view_slug}".format(
@@ -100,7 +105,17 @@ class OhMyAdmin(Router):
         ]
 
     async def welcome_view(self, request: Request) -> Response:
-        return self.templating.TemplateResponse(request, "ohmyadmin/welcome.html")
+        class WelcomeScreen(Screen):
+            ...
+
+        return self.templating.TemplateResponse(
+            request,
+            "ohmyadmin/welcome.html",
+            {
+                "page_title": _("Welcome"),
+                "screen": WelcomeScreen(),
+            },
+        )
 
     async def login_view(self, request: Request) -> Response:
         next_url = request.query_params.get("next", request.url_for("ohmyadmin.welcome"))
@@ -127,6 +142,12 @@ class OhMyAdmin(Router):
         self.auth_policy.logout(request)
         flash(request).success(_("You have been logged out."))
         return RedirectResponse(request.url_for("ohmyadmin.login"), status_code=302)
+
+    async def media_view(self, request: Request) -> Response:
+        path = request.path_params["path"]
+        if path.startswith("http://") or path.startswith("https://"):
+            return RedirectResponse(path, status_code=302)
+        return self.file_storage.as_response(path)
 
     async def generate_menu(self, request: Request) -> list[MenuItem]:
         groups = itertools.groupby(self.screens, key=operator.attrgetter("group"))

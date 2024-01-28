@@ -15,5 +15,10 @@
 17. add image display and form component
 18. simplify datasource -> django-like?
 19. implement table component and use in TableView. just like display view
-
+20. django-like filters for sqla datasource
+21. main menu builder
+22. user menu builder
+23. global actions
+24. pass welcome screen as argument of app
+25. use fqcn as route name instead of 15
 # BUGS

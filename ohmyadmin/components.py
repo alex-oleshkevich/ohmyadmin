@@ -35,7 +35,17 @@ class FormInput(Component):
         )
 
 
-class ColumnComponent(Component):
+class ImageFormInput(FormInput):
+    template: str = "ohmyadmin/components/image_field.html"
+
+    def __init__(self, field: wtforms.Field, media_url: str, colspan: int = 1) -> None:
+        super().__init__(field, colspan)
+        self.field = field
+        self.colspan = colspan
+        self.media_url = media_url
+
+
+class Column(Component):
     template: str = "ohmyadmin/components/column.html"
 
     def __init__(self, children: list[Component], gap: int = 3, colspan: int = 12) -> None:
@@ -54,7 +64,7 @@ class ColumnComponent(Component):
         )
 
 
-class GridComponent(Component):
+class Grid(Component):
     template: str = "ohmyadmin/components/grid.html"
 
     def __init__(self, children: list[Component], columns: int = 12, gap: int = 5, colspan: int = 12) -> None:
@@ -74,7 +84,7 @@ class GridComponent(Component):
         )
 
 
-class GroupComponent(Component):
+class Group(Component):
     template: str = "ohmyadmin/components/group.html"
 
     def __init__(
@@ -194,7 +204,24 @@ class SeparatorComponent(Component):
         return RawHTMLComponent("<hr>").render(request)
 
 
-class DisplayValueComponent(Component):
+class Image(Component):
+    template: str = "ohmyadmin/components/image.html"
+
+    def __init__(self, src: str) -> None:
+        self.src = src
+
+    def render(self, request: Request) -> str:
+        return render_to_string(
+            request,
+            self.template,
+            {
+                "layout": self,
+                "src": self.src,
+            },
+        )
+
+
+class DisplayValue(Component):
     def __init__(
         self,
         label: str,
@@ -206,11 +233,11 @@ class DisplayValueComponent(Component):
         self.formatter = formatter
 
     def render(self, request: Request) -> str:
-        layout = GridComponent(
+        layout = Grid(
             columns=12,
             children=[
-                ColumnComponent(children=[TextComponent(value=self.label)], colspan=4),
-                ColumnComponent(children=[TextComponent(value=self.formatter(request, self.value))], colspan=8),
+                Column(children=[TextComponent(value=self.label)], colspan=4),
+                Column(children=[TextComponent(value=self.formatter(request, self.value))], colspan=8),
             ],
         )
         return layout.render(request)
@@ -222,7 +249,7 @@ class DisplayFieldComponent(Component):
         self.model = model
 
     def render(self, request: Request) -> str:
-        component = DisplayValueComponent(
+        component = DisplayValue(
             label=self.field.label,
             value=self.field.get_field_value(request, self.model),
         )
@@ -245,7 +272,7 @@ class BaseFormLayoutBuilder(abc.ABC):
 
 class AutoFormLayout(BaseFormLayoutBuilder):
     def build(self, form: wtforms.Form | wtforms.Field) -> Component:
-        return GridComponent(
+        return Grid(
             columns=12,
             children=[self.build_for_field(field) for field in form],
         )
@@ -255,18 +282,18 @@ class AutoFormLayout(BaseFormLayoutBuilder):
             case wtforms.FormField() as form_field:
                 field_count = len(list(form_field))
                 if field_count > 4:
-                    return ColumnComponent(children=[FormInput(subfield) for subfield in form_field])
-                return GridComponent(columns=field_count, children=[FormInput(subfield) for subfield in form_field])
+                    return Column(children=[FormInput(subfield) for subfield in form_field])
+                return Grid(columns=field_count, children=[FormInput(subfield) for subfield in form_field])
             case _:
                 return FormInput(field)
 
     def build_for_field(self, field: wtforms.Field) -> Component:
         match field:
             case wtforms.FieldList() as list_field:
-                return ColumnComponent(
+                return Column(
                     colspan=8,
                     children=[
-                        GroupComponent(
+                        Group(
                             label=list_field.label.text,
                             description=list_field.description,
                             children=[
@@ -279,23 +306,23 @@ class AutoFormLayout(BaseFormLayoutBuilder):
                     ],
                 )
             case wtforms.TextAreaField():
-                return GridComponent(children=[FormInput(field, colspan=6)])
+                return Grid(children=[FormInput(field, colspan=6)])
             case wtforms.IntegerField() | wtforms.FloatField() | wtforms.DecimalField():
-                return GridComponent(children=[FormInput(field, colspan=2)])
+                return Grid(children=[FormInput(field, colspan=2)])
             case wtforms.FormField() as form_field:
                 field_count = len(list(form_field))
                 layout: Component
                 if field_count > 4:
-                    layout = ColumnComponent(children=[FormInput(subfield) for subfield in form_field])
-                layout = GridComponent(columns=field_count, children=[FormInput(subfield) for subfield in form_field])
-                return GroupComponent(
+                    layout = Column(children=[FormInput(subfield) for subfield in form_field])
+                layout = Grid(columns=field_count, children=[FormInput(subfield) for subfield in form_field])
+                return Group(
                     colspan=8,
                     label=form_field.label.text,
                     description=form_field.description,
                     children=[NestedFormComponent(field=form_field, builder=lambda field: layout)],
                 )
             case _:
-                return GridComponent(children=[FormInput(field, colspan=4)])
+                return Grid(children=[FormInput(field, colspan=4)])
 
 
 class DisplayLayoutBuilder(typing.Protocol):
@@ -315,12 +342,28 @@ class BaseDisplayLayoutBuilder(abc.ABC):
 class AutoDisplayLayout(BaseDisplayLayoutBuilder):
     def build(self, request: Request, model: typing.Any) -> Component:
         fields = request.state.resource.display_fields
-        return GridComponent(
+        return Grid(
             columns=12,
             children=[
-                ColumnComponent(
+                Column(
                     colspan=6,
                     children=[DisplayFieldComponent(field=field, model=model) for field in fields],
                 )
             ],
         )
+
+
+# class MenuItem(Component):
+#     def __init__(self, url: str, label: str, icon: str = '', badge: str = '') -> None:
+#         self.url = url
+#         self.label = label
+#         self.icon = icon
+#         self.badge = badge
+
+# class MenuHeading(Component):
+#     def __init__(self, label:str) -> None:
+#         self.label = label
+
+# class MenuGroup(Component):
+#     def __init__(self, items: typing.Sequence[MenuItem | MenuHeading]) -> None:
+#         self.items = items

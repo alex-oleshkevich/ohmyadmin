@@ -1,14 +1,17 @@
 {% import 'ohmyadmin/icons.html' as icons %}
 
 {% macro list_item(field) %}
-    <template x-if="!deleted" x-data="{deleted: false}">
-        <div class="flex items-center gap-5 bg-gray-50 p-2">
-            <div class="flex-grow-1 w-full">{{ builder(field).render(request) }}</div>
-            <button type="button" class="btn btn-icon btn-text flex-grow-0" @click="deleted = true">
-                {{ icons.trash() }}
-            </button>
+    <div class="flex items-center gap-5 bg-gray-50 p-2" x-show="!deleted" x-data="{deleted: false}">
+        <div class="flex-grow-1 w-full">
+            {{ builder(field).render(request) }}
+            <template x-if="deleted">
+                <input type="hidden" name="{{ field.name }}-delete" value="1">
+            </template>
         </div>
-    </template>
+        <button type="button" class="btn btn-icon btn-text flex-grow-0" @click="deleted = true">
+            {{ icons.trash() }}
+        </button>
+    </div>
 {% endmacro %}
 
 <div class="space-y-3" x-data="{counter: 0, offset: 1 + {{ field|length }} }">

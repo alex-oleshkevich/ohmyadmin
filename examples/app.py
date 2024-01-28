@@ -99,6 +99,12 @@ admin = OhMyAdmin(
         OrdersResource(),
         ProductResource(),
     ],
+    # main_menu_builder=async lambda r: components.Menu(children=[
+    #     actions.LinkAction(url='/profile', label='Account settings'),
+    # ]),
+    # user_menu_builder=lambda user: components.ListMenu(children=[
+    #     actions.LinkAction(url='/profile', label='Account settings'),
+    # ])
 )
 
 app = Starlette(

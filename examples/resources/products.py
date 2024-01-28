@@ -1,11 +1,14 @@
-import wtforms
+import contextlib
+
+import slugify
 import sqlalchemy as sa
+import wtforms
 from sqlalchemy.orm import joinedload, selectinload
 from starlette.requests import Request
 from wtforms.fields.choices import SelectField
 
 from examples import icons
-from examples.models import Brand, Product
+from examples.models import Brand, Image, Product
 from ohmyadmin import components, filters, formatters
 from ohmyadmin.components import BaseDisplayLayoutBuilder, BaseFormLayoutBuilder, Component
 from ohmyadmin.datasources.sqlalchemy import form_choices_from, load_choices, SADataSource
@@ -13,8 +16,14 @@ from ohmyadmin.display_fields import DisplayField
 from ohmyadmin.forms.utils import safe_int_coerce
 from ohmyadmin.metrics import ProgressMetric, TrendMetric, TrendValue, ValueMetric, ValueValue
 from ohmyadmin.resources.resource import ResourceScreen
+from ohmyadmin.storages.uploaders import delete_file, upload_file
 from ohmyadmin.views.display import BuilderDisplayView
 from ohmyadmin.views.table import TableView
+
+
+class ProductImageForm(wtforms.Form):
+    image_path = wtforms.FileField(render_kw={"accept": "image/*"})
+    delete = wtforms.BooleanField(render_kw={"style": "display: none"})
 
 
 class ProductForm(wtforms.Form):
@@ -27,7 +36,8 @@ class ProductForm(wtforms.Form):
     cost_per_item = wtforms.DecimalField(
         description="Customers won't see this price.", validators=[wtforms.validators.data_required()]
     )
-    images = wtforms.FieldList(wtforms.FileField(render_kw={"accept": "image/jpeg"}))
+    images = wtforms.FieldList(wtforms.FormField(form_class=ProductImageForm))
+
     quantity = wtforms.IntegerField(default=0)
     sku = wtforms.IntegerField(default=0)
     security_stock = wtforms.IntegerField(
@@ -90,35 +100,40 @@ class ProductsByYear(TrendMetric):
 
 class DisplayLayout(BaseDisplayLayoutBuilder):
     def build(self, request: Request, model: Product) -> components.Component:
-        return components.GridComponent(
+        return components.Grid(
             columns=2,
             children=[
-                components.ColumnComponent(
+                components.Column(
                     colspan=1,
                     children=[
-                        components.GroupComponent(
+                        components.Group(
                             label="Product",
                             children=[
-                                components.DisplayValueComponent(label="Name", value=model.name),
-                                components.DisplayValueComponent(label="Slug", value=model.slug),
-                                components.DisplayValueComponent(label="Description", value=model.description),
+                                components.DisplayValue(label="Name", value=model.name),
+                                components.DisplayValue(label="Slug", value=model.slug),
+                                components.DisplayValue(label="Description", value=model.description),
                             ],
                         ),
-                        components.GroupComponent(
-                            label="Images", children=[components.TextComponent(image) for image in model.images]
+                        components.Group(
+                            label="Images",
+                            children=[
+                                components.Grid(
+                                    columns=4, children=[components.Image(image.image_path) for image in model.images]
+                                )
+                            ],
                         ),
-                        components.GroupComponent(
+                        components.Group(
                             label="Pricing",
                             children=[
-                                components.DisplayValueComponent(
+                                components.DisplayValue(
                                     label="Price", value=model.price, formatter=formatters.NumberFormatter(prefix="$")
                                 ),
-                                components.DisplayValueComponent(
+                                components.DisplayValue(
                                     label="Compare at price",
                                     value=model.compare_at_price,
                                     formatter=formatters.NumberFormatter(prefix="$"),
                                 ),
-                                components.DisplayValueComponent(
+                                components.DisplayValue(
                                     label="Cost per item",
                                     value=model.cost_per_item,
                                     formatter=formatters.NumberFormatter(prefix="$"),
@@ -126,36 +141,36 @@ class DisplayLayout(BaseDisplayLayoutBuilder):
                             ],
                             description="This information will be displayed publicly so be careful what you share.",
                         ),
-                        components.GroupComponent(
+                        components.Group(
                             label="Inventory",
                             children=[
-                                components.DisplayValueComponent(label="SKU", value=model.sku),
-                                components.DisplayValueComponent(label="Barcode", value=model.barcode),
-                                components.DisplayValueComponent(label="Quantity", value=model.quantity),
-                                components.DisplayValueComponent(label="Security stock", value=model.security_stock),
+                                components.DisplayValue(label="SKU", value=model.sku),
+                                components.DisplayValue(label="Barcode", value=model.barcode),
+                                components.DisplayValue(label="Quantity", value=model.quantity),
+                                components.DisplayValue(label="Security stock", value=model.security_stock),
                             ],
                             description="Decide which communications you'd like to receive and how.",
                         ),
                     ],
                 ),
-                components.ColumnComponent(
+                components.Column(
                     colspan=1,
                     children=[
-                        components.GroupComponent(
+                        components.Group(
                             label="Brand",
                             children=[
-                                components.DisplayValueComponent(label="Brand", value=model.brand),
+                                components.DisplayValue(label="Brand", value=model.brand),
                             ],
                         ),
-                        components.GroupComponent(
+                        components.Group(
                             label="Shipment",
                             children=[
-                                components.DisplayValueComponent(
+                                components.DisplayValue(
                                     label="Can be shipped",
                                     value=model.can_be_shipped,
                                     formatter=formatters.BoolFormatter(),
                                 ),
-                                components.DisplayValueComponent(
+                                components.DisplayValue(
                                     label="Can be returned",
                                     value=model.can_be_returned,
                                     formatter=formatters.BoolFormatter(),
@@ -170,13 +185,13 @@ class DisplayLayout(BaseDisplayLayoutBuilder):
 
 class FormLayout(BaseFormLayoutBuilder):
     def build(self, form: ProductForm) -> Component:
-        return components.GridComponent(
-            columns=2,
+        return components.Grid(
+            columns=12,
             children=[
-                components.ColumnComponent(
-                    colspan=1,
+                components.Column(
+                    colspan=8,
                     children=[
-                        components.GroupComponent(
+                        components.Group(
                             label="Product",
                             children=[
                                 components.FormInput(form.name),
@@ -184,23 +199,26 @@ class FormLayout(BaseFormLayoutBuilder):
                                 components.FormInput(form.description),
                             ],
                         ),
-                        components.GroupComponent(
+                        components.Group(
                             label="Images",
                             children=[
                                 components.RepeatedFormInput(
                                     form.images,
-                                    builder=lambda f: components.ColumnComponent(
+                                    builder=lambda f: components.Column(
                                         children=[
-                                            components.FormInput(f),
+                                            components.ImageFormInput(
+                                                f,
+                                                media_url=f.image_path.data if f.image_path.data else None,
+                                            ),
                                         ]
                                     ),
                                 )
                             ],
                         ),
-                        components.GroupComponent(
+                        components.Group(
                             label="Pricing",
                             children=[
-                                components.GridComponent(
+                                components.Grid(
                                     children=[
                                         components.FormInput(form.price, colspan=3),
                                         components.FormInput(form.compare_at_price, colspan=3),
@@ -210,10 +228,10 @@ class FormLayout(BaseFormLayoutBuilder):
                             ],
                             description="This information will be displayed publicly so be careful what you share.",
                         ),
-                        components.GroupComponent(
+                        components.Group(
                             label="Inventory",
                             children=[
-                                components.GridComponent(
+                                components.Grid(
                                     columns=12,
                                     children=[
                                         components.FormInput(form.barcode, colspan=4),
@@ -227,16 +245,16 @@ class FormLayout(BaseFormLayoutBuilder):
                         ),
                     ],
                 ),
-                components.ColumnComponent(
-                    colspan=1,
+                components.Column(
+                    colspan=4,
                     children=[
-                        components.GroupComponent(
+                        components.Group(
                             label="Brand",
                             children=[
                                 components.FormInput(form.brand_id),
                             ],
                         ),
-                        components.GroupComponent(
+                        components.Group(
                             label="Shipment",
                             children=[
                                 components.FormInput(form.availability),
@@ -269,7 +287,6 @@ class ProductResource(ResourceScreen):
     )
     page_filters = [
         filters.StringFilter("name"),
-        # FIXME: load choices
         filters.ChoiceFilter("brand_id", label="Brand", coerce=safe_int_coerce, choices=form_choices_from(Brand)),
         filters.IntegerFilter("sku"),
         filters.DecimalFilter("price"),
@@ -283,10 +300,7 @@ class ProductResource(ResourceScreen):
         ),
     ]
     ordering_fields = "name", "brand", "price", "sku", "quantity"  # FIXME: nested ordering = brand.name
-    searchable_fields = (
-        "name",
-        "brand",
-    )  # FIXME: nested search = brand.name
+    searchable_fields = ("name", "brand")  # FIXME: nested search = brand.name
     index_view = TableView(
         columns=[
             DisplayField("name", link=True),
@@ -304,3 +318,24 @@ class ProductResource(ResourceScreen):
 
     async def init_form(self, request: Request, form: ProductForm) -> None:
         await load_choices(request.state.dbsession, form.brand_id, sa.select(Brand))
+
+    async def populate_object(self, request: Request, form: ProductForm, model: Product) -> None:
+        images = model.images
+        for image_form in form.images:
+            if image_form.delete.data:
+                images.remove(image_form.object_data)
+                with contextlib.suppress(FileNotFoundError):
+                    await delete_file(request, image_form.image_path.data)
+                continue
+
+            if image_form.image_path.data:
+                path = await upload_file(
+                    request,
+                    image_form.image_path.data,
+                    "products/{group_name}/{random}_{basename}",
+                    tokens={"group_name": slugify.slugify(form.name.data)},
+                )
+                images.append(Image(image_path=path))
+        del form.images
+
+        await super().populate_object(request, form, model)

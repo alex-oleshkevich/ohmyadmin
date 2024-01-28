@@ -36,10 +36,10 @@ class AutoDisplayView(BaseDisplayView):
         self.fields = fields
 
     def render(self, request: Request, model: object) -> components.Component:
-        return components.GridComponent(
+        return components.Grid(
             columns=12,
             children=[
-                components.ColumnComponent(
+                components.Column(
                     colspan=6,
                     children=[components.DisplayFieldComponent(field=field, model=model) for field in self.fields],
                 )

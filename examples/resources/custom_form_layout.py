@@ -53,15 +53,15 @@ class ProductForm(wtforms.Form):
 
 class FormLayout(BaseFormLayoutBuilder):
     def build(self, form: ProductForm) -> Component:
-        return components.GridComponent(
+        return components.Grid(
             children=[
-                components.ColumnComponent(
+                components.Column(
                     colspan=8,
                     children=[
-                        components.GroupComponent(
+                        components.Group(
                             label="Product info",
                             children=[
-                                components.GridComponent(
+                                components.Grid(
                                     columns=2,
                                     children=[
                                         components.FormInput(form.name),
@@ -71,7 +71,7 @@ class FormLayout(BaseFormLayoutBuilder):
                                 ),
                             ],
                         ),
-                        components.GroupComponent(
+                        components.Group(
                             label="Image",
                             children=[
                                 components.RepeatedFormInput(
@@ -80,11 +80,11 @@ class FormLayout(BaseFormLayoutBuilder):
                                 ),
                             ],
                         ),
-                        components.GroupComponent(
+                        components.Group(
                             label="Pricing",
                             description="Decide which communications you'd like to receive and how.",
                             children=[
-                                components.GridComponent(
+                                components.Grid(
                                     columns=3,
                                     children=[
                                         components.FormInput(form.price),
@@ -94,11 +94,11 @@ class FormLayout(BaseFormLayoutBuilder):
                                 ),
                             ],
                         ),
-                        components.GroupComponent(
+                        components.Group(
                             label="Inventory",
                             description="Decide which communications you'd like to receive and how.",
                             children=[
-                                components.GridComponent(
+                                components.Grid(
                                     columns=3,
                                     children=[
                                         components.FormInput(form.sku),
@@ -109,12 +109,12 @@ class FormLayout(BaseFormLayoutBuilder):
                                 )
                             ],
                         ),
-                        components.GroupComponent(
+                        components.Group(
                             label="Attributes",
                             children=[
                                 components.RepeatedFormInput(
                                     form.attributes,
-                                    builder=lambda field: components.GridComponent(
+                                    builder=lambda field: components.Grid(
                                         columns=2,
                                         children=[
                                             components.FormInput(field.form.name),
@@ -126,12 +126,12 @@ class FormLayout(BaseFormLayoutBuilder):
                         ),
                     ],
                 ),
-                components.ColumnComponent(
+                components.Column(
                     colspan=4,
                     children=[
-                        components.GroupComponent(label="Brand", children=[components.FormInput(form.brand_id)]),
+                        components.Group(label="Brand", children=[components.FormInput(form.brand_id)]),
                         components.SeparatorComponent(),
-                        components.GroupComponent(
+                        components.Group(
                             label="",
                             children=[
                                 components.FormInput(form.can_be_shipped),
@@ -139,12 +139,12 @@ class FormLayout(BaseFormLayoutBuilder):
                             ],
                         ),
                         components.SeparatorComponent(),
-                        components.GroupComponent(
+                        components.Group(
                             label="Manufacturer",
                             children=[
                                 components.NestedFormComponent(
                                     field=form.manufacturer,
-                                    builder=lambda field: components.ColumnComponent(
+                                    builder=lambda field: components.Column(
                                         children=[
                                             components.FormInput(field.form.name),
                                             components.FormInput(field.form.country),

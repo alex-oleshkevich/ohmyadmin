@@ -16,11 +16,11 @@ def static_url(request: Request, path: str) -> str:
     return str(url)
 
 
-def media_url(request: Request, path: str) -> str:
+def media_url(request: Request, path: str) -> URL:
     if path.startswith("http"):
-        return path
+        return URL(path)
 
-    raise NotImplementedError()
+    return request.url_for("ohmyadmin.media", path=path)
 
 
 def url_matches(request: Request, url: URL | str) -> bool:
