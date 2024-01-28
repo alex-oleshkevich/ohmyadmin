@@ -5,10 +5,12 @@ import typing
 
 import wtforms
 from markupsafe import Markup
+from starlette.datastructures import URL
 from starlette.requests import Request
 
 from ohmyadmin import formatters
 from ohmyadmin.display_fields import DisplayField
+from ohmyadmin.routing import LazyURL
 from ohmyadmin.templating import render_to_string
 
 
@@ -353,17 +355,67 @@ class AutoDisplayLayout(BaseDisplayLayoutBuilder):
         )
 
 
-# class MenuItem(Component):
-#     def __init__(self, url: str, label: str, icon: str = '', badge: str = '') -> None:
-#         self.url = url
-#         self.label = label
-#         self.icon = icon
-#         self.badge = badge
+class MenuItem(Component):
+    template = 'ohmyadmin/components/menu_item.html'
 
-# class MenuHeading(Component):
-#     def __init__(self, label:str) -> None:
-#         self.label = label
+    def __init__(self, url: str | URL | LazyURL, label: str, icon: str = '', badge: str = '') -> None:
+        self.url = URL(url) if isinstance(str, URL) else url
+        self.label = label
+        self.icon = icon
+        self.badge = badge
 
-# class MenuGroup(Component):
-#     def __init__(self, items: typing.Sequence[MenuItem | MenuHeading]) -> None:
-#         self.items = items
+    def resolve_url(self, request: Request) -> URL:
+        match self.url:
+            case URL():
+                return self.url
+            case LazyURL():
+                return self.url.resolve(request)
+            case _:
+                return URL(self.url)
+
+    def is_active(self, request: Request) -> bool:
+        url = self.resolve_url(request)
+        return request.url.path.startswith(url.path)
+
+    def render(self, request: Request) -> str:
+        return render_to_string(request, self.template, {
+            'component': self,
+        })
+
+
+class MenuHeading(Component):
+    template = 'ohmyadmin/components/menu_heading.html'
+
+    def __init__(self, label: str) -> None:
+        self.label = label
+
+    def render(self, request: Request) -> str:
+        return render_to_string(request, self.template, {
+            'component': self,
+        })
+
+
+class MenuGroup(Component):
+    template = 'ohmyadmin/components/menu.html'
+
+    def __init__(self, items: typing.Sequence[Component], heading: str = '') -> None:
+        self.heading = heading
+        self.items = list(items)
+
+    def render(self, request: Request) -> str:
+        items = self.items
+        if self.heading:
+            items.insert(0, MenuHeading(self.heading))
+
+        return render_to_string(request, self.template, {
+            'component': self,
+            'items': items,
+        })
+
+
+class Menu(Component):
+    def __init__(self, builder: typing.Callable[[Request], Component]) -> None:
+        self.builder = builder
+
+    def render(self, request: Request) -> str:
+        return self.builder(request).render(request)

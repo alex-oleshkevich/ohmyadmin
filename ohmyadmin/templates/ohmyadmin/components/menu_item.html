@@ -1,0 +1,10 @@
+{% set url = component.resolve_url(request) %}
+{% set is_active = component.is_active(request) %}
+{% set base_classes = 'hover:bg-gray-200' %}
+{% set active_classes = 'text-accent-900 bg-accent-100 hover:bg-accent-200' %}
+{% set state_classes = active_classes if is_active else base_classes %}
+<a class="w-full rounded px-3 py-2 text-sm font-medium flex items-center gap-2 {{ state_classes }}"
+   href="{{ url }}">
+    {% if component.icon %}<span class="text-gray-400">{{ component.icon }}</span>{% endif %}
+    {{ component.label }}
+</a>

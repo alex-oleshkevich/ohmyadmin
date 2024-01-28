@@ -17,7 +17,9 @@ from starlette_babel import gettext_lazy as _
 from starlette_babel.contrib.jinja import configure_jinja_env
 from starlette_flash import flash
 
+from ohmyadmin import components
 from ohmyadmin.authentication.policy import AnonymousAuthPolicy, AuthPolicy
+from ohmyadmin.components import Menu
 from ohmyadmin.menu import MenuItem
 from ohmyadmin.middleware import LoginRequiredMiddleware
 from ohmyadmin.storages.storage import FileStorage
@@ -33,11 +35,13 @@ class OhMyAdmin(Router):
         theme: Theme = Theme(),
         file_storage: FileStorage | None = None,
         auth_policy: AuthPolicy | None = None,
+        menu_builder: Menu | None = None,
     ) -> None:
         self.theme = theme
         self.screens = screens or []
         self.auth_policy = auth_policy or AnonymousAuthPolicy()
         self.file_storage = file_storage
+        self.menu_builder = menu_builder or components.Menu(builder=self._default_menu_builder)
 
         self.jinja_env = jinja2.Environment(
             autoescape=True,
@@ -61,28 +65,10 @@ class OhMyAdmin(Router):
                 path="",
                 routes=[
                     Route("/", self.welcome_view, name="ohmyadmin.welcome"),
-                    Route(
-                        "/login",
-                        self.login_view,
-                        name="ohmyadmin.login",
-                        methods=["get", "post"],
-                    ),
-                    Route(
-                        "/logout",
-                        self.logout_view,
-                        name="ohmyadmin.logout",
-                        methods=["post"],
-                    ),
-                    Mount(
-                        "/static",
-                        app=StaticFiles(packages=["ohmyadmin"]),
-                        name="ohmyadmin.static",
-                    ),
-                    Route(
-                        "/media/{path:path}",
-                        self.media_view,
-                        name="ohmyadmin.media",
-                    ),
+                    Route("/login", self.login_view, name="ohmyadmin.login", methods=["get", "post"]),
+                    Route("/logout", self.logout_view, name="ohmyadmin.logout", methods=["post"]),
+                    Mount("/static", app=StaticFiles(packages=["ohmyadmin"]), name="ohmyadmin.static"),
+                    Route("/media/{path:path}", self.media_view, name="ohmyadmin.media"),
                     *[
                         Mount(
                             "/{group_slug}/{view_slug}".format(
@@ -95,10 +81,7 @@ class OhMyAdmin(Router):
                     ],
                 ],
                 middleware=[
-                    Middleware(
-                        AuthenticationMiddleware,
-                        backend=self.auth_policy.get_authentication_backend(),
-                    ),
+                    Middleware(AuthenticationMiddleware, backend=self.auth_policy.get_authentication_backend()),
                     Middleware(LoginRequiredMiddleware, exclude_paths=["/login", "/static"]),
                 ],
             ),
@@ -149,15 +132,20 @@ class OhMyAdmin(Router):
             return RedirectResponse(path, status_code=302)
         return self.file_storage.as_response(path)
 
-    async def generate_menu(self, request: Request) -> list[MenuItem]:
-        groups = itertools.groupby(self.screens, key=operator.attrgetter("group"))
-        return [
-            MenuItem(
-                label=group[0],
-                children=[await screen.get_menu_item(request) for screen in group[1]],
+    def _default_menu_builder(self, request: Request) -> components.Component:
+        return components.Column(children=[
+            components.MenuGroup(
+                heading=group[0],
+                items=[
+                    components.MenuItem(
+                        url=screen.get_url(request),
+                        label=screen.label,
+                        icon=screen.icon,
+                    ) for screen in group[1]
+                ],
             )
-            for group in groups
-        ]
+            for group in itertools.groupby(self.screens, key=operator.attrgetter("group"))
+        ])
 
     def generate_user_menu(self, request: Request) -> list[MenuItem]:
         return []
@@ -170,13 +158,13 @@ class OhMyAdmin(Router):
             "static_url": functools.partial(static_url, request),
             "url_matches": functools.partial(url_matches, request),
             "flash_messages": flash(request),
-            "ohmyadmin_main_menu": request.scope["ohmyadmin_main_menu"],
+            # "ohmyadmin_main_menu": request.scope["ohmyadmin_main_menu"],
             "ohmyadmin_user_menu": request.scope["ohmyadmin_user_menu"],
         }
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         scope.setdefault("state")
         scope["state"]["ohmyadmin"] = self
-        scope["ohmyadmin_main_menu"] = await self.generate_menu(Request(scope))
+        # scope["ohmyadmin_main_menu"] = await self.generate_menu(Request(scope))
         scope["ohmyadmin_user_menu"] = self.generate_user_menu(Request(scope))
         await super().__call__(scope, receive, send)

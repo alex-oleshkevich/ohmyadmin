@@ -1,20 +1,6 @@
 {% extends 'ohmyadmin/base.html' %}
 {% import 'ohmyadmin/actions.html' as actions %}
 
-{% macro menu_heading(label) %}
-    <div class="text-xs uppercase text-gray-500 font-medium px-3 pt-2">{{ label }}</div>
-{% endmacro %}
-
-{% macro menu_item(item, active) %}
-    {% set base_classes = 'hover:bg-gray-200' %}
-    {% set active_classes = 'text-accent-900 bg-accent-100 hover:bg-accent-200' %}
-    {% set state_classes = active_classes if active else base_classes %}
-    <a class="w-full rounded px-3 py-2 text-sm font-medium flex items-center gap-2 {{ state_classes }}"
-       href="{{ item.url }}">
-        {% if item.icon %}<span class="text-gray-400">{{ item.icon }}</span>{% endif %}
-        {{ item.label }}
-    </a>
-{% endmacro %}
 
 {% block main %}
     <div class="flex flex-col md:flex-row w-full h-full overflow-hidden">
@@ -26,16 +12,7 @@
                 </a>
             </section>
             <section class="space-y-2">
-                {% for menu_group in ohmyadmin_main_menu %}
-                    <div class="space-y-px">
-                        {% if menu_group.label %}
-                            {{ menu_heading(menu_group.label) }}
-                        {% endif %}
-                        {% for item in menu_group.children %}
-                            {{ menu_item(item, url_matches(item.url)) }}
-                        {% endfor %}
-                    </div>
-                {% endfor %}
+                {{ ohmyadmin.menu_builder.render(request) }}
             </section>
             <section class="mt-auto">
                 <button id="user-menu" type="button"
@@ -61,7 +38,8 @@
                 <div class="flex justify-between gap-5">
                     <div class="flex-shrink-0">
                         <h1 class="text-2xl font-semibold mb-1">
-                            {% block page_title %}{% if page_title is defined %}{{ page_title }}{% endif %}{% endblock %}
+                            {% block page_title %}{% if page_title is defined %}{{ page_title }}
+                            {% endif %}{% endblock %}
                         </h1>
                         {% if page_description is defined %}
                             <div>{{ page_description }}</div>
@@ -71,7 +49,7 @@
                         {% block page_actions %}
                             {% call actions.action_toolbar() %}
                                 {% if model is undefined %}
-                                {% set model = none %}
+                                    {% set model = none %}
                                 {% endif %}
                                 {% for action in screen.get_page_actions() %}
                                     {{ actions.action_button(request, action, screen, model) }}

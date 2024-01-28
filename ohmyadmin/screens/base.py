@@ -29,10 +29,11 @@ class Screen(abc.ABC):
     def slug(self) -> str:
         return slugify.slugify(str(self.label))
 
+    @classmethod
     @property
-    def url_name(self) -> str:
-        view_name = self.slug.replace("/", "_")
-        return f"ohmyadmin.screen.{view_name}"
+    def url_name(cls) -> str:
+        slug = slugify.slugify('.'.join([cls.__module__, cls.__name__]))
+        return f"ohmyadmin.screen.{slug}"
 
     def get_url(self, request: Request) -> URL:
         return request.url_for(self.url_name)
@@ -74,9 +75,6 @@ class Screen(abc.ABC):
 
     def get_page_actions(self) -> typing.Sequence[actions.Action]:
         return self.page_actions
-
-    def get_page_metrics(self) -> typing.Sequence[metrics.Metric]:
-        return self.page_metrics
 
     async def dispatch(self, request: Request) -> Response:
         raise NotImplementedError()

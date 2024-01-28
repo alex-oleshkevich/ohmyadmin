@@ -112,6 +112,12 @@ class ResourceScreen(Screen):
     def slug(self) -> str:
         return slugify.slugify(self.label_plural)
 
+    @classmethod
+    @property
+    def url_name(cls) -> str:
+        slug = slugify.slugify('.'.join([cls.__module__, cls.__name__]))
+        return f"ohmyadmin.resource.{slug}"
+
     def get_index_page_actions(self) -> list[actions.Action]:
         """Return user defined actions along with default actions."""
         return [
@@ -255,16 +261,16 @@ class ResourceScreen(Screen):
         return typing.cast(type[Screen], screen)
 
     def get_index_route_name(self) -> str:
-        return "ohmyadmin.resource.{resource}.index".format(resource=self.slug)
+        return self.url_name
 
     def get_create_route_name(self) -> str:
-        return "ohmyadmin.resource.{resource}.create".format(resource=self.slug)
+        return "{url_name}.create".format(url_name=self.url_name)
 
     def get_edit_route_name(self) -> str:
-        return "ohmyadmin.resource.{resource}.edit".format(resource=self.slug)
+        return "{url_name}.edit".format(url_name=self.url_name)
 
     def get_display_route_name(self) -> str:
-        return "ohmyadmin.resource.{resource}.show".format(resource=self.slug)
+        return "{url_name}.show".format(url_name=self.url_name)
 
     async def get_menu_item(self, request: Request) -> MenuItem:
         """Generate a menu item."""
