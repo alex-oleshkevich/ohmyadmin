@@ -69,9 +69,6 @@ class Screen(abc.ABC):
             ],
         )
 
-    async def get_menu_item(self, request: Request) -> MenuItem:
-        """Generate a menu item."""
-        return MenuItem(label=self.label, group=self.group, url=self.get_url(request), icon=self.icon)
 
     def get_page_actions(self) -> typing.Sequence[actions.Action]:
         return self.page_actions

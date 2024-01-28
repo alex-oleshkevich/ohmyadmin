@@ -16,7 +16,6 @@ from ohmyadmin.components import AutoFormLayout, FormLayoutBuilder
 from ohmyadmin.datasources.datasource import DataSource, DuplicateError, InFilter
 from ohmyadmin.forms.utils import populate_object
 from ohmyadmin.helpers import pluralize, snake_to_sentence
-from ohmyadmin.menu import MenuItem
 from ohmyadmin.resources.actions import (
     CreateResourceAction,
     DeleteResourceAction,
@@ -271,15 +270,6 @@ class ResourceScreen(Screen):
 
     def get_display_route_name(self) -> str:
         return "{url_name}.show".format(url_name=self.url_name)
-
-    async def get_menu_item(self, request: Request) -> MenuItem:
-        """Generate a menu item."""
-        return MenuItem(
-            label=self.label_plural,
-            group=self.group,
-            icon=self.icon,
-            url=request.url_for(self.get_index_route_name()),
-        )
 
     def get_route(self) -> BaseRoute:
         return Mount(

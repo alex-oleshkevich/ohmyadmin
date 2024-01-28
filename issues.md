@@ -10,9 +10,7 @@
 12. search in joined tables
 13. order by joined tables
 14. global search
-15. screen get_route should be static to generate routes w/o instances (eg. menu builder)
 16. actions should have static urls - pass route name and path prefix via args
-17. add image display and form component
 18. simplify datasource -> django-like?
 19. implement table component and use in TableView. just like display view
 20. django-like filters for sqla datasource
@@ -20,5 +18,4 @@
 22. user menu builder
 23. global actions
 24. pass welcome screen as argument of app
-25. use fqcn as route name instead of 15
 # BUGS
