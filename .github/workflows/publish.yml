@@ -43,7 +43,8 @@ jobs:
             -   name: Build package
                 run: |
                     poetry config pypi-token.pypi "{{ secrets.PYPI_TOKEN }}"
-                    poetry build --publish
+                    poetry build
+                    poetry publish
 
             -   name: Archive build artifacts
                 uses: actions/upload-artifact@v3
