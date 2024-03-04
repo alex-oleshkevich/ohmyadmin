@@ -27,7 +27,7 @@ class DisplayField:
         value_getter: ValueGetter | None = None,
         default_if_none: str = "-",
         link: bool = False,
-        link_to: ResourceActionLink = "view",
+        link_to: ResourceActionLink = "edit",
     ) -> None:
         if link and isinstance(formatter, formatters.LinkFormatter):
             raise AttributeError("DisplayField.link option cannot be used together with LinkFormatter.")

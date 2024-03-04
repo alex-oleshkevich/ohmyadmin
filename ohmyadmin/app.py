@@ -5,6 +5,7 @@ import operator
 import typing
 
 import slugify
+from async_storages import FileStorage
 from starlette import templating
 from starlette.middleware import Middleware
 from starlette.middleware.authentication import AuthenticationMiddleware
@@ -22,7 +23,6 @@ from ohmyadmin.authentication.policy import AnonymousAuthPolicy, AuthPolicy
 from ohmyadmin.components import Menu
 from ohmyadmin.menu import MenuItem
 from ohmyadmin.middleware import LoginRequiredMiddleware
-from ohmyadmin.storages.storage import FileStorage
 from ohmyadmin.templating import model_pk, static_url, url_matches
 from ohmyadmin.theme import Theme
 from ohmyadmin.screens.base import Screen
@@ -133,19 +133,22 @@ class OhMyAdmin(Router):
         return self.file_storage.as_response(path)
 
     def _default_menu_builder(self, request: Request) -> components.Component:
-        return components.Column(children=[
-            components.MenuGroup(
-                heading=group[0],
-                items=[
-                    components.MenuItem(
-                        url=screen.get_url(request),
-                        label=screen.label,
-                        icon=screen.icon,
-                    ) for screen in group[1]
-                ],
-            )
-            for group in itertools.groupby(self.screens, key=operator.attrgetter("group"))
-        ])
+        return components.Column(
+            children=[
+                components.MenuGroup(
+                    heading=group[0],
+                    items=[
+                        components.MenuItem(
+                            url=screen.get_url(request),
+                            label=getattr(screen, "label_plural", screen.label),
+                            icon=screen.icon,
+                        )
+                        for screen in group[1]
+                    ],
+                )
+                for group in itertools.groupby(self.screens, key=operator.attrgetter("group"))
+            ]
+        )
 
     def generate_user_menu(self, request: Request) -> list[MenuItem]:
         return []

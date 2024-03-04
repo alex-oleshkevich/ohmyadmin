@@ -1,6 +1,7 @@
 import pathlib
 
 import sqlalchemy as sa
+from async_storages import FileStorage, FileSystemBackend
 from passlib.handlers.pbkdf2 import pbkdf2_sha256
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from starception import install_error_handler
@@ -31,9 +32,9 @@ from ohmyadmin.app import OhMyAdmin
 from ohmyadmin.authentication.policy import AuthPolicy
 from ohmyadmin.components import Menu
 from ohmyadmin.routing import url_to
-from ohmyadmin.storages.storage import FileSystemStorage
-from ohmyadmin.theme import Theme
 from starlette_babel import gettext_lazy as _
+
+from ohmyadmin.theme import Theme
 
 install_error_handler()
 
@@ -82,9 +83,12 @@ class UserPolicy(AuthPolicy):
 
 admin = OhMyAdmin(
     auth_policy=UserPolicy(),
-    file_storage=FileSystemStorage(
-        directory=this_dir / "media",
-        url_prefix="/",
+    file_storage=FileStorage(
+        FileSystemBackend(
+            base_dir=this_dir / "media",
+            base_url="/",
+            mkdirs=True,
+        )
     ),
     theme=Theme(
         logo="https://jelpy.io/static/logo.svg",
@@ -103,23 +107,33 @@ admin = OhMyAdmin(
         OrdersResource(),
         ProductResource(),
     ],
-    menu_builder=Menu(builder=lambda request: components.Column(children=[
-        components.MenuGroup(heading=_('Shop'), items=[
-            components.MenuItem(url_to(CountryResource), _('Countries'), icon=icons.ICON_COUNTRIES),
-            components.MenuItem(url_to(CategoryResource), _('Categories'), icon=icons.ICON_CATEGORY),
-            components.MenuItem(url_to(BrandResource), _('Brands'), icon=icons.ICON_BASKET),
-            components.MenuItem(url_to(CurrencyResource), _('Currencies'), icon=icons.ICON_CURRENCY),
-            components.MenuItem(url_to(CustomerResource), _('Customers'), icon=icons.ICON_FRIENDS),
-            components.MenuItem(url_to(OrdersResource), _('Orders'), icon=icons.ICON_ORDER),
-            components.MenuItem(url_to(ProductResource), _('Products'), icon=icons.ICON_PRODUCTS),
-        ]),
-        components.MenuGroup(heading=_('Demo'), items=[
-            components.MenuItem(url_to(UsersTable), _('Table view')),
-            components.MenuItem(url_to(ProductView), _('Display view')),
-            components.MenuItem(url_to(ProductFormView), _('Form view')),
-            components.MenuItem(url_to(CustomProductFormView), _('Custom form layout')),
-        ]),
-    ])),
+    menu_builder=Menu(
+        builder=lambda request: components.Column(
+            children=[
+                components.MenuGroup(
+                    heading=_("Shop"),
+                    items=[
+                        components.MenuItem(url_to(CountryResource), _("Countries"), icon=icons.ICON_COUNTRIES),
+                        components.MenuItem(url_to(CategoryResource), _("Categories"), icon=icons.ICON_CATEGORY),
+                        components.MenuItem(url_to(BrandResource), _("Brands"), icon=icons.ICON_BASKET),
+                        components.MenuItem(url_to(CurrencyResource), _("Currencies"), icon=icons.ICON_CURRENCY),
+                        components.MenuItem(url_to(CustomerResource), _("Customers"), icon=icons.ICON_FRIENDS),
+                        components.MenuItem(url_to(OrdersResource), _("Orders"), icon=icons.ICON_ORDER),
+                        components.MenuItem(url_to(ProductResource), _("Products"), icon=icons.ICON_PRODUCTS),
+                    ],
+                ),
+                components.MenuGroup(
+                    heading=_("Demo"),
+                    items=[
+                        components.MenuItem(url_to(UsersTable), _("Table view")),
+                        components.MenuItem(url_to(ProductView), _("Display view")),
+                        components.MenuItem(url_to(ProductFormView), _("Form view")),
+                        components.MenuItem(url_to(CustomProductFormView), _("Custom form layout")),
+                    ],
+                ),
+            ]
+        )
+    ),
 )
 
 app = Starlette(

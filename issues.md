@@ -14,8 +14,20 @@
 18. simplify datasource -> django-like?
 19. implement table component and use in TableView. just like display view
 20. django-like filters for sqla datasource
-21. main menu builder
 22. user menu builder
 23. global actions
 24. pass welcome screen as argument of app
-# BUGS
+25. Builder in display view: `DisplayField(builder=lambda r, o: components.Link(url=r.url_for('/')))`
+26. move searchable and sortable field list to datasource
+27. report error toast if request fails with 500
+28. display fields to be components. ideally like this
+```python
+display_view = display_view_builder(builder=lambda r, o: Column(children=[
+    DisplayField(label='name', value=o.name),
+    DisplayField(label='name', value=o.name, component=Badge(o.name)),
+    Row(children=[
+        DisplayField(),
+        DisplayField(),
+    ]),
+]))
+```
