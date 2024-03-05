@@ -4,10 +4,9 @@ import time
 import typing
 import uuid
 
+from async_storages import FileStorage
 from starlette.datastructures import UploadFile
 from starlette.requests import Request
-
-from ohmyadmin.storages.storage import FileStorage
 
 
 async def upload_file(
@@ -19,8 +18,8 @@ async def upload_file(
     storage: FileStorage = request.state.ohmyadmin.file_storage
     destination = destination.format(
         random=uuid.uuid4().hex[:8],
-        name=os.path.splitext(file.filename)[0],
-        extension=os.path.splitext(file.filename)[1].removeprefix("."),
+        name=os.path.splitext(file.filename or "unnamed")[0],
+        extension=os.path.splitext(file.filename or "unnamed")[1].removeprefix("."),
         date=datetime.datetime.now().date().isoformat(),
         datetime=datetime.datetime.now().isoformat(),
         time=datetime.datetime.now().time().isoformat(),
