@@ -7,6 +7,7 @@ from sqlalchemy.orm import joinedload, selectinload
 from starlette.requests import Request
 from wtforms.fields.choices import SelectField
 
+import ohmyadmin.components.layout
 from examples import icons
 from examples.models import Brand, Image, Product
 from ohmyadmin import components, filters, formatters
@@ -100,10 +101,10 @@ class ProductsByYear(TrendMetric):
 
 class DisplayLayout(BaseDisplayLayoutBuilder):
     def build(self, request: Request, model: Product) -> components.Component:
-        return components.Grid(
+        return ohmyadmin.components.layout.Grid(
             columns=2,
             children=[
-                components.Column(
+                ohmyadmin.components.layout.Column(
                     colspan=1,
                     children=[
                         components.Group(
@@ -117,7 +118,7 @@ class DisplayLayout(BaseDisplayLayoutBuilder):
                         components.Group(
                             label="Images",
                             children=[
-                                components.Grid(
+                                ohmyadmin.components.layout.Grid(
                                     columns=4, children=[components.Image(image.image_path) for image in model.images]
                                 )
                             ],
@@ -153,7 +154,7 @@ class DisplayLayout(BaseDisplayLayoutBuilder):
                         ),
                     ],
                 ),
-                components.Column(
+                ohmyadmin.components.layout.Column(
                     colspan=1,
                     children=[
                         components.Group(
@@ -185,10 +186,10 @@ class DisplayLayout(BaseDisplayLayoutBuilder):
 
 class FormLayout(BaseFormLayoutBuilder):
     def build(self, form: ProductForm) -> Component:
-        return components.Grid(
+        return ohmyadmin.components.layout.Grid(
             columns=12,
             children=[
-                components.Column(
+                ohmyadmin.components.layout.Column(
                     colspan=8,
                     children=[
                         components.Group(
@@ -204,7 +205,7 @@ class FormLayout(BaseFormLayoutBuilder):
                             children=[
                                 components.RepeatedFormInput(
                                     form.images,
-                                    builder=lambda f: components.Column(
+                                    builder=lambda f: ohmyadmin.components.layout.Column(
                                         children=[
                                             components.ImageFormInput(
                                                 f,
@@ -218,7 +219,7 @@ class FormLayout(BaseFormLayoutBuilder):
                         components.Group(
                             label="Pricing",
                             children=[
-                                components.Grid(
+                                ohmyadmin.components.layout.Grid(
                                     children=[
                                         components.FormInput(form.price, colspan=3),
                                         components.FormInput(form.compare_at_price, colspan=3),
@@ -231,7 +232,7 @@ class FormLayout(BaseFormLayoutBuilder):
                         components.Group(
                             label="Inventory",
                             children=[
-                                components.Grid(
+                                ohmyadmin.components.layout.Grid(
                                     columns=12,
                                     children=[
                                         components.FormInput(form.barcode, colspan=4),
@@ -245,7 +246,7 @@ class FormLayout(BaseFormLayoutBuilder):
                         ),
                     ],
                 ),
-                components.Column(
+                ohmyadmin.components.layout.Column(
                     colspan=4,
                     children=[
                         components.Group(

@@ -7,9 +7,7 @@ __pycache__
 dist/
 ohmyadmin2
 coverage.xml
-assets-old
-ohmyadmin-old
-examples-old
+*-old
 node_modules
 ohmyadmin/statics
 

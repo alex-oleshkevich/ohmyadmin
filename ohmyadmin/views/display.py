@@ -3,6 +3,7 @@ import typing
 
 from starlette.requests import Request
 
+import ohmyadmin.components.layout
 from ohmyadmin import components, display_fields
 from ohmyadmin.components import DisplayLayoutBuilder
 from ohmyadmin.templating import render_to_string
@@ -36,10 +37,10 @@ class AutoDisplayView(BaseDisplayView):
         self.fields = fields
 
     def render(self, request: Request, model: object) -> components.Component:
-        return components.Grid(
+        return ohmyadmin.components.layout.Grid(
             columns=12,
             children=[
-                components.Column(
+                ohmyadmin.components.layout.Column(
                     colspan=6,
                     children=[components.DisplayFieldComponent(field=field, model=model) for field in self.fields],
                 )

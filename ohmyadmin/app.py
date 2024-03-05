@@ -18,9 +18,11 @@ from starlette_babel import gettext_lazy as _
 from starlette_babel.contrib.jinja import configure_jinja_env
 from starlette_flash import flash
 
+import ohmyadmin.components.layout
+import ohmyadmin.components.menu
 from ohmyadmin import components
 from ohmyadmin.authentication.policy import AnonymousAuthPolicy, AuthPolicy
-from ohmyadmin.components import Menu
+from ohmyadmin.components.menu import MenuBuilder
 from ohmyadmin.menu import MenuItem
 from ohmyadmin.middleware import LoginRequiredMiddleware
 from ohmyadmin.templating import model_pk, static_url, url_matches
@@ -35,13 +37,13 @@ class OhMyAdmin(Router):
         theme: Theme = Theme(),
         file_storage: FileStorage | None = None,
         auth_policy: AuthPolicy | None = None,
-        menu_builder: Menu | None = None,
+        menu_builder: MenuBuilder | None = None,
     ) -> None:
         self.theme = theme
         self.screens = screens or []
         self.auth_policy = auth_policy or AnonymousAuthPolicy()
         self.file_storage = file_storage
-        self.menu_builder = menu_builder or components.Menu(builder=self._default_menu_builder)
+        self.menu_builder = menu_builder or ohmyadmin.components.menu.MenuBuilder(builder=self._default_menu_builder)
 
         self.jinja_env = jinja2.Environment(
             autoescape=True,
@@ -133,12 +135,12 @@ class OhMyAdmin(Router):
         return self.file_storage.as_response(path)
 
     def _default_menu_builder(self, request: Request) -> components.Component:
-        return components.Column(
+        return ohmyadmin.components.layout.Column(
             children=[
-                components.MenuGroup(
+                ohmyadmin.components.menu.MenuGroup(
                     heading=group[0],
                     items=[
-                        components.MenuItem(
+                        ohmyadmin.components.menu.MenuItem(
                             url=screen.get_url(request),
                             label=getattr(screen, "label_plural", screen.label),
                             icon=screen.icon,

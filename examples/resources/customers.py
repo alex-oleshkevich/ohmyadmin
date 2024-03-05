@@ -4,6 +4,7 @@ from markupsafe import Markup
 from sqlalchemy.orm import selectinload
 from starlette.requests import Request
 
+import ohmyadmin.components.layout
 from examples import icons
 from examples.models import Comment, Customer, Order, OrderItem
 from ohmyadmin import components, filters, formatters
@@ -24,9 +25,9 @@ class CustomerForm(wtforms.Form):
 
 class DisplayLayout(BaseDisplayLayoutBuilder):
     def build(self, request: Request, model: Customer) -> components.Component:
-        return components.Grid(
+        return ohmyadmin.components.layout.Grid(
             children=[
-                components.Column(
+                ohmyadmin.components.layout.Column(
                     colspan=6,
                     children=[
                         components.DisplayFieldComponent(DisplayField("name"), model),
@@ -55,10 +56,10 @@ class DisplayLayout(BaseDisplayLayoutBuilder):
                         components.Group(
                             label="Addresses",
                             children=[
-                                components.Grid(
+                                ohmyadmin.components.layout.Grid(
                                     columns=4,
                                     children=[
-                                        components.Column(
+                                        ohmyadmin.components.layout.Column(
                                             colspan=1,
                                             children=[
                                                 components.DisplayValue(label="Country", value=address.country),
@@ -75,9 +76,9 @@ class DisplayLayout(BaseDisplayLayoutBuilder):
                         components.Group(
                             label="Payments",
                             children=[
-                                components.Grid(
+                                ohmyadmin.components.layout.Grid(
                                     children=[
-                                        components.Column(
+                                        ohmyadmin.components.layout.Column(
                                             children=[
                                                 components.DisplayValue(label="Reference", value=payment.reference),
                                                 components.DisplayValue(
@@ -99,9 +100,9 @@ class DisplayLayout(BaseDisplayLayoutBuilder):
                         components.Group(
                             label="Orders",
                             children=[
-                                components.Grid(
+                                ohmyadmin.components.layout.Grid(
                                     children=[
-                                        components.Column(
+                                        ohmyadmin.components.layout.Column(
                                             children=[
                                                 components.DisplayValue(label="Number", value=order.number),
                                                 components.DisplayValue(label="Status", value=order.status),
@@ -121,9 +122,9 @@ class DisplayLayout(BaseDisplayLayoutBuilder):
                         components.Group(
                             label="Comments",
                             children=[
-                                components.Grid(
+                                ohmyadmin.components.layout.Grid(
                                     children=[
-                                        components.Column(
+                                        ohmyadmin.components.layout.Column(
                                             children=[
                                                 components.DisplayValue(label="Title", value=comments.title),
                                                 components.DisplayValue(label="Content", value=comments.content),

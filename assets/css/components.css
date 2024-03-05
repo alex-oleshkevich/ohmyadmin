@@ -692,6 +692,28 @@
     .dot.dot-pink {
         @apply bg-pink-500;
     }
+
+    /* sidebar menu */
+    .sidebar-menu {
+        @apply space-y-0.5;
+    }
+
+    .sidebar-menu .menu-item {
+        @apply w-full rounded px-3 py-2 text-sm font-medium flex items-center gap-2;
+        @apply hover:bg-gray-200;
+    }
+
+    .sidebar-menu .menu-item.active {
+        @apply text-accent-900 bg-accent-100 hover:bg-accent-200;
+    }
+
+    .sidebar-menu .menu-item > svg {
+        @apply text-gray-400 h-5;
+    }
+
+    .sidebar-menu .menu-heading {
+        @apply text-xs uppercase text-gray-500 font-medium px-3 pt-2;
+    }
 }
 
 @layer utilities {

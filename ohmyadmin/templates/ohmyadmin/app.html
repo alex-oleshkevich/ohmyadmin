@@ -1,5 +1,6 @@
 {% extends 'ohmyadmin/base.html' %}
 {% import 'ohmyadmin/actions.html' as actions %}
+{% import 'ohmyadmin/components.html' as components %}
 
 
 {% block main %}
@@ -12,7 +13,7 @@
                 </a>
             </section>
             <section class="space-y-2">
-                {{ ohmyadmin.menu_builder.render(request) }}
+                {{ components.render_component(request, ohmyadmin.menu_builder) }}
             </section>
             <section class="mt-auto">
                 <button id="user-menu" type="button"

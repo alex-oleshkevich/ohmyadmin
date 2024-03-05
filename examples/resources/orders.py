@@ -5,6 +5,7 @@ import sqlalchemy as sa
 from sqlalchemy.orm import joinedload, selectinload, with_expression
 from starlette.requests import Request
 
+import ohmyadmin.components.layout
 from examples import icons
 from examples.models import Country, Currency, Customer, Order, OrderItem, Product
 from ohmyadmin import components, filters, formatters
@@ -89,7 +90,7 @@ class OrdersByYear(TrendMetric):
 
 class DisplayLayout(BaseDisplayLayoutBuilder):
     def build(self, request: Request, model: Customer) -> components.Component:
-        return components.Grid()
+        return ohmyadmin.components.layout.Grid()
 
 
 class OrdersResource(ResourceScreen):

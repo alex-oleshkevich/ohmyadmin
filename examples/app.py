@@ -14,6 +14,8 @@ from starlette.responses import Response
 from starlette.routing import Mount, Route
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+import ohmyadmin.components.layout
+import ohmyadmin.components.menu
 from examples import icons, settings
 from examples.models import User
 from examples.resources.brands import BrandResource
@@ -27,10 +29,9 @@ from examples.resources.form_view import ProductFormView
 from examples.resources.orders import OrdersResource
 from examples.resources.products import ProductResource
 from examples.resources.users_table import UsersTable
-from ohmyadmin import components
 from ohmyadmin.app import OhMyAdmin
 from ohmyadmin.authentication.policy import AuthPolicy
-from ohmyadmin.components import Menu
+from ohmyadmin.components.menu import MenuBuilder
 from ohmyadmin.routing import url_to
 from starlette_babel import gettext_lazy as _
 
@@ -107,28 +108,38 @@ admin = OhMyAdmin(
         OrdersResource(),
         ProductResource(),
     ],
-    menu_builder=Menu(
-        builder=lambda request: components.Column(
+    menu_builder=MenuBuilder(
+        builder=lambda request: ohmyadmin.components.layout.Column(
             children=[
-                components.MenuGroup(
+                ohmyadmin.components.menu.MenuGroup(
                     heading=_("Shop"),
                     items=[
-                        components.MenuItem(url_to(CountryResource), _("Countries"), icon=icons.ICON_COUNTRIES),
-                        components.MenuItem(url_to(CategoryResource), _("Categories"), icon=icons.ICON_CATEGORY),
-                        components.MenuItem(url_to(BrandResource), _("Brands"), icon=icons.ICON_BASKET),
-                        components.MenuItem(url_to(CurrencyResource), _("Currencies"), icon=icons.ICON_CURRENCY),
-                        components.MenuItem(url_to(CustomerResource), _("Customers"), icon=icons.ICON_FRIENDS),
-                        components.MenuItem(url_to(OrdersResource), _("Orders"), icon=icons.ICON_ORDER),
-                        components.MenuItem(url_to(ProductResource), _("Products"), icon=icons.ICON_PRODUCTS),
+                        ohmyadmin.components.menu.MenuItem(
+                            url_to(CountryResource), _("Countries"), icon=icons.ICON_COUNTRIES
+                        ),
+                        ohmyadmin.components.menu.MenuItem(
+                            url_to(CategoryResource), _("Categories"), icon=icons.ICON_CATEGORY
+                        ),
+                        ohmyadmin.components.menu.MenuItem(url_to(BrandResource), _("Brands"), icon=icons.ICON_BASKET),
+                        ohmyadmin.components.menu.MenuItem(
+                            url_to(CurrencyResource), _("Currencies"), icon=icons.ICON_CURRENCY
+                        ),
+                        ohmyadmin.components.menu.MenuItem(
+                            url_to(CustomerResource), _("Customers"), icon=icons.ICON_FRIENDS
+                        ),
+                        ohmyadmin.components.menu.MenuItem(url_to(OrdersResource), _("Orders"), icon=icons.ICON_ORDER),
+                        ohmyadmin.components.menu.MenuItem(
+                            url_to(ProductResource), _("Products"), icon=icons.ICON_PRODUCTS
+                        ),
                     ],
                 ),
-                components.MenuGroup(
+                ohmyadmin.components.menu.MenuGroup(
                     heading=_("Demo"),
                     items=[
-                        components.MenuItem(url_to(UsersTable), _("Table view")),
-                        components.MenuItem(url_to(ProductView), _("Display view")),
-                        components.MenuItem(url_to(ProductFormView), _("Form view")),
-                        components.MenuItem(url_to(CustomProductFormView), _("Custom form layout")),
+                        ohmyadmin.components.menu.MenuItem(url_to(UsersTable), _("Table view")),
+                        ohmyadmin.components.menu.MenuItem(url_to(ProductView), _("Display view")),
+                        ohmyadmin.components.menu.MenuItem(url_to(ProductFormView), _("Form view")),
+                        ohmyadmin.components.menu.MenuItem(url_to(CustomProductFormView), _("Custom form layout")),
                     ],
                 ),
             ]

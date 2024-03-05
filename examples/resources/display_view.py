@@ -4,6 +4,7 @@ import sqlalchemy as sa
 from sqlalchemy.orm import joinedload, selectinload
 from starlette.requests import Request
 
+import ohmyadmin.components.layout
 from examples.models import Product
 from examples.resources.users_table import create_user_callback, CreateUserForm, PLUS_ICON, show_toast_callback
 from ohmyadmin import components, formatters
@@ -15,12 +16,12 @@ from ohmyadmin.views.display import BuilderDisplayView
 
 class ProductLayout(BaseDisplayLayoutBuilder):
     def build(self, request: Request, model: Product) -> components.Component:
-        return components.Grid(
+        return ohmyadmin.components.layout.Grid(
             children=[
-                components.Grid(
+                ohmyadmin.components.layout.Grid(
                     columns=12,
                     children=[
-                        components.Column(
+                        ohmyadmin.components.layout.Column(
                             colspan=6,
                             children=[
                                 components.DisplayValue(label="Name", value=model.name),
@@ -37,7 +38,7 @@ class ProductLayout(BaseDisplayLayoutBuilder):
                                 components.Group(
                                     label="Pricing",
                                     children=[
-                                        components.Column(
+                                        ohmyadmin.components.layout.Column(
                                             children=[
                                                 components.DisplayValue(
                                                     "Price",
@@ -61,7 +62,7 @@ class ProductLayout(BaseDisplayLayoutBuilder):
                                 components.Group(
                                     label="Inventory",
                                     children=[
-                                        components.Column(
+                                        ohmyadmin.components.layout.Column(
                                             children=[
                                                 components.DisplayValue("SKU", model.sku),
                                                 components.DisplayValue("Quantity", model.quantity),
@@ -74,7 +75,7 @@ class ProductLayout(BaseDisplayLayoutBuilder):
                                 components.DisplayValue(label="Description", value=model.description),
                             ],
                         ),
-                        components.Column(
+                        ohmyadmin.components.layout.Column(
                             colspan=6,
                             children=[
                                 components.DisplayValue(

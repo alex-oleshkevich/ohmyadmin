@@ -1,0 +1,10 @@
+<!-- menu -->
+<div class="sidebar-menu">
+    {% if component.heading %}
+        <div class="menu-heading">{{ component.heading }}</div>
+    {% endif %}
+    {% for item in component.items %}
+        {{ item.render(request) }}
+    {% endfor %}
+</div>
+<!-- end menu -->

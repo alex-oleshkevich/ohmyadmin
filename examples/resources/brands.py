@@ -1,6 +1,7 @@
 import wtforms
 from starlette_babel import gettext_lazy as _
 
+import ohmyadmin.components.layout
 from examples import icons
 from examples.models import Brand
 from ohmyadmin import components, filters, formatters
@@ -21,10 +22,10 @@ class BrandForm(wtforms.Form):
 
 class _FormLayout(BaseFormLayoutBuilder):
     def build(self, form: BrandForm) -> components.Component:
-        return components.Grid(
+        return ohmyadmin.components.layout.Grid(
             colspan=2,
             children=[
-                components.Column(
+                ohmyadmin.components.layout.Column(
                     children=[
                         components.FormInput(form.name),
                         components.FormInput(form.slug),
@@ -32,7 +33,7 @@ class _FormLayout(BaseFormLayoutBuilder):
                         components.FormInput(form.description, colspan=12),
                     ]
                 ),
-                components.Column(
+                ohmyadmin.components.layout.Column(
                     children=[
                         components.FormInput(form.visible_to_customers),
                     ]

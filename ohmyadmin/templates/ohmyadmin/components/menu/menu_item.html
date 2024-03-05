@@ -1,0 +1,7 @@
+{% set url = component.resolve_url(request) %}
+{% set is_active = component.is_active(request) %}
+{% set state_classes = 'active' if is_active else '' %}
+<a class="menu-item {{ state_classes }}" href="{{ url }}">
+    {% if component.icon %}{{ component.icon }}{% endif %}
+    {{ component.label }}
+</a>

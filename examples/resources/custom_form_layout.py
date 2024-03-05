@@ -4,6 +4,7 @@ import wtforms
 from starlette.requests import Request
 from starlette.responses import Response
 
+import ohmyadmin.components.layout
 from examples.models import Brand, Country
 from ohmyadmin import htmx, components
 from ohmyadmin.actions import actions
@@ -53,15 +54,15 @@ class ProductForm(wtforms.Form):
 
 class FormLayout(BaseFormLayoutBuilder):
     def build(self, form: ProductForm) -> Component:
-        return components.Grid(
+        return ohmyadmin.components.layout.Grid(
             children=[
-                components.Column(
+                ohmyadmin.components.layout.Column(
                     colspan=8,
                     children=[
                         components.Group(
                             label="Product info",
                             children=[
-                                components.Grid(
+                                ohmyadmin.components.layout.Grid(
                                     columns=2,
                                     children=[
                                         components.FormInput(form.name),
@@ -84,7 +85,7 @@ class FormLayout(BaseFormLayoutBuilder):
                             label="Pricing",
                             description="Decide which communications you'd like to receive and how.",
                             children=[
-                                components.Grid(
+                                ohmyadmin.components.layout.Grid(
                                     columns=3,
                                     children=[
                                         components.FormInput(form.price),
@@ -98,7 +99,7 @@ class FormLayout(BaseFormLayoutBuilder):
                             label="Inventory",
                             description="Decide which communications you'd like to receive and how.",
                             children=[
-                                components.Grid(
+                                ohmyadmin.components.layout.Grid(
                                     columns=3,
                                     children=[
                                         components.FormInput(form.sku),
@@ -114,7 +115,7 @@ class FormLayout(BaseFormLayoutBuilder):
                             children=[
                                 components.RepeatedFormInput(
                                     form.attributes,
-                                    builder=lambda field: components.Grid(
+                                    builder=lambda field: ohmyadmin.components.layout.Grid(
                                         columns=2,
                                         children=[
                                             components.FormInput(field.form.name),
@@ -126,7 +127,7 @@ class FormLayout(BaseFormLayoutBuilder):
                         ),
                     ],
                 ),
-                components.Column(
+                ohmyadmin.components.layout.Column(
                     colspan=4,
                     children=[
                         components.Group(label="Brand", children=[components.FormInput(form.brand_id)]),
@@ -144,7 +145,7 @@ class FormLayout(BaseFormLayoutBuilder):
                             children=[
                                 components.NestedFormComponent(
                                     field=form.manufacturer,
-                                    builder=lambda field: components.Column(
+                                    builder=lambda field: ohmyadmin.components.layout.Column(
                                         children=[
                                             components.FormInput(field.form.name),
                                             components.FormInput(field.form.country),
