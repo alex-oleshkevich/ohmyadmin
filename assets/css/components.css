@@ -305,6 +305,9 @@
     .badge-pink {
         @apply bg-pink-100 text-pink-800;
     }
+    .badge-rose {
+        @apply bg-rose-100 text-rose-800;
+    }
 
     .alert {
         @apply mb-4 rounded-md p-4 text-sm border rounded flex flex-col items-start justify-center;
@@ -596,10 +599,11 @@
     }
 
     .breadcrumbs {
+        @apply mb-2;
     }
 
     .breadcrumbs ul {
-        @apply inline-flex items-center py-2 text-sm font-medium;
+        @apply inline-flex items-center text-sm font-medium;
     }
 
     .breadcrumbs ul li {

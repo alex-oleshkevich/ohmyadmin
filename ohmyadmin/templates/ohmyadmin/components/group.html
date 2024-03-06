@@ -1,15 +1,15 @@
 <!-- group -->
-<section class="mt-4 col-span-{{ layout.colspan }}">
-    {% if layout.label %}
+<section class="mb-5 col-span-{{ component.colspan }}">
+    {% if component.label %}
         <header class="mb-3">
-            <div class="font-medium text-lg">{{ layout.label }}</div>
-            {% if layout.description %}
-                <div class="text-gray-600">{{ layout.description }}</div>
+            <div class="font-medium text-lg">{{ component.label }}</div>
+            {% if component.description %}
+                <div class="text-gray-600">{{ component.description }}</div>
             {% endif %}
         </header>
     {% endif %}
-    <main>
-        {% for child in layout.children %}
+    <main class="space-y-{{ component.gap }}">
+        {% for child in component.children %}
             {{ child.render(request) }}
         {% endfor %}
     </main>

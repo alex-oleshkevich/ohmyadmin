@@ -30,7 +30,7 @@ class TrendMetric(Metric):
     color: str = colors.COLOR_SKY
     background_color: str = colors.COLOR_SKY_LIGHT
 
-    formatter: formatters.BaseFormatter = formatters.StringFormatter()
+    formatter: formatters.Formatter = formatters.String()
     template = "ohmyadmin/metrics/trend.html"
 
     async def calculate_current_value(self, request: Request) -> int | float | decimal.Decimal:

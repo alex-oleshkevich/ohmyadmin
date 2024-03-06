@@ -13,6 +13,7 @@ from ohmyadmin import filters, htmx, metrics, screens
 from ohmyadmin.actions import actions
 from ohmyadmin.breadcrumbs import Breadcrumb
 from ohmyadmin.components import AutoFormLayout, FormLayoutBuilder
+from ohmyadmin.components.display import DetailView
 from ohmyadmin.datasources.datasource import DataSource, DuplicateError, InFilter
 from ohmyadmin.forms.utils import populate_object
 from ohmyadmin.helpers import pluralize, snake_to_sentence
@@ -27,9 +28,9 @@ from ohmyadmin.resources.actions import (
     ViewResourceAction,
 )
 from ohmyadmin.resources.policy import AccessPolicy, PermissiveAccessPolicy
+from ohmyadmin.routing import LazyURL
 from ohmyadmin.screens.base import ExposeViewMiddleware, Screen
 from ohmyadmin.views.base import IndexView
-from ohmyadmin.views.display import DisplayView
 
 
 class ResourceScreen(Screen):
@@ -96,7 +97,7 @@ class ResourceScreen(Screen):
 
     # display page
     display_object_actions: typing.Sequence[actions.Action] = tuple()
-    display_view: DisplayView | None = None
+    detail_view_class: type[DetailView] = DetailView
 
     def __init__(self) -> None:
         assert self.datasource, f"Class {self.__class__.__name__} must have a datasource."
@@ -114,7 +115,7 @@ class ResourceScreen(Screen):
     @classmethod
     @property
     def url_name(cls) -> str:
-        slug = slugify.slugify('.'.join([cls.__module__, cls.__name__]))
+        slug = slugify.slugify(".".join([cls.__module__, cls.__name__]))
         return f"ohmyadmin.resource.{slug}"
 
     def get_index_page_actions(self) -> list[actions.Action]:
@@ -249,7 +250,7 @@ class ResourceScreen(Screen):
                 url_name=self.get_display_route_name(),
                 page_actions=self.get_display_actions(),
                 get_object=self.get_object_for_display,
-                view=self.display_view,
+                view_class=self.detail_view_class,
                 breadcrumbs=[
                     Breadcrumb(label=_("Home", domain="ohmyadmin"), url=lambda r: r.url_for("ohmyadmin.welcome")),
                     Breadcrumb(label=self.label_plural, url=lambda r: r.url_for(self.get_index_route_name())),
@@ -259,17 +260,37 @@ class ResourceScreen(Screen):
         )
         return typing.cast(type[Screen], screen)
 
-    def get_index_route_name(self) -> str:
-        return self.url_name
+    @classmethod
+    def get_index_route_name(cls) -> str:
+        return cls.url_name
 
-    def get_create_route_name(self) -> str:
-        return "{url_name}.create".format(url_name=self.url_name)
+    @classmethod
+    def get_index_page_route(cls) -> LazyURL:
+        return LazyURL(cls.get_index_route_name())
 
-    def get_edit_route_name(self) -> str:
-        return "{url_name}.edit".format(url_name=self.url_name)
+    @classmethod
+    def get_create_route_name(cls) -> str:
+        return "{url_name}.create".format(url_name=cls.url_name)
 
-    def get_display_route_name(self) -> str:
-        return "{url_name}.show".format(url_name=self.url_name)
+    @classmethod
+    def get_create_page_route(cls) -> LazyURL:
+        return LazyURL(cls.get_create_route_name())
+
+    @classmethod
+    def get_edit_route_name(cls) -> str:
+        return "{url_name}.edit".format(url_name=cls.url_name)
+
+    @classmethod
+    def get_edit_page_route(cls, object_id: int) -> LazyURL:
+        return LazyURL(cls.get_edit_route_name(), object_id=object_id)
+
+    @classmethod
+    def get_display_route_name(cls) -> str:
+        return "{url_name}.show".format(url_name=cls.url_name)
+
+    @classmethod
+    def get_display_page_route(cls, object_id: int) -> LazyURL:
+        return LazyURL(cls.get_display_route_name(), object_id=object_id)
 
     def get_route(self) -> BaseRoute:
         return Mount(

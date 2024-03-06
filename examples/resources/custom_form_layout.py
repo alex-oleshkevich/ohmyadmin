@@ -59,7 +59,7 @@ class FormLayout(BaseFormLayoutBuilder):
                 ohmyadmin.components.layout.Column(
                     colspan=8,
                     children=[
-                        components.Group(
+                        ohmyadmin.components.layout.Group(
                             label="Product info",
                             children=[
                                 ohmyadmin.components.layout.Grid(
@@ -72,7 +72,7 @@ class FormLayout(BaseFormLayoutBuilder):
                                 ),
                             ],
                         ),
-                        components.Group(
+                        ohmyadmin.components.layout.Group(
                             label="Image",
                             children=[
                                 components.RepeatedFormInput(
@@ -81,7 +81,7 @@ class FormLayout(BaseFormLayoutBuilder):
                                 ),
                             ],
                         ),
-                        components.Group(
+                        ohmyadmin.components.layout.Group(
                             label="Pricing",
                             description="Decide which communications you'd like to receive and how.",
                             children=[
@@ -95,7 +95,7 @@ class FormLayout(BaseFormLayoutBuilder):
                                 ),
                             ],
                         ),
-                        components.Group(
+                        ohmyadmin.components.layout.Group(
                             label="Inventory",
                             description="Decide which communications you'd like to receive and how.",
                             children=[
@@ -110,7 +110,7 @@ class FormLayout(BaseFormLayoutBuilder):
                                 )
                             ],
                         ),
-                        components.Group(
+                        ohmyadmin.components.layout.Group(
                             label="Attributes",
                             children=[
                                 components.RepeatedFormInput(
@@ -130,9 +130,11 @@ class FormLayout(BaseFormLayoutBuilder):
                 ohmyadmin.components.layout.Column(
                     colspan=4,
                     children=[
-                        components.Group(label="Brand", children=[components.FormInput(form.brand_id)]),
+                        ohmyadmin.components.layout.Group(
+                            label="Brand", children=[components.FormInput(form.brand_id)]
+                        ),
                         components.SeparatorComponent(),
-                        components.Group(
+                        ohmyadmin.components.layout.Group(
                             label="",
                             children=[
                                 components.FormInput(form.can_be_shipped),
@@ -140,7 +142,7 @@ class FormLayout(BaseFormLayoutBuilder):
                             ],
                         ),
                         components.SeparatorComponent(),
-                        components.Group(
+                        ohmyadmin.components.layout.Group(
                             label="Manufacturer",
                             children=[
                                 components.NestedFormComponent(

@@ -5,8 +5,9 @@ import typing
 from starlette.datastructures import URL
 from starlette.requests import Request
 
-if typing.TYPE_CHECKING:
-    from ohmyadmin.screens import Screen
+
+class URLProvider(typing.Protocol):
+    url_name: str
 
 
 class LazyURL:
@@ -18,5 +19,5 @@ class LazyURL:
         return request.url_for(self.route_name, **self.params)
 
 
-def url_to(screen: Screen | type[Screen], **params: typing.Any) -> LazyURL:
+def url_to(screen: URLProvider, **params: typing.Any) -> LazyURL:
     return LazyURL(screen.url_name, **params)

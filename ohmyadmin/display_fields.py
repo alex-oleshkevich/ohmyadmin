@@ -23,7 +23,7 @@ class DisplayField:
         self,
         name: str,
         label: str | None = None,
-        formatter: formatters.FieldValueFormatter = formatters.StringFormatter(),
+        formatter: formatters.ValueFormatter = formatters.String(),
         value_getter: ValueGetter | None = None,
         default_if_none: str = "-",
         link: bool = False,

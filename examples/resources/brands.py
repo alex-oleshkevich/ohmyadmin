@@ -1,4 +1,5 @@
 import wtforms
+from starlette.requests import Request
 from starlette_babel import gettext_lazy as _
 
 import ohmyadmin.components.layout
@@ -7,8 +8,8 @@ from examples.models import Brand
 from ohmyadmin import components, filters, formatters
 from ohmyadmin.components import BaseFormLayoutBuilder
 from ohmyadmin.datasources.sqlalchemy import SADataSource
-from ohmyadmin.resources.resource import ResourceScreen
 from ohmyadmin.display_fields import DisplayField
+from ohmyadmin.resources.resource import ResourceScreen
 from ohmyadmin.views.table import TableView
 
 
@@ -18,6 +19,22 @@ class BrandForm(wtforms.Form):
     website = wtforms.URLField()
     visible_to_customers = wtforms.BooleanField()
     description = wtforms.TextAreaField()
+
+
+class BrandDetailView(components.DetailView[Brand]):
+    def build(self, request: Request) -> components.Component:
+        return components.Column(
+            [
+                components.ModelField("Name", self.model.name),
+                components.ModelField("Website", self.model.website),
+                components.ModelField(
+                    "Visible to customers",
+                    self.model.visible_to_customers,
+                    value_builder=lambda value: components.BoolValue(value=value),
+                ),
+                components.ModelField("Updated at", self.model.updated_at),
+            ]
+        )
 
 
 class _FormLayout(BaseFormLayoutBuilder):
@@ -58,17 +75,13 @@ class BrandResource(ResourceScreen):
             ],
         ),
     ]
-    display_fields = (
-        DisplayField("name"),
-        DisplayField("website"),
-        DisplayField("visible_to_customers", _("Visibility"), formatter=formatters.BoolFormatter(as_text=True)),
-        DisplayField("updated_at", formatter=formatters.DateTimeFormatter()),
-    )
+
+    detail_view_class = BrandDetailView
     index_view = TableView(
         [
             DisplayField("name", link=True),
             DisplayField("website"),
             DisplayField("visible_to_customers", _("Visibility"), formatter=formatters.BoolFormatter(as_text=True)),
-            DisplayField("updated_at", formatter=formatters.DateTimeFormatter()),
+            DisplayField("updated_at", formatter=formatters.DateTime()),
         ]
     )

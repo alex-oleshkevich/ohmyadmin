@@ -5,17 +5,16 @@ import sqlalchemy as sa
 from sqlalchemy.orm import joinedload, selectinload, with_expression
 from starlette.requests import Request
 
-import ohmyadmin.components.layout
 from examples import icons
 from examples.models import Country, Currency, Customer, Order, OrderItem, Product
+from examples.resources.customers import CustomerResource
 from ohmyadmin import components, filters, formatters
 from ohmyadmin.datasources.sqlalchemy import load_choices, SADataSource
 from ohmyadmin.display_fields import DisplayField
 from ohmyadmin.forms.utils import safe_int_coerce
 from ohmyadmin.metrics import Partition, PartitionMetric, TrendMetric, TrendValue, ValueMetric, ValueValue
 from ohmyadmin.resources.resource import ResourceScreen
-from ohmyadmin.components import BaseDisplayLayoutBuilder
-from ohmyadmin.views.display import AutoDisplayView
+from ohmyadmin.components import BadgeColor
 from ohmyadmin.views.table import TableView
 
 STATUS_COLORS: dict[str, str] = {
@@ -69,7 +68,7 @@ class TotalProductsMetric(ValueMetric):
 class OrdersByYear(TrendMetric):
     label = "Orders by year"
     show_current_value = True
-    formatter = formatters.StringFormatter(suffix=" orders this month")
+    formatter = formatters.String(suffix=" orders this month")
 
     async def calculate_current_value(self, request: Request) -> int | float | decimal.Decimal:
         stmt = sa.select(sa.func.count("*")).where(Order.created_at >= sa.func.now() - sa.text("interval '30 day'"))
@@ -88,9 +87,76 @@ class OrdersByYear(TrendMetric):
         return [TrendValue(label=row.year.year, value=row.total) for row in result.all()]
 
 
-class DisplayLayout(BaseDisplayLayoutBuilder):
-    def build(self, request: Request, model: Customer) -> components.Component:
-        return ohmyadmin.components.layout.Grid()
+class OrderDetailView(components.DetailView[Order]):
+    def build(self, request: Request) -> components.Component:
+        return components.Grid(
+            children=[
+                components.Column(
+                    colspan=8,
+                    children=[
+                        components.ModelField(
+                            "Customer",
+                            self.model.customer,
+                            value_builder=lambda _: components.Link(
+                                text=self.model.customer,
+                                url=CustomerResource.get_display_page_route(self.model.customer_id),
+                            ),
+                        ),
+                        components.ModelField(
+                            "Status",
+                            self.model.status,
+                            value_builder=lambda value: components.Badge(
+                                value,
+                                {
+                                    Order.Status.NEW: BadgeColor.BLUE,
+                                    Order.Status.SHIPPED: BadgeColor.GREEN,
+                                    Order.Status.PROCESSING: BadgeColor.YELLOW,
+                                    Order.Status.DELIVERED: BadgeColor.GREEN,
+                                    Order.Status.CANCELLED: BadgeColor.RED,
+                                },
+                            ),
+                        ),
+                        components.ModelField(
+                            "Total price",
+                            sum([item.unit_price * item.quantity for item in self.model.items]),
+                            formatter=formatters.Number(prefix="USD "),
+                        ),
+                        components.ModelField("Order date", self.model.created_at),
+                        components.ModelField("Update date", self.model.updated_at),
+                        components.ModelField("Address", self.model.address),
+                        components.ModelField("City", self.model.city),
+                        components.ModelField("ZIP", self.model.zip),
+                        components.ModelField("Currency", self.model.currency),
+                        components.ModelField("Country", self.model.country),
+                        components.ModelField("Notes", self.model.notes),
+                        components.Group(
+                            label="Ordered products",
+                            children=[
+                                components.Table(
+                                    items=self.model.items,
+                                    headers=["Product", "Quantity", "Price"],
+                                    row_builder=lambda row: [
+                                        components.TableCell(row.product),
+                                        components.TableCell(row.quantity, align="right"),
+                                        components.TableCell(
+                                            row.unit_price * row.quantity, align="right", formatter=formatters.Number()
+                                        ),
+                                    ],
+                                    summary=[
+                                        components.TableCell(value="Total", align="right", colspan=2),
+                                        components.TableCell(
+                                            align="right",
+                                            formatter=formatters.Number(prefix="USD "),
+                                            value=sum([item.unit_price * item.quantity for item in self.model.items]),
+                                        ),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
 
 
 class OrdersResource(ResourceScreen):
@@ -104,7 +170,7 @@ class OrdersResource(ResourceScreen):
             joinedload(Order.customer),
             joinedload(Order.currency),
             joinedload(Order.country),
-            selectinload(Order.items),
+            selectinload(Order.items).joinedload(OrderItem.product),
         ),
         query_for_list=(
             sa.select(Order)
@@ -141,36 +207,11 @@ class OrdersResource(ResourceScreen):
                 ),
             ),
             DisplayField("currency"),
-            DisplayField("total_price", formatter=formatters.NumberFormatter(suffix="USD")),
-            DisplayField("created_at", label="Order date", formatter=formatters.DateFormatter()),
+            DisplayField("total_price", formatter=formatters.Number(suffix="USD")),
+            DisplayField("created_at", label="Order date", formatter=formatters.Date()),
         ]
     )
-    display_view = AutoDisplayView(
-        fields=[
-            DisplayField(
-                "status",
-                formatter=formatters.BadgeFormatter(
-                    color_map={
-                        Order.Status.NEW: "blue",
-                        Order.Status.SHIPPED: "green",
-                        Order.Status.PROCESSING: "yellow",
-                        Order.Status.DELIVERED: "green",
-                        Order.Status.CANCELLED: "red",
-                    }
-                ),
-            ),
-            DisplayField("currency"),
-            DisplayField("total_price", formatter=formatters.NumberFormatter(suffix="USD")),
-            DisplayField("created_at", label="Order date", formatter=formatters.DateFormatter()),
-            DisplayField("updated_at", label="Update date", formatter=formatters.DateFormatter()),
-            DisplayField("address"),
-            DisplayField("city"),
-            DisplayField("zip"),
-            DisplayField("notes"),
-            DisplayField("currency"),
-            DisplayField("country"),
-        ]
-    )
+    detail_view_class = OrderDetailView
 
     async def init_form(self, request: Request, form: OrderForm) -> None:
         await load_choices(request.state.dbsession, form.customer_id, sa.select(Customer))

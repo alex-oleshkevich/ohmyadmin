@@ -4,56 +4,55 @@ import sqlalchemy as sa
 from sqlalchemy.orm import joinedload, selectinload
 from starlette.requests import Request
 
-import ohmyadmin.components.layout
 from examples.models import Product
+from examples.resources.brands import BrandResource
 from examples.resources.users_table import create_user_callback, CreateUserForm, PLUS_ICON, show_toast_callback
 from ohmyadmin import components, formatters
 from ohmyadmin.actions import actions
 from ohmyadmin.screens.display import DisplayScreen
-from ohmyadmin.components import BaseDisplayLayoutBuilder
-from ohmyadmin.views.display import BuilderDisplayView
 
 
-class ProductLayout(BaseDisplayLayoutBuilder):
-    def build(self, request: Request, model: Product) -> components.Component:
-        return ohmyadmin.components.layout.Grid(
+class ProductDetailView(components.DetailView[Product]):
+    def build(self, request: Request) -> components.Component:
+        return components.Grid(
             children=[
-                ohmyadmin.components.layout.Grid(
+                components.Grid(
                     columns=12,
                     children=[
-                        ohmyadmin.components.layout.Column(
+                        components.Column(
                             colspan=6,
                             children=[
-                                components.DisplayValue(label="Name", value=model.name),
-                                components.DisplayValue(
+                                components.ModelField(label="Name", value=self.model.name),
+                                components.ModelField(
                                     label="Brand",
-                                    value=model.brand.name,
-                                    formatter=formatters.LinkFormatter(
-                                        url="/admin",
+                                    value=self.model.brand.name,
+                                    value_builder=lambda _: components.Link(
+                                        url=BrandResource.get_display_page_route(self.model.brand_id),
+                                        text=self.model.brand,
                                     ),
                                 ),
-                                components.DisplayValue(
-                                    label="Categories", value=", ".join([c.name for c in model.categories]) or "-"
+                                components.ModelField(
+                                    label="Categories", value=", ".join([c.name for c in self.model.categories]) or "-"
                                 ),
                                 components.Group(
                                     label="Pricing",
                                     children=[
-                                        ohmyadmin.components.layout.Column(
+                                        components.Column(
                                             children=[
-                                                components.DisplayValue(
+                                                components.ModelField(
                                                     "Price",
-                                                    model.price,
-                                                    formatter=formatters.NumberFormatter(prefix="$"),
+                                                    self.model.price,
+                                                    formatter=formatters.Number(prefix="$"),
                                                 ),
-                                                components.DisplayValue(
+                                                components.ModelField(
                                                     "Compare at price",
-                                                    model.compare_at_price,
-                                                    formatter=formatters.NumberFormatter(prefix="$"),
+                                                    self.model.compare_at_price,
+                                                    formatter=formatters.Number(prefix="$"),
                                                 ),
-                                                components.DisplayValue(
+                                                components.ModelField(
                                                     "Cost per item",
-                                                    model.cost_per_item,
-                                                    formatter=formatters.NumberFormatter(prefix="$"),
+                                                    self.model.cost_per_item,
+                                                    formatter=formatters.Number(prefix="$"),
                                                 ),
                                             ]
                                         )
@@ -62,52 +61,47 @@ class ProductLayout(BaseDisplayLayoutBuilder):
                                 components.Group(
                                     label="Inventory",
                                     children=[
-                                        ohmyadmin.components.layout.Column(
+                                        components.Column(
                                             children=[
-                                                components.DisplayValue("SKU", model.sku),
-                                                components.DisplayValue("Quantity", model.quantity),
-                                                components.DisplayValue("Security stock", model.security_stock),
-                                                components.DisplayValue("Barcode", model.barcode),
+                                                components.ModelField("SKU", self.model.sku),
+                                                components.ModelField("Quantity", self.model.quantity),
+                                                components.ModelField("Security stock", self.model.security_stock),
+                                                components.ModelField("Barcode", self.model.barcode),
                                             ]
                                         ),
                                     ],
                                 ),
-                                components.DisplayValue(label="Description", value=model.description),
+                                components.ModelField(label="Description", value=self.model.description),
                             ],
                         ),
-                        ohmyadmin.components.layout.Column(
+                        components.Column(
                             colspan=6,
                             children=[
-                                components.DisplayValue(
-                                    label="Visible",
-                                    value=model.visible,
-                                    formatter=formatters.BoolFormatter(align="left"),
+                                components.Group(
+                                    children=[
+                                        components.ModelField(
+                                            label="Visible",
+                                            value=self.model.visible,
+                                            value_builder=lambda value: components.BoolValue(value),
+                                        ),
+                                        components.ModelField(
+                                            label="Can be shipped",
+                                            value=self.model.can_be_shipped,
+                                            value_builder=lambda value: components.BoolValue(value),
+                                        ),
+                                        components.ModelField(
+                                            label="Can be returned",
+                                            value=self.model.can_be_returned,
+                                            value_builder=lambda value: components.BoolValue(value),
+                                        ),
+                                    ]
                                 ),
-                                components.DisplayValue(
-                                    label="Can be shipped",
-                                    value=model.can_be_shipped,
-                                    formatter=formatters.BoolFormatter(align="left"),
-                                ),
-                                components.DisplayValue(
-                                    label="Can be returned",
-                                    value=model.can_be_returned,
-                                    formatter=formatters.BoolFormatter(align="left"),
-                                ),
-                                components.SeparatorComponent(),
-                                components.DisplayValue(
-                                    label="Availability",
-                                    value=model.availability,
-                                    formatter=formatters.DateFormatter(),
-                                ),
-                                components.DisplayValue(
-                                    label="Created at",
-                                    value=model.created_at,
-                                    formatter=formatters.DateFormatter(),
-                                ),
-                                components.DisplayValue(
-                                    label="Updated at",
-                                    value=model.updated_at,
-                                    formatter=formatters.DateFormatter(),
+                                components.Group(
+                                    children=[
+                                        components.ModelField(label="Availability", value=self.model.availability),
+                                        components.ModelField(label="Created at", value=self.model.created_at),
+                                        components.ModelField(label="Updated at", value=self.model.updated_at),
+                                    ]
                                 ),
                             ],
                         ),
@@ -134,7 +128,7 @@ class ProductView(DisplayScreen):
             modal_description="Create a new user right now!",
         ),
     ]
-    view = BuilderDisplayView(ProductLayout())
+    view_class = ProductDetailView
 
     async def get_object(self, request: Request) -> typing.Any:
         stmt = sa.select(Product).limit(1).options(joinedload(Product.brand), selectinload(Product.categories))

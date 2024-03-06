@@ -19,7 +19,7 @@ ValueValue: typing.TypeAlias = typing.Any  # anything with __str__ is ok
 
 
 class ValueMetric(Metric):
-    formatter: formatters.BaseFormatter = formatters.StringFormatter()
+    formatter: formatters.Formatter = formatters.String()
     template = "ohmyadmin/metrics/value.html"
 
     @abc.abstractmethod

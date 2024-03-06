@@ -1,18 +1,14 @@
 import sqlalchemy as sa
 import wtforms
-from markupsafe import Markup
 from sqlalchemy.orm import selectinload
 from starlette.requests import Request
 
-import ohmyadmin.components.layout
 from examples import icons
-from examples.models import Comment, Customer, Order, OrderItem
+from examples.models import Address, Comment, Customer, Order, OrderItem
 from ohmyadmin import components, filters, formatters
 from ohmyadmin.datasources.sqlalchemy import SADataSource
 from ohmyadmin.display_fields import DisplayField
 from ohmyadmin.resources.resource import ResourceScreen
-from ohmyadmin.components import BaseDisplayLayoutBuilder
-from ohmyadmin.views.display import BuilderDisplayView
 from ohmyadmin.views.table import TableView
 
 
@@ -23,128 +19,92 @@ class CustomerForm(wtforms.Form):
     birthday = wtforms.DateField()
 
 
-class DisplayLayout(BaseDisplayLayoutBuilder):
-    def build(self, request: Request, model: Customer) -> components.Component:
-        return ohmyadmin.components.layout.Grid(
+class CustomerDetailView(components.DetailView[Customer]):
+    def build(self, request: Request) -> components.Component:
+        return components.Grid(
             children=[
-                ohmyadmin.components.layout.Column(
-                    colspan=6,
+                components.Column(
+                    colspan=8,
                     children=[
-                        components.DisplayFieldComponent(DisplayField("name"), model),
-                        components.DisplayFieldComponent(
-                            DisplayField(
-                                "email",
-                                formatter=formatters.LinkFormatter(
-                                    url=lambda r, v: Markup(f"mailto:{v}"),
-                                ),
-                            ),
-                            model,
+                        components.ModelField("Name", self.model.name),
+                        components.ModelField(
+                            "Email",
+                            self.model.email,
+                            formatter=formatters.Link(self.model.email, protocol="mailto"),
                         ),
-                        components.DisplayFieldComponent(
-                            DisplayField(
-                                "phone",
-                                formatter=formatters.LinkFormatter(
-                                    url=lambda r, v: Markup(f"tel:{v}"),
-                                ),
-                            ),
-                            model,
+                        components.ModelField(
+                            "Phone",
+                            self.model.phone,
+                            formatter=formatters.Link(self.model.phone, protocol="tel"),
                         ),
-                        components.DisplayFieldComponent(
-                            DisplayField("birthday", formatter=formatters.DateFormatter()),
-                            model,
-                        ),
+                        components.ModelField("Birthdate", self.model.birthday),
                         components.Group(
                             label="Addresses",
                             children=[
-                                ohmyadmin.components.layout.Grid(
-                                    columns=4,
-                                    children=[
-                                        ohmyadmin.components.layout.Column(
-                                            colspan=1,
-                                            children=[
-                                                components.DisplayValue(label="Country", value=address.country),
-                                                components.DisplayValue(label="City", value=address.city),
-                                                components.DisplayValue(label="ZIP", value=address.zip),
-                                                components.DisplayValue(label="Street", value=address.street),
-                                            ],
-                                        ),
+                                components.Table[Address](
+                                    items=self.model.addresses,
+                                    headers=["Country", "City", "ZIP", "Street"],
+                                    row_builder=lambda row: [
+                                        components.TableCell(row.country),
+                                        components.TableCell(row.city),
+                                        components.TableCell(row.zip),
+                                        components.TableCell(row.street),
                                     ],
-                                )
-                                for address in model.addresses
+                                ),
                             ],
                         ),
                         components.Group(
                             label="Payments",
                             children=[
-                                ohmyadmin.components.layout.Grid(
-                                    children=[
-                                        ohmyadmin.components.layout.Column(
-                                            children=[
-                                                components.DisplayValue(label="Reference", value=payment.reference),
-                                                components.DisplayValue(
-                                                    label="Amount",
-                                                    value=payment.amount,
-                                                    formatter=formatters.NumberFormatter(prefix="$"),
-                                                ),
-                                                components.DisplayValue(label="Currency", value=payment.currency_code),
-                                                components.DisplayValue(label="Provider", value=payment.provider),
-                                                components.DisplayValue(label="Method", value=payment.method),
-                                                components.SeparatorComponent(),
-                                            ]
+                                components.Table(
+                                    items=self.model.payments,
+                                    headers=["Reference", "Currency", "Provider", "Method", "Amount"],
+                                    row_builder=lambda row: [
+                                        components.TableCell(row.reference),
+                                        components.TableCell(row.currency_code),
+                                        components.TableCell(row.provider),
+                                        components.TableCell(row.method),
+                                        components.TableCell(
+                                            row.amount,
+                                            align="right",
+                                            formatter=formatters.Number(prefix="$"),
                                         ),
-                                    ]
-                                )
-                                for payment in model.payments
+                                    ],
+                                ),
                             ],
                         ),
                         components.Group(
                             label="Orders",
                             children=[
-                                ohmyadmin.components.layout.Grid(
-                                    children=[
-                                        ohmyadmin.components.layout.Column(
-                                            children=[
-                                                components.DisplayValue(label="Number", value=order.number),
-                                                components.DisplayValue(label="Status", value=order.status),
-                                                components.DisplayValue(
-                                                    label="Items",
-                                                    value=", ".join([str(item.product) for item in order.items]),
-                                                ),
-                                                components.DisplayValue(label="Total price", value=order.total_price),
-                                                components.SeparatorComponent(),
-                                            ]
-                                        ),
-                                    ]
-                                )
-                                for order in model.orders
+                                components.Table(
+                                    items=self.model.orders,
+                                    headers=["Number", "Status", "Items", "Total price"],
+                                    row_builder=lambda row: [
+                                        components.TableCell(row.number),
+                                        components.TableCell(row.status),
+                                        components.TableCell(", ".join([str(item.product) for item in row.items])),
+                                        components.TableCell(row.total_price),
+                                    ],
+                                ),
                             ],
                         ),
                         components.Group(
                             label="Comments",
                             children=[
-                                ohmyadmin.components.layout.Grid(
-                                    children=[
-                                        ohmyadmin.components.layout.Column(
-                                            children=[
-                                                components.DisplayValue(label="Title", value=comments.title),
-                                                components.DisplayValue(label="Content", value=comments.content),
-                                                components.DisplayValue(
-                                                    label="Public",
-                                                    value=comments.public,
-                                                    formatter=formatters.BoolFormatter(),
-                                                ),
-                                                components.DisplayValue(label="Product", value=comments.product),
-                                                components.DisplayValue(
-                                                    label="Created at",
-                                                    value=comments.created_at,
-                                                    formatter=formatters.DateTimeFormatter(),
-                                                ),
-                                                components.SeparatorComponent(),
-                                            ]
+                                components.Table(
+                                    items=self.model.comments,
+                                    headers=["Title", "Content", "Product", "Public", "Created at"],
+                                    row_builder=lambda row: [
+                                        components.TableCell(row.title),
+                                        components.TableCell(row.content),
+                                        components.TableCell(row.product),
+                                        components.TableCell(
+                                            row.public,
+                                            value_builder=lambda value: components.BoolValue(value),
                                         ),
-                                    ]
-                                )
-                                for comments in model.comments
+                                        components.TableCell(row.created_at),
+                                    ],
+                                ),
                             ],
                         ),
                     ],
@@ -184,4 +144,4 @@ class CustomerResource(ResourceScreen):
             DisplayField("phone"),
         ]
     )
-    display_view = BuilderDisplayView(builder=DisplayLayout())
+    detail_view_class = CustomerDetailView

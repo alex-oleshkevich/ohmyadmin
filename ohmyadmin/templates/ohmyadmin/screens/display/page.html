@@ -1,7 +1,6 @@
 {% extends 'ohmyadmin/app.html' %}
-{% import 'ohmyadmin/icons.html' as icons %}
-{% import 'ohmyadmin/actions.html' as actions %}
+{% import 'ohmyadmin/components.html' as components %}
 
 {% block content %}
-    {{ view(request, model) }}
+    {{ components.render_component(request, component) }}
 {% endblock %}

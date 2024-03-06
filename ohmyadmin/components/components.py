@@ -42,32 +42,6 @@ class ImageFormInput(FormInput):
         self.media_url = media_url
 
 
-class Group(Component):
-    template: str = "ohmyadmin/components/group.html"
-
-    def __init__(
-        self,
-        children: list[Component],
-        label: str = "",
-        description: str = "",
-        colspan: int = 12,
-    ) -> None:
-        self.label = label
-        self.colspan = colspan
-        self.children = children
-        self.description = description
-
-    def render(self, request: Request) -> str:
-        return render_to_string(
-            request,
-            self.template,
-            {
-                "layout": self,
-                "children": self.children,
-            },
-        )
-
-
 class RepeatedFormInput(Component):
     template: str = "ohmyadmin/components/repeated_form_input.html"
 
@@ -132,7 +106,7 @@ class TextComponent(Component):
     def __init__(
         self,
         value: typing.Any,
-        formatter: formatters.FieldValueFormatter = formatters.StringFormatter(),
+        formatter: formatters.ValueFormatter = formatters.String(),
     ) -> None:
         self.value = value
         self.formatter = formatter
@@ -162,29 +136,12 @@ class SeparatorComponent(Component):
         return RawHTMLComponent("<hr>").render(request)
 
 
-class Image(Component):
-    template: str = "ohmyadmin/components/image.html"
-
-    def __init__(self, src: str) -> None:
-        self.src = src
-
-    def render(self, request: Request) -> str:
-        return render_to_string(
-            request,
-            self.template,
-            {
-                "layout": self,
-                "src": self.src,
-            },
-        )
-
-
 class DisplayValue(Component):
     def __init__(
         self,
         label: str,
         value: typing.Any,
-        formatter: formatters.FieldValueFormatter = formatters.StringFormatter(),
+        formatter: formatters.ValueFormatter = formatters.String(),
     ) -> None:
         self.label = label
         self.value = value
@@ -251,7 +208,7 @@ class AutoFormLayout(BaseFormLayoutBuilder):
                 return Column(
                     colspan=8,
                     children=[
-                        Group(
+                        Column(
                             label=list_field.label.text,
                             description=list_field.description,
                             children=[

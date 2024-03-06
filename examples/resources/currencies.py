@@ -1,18 +1,29 @@
 import wtforms
 import sqlalchemy as sa
+from starlette.requests import Request
 
 from examples import icons
 from examples.models import Currency
+from ohmyadmin import components
 from ohmyadmin.datasources.sqlalchemy import SADataSource
 from ohmyadmin.display_fields import DisplayField
 from ohmyadmin.resources.resource import ResourceScreen
-from ohmyadmin.views.display import AutoDisplayView
 from ohmyadmin.views.table import TableView
 
 
 class CurrencyForm(wtforms.Form):
     name = wtforms.StringField(validators=[wtforms.validators.data_required()])
     code = wtforms.StringField(validators=[wtforms.validators.data_required()])
+
+
+class CurrencyDetailView(components.DetailView[Currency]):
+    def build(self, request: Request) -> components.Component:
+        return components.Column(
+            [
+                components.ModelField("Code", self.model.code),
+                components.ModelField("Name", self.model.name),
+            ]
+        )
 
 
 class CurrencyResource(ResourceScreen):
@@ -34,9 +45,4 @@ class CurrencyResource(ResourceScreen):
             DisplayField(name="code"),
         ]
     )
-    display_view = AutoDisplayView(
-        fields=[
-            DisplayField("name"),
-            DisplayField("code"),
-        ]
-    )
+    detail_view_class = CurrencyDetailView

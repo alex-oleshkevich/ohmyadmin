@@ -1,1 +1,3 @@
-<a href="{{ url }}" target="{{ formatter.target }}" class="link">{{ value }}</a>
+<a href="{{ formatter.get_link(value) }}" target="{{ formatter.target }}" class="link">
+    {{ formatter.text or value }}
+</a>

@@ -29,10 +29,10 @@ from ohmyadmin.filters import (
 from ohmyadmin.formatters import (
     AvatarFormatter,
     BoolFormatter,
-    CallbackFormatter,
-    DateFormatter,
+    Callback,
+    Date,
     LinkFormatter,
-    NumberFormatter,
+    Number,
 )
 from ohmyadmin.helpers import snake_to_sentence
 from ohmyadmin.htmx import response
@@ -116,7 +116,7 @@ class GenderDistributionMetric(PartitionMetric):
 class AdultsMetric(ValueMetric):
     label = "Adults"
     size = 2
-    formatter = formatters.NumberFormatter(suffix=" users")
+    formatter = formatters.Number(suffix=" users")
 
     async def calculate(self, request: Request) -> ValueValue:
         stmt = (
@@ -133,7 +133,7 @@ class RegistrationsByYearMetric(TrendMetric):
     size = 4
     show_current_value = True
     update_interval = 2
-    formatter = formatters.StringFormatter(suffix=" new users")
+    formatter = formatters.String(suffix=" new users")
 
     async def calculate_current_value(self, request: Request) -> int | float | decimal.Decimal:
         stmt = sa.select(sa.func.count("*")).where(
@@ -264,11 +264,11 @@ class UsersTable(TableScreen):
         DisplayField("photo", formatter=AvatarFormatter()),
         DisplayField("first_name", formatter=LinkFormatter(url="/admin")),
         DisplayField("last_name"),
-        DisplayField("birthdate", formatter=DateFormatter()),
-        DisplayField("balance", formatter=NumberFormatter(prefix="$", align="right")),
+        DisplayField("birthdate", formatter=Date()),
+        DisplayField("balance", formatter=Number(prefix="$")),
         DisplayField("rating"),
         DisplayField("email"),
         DisplayField("is_active", formatter=BoolFormatter(as_text=True)),
-        DisplayField("gender", formatter=CallbackFormatter(lambda r, v: snake_to_sentence(v))),
-        DisplayField("created_at", formatter=DateFormatter()),
+        DisplayField("gender", formatter=Callback(lambda r, v: snake_to_sentence(v))),
+        DisplayField("created_at", formatter=Date()),
     ]
