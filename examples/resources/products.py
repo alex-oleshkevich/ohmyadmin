@@ -183,8 +183,8 @@ class ProductDetailView(components.DetailView[Product]):
         )
 
 
-class FormLayout(components.BaseFormLayoutBuilder):
-    def build(self, form: ProductForm) -> components.Component:
+class ProductFormView(components.FormView[ProductForm, Product]):
+    def build(self, request: Request) -> components.Component:
         return components.Grid(
             columns=12,
             children=[
@@ -194,19 +194,19 @@ class FormLayout(components.BaseFormLayoutBuilder):
                         components.Group(
                             label="Product",
                             children=[
-                                ohmyadmin.components.form.FormInput(form.name),
-                                ohmyadmin.components.form.FormInput(form.slug),
-                                ohmyadmin.components.form.FormInput(form.description),
+                                components.FormInput(self.form.name),
+                                components.FormInput(self.form.slug),
+                                components.FormInput(self.form.description),
                             ],
                         ),
                         components.Group(
                             label="Images",
                             children=[
-                                ohmyadmin.components.form.RepeatedFormInput(
-                                    form.images,
+                                components.RepeatedFormInput(
+                                    self.form.images,
                                     builder=lambda f: components.Column(
                                         children=[
-                                            ohmyadmin.components.form.ImageFormInput(
+                                            components.ImageFormInput(
                                                 f,
                                                 media_url=f.image_path.data if f.image_path.data else None,
                                             ),
@@ -220,9 +220,9 @@ class FormLayout(components.BaseFormLayoutBuilder):
                             children=[
                                 components.Grid(
                                     children=[
-                                        ohmyadmin.components.form.FormInput(form.price, colspan=3),
-                                        ohmyadmin.components.form.FormInput(form.compare_at_price, colspan=3),
-                                        ohmyadmin.components.form.FormInput(form.cost_per_item, colspan=6),
+                                        components.FormInput(self.form.price, colspan=3),
+                                        components.FormInput(self.form.compare_at_price, colspan=3),
+                                        components.FormInput(self.form.cost_per_item, colspan=6),
                                     ]
                                 ),
                             ],
@@ -234,10 +234,10 @@ class FormLayout(components.BaseFormLayoutBuilder):
                                 components.Grid(
                                     columns=12,
                                     children=[
-                                        ohmyadmin.components.form.FormInput(form.barcode, colspan=4),
-                                        ohmyadmin.components.form.FormInput(form.quantity, colspan=4),
-                                        ohmyadmin.components.form.FormInput(form.sku, colspan=4),
-                                        ohmyadmin.components.form.FormInput(form.security_stock, colspan=12),
+                                        components.FormInput(self.form.barcode, colspan=4),
+                                        components.FormInput(self.form.quantity, colspan=4),
+                                        components.FormInput(self.form.sku, colspan=4),
+                                        components.FormInput(self.form.security_stock, colspan=12),
                                     ],
                                 ),
                             ],
@@ -251,15 +251,15 @@ class FormLayout(components.BaseFormLayoutBuilder):
                         components.Group(
                             label="Brand",
                             children=[
-                                ohmyadmin.components.form.FormInput(form.brand_id),
+                                components.FormInput(self.form.brand_id),
                             ],
                         ),
                         components.Group(
                             label="Shipment",
                             children=[
-                                ohmyadmin.components.form.FormInput(form.availability),
-                                ohmyadmin.components.form.FormInput(form.can_be_shipped),
-                                ohmyadmin.components.form.FormInput(form.can_be_returned),
+                                components.FormInput(self.form.availability),
+                                components.FormInput(self.form.can_be_shipped),
+                                components.FormInput(self.form.can_be_returned),
                             ],
                         ),
                     ],
@@ -314,7 +314,7 @@ class ProductResource(ResourceScreen):
         ]
     )
     detail_view_class = ProductDetailView
-    form_view_class = FormLayout
+    form_view_class = ProductFormView
 
     async def init_form(self, request: Request, form: ProductForm) -> None:
         await load_choices(request.state.dbsession, form.brand_id, sa.select(Brand))
