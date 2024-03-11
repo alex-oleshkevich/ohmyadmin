@@ -2,11 +2,9 @@ import wtforms
 from starlette.requests import Request
 from starlette_babel import gettext_lazy as _
 
-import ohmyadmin.components.layout
 from examples import icons
 from examples.models import Brand
 from ohmyadmin import components, filters, formatters
-from ohmyadmin.components import BaseFormLayoutBuilder
 from ohmyadmin.datasources.sqlalchemy import SADataSource
 from ohmyadmin.display_fields import DisplayField
 from ohmyadmin.resources.resource import ResourceScreen
@@ -37,23 +35,21 @@ class BrandDetailView(components.DetailView[Brand]):
         )
 
 
-class _FormLayout(BaseFormLayoutBuilder):
-    def build(self, form: BrandForm) -> components.Component:
-        return ohmyadmin.components.layout.Grid(
-            colspan=2,
+class BrandFormView(components.FormView[BrandForm, Brand]):
+    def build(self, request: Request) -> components.Component:
+        return components.Grid(
             children=[
-                ohmyadmin.components.layout.Column(
-                    children=[
-                        components.FormInput(form.name),
-                        components.FormInput(form.slug),
-                        components.FormInput(form.website),
-                        components.FormInput(form.description, colspan=12),
-                    ]
-                ),
-                ohmyadmin.components.layout.Column(
-                    children=[
-                        components.FormInput(form.visible_to_customers),
-                    ]
+                components.Container(
+                    colspan=5,
+                    child=components.Column(
+                        children=[
+                            components.FormInput(self.form.name),
+                            components.FormInput(self.form.slug),
+                            components.FormInput(self.form.website),
+                            components.FormInput(self.form.description, colspan=6),
+                            components.FormInput(self.form.visible_to_customers),
+                        ]
+                    ),
                 ),
             ],
         )
@@ -77,6 +73,7 @@ class BrandResource(ResourceScreen):
     ]
 
     detail_view_class = BrandDetailView
+    form_view_class = BrandFormView
     index_view = TableView(
         [
             DisplayField("name", link=True),

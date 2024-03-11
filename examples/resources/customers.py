@@ -113,6 +113,28 @@ class CustomerDetailView(components.DetailView[Customer]):
         )
 
 
+class CustomerFormView(components.FormView[CustomerForm, Customer]):
+    def build(self, request: Request) -> components.Component:
+        return components.Grid(
+            children=[
+                components.Column(
+                    colspan=5,
+                    children=[
+                        components.FormInput(self.form.name),
+                        components.FormInput(self.form.email),
+                        components.Grid(
+                            columns=2,
+                            children=[
+                                components.FormInput(self.form.phone),
+                                components.FormInput(self.form.birthday),
+                            ],
+                        ),
+                    ],
+                ),
+            ]
+        )
+
+
 class CustomerResource(ResourceScreen):
     icon = icons.ICON_FRIENDS
     group = "Shop"
@@ -144,4 +166,5 @@ class CustomerResource(ResourceScreen):
             DisplayField("phone"),
         ]
     )
+    form_view_class = CustomerFormView
     detail_view_class = CustomerDetailView

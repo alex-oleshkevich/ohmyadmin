@@ -52,6 +52,24 @@ class CategoryDetailView(DetailView[Category]):
         )
 
 
+class CategoryFormView(components.FormView[CategoryForm, Category]):
+    def build(self, request: Request) -> Component:
+        return components.Grid(
+            children=[
+                components.Column(
+                    colspan=6,
+                    children=[
+                        components.FormInput(self.form.name),
+                        components.FormInput(self.form.parent_id),
+                        components.FormInput(self.form.visible_to_customers),
+                        components.FormInput(self.form.description),
+                        components.FormInput(self.form.slug),
+                    ],
+                )
+            ]
+        )
+
+
 class CategoryResource(ResourceScreen):
     group = "Shop"
     icon = icons.ICON_CATEGORY
@@ -73,6 +91,7 @@ class CategoryResource(ResourceScreen):
         ]
     )
     detail_view_class = CategoryDetailView
+    form_view_class = CategoryFormView
 
     async def init_form(self, request: Request, form: CategoryForm) -> None:
         await load_choices(request.state.dbsession, form.parent_id, sa.select(Category).order_by(Category.name))

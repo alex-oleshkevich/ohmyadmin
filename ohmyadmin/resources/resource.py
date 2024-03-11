@@ -12,8 +12,9 @@ from starlette_flash import flash
 from ohmyadmin import filters, htmx, metrics, screens
 from ohmyadmin.actions import actions
 from ohmyadmin.breadcrumbs import Breadcrumb
-from ohmyadmin.components import AutoFormLayout, FormLayoutBuilder
+from ohmyadmin.components import FormLayoutBuilder
 from ohmyadmin.components.display import DetailView
+from ohmyadmin.components.form import FormView
 from ohmyadmin.datasources.datasource import DataSource, DuplicateError, InFilter
 from ohmyadmin.forms.utils import populate_object
 from ohmyadmin.helpers import pluralize, snake_to_sentence
@@ -87,7 +88,7 @@ class ResourceScreen(Screen):
 
     # edit page
     form_class: type[wtforms.Form] = wtforms.Form
-    form_layout_class: type[FormLayoutBuilder] = AutoFormLayout
+    form_view_class: type[FormView] = FormView
     form_actions: typing.Sequence[actions.Action] = tuple()
 
     # create page
@@ -203,7 +204,7 @@ class ResourceScreen(Screen):
                 group=self.group,
                 url_name=self.get_edit_route_name(),
                 form_class=self.form_class,
-                layout_class=self.form_layout_class,
+                layout_class=self.form_view_class,
                 form_actions=self.get_edit_form_actions(),
                 init_form=self.init_form,
                 get_object=self.get_object_for_form,
@@ -226,7 +227,7 @@ class ResourceScreen(Screen):
                 group=self.group,
                 url_name=self.get_create_route_name(),
                 form_class=self.create_form_class or self.form_class,
-                layout_class=self.create_form_layout_class or self.form_layout_class,
+                layout_class=self.create_form_layout_class or self.form_view_class,
                 form_actions=self.get_create_form_actions(),
                 init_form=self.init_create_form,
                 get_object=self.get_new_object,

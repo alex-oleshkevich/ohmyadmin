@@ -259,7 +259,7 @@ class Order(Base):
 
     total_price: Mapped[float] = query_expression()
     customer: Mapped[Customer] = relationship("Customer", cascade="all", back_populates="orders")
-    items: Mapped[list[OrderItem]] = relationship("OrderItem")
+    items: Mapped[list[OrderItem]] = relationship("OrderItem", cascade="all, delete-orphan", back_populates="order")
     currency: Mapped[Currency] = relationship("Currency")
     country: Mapped[Currency] = relationship("Country")
 

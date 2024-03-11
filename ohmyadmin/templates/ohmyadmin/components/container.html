@@ -1,4 +1,4 @@
 {% import 'ohmyadmin/components.html' as components %}
-<div>
+<div class="col-span-{{ component.colspan }}">
     {{ components.render_component(request, component.child) }}
 </div>

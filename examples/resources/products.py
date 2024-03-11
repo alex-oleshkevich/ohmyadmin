@@ -7,10 +7,10 @@ from sqlalchemy.orm import joinedload, selectinload
 from starlette.requests import Request
 from wtforms.fields.choices import SelectField
 
+import ohmyadmin.components.form
 from examples import icons
 from examples.models import Brand, Image, Product
 from ohmyadmin import components, filters, formatters
-from ohmyadmin.components import BaseFormLayoutBuilder, Component
 from ohmyadmin.datasources.sqlalchemy import form_choices_from, load_choices, SADataSource
 from ohmyadmin.display_fields import DisplayField
 from ohmyadmin.forms.utils import safe_int_coerce
@@ -98,7 +98,7 @@ class ProductsByYear(TrendMetric):
 
 
 class ProductDetailView(components.DetailView[Product]):
-    def build(self, request: Request) -> Component:
+    def build(self, request: Request) -> components.Component:
         return components.Grid(
             columns=2,
             children=[
@@ -183,8 +183,8 @@ class ProductDetailView(components.DetailView[Product]):
         )
 
 
-class FormLayout(BaseFormLayoutBuilder):
-    def build(self, form: ProductForm) -> Component:
+class FormLayout(components.BaseFormLayoutBuilder):
+    def build(self, form: ProductForm) -> components.Component:
         return components.Grid(
             columns=12,
             children=[
@@ -194,19 +194,19 @@ class FormLayout(BaseFormLayoutBuilder):
                         components.Group(
                             label="Product",
                             children=[
-                                components.FormInput(form.name),
-                                components.FormInput(form.slug),
-                                components.FormInput(form.description),
+                                ohmyadmin.components.form.FormInput(form.name),
+                                ohmyadmin.components.form.FormInput(form.slug),
+                                ohmyadmin.components.form.FormInput(form.description),
                             ],
                         ),
                         components.Group(
                             label="Images",
                             children=[
-                                components.RepeatedFormInput(
+                                ohmyadmin.components.form.RepeatedFormInput(
                                     form.images,
                                     builder=lambda f: components.Column(
                                         children=[
-                                            components.ImageFormInput(
+                                            ohmyadmin.components.form.ImageFormInput(
                                                 f,
                                                 media_url=f.image_path.data if f.image_path.data else None,
                                             ),
@@ -220,9 +220,9 @@ class FormLayout(BaseFormLayoutBuilder):
                             children=[
                                 components.Grid(
                                     children=[
-                                        components.FormInput(form.price, colspan=3),
-                                        components.FormInput(form.compare_at_price, colspan=3),
-                                        components.FormInput(form.cost_per_item, colspan=6),
+                                        ohmyadmin.components.form.FormInput(form.price, colspan=3),
+                                        ohmyadmin.components.form.FormInput(form.compare_at_price, colspan=3),
+                                        ohmyadmin.components.form.FormInput(form.cost_per_item, colspan=6),
                                     ]
                                 ),
                             ],
@@ -234,10 +234,10 @@ class FormLayout(BaseFormLayoutBuilder):
                                 components.Grid(
                                     columns=12,
                                     children=[
-                                        components.FormInput(form.barcode, colspan=4),
-                                        components.FormInput(form.quantity, colspan=4),
-                                        components.FormInput(form.sku, colspan=4),
-                                        components.FormInput(form.security_stock, colspan=12),
+                                        ohmyadmin.components.form.FormInput(form.barcode, colspan=4),
+                                        ohmyadmin.components.form.FormInput(form.quantity, colspan=4),
+                                        ohmyadmin.components.form.FormInput(form.sku, colspan=4),
+                                        ohmyadmin.components.form.FormInput(form.security_stock, colspan=12),
                                     ],
                                 ),
                             ],
@@ -251,15 +251,15 @@ class FormLayout(BaseFormLayoutBuilder):
                         components.Group(
                             label="Brand",
                             children=[
-                                components.FormInput(form.brand_id),
+                                ohmyadmin.components.form.FormInput(form.brand_id),
                             ],
                         ),
                         components.Group(
                             label="Shipment",
                             children=[
-                                components.FormInput(form.availability),
-                                components.FormInput(form.can_be_shipped),
-                                components.FormInput(form.can_be_returned),
+                                ohmyadmin.components.form.FormInput(form.availability),
+                                ohmyadmin.components.form.FormInput(form.can_be_shipped),
+                                ohmyadmin.components.form.FormInput(form.can_be_returned),
                             ],
                         ),
                     ],
@@ -314,7 +314,7 @@ class ProductResource(ResourceScreen):
         ]
     )
     detail_view_class = ProductDetailView
-    form_layout_class = FormLayout
+    form_view_class = FormLayout
 
     async def init_form(self, request: Request, form: ProductForm) -> None:
         await load_choices(request.state.dbsession, form.brand_id, sa.select(Brand))

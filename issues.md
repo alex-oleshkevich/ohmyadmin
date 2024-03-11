@@ -17,17 +17,5 @@
 22. user menu builder
 23. global actions
 24. pass welcome screen as argument of app
-25. Builder in display view: `DisplayField(builder=lambda r, o: components.Link(url=r.url_for('/')))`
 26. move searchable and sortable field list to datasource
 27. report error toast if request fails with 500
-28. display fields to be components. ideally like this
-```python
-display_view = display_view_builder(builder=lambda r, o: Column(children=[
-    DisplayField(label='name', value=o.name),
-    DisplayField(label='name', value=o.name, component=Badge(o.name)),
-    Row(children=[
-        DisplayField(),
-        DisplayField(),
-    ]),
-]))
-```

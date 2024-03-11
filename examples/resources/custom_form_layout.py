@@ -4,6 +4,7 @@ import wtforms
 from starlette.requests import Request
 from starlette.responses import Response
 
+import ohmyadmin.components.form
 import ohmyadmin.components.layout
 from examples.models import Brand, Country
 from ohmyadmin import htmx, components
@@ -65,9 +66,9 @@ class FormLayout(BaseFormLayoutBuilder):
                                 ohmyadmin.components.layout.Grid(
                                     columns=2,
                                     children=[
-                                        components.FormInput(form.name),
-                                        components.FormInput(form.slug),
-                                        components.FormInput(form.description, colspan=2),
+                                        ohmyadmin.components.form.FormInput(form.name),
+                                        ohmyadmin.components.form.FormInput(form.slug),
+                                        ohmyadmin.components.form.FormInput(form.description, colspan=2),
                                     ],
                                 ),
                             ],
@@ -75,9 +76,9 @@ class FormLayout(BaseFormLayoutBuilder):
                         ohmyadmin.components.layout.Group(
                             label="Image",
                             children=[
-                                components.RepeatedFormInput(
+                                ohmyadmin.components.form.RepeatedFormInput(
                                     field=form.images,
-                                    builder=lambda field: components.FormInput(field),
+                                    builder=lambda field: ohmyadmin.components.form.FormInput(field),
                                 ),
                             ],
                         ),
@@ -88,9 +89,9 @@ class FormLayout(BaseFormLayoutBuilder):
                                 ohmyadmin.components.layout.Grid(
                                     columns=3,
                                     children=[
-                                        components.FormInput(form.price),
-                                        components.FormInput(form.compare_at_price),
-                                        components.FormInput(form.cost_per_item),
+                                        ohmyadmin.components.form.FormInput(form.price),
+                                        ohmyadmin.components.form.FormInput(form.compare_at_price),
+                                        ohmyadmin.components.form.FormInput(form.cost_per_item),
                                     ],
                                 ),
                             ],
@@ -102,10 +103,10 @@ class FormLayout(BaseFormLayoutBuilder):
                                 ohmyadmin.components.layout.Grid(
                                     columns=3,
                                     children=[
-                                        components.FormInput(form.sku),
-                                        components.FormInput(form.barcode),
-                                        components.FormInput(form.quantity),
-                                        components.FormInput(form.security_stock, colspan=3),
+                                        ohmyadmin.components.form.FormInput(form.sku),
+                                        ohmyadmin.components.form.FormInput(form.barcode),
+                                        ohmyadmin.components.form.FormInput(form.quantity),
+                                        ohmyadmin.components.form.FormInput(form.security_stock, colspan=3),
                                     ],
                                 )
                             ],
@@ -113,13 +114,13 @@ class FormLayout(BaseFormLayoutBuilder):
                         ohmyadmin.components.layout.Group(
                             label="Attributes",
                             children=[
-                                components.RepeatedFormInput(
+                                ohmyadmin.components.form.RepeatedFormInput(
                                     form.attributes,
                                     builder=lambda field: ohmyadmin.components.layout.Grid(
                                         columns=2,
                                         children=[
-                                            components.FormInput(field.form.name),
-                                            components.FormInput(field.form.value),
+                                            ohmyadmin.components.form.FormInput(field.form.name),
+                                            ohmyadmin.components.form.FormInput(field.form.value),
                                         ],
                                     ),
                                 ),
@@ -131,26 +132,26 @@ class FormLayout(BaseFormLayoutBuilder):
                     colspan=4,
                     children=[
                         ohmyadmin.components.layout.Group(
-                            label="Brand", children=[components.FormInput(form.brand_id)]
+                            label="Brand", children=[ohmyadmin.components.form.FormInput(form.brand_id)]
                         ),
                         components.SeparatorComponent(),
                         ohmyadmin.components.layout.Group(
                             label="",
                             children=[
-                                components.FormInput(form.can_be_shipped),
-                                components.FormInput(form.can_be_returned),
+                                ohmyadmin.components.form.FormInput(form.can_be_shipped),
+                                ohmyadmin.components.form.FormInput(form.can_be_returned),
                             ],
                         ),
                         components.SeparatorComponent(),
                         ohmyadmin.components.layout.Group(
                             label="Manufacturer",
                             children=[
-                                components.NestedFormComponent(
+                                ohmyadmin.components.form.NestedFormComponent(
                                     field=form.manufacturer,
                                     builder=lambda field: ohmyadmin.components.layout.Column(
                                         children=[
-                                            components.FormInput(field.form.name),
-                                            components.FormInput(field.form.country),
+                                            ohmyadmin.components.form.FormInput(field.form.name),
+                                            ohmyadmin.components.form.FormInput(field.form.country),
                                         ]
                                     ),
                                 ),

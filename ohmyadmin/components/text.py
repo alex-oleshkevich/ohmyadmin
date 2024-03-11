@@ -30,8 +30,9 @@ class Placeholder(Component):
 class Container(Component):
     template_name = "ohmyadmin/components/container.html"
 
-    def __init__(self, child: Component) -> None:
+    def __init__(self, child: Component, colspan: int = 12) -> None:
         self.child = child
+        self.colspan = colspan
 
 
 class Link(Component):

@@ -159,6 +159,63 @@ class OrderDetailView(components.DetailView[Order]):
         )
 
 
+class OrderFormView(components.FormView[OrderForm, Order]):
+    def build(self, request: Request) -> components.Component:
+        return components.Grid(
+            children=[
+                components.Column(
+                    colspan=8,
+                    children=[
+                        components.FormInput(self.form.customer_id),
+                        components.Grid(
+                            columns=3,
+                            children=[
+                                components.FormInput(self.form.number),
+                                components.FormInput(self.form.status),
+                                components.FormInput(self.form.currency_code),
+                            ],
+                        ),
+                        components.FormInput(self.form.notes),
+                        components.Group(
+                            label="Order items",
+                            children=[
+                                components.RepeatedFormInput(
+                                    self.form.items,
+                                    builder=lambda field: components.Grid(
+                                        columns=3, children=[components.FormInput(subfield) for subfield in field]
+                                    ),
+                                ),
+                            ],
+                        ),
+                    ],
+                ),
+                components.Column(
+                    colspan=4,
+                    children=[
+                        components.Group(
+                            children=[
+                                components.Grid(
+                                    columns=2,
+                                    children=[
+                                        components.FormInput(self.form.country_code),
+                                        components.FormInput(self.form.city),
+                                    ],
+                                ),
+                                components.Grid(
+                                    columns=2,
+                                    children=[
+                                        components.FormInput(self.form.address),
+                                        components.FormInput(self.form.zip),
+                                    ],
+                                ),
+                            ]
+                        ),
+                    ],
+                ),
+            ]
+        )
+
+
 class OrdersResource(ResourceScreen):
     group = "Shop"
     icon = icons.ICON_ORDER
@@ -212,6 +269,7 @@ class OrdersResource(ResourceScreen):
         ]
     )
     detail_view_class = OrderDetailView
+    form_view_class = OrderFormView
 
     async def init_form(self, request: Request, form: OrderForm) -> None:
         await load_choices(request.state.dbsession, form.customer_id, sa.select(Customer))

@@ -4,6 +4,7 @@ from starlette.requests import Request
 from examples import icons
 from examples.models import Country
 from ohmyadmin import components
+from ohmyadmin.components import Component
 from ohmyadmin.datasources.sqlalchemy import SADataSource
 from ohmyadmin.resources.resource import ResourceScreen
 from ohmyadmin.display_fields import DisplayField
@@ -25,6 +26,21 @@ class CountryDetailView(components.DetailView[Country]):
         )
 
 
+class FormView(components.FormView[CountryForm, Country]):
+    def build(self, request: Request) -> Component:
+        return components.Grid(
+            children=[
+                components.Column(
+                    colspan=6,
+                    children=[
+                        components.FormInput(self.form.code),
+                        components.FormInput(self.form.name),
+                    ],
+                )
+            ]
+        )
+
+
 class CountryResource(ResourceScreen):
     group = "Shop"
     icon = icons.ICON_COUNTRIES
@@ -37,3 +53,4 @@ class CountryResource(ResourceScreen):
         ]
     )
     detail_view_class = CountryDetailView
+    form_view_class = FormView

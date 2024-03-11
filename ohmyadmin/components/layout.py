@@ -17,7 +17,7 @@ class Column(Component):
     def __init__(
         self,
         children: list[Component],
-        gap: int = 2,
+        gap: int = 0,
         colspan: int = 12,
     ) -> None:
         self.gap = gap

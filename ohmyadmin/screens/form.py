@@ -6,7 +6,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from ohmyadmin.actions import actions
-from ohmyadmin.components import AutoFormLayout, FormLayoutBuilder
+from ohmyadmin.components.form import FormView
 from ohmyadmin.forms.utils import create_form, validate_on_submit
 from ohmyadmin.templating import render_to_response
 from ohmyadmin.screens.base import Screen
@@ -14,7 +14,7 @@ from ohmyadmin.screens.base import Screen
 
 class FormScreen(Screen):
     form_class: typing.Type[wtforms.Form] = wtforms.Form
-    layout_class: typing.Type[FormLayoutBuilder] = AutoFormLayout
+    layout_class: typing.Type[FormView] = FormView
     form_actions: typing.Sequence[actions.Action] = tuple()
     template = "ohmyadmin/screens/form/page.html"
 
@@ -38,17 +38,17 @@ class FormScreen(Screen):
         if await validate_on_submit(request, form):
             return await self.handle(request, form, instance)
 
-        form_layout = self.layout_class()
+        component = self.layout_class(form, instance)
         return render_to_response(
             request,
             self.template,
             {
                 "screen": self,
                 "model": instance,
-                "form_layout": form_layout(form),
+                "component": component,
+                "page_title": self.label,
                 "page_description": self.description,
                 "form_actions": self.get_form_actions(),
-                "page_title": self.label,
             },
         )
 

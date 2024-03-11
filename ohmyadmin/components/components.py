@@ -8,96 +8,11 @@ from markupsafe import Markup
 from starlette.requests import Request
 
 from ohmyadmin import formatters
+from ohmyadmin.components.form import FormInput, NestedFormComponent, RepeatedFormInput
 from ohmyadmin.components.base import Component
 from ohmyadmin.components.layout import Column, Grid
 from ohmyadmin.display_fields import DisplayField
 from ohmyadmin.templating import render_to_string
-
-
-class FormInput(Component):
-    template: str = "ohmyadmin/components/field.html"
-
-    def __init__(self, field: wtforms.Field, colspan: int = 1) -> None:
-        self.field = field
-        self.colspan = colspan
-
-    def render(self, request: Request) -> str:
-        return render_to_string(
-            request,
-            self.template,
-            {
-                "layout": self,
-                "field": self.field,
-            },
-        )
-
-
-class ImageFormInput(FormInput):
-    template: str = "ohmyadmin/components/image_field.html"
-
-    def __init__(self, field: wtforms.Field, media_url: str, colspan: int = 1) -> None:
-        super().__init__(field, colspan)
-        self.field = field
-        self.colspan = colspan
-        self.media_url = media_url
-
-
-class RepeatedFormInput(Component):
-    template: str = "ohmyadmin/components/repeated_form_input.html"
-
-    def __init__(self, field: wtforms.FieldList, builder: FormLayoutBuilder) -> None:
-        self.field = field
-        self.builder = builder
-
-    def render(self, request: Request) -> str:
-        template_field = self.field.append_entry()
-        last_index = self.field.last_index
-        self.field.pop_entry()
-
-        def patch_field(field: wtforms.Field) -> None:
-            field.render_kw = field.render_kw or {}
-            field.render_kw.update(
-                {
-                    ":id": "`" + field.id.replace(str(last_index), "${index}") + "`",
-                    ":name": "`" + field.name.replace(str(last_index), "${index}") + "`",
-                }
-            )
-
-        try:
-            for subfield in template_field:
-                patch_field(subfield)
-        except TypeError:
-            patch_field(template_field)
-
-        return render_to_string(
-            request,
-            self.template,
-            {
-                "layout": self,
-                "field": self.field,
-                "builder": self.builder,
-                "template_field": template_field,
-            },
-        )
-
-
-class NestedFormComponent(Component):
-    template: str = "ohmyadmin/components/nested_form.html"
-
-    def __init__(self, field: wtforms.FormField, builder: FormLayoutBuilder) -> None:
-        self.field = field
-        self.builder = builder
-
-    def render(self, request: Request) -> str:
-        return render_to_string(
-            request,
-            self.template,
-            {
-                "layout": self,
-                "field": self.field,
-                "builder": self.builder,
-            },
-        )
 
 
 class TextComponent(Component):

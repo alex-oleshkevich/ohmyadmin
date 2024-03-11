@@ -26,6 +26,21 @@ class CurrencyDetailView(components.DetailView[Currency]):
         )
 
 
+class CurrencyFormView(components.FormView[CurrencyForm, Currency]):
+    def build(self, request: Request) -> components.Component:
+        return components.Grid(
+            children=[
+                components.Column(
+                    colspan=3,
+                    children=[
+                        components.FormInput(self.form.code),
+                        components.FormInput(self.form.name),
+                    ],
+                ),
+            ]
+        )
+
+
 class CurrencyResource(ResourceScreen):
     group = "Shop"
     icon = icons.ICON_CURRENCY
@@ -45,4 +60,5 @@ class CurrencyResource(ResourceScreen):
             DisplayField(name="code"),
         ]
     )
+    form_view_class = CurrencyFormView
     detail_view_class = CurrencyDetailView
