@@ -2,31 +2,32 @@
 {% import 'ohmyadmin/components.html' as components %}
 
 {% macro list_item(request, component) %}
-    <template x-if="!deleted" x-data="{deleted: false}">
-        <div class="flex items-center gap-5 bg-gray-50 p-2">
-            <div class="flex-grow-1 w-full">
-                {{ components.render_component(request, component) }}
-            </div>
-            <button type="button" class="btn btn-icon btn-text flex-grow-0" @click="deleted = true">
+    <o-repeated-input-item-controller>
+        <div class="repeated-input-item">
+            <div class="w-full">
+            {{ components.render_component(request, component) }}
+                </div>
+            <button type="button" class="btn btn-icon btn-text" data-repeated="remove-item">
                 {{ icons.trash() }}
             </button>
         </div>
-    </template>
+    </o-repeated-input-item-controller>
 {% endmacro %}
 
-<div class="space-y-3" x-data="{counter: 0, offset: 1 + {{ component.field|length }} }">
-    <div class="rounded border border-gray-200 divide-y divide-gray-200">
-        {% for subfield in fields %}
-            {{ list_item(request, subfield) }}
-        {% endfor %}
-
-        <template x-for="_ in counter" x-data="{index: counter + offset}">
+<o-repeated-controller>
+    <div class="repeated-input">
+        <div class="repeated-input-set">
+            {% for subfield in fields %}
+                {{ list_item(request, subfield) }}
+            {% endfor %}
+        </div>
+        <div>
+            <button type="button" class="btn btn-text text-blue-700" data-repeated="add-item">
+                {{ icons.plus() }} {{ _('Add a new item', domain='ohmyadmin') }}
+            </button>
+        </div>
+        <template data-repeated="template">
             {{ list_item(request, component.template_field) }}
         </template>
     </div>
-    <div>
-        <button type="button" class="btn btn-text text-blue-700" @click="counter += 1">
-            {{ icons.plus() }} {{ _('Add a new item', domain='ohmyadmin') }}
-        </button>
-    </div>
-</div>
+</o-repeated-controller>

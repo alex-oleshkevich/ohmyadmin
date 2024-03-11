@@ -230,7 +230,7 @@ class OrdersResource(ResourceScreen):
             selectinload(Order.items).joinedload(OrderItem.product),
         ),
         query_for_list=(
-            sa.select(Order)
+            sa.select(Order).distinct()
             .join(Order.items)
             .options(
                 with_expression(Order.total_price, OrderItem.unit_price + OrderItem.quantity),

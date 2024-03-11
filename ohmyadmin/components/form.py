@@ -57,17 +57,16 @@ class RepeatedFormInput(Component):
     @property
     def template_field(self) -> Component:
         template_field = self.field.append_entry()
+        for template_subfield, original_subfield in zip(template_field, self.field[0]):
+            if isinstance(template_subfield, wtforms.SelectField):
+                template_subfield.choices = original_subfield.choices
+
         last_index = self.field.last_index
         self.field.pop_entry()
 
         def patch_field(field: wtforms.Field) -> None:
-            field.render_kw = field.render_kw or {}
-            field.render_kw.update(
-                {
-                    ":id": "`" + field.id.replace(str(last_index), "${index}") + "`",
-                    ":name": "`" + field.name.replace(str(last_index), "${index}") + "`",
-                }
-            )
+            field.id = field.id.replace(str(last_index), ":index")
+            field.name = field.name.replace(str(last_index), ":index")
 
         try:
             for subfield in template_field:

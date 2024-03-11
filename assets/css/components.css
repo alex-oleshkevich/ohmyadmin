@@ -1,3 +1,5 @@
+@import "forms/repeated_input.css";
+
 @layer base {
     [type="text"],
     [type="email"],
