@@ -1,0 +1,38 @@
+.table-head-cell {
+}
+
+.table-head-cell-left {
+    text-align: left;
+}
+
+.table-head-cell-center {
+    text-align: center;
+}
+
+.table-head-cell-left {
+    text-align: left;
+}
+
+.table-sortable-head-cell {
+    @apply flex items-center gap-2 w-full h-full whitespace-nowrap;
+}
+
+.table-sortable-head-cell.table-head-cell-left {
+    @apply justify-start;
+}
+
+.table-sortable-head-cell.table-head-cell-center {
+    @apply justify-center;
+}
+
+.table-sortable-head-cell.table-head-cell-right {
+    @apply justify-end;
+}
+
+.table-sort-control {
+    @apply text-gray-400 flex items-center;
+}
+
+.table-sort-index {
+    @apply text-sm text-accent-600 ml-1;
+}

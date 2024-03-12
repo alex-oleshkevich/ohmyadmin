@@ -1,0 +1,23 @@
+{% import 'ohmyadmin/icons.html' as icons %}
+{% set control = helper.get_control(component.sort_field) %}
+<th>
+    <a class="table-head-cell table-sortable-head-cell table-head-cell-{{ component.align }}"
+       hx-boost="true"
+       hx-include="this"
+       href="{{ control.url }}">
+        <span>{{ component.text }}</span>
+        <span class="table-sort-control">
+            {% if control.ordering == 'asc' %}
+                {{ icons.sort_asc() }}
+            {% elif control.ordering == 'desc' %}
+                {{ icons.sort_desc() }}
+            {% else %}
+                {{ icons.sort() }}
+            {% endif %}
+
+            {% if control.show_index and control.index %}
+                <span class="table-sort-index">{{ control.index }}</span>
+            {% endif %}
+    </span>
+    </a>
+</th>

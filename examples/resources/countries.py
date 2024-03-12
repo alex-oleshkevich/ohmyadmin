@@ -7,8 +7,6 @@ from ohmyadmin import components
 from ohmyadmin.components import Component
 from ohmyadmin.datasources.sqlalchemy import SADataSource
 from ohmyadmin.resources.resource import ResourceScreen
-from ohmyadmin.display_fields import DisplayField
-from ohmyadmin.views.table import TableView
 
 
 class CountryForm(wtforms.Form):
@@ -41,16 +39,36 @@ class FormView(components.FormView[CountryForm, Country]):
         )
 
 
+class CountryIndexView(components.IndexView[Country]):
+    def build(self, request: Request) -> components.Component:
+        return components.Table(
+            items=self.models,
+            header=components.TableRow(
+                children=[
+                    components.TableSortableHeadCell("Code", sort_field="code"),
+                    components.TableHeadCell("Name"),
+                ]
+            ),
+            row_builder=lambda row: components.TableRow(
+                children=[
+                    components.TableColumn(
+                        row.code,
+                        value_builder=lambda: components.Link(
+                            text=str(row), url=CountryResource.get_edit_page_route(row.code)
+                        ),
+                    ),
+                    components.TableColumn(row.name),
+                ]
+            ),
+        )
+
+
 class CountryResource(ResourceScreen):
     group = "Shop"
     icon = icons.ICON_COUNTRIES
     datasource = SADataSource(Country)
     form_class = CountryForm
-    index_view = TableView(
-        columns=[
-            DisplayField("code", link=True),
-            DisplayField("name"),
-        ]
-    )
+    index_view_class = CountryIndexView
     detail_view_class = CountryDetailView
     form_view_class = FormView
+    ordering_fields = ("code",)

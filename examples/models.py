@@ -150,12 +150,13 @@ class Category(Base):
     name: Mapped[str] = mapped_column(sa.Text, nullable=False)
     slug: Mapped[str] = mapped_column(sa.Text, nullable=False)
     description: Mapped[str] = mapped_column(sa.Text)
-    parent_id: Mapped[int | None] = mapped_column(sa.ForeignKey("categories.id"))
+    parent_id: Mapped[int | None] = mapped_column(sa.ForeignKey(id))
     visible_to_customers: Mapped[bool] = mapped_column(sa.Boolean, default=True)
     created_at: Mapped[datetime.datetime] = mapped_column(sa.DateTime, default=datetime.datetime.now)
     updated_at: Mapped[datetime.datetime] = mapped_column(sa.DateTime, default=datetime.datetime.now)
 
-    parent: Mapped[Category | None] = relationship("Category")
+    parent: Mapped[Category | None] = relationship("Category", back_populates="children", remote_side=[id])
+    children: Mapped[list[Category]] = relationship("Category", back_populates="parent")
 
     def get_pk(self) -> int:
         return self.id

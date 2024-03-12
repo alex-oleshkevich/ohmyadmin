@@ -1,0 +1,6 @@
+{% import 'ohmyadmin/components.html' as components %}
+<tr>
+    {% for child in component.children %}
+        {{ components.render_component(request, child) }}
+    {% endfor %}
+</tr>

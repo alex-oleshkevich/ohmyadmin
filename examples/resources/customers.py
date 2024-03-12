@@ -3,13 +3,12 @@ import wtforms
 from sqlalchemy.orm import selectinload
 from starlette.requests import Request
 
+import ohmyadmin.components.table
 from examples import icons
 from examples.models import Address, Comment, Customer, Order, OrderItem
 from ohmyadmin import components, filters, formatters
 from ohmyadmin.datasources.sqlalchemy import SADataSource
-from ohmyadmin.display_fields import DisplayField
 from ohmyadmin.resources.resource import ResourceScreen
-from ohmyadmin.views.table import TableView
 
 
 class CustomerForm(wtforms.Form):
@@ -41,14 +40,14 @@ class CustomerDetailView(components.DetailView[Customer]):
                         components.Group(
                             label="Addresses",
                             children=[
-                                components.Table[Address](
+                                ohmyadmin.components.table.Table[Address](
                                     items=self.model.addresses,
                                     headers=["Country", "City", "ZIP", "Street"],
                                     row_builder=lambda row: [
-                                        components.TableCell(row.country),
-                                        components.TableCell(row.city),
-                                        components.TableCell(row.zip),
-                                        components.TableCell(row.street),
+                                        ohmyadmin.components.table.TableColumn(row.country),
+                                        ohmyadmin.components.table.TableColumn(row.city),
+                                        ohmyadmin.components.table.TableColumn(row.zip),
+                                        ohmyadmin.components.table.TableColumn(row.street),
                                     ],
                                 ),
                             ],
@@ -56,15 +55,15 @@ class CustomerDetailView(components.DetailView[Customer]):
                         components.Group(
                             label="Payments",
                             children=[
-                                components.Table(
+                                ohmyadmin.components.table.Table(
                                     items=self.model.payments,
                                     headers=["Reference", "Currency", "Provider", "Method", "Amount"],
                                     row_builder=lambda row: [
-                                        components.TableCell(row.reference),
-                                        components.TableCell(row.currency_code),
-                                        components.TableCell(row.provider),
-                                        components.TableCell(row.method),
-                                        components.TableCell(
+                                        ohmyadmin.components.table.TableColumn(row.reference),
+                                        ohmyadmin.components.table.TableColumn(row.currency_code),
+                                        ohmyadmin.components.table.TableColumn(row.provider),
+                                        ohmyadmin.components.table.TableColumn(row.method),
+                                        ohmyadmin.components.table.TableColumn(
                                             row.amount,
                                             align="right",
                                             formatter=formatters.Number(prefix="$"),
@@ -76,14 +75,16 @@ class CustomerDetailView(components.DetailView[Customer]):
                         components.Group(
                             label="Orders",
                             children=[
-                                components.Table(
+                                ohmyadmin.components.table.Table(
                                     items=self.model.orders,
                                     headers=["Number", "Status", "Items", "Total price"],
                                     row_builder=lambda row: [
-                                        components.TableCell(row.number),
-                                        components.TableCell(row.status),
-                                        components.TableCell(", ".join([str(item.product) for item in row.items])),
-                                        components.TableCell(row.total_price),
+                                        ohmyadmin.components.table.TableColumn(row.number),
+                                        ohmyadmin.components.table.TableColumn(row.status),
+                                        ohmyadmin.components.table.TableColumn(
+                                            ", ".join([str(item.product) for item in row.items])
+                                        ),
+                                        ohmyadmin.components.table.TableColumn(row.total_price),
                                     ],
                                 ),
                             ],
@@ -91,18 +92,18 @@ class CustomerDetailView(components.DetailView[Customer]):
                         components.Group(
                             label="Comments",
                             children=[
-                                components.Table(
+                                ohmyadmin.components.table.Table(
                                     items=self.model.comments,
                                     headers=["Title", "Content", "Product", "Public", "Created at"],
                                     row_builder=lambda row: [
-                                        components.TableCell(row.title),
-                                        components.TableCell(row.content),
-                                        components.TableCell(row.product),
-                                        components.TableCell(
+                                        ohmyadmin.components.table.TableColumn(row.title),
+                                        ohmyadmin.components.table.TableColumn(row.content),
+                                        ohmyadmin.components.table.TableColumn(row.product),
+                                        ohmyadmin.components.table.TableColumn(
                                             row.public,
                                             value_builder=lambda value: components.BoolValue(value),
                                         ),
-                                        components.TableCell(row.created_at),
+                                        ohmyadmin.components.table.TableColumn(row.created_at),
                                     ],
                                 ),
                             ],
@@ -135,6 +136,32 @@ class CustomerFormView(components.FormView[CustomerForm, Customer]):
         )
 
 
+class CustomerIndexView(components.IndexView[Customer]):
+    def build(self, request: Request) -> components.Component:
+        return components.Table(
+            items=self.models,
+            header=components.TableRow(
+                children=[
+                    components.TableSortableHeadCell("Name", sort_field="name"),
+                    components.TableSortableHeadCell("Email", sort_field="email"),
+                    components.TableHeadCell("phone"),
+                ]
+            ),
+            row_builder=lambda row: components.TableRow(
+                children=[
+                    components.TableColumn(
+                        value_builder=lambda: components.Link(
+                            text=row.name,
+                            url=CustomerResource.get_edit_page_route(row.id),
+                        )
+                    ),
+                    components.TableColumn(row.email, formatter=formatters.Link(protocol="mailto")),
+                    components.TableColumn(row.phone, formatter=formatters.Link(protocol="tel")),
+                ]
+            ),
+        )
+
+
 class CustomerResource(ResourceScreen):
     icon = icons.ICON_FRIENDS
     group = "Shop"
@@ -159,12 +186,6 @@ class CustomerResource(ResourceScreen):
         filters.DateFilter("created_at"),
         filters.DateFilter("birthday"),
     ]
-    index_view = TableView(
-        columns=[
-            DisplayField("name", link=True),
-            DisplayField("email"),
-            DisplayField("phone"),
-        ]
-    )
+    index_view_class = CustomerIndexView
     form_view_class = CustomerFormView
     detail_view_class = CustomerDetailView

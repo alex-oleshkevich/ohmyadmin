@@ -1,14 +1,11 @@
 import wtforms
 from starlette.requests import Request
-from starlette_babel import gettext_lazy as _
 
 from examples import icons
 from examples.models import Brand
-from ohmyadmin import components, filters, formatters
+from ohmyadmin import components, filters
 from ohmyadmin.datasources.sqlalchemy import SADataSource
-from ohmyadmin.display_fields import DisplayField
 from ohmyadmin.resources.resource import ResourceScreen
-from ohmyadmin.views.table import TableView
 
 
 class BrandForm(wtforms.Form):
@@ -55,12 +52,46 @@ class BrandFormView(components.FormView[BrandForm, Brand]):
         )
 
 
+class BrandsIndexView(components.IndexView[Brand]):
+    def build(self, request: Request) -> components.Component:
+        return components.Table[Brand](
+            items=self.models,
+            header=components.TableRow(
+                children=[
+                    components.TableSortableHeadCell("Name", sort_field="name"),
+                    components.TableHeadCell("Website"),
+                    components.TableHeadCell("Visible to customers"),
+                    components.TableHeadCell("Updated at"),
+                ]
+            ),
+            row_builder=lambda row: components.TableRow(
+                children=[
+                    components.TableColumn(
+                        value_builder=lambda: components.Link(
+                            text=str(row), url=BrandResource.get_edit_page_route(row.id)
+                        )
+                    ),
+                    components.TableColumn(
+                        value_builder=lambda: components.Link(
+                            url=row.website,
+                            text=row.website,
+                            target="_blank",
+                        )
+                    ),
+                    components.TableColumn(value_builder=lambda: components.BoolValue(row.visible_to_customers)),
+                    components.TableColumn(row.updated_at),
+                ]
+            ),
+        )
+
+
 class BrandResource(ResourceScreen):
     group = "Shop"
     icon = icons.ICON_BASKET
     datasource = SADataSource(Brand)
     form_class = BrandForm
     searchable_fields = ["name"]
+    ordering_fields = ("name",)
     page_filters = [
         filters.ChoiceFilter(
             "website",
@@ -72,13 +103,6 @@ class BrandResource(ResourceScreen):
         ),
     ]
 
+    index_view_class = BrandsIndexView
     detail_view_class = BrandDetailView
     form_view_class = BrandFormView
-    index_view = TableView(
-        [
-            DisplayField("name", link=True),
-            DisplayField("website"),
-            DisplayField("visible_to_customers", _("Visibility"), formatter=formatters.BoolFormatter(as_text=True)),
-            DisplayField("updated_at", formatter=formatters.DateTime()),
-        ]
-    )

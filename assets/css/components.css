@@ -1,4 +1,5 @@
 @import "forms/repeated_input.css";
+@import "table.css";
 
 @layer base {
     [type="text"],

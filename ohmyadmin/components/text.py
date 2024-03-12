@@ -43,9 +43,11 @@ class Link(Component):
         url: str | URL | LazyURL | URLProvider | None = None,
         *,
         text: str,
+        target: typing.Literal["", "_blank"] = "",
         builder: typing.Callable[[], str | URL] = None,
     ) -> None:
         self.text = text
+        self.target = target
         self.url = URL(url) if isinstance(url, str) else url
         self.builder = builder
 

@@ -6,9 +6,7 @@ from examples import icons
 from examples.models import Currency
 from ohmyadmin import components
 from ohmyadmin.datasources.sqlalchemy import SADataSource
-from ohmyadmin.display_fields import DisplayField
 from ohmyadmin.resources.resource import ResourceScreen
-from ohmyadmin.views.table import TableView
 
 
 class CurrencyForm(wtforms.Form):
@@ -41,6 +39,30 @@ class CurrencyFormView(components.FormView[CurrencyForm, Currency]):
         )
 
 
+class CurrencyIndexView(components.IndexView[Currency]):
+    def build(self, request: Request) -> components.Component:
+        return components.Table(
+            items=self.models,
+            header=components.TableRow(
+                children=[
+                    components.TableSortableHeadCell("Code", sort_field="code"),
+                    components.TableSortableHeadCell("Name", sort_field="name"),
+                ]
+            ),
+            row_builder=lambda row: components.TableRow(
+                children=[
+                    components.TableColumn(
+                        row.code,
+                        value_builder=lambda: components.Link(
+                            text=str(row), url=CurrencyResource.get_edit_page_route(row.code)
+                        ),
+                    ),
+                    components.TableColumn(row.name),
+                ]
+            ),
+        )
+
+
 class CurrencyResource(ResourceScreen):
     group = "Shop"
     icon = icons.ICON_CURRENCY
@@ -54,11 +76,6 @@ class CurrencyResource(ResourceScreen):
         "name",
         "code",
     )
-    index_view = TableView(
-        columns=[
-            DisplayField(name="name", link=True),
-            DisplayField(name="code"),
-        ]
-    )
+    index_view_class = CurrencyIndexView
     form_view_class = CurrencyFormView
     detail_view_class = CurrencyDetailView

@@ -1,3 +1,5 @@
 {% import 'ohmyadmin/components.html' as components %}
 {% set child = component.build_value(request) %}
-<td colspan="{{ component.colspan }}" class="text-{{ component.align }}">{{ components.render_component(request, child) }}</td>
+<td colspan="{{ component.colspan }}" class="text-{{ component.align }}">
+    {{ components.render_component(request, child) }}
+</td>

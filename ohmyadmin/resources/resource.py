@@ -15,6 +15,7 @@ from ohmyadmin.breadcrumbs import Breadcrumb
 from ohmyadmin.components import FormLayoutBuilder
 from ohmyadmin.components.display import DetailView
 from ohmyadmin.components.form import FormView
+from ohmyadmin.components.index import IndexView
 from ohmyadmin.datasources.datasource import DataSource, DuplicateError, InFilter
 from ohmyadmin.forms.utils import populate_object
 from ohmyadmin.helpers import pluralize, snake_to_sentence
@@ -31,7 +32,6 @@ from ohmyadmin.resources.actions import (
 from ohmyadmin.resources.policy import AccessPolicy, PermissiveAccessPolicy
 from ohmyadmin.routing import LazyURL
 from ohmyadmin.screens.base import ExposeViewMiddleware, Screen
-from ohmyadmin.views.base import IndexView
 
 
 class ResourceScreen(Screen):
@@ -65,7 +65,7 @@ class ResourceScreen(Screen):
     datasource: typing.ClassVar[DataSource | None] = None
 
     # index page
-    index_view: IndexView
+    index_view_class: IndexView = IndexView
     page_param: typing.ClassVar[str] = "page"
     page_size_param: typing.ClassVar[str] = "page_size"
     page_size: typing.ClassVar[int] = 25
@@ -93,7 +93,7 @@ class ResourceScreen(Screen):
 
     # create page
     create_form_class: type[wtforms.Form] | None = None
-    create_form_layout_class: type[FormLayoutBuilder] | None = None
+    create_form_view_class: type[FormLayoutBuilder] | None = None
     create_form_actions: typing.Sequence[actions.Action] | None = None
 
     # display page
@@ -186,7 +186,7 @@ class ResourceScreen(Screen):
                 searchable_fields=self.searchable_fields,
                 search_filter=self.search_filter,
                 url_name=self.get_index_route_name(),
-                view=self.index_view,
+                view_class=self.index_view_class,
                 breadcrumbs=[
                     Breadcrumb(label=_("Home", domain="ohmyadmin"), url=lambda r: r.url_for("ohmyadmin.welcome")),
                     Breadcrumb(label=self.label_plural, url=lambda r: r.url_for(self.get_index_route_name())),
@@ -227,7 +227,7 @@ class ResourceScreen(Screen):
                 group=self.group,
                 url_name=self.get_create_route_name(),
                 form_class=self.create_form_class or self.form_class,
-                layout_class=self.create_form_layout_class or self.form_view_class,
+                layout_class=self.create_form_view_class or self.form_view_class,
                 form_actions=self.get_create_form_actions(),
                 init_form=self.init_create_form,
                 get_object=self.get_new_object,

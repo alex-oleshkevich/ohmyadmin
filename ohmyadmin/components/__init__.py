@@ -3,5 +3,7 @@ from ohmyadmin.components.layout import *
 from ohmyadmin.components.base import *
 from ohmyadmin.components.text import *
 from ohmyadmin.components.form import *
+from ohmyadmin.components.index import *
+from ohmyadmin.components.table import *
 from ohmyadmin.components.display import *
 from ohmyadmin.components.control_flow import *

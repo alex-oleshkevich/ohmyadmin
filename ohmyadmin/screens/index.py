@@ -6,12 +6,12 @@ from starlette_babel import gettext_lazy as _
 
 from ohmyadmin import htmx
 from ohmyadmin.actions.actions import Action, ModalAction
+from ohmyadmin.components.index import IndexView
 from ohmyadmin.datasources.datasource import DataSource
 from ohmyadmin.filters import Filter, OrderingFilter, SearchFilter
 from ohmyadmin.pagination import get_page_size_value, get_page_value
 from ohmyadmin.templating import render_to_response
 from ohmyadmin.screens.base import Screen
-from ohmyadmin.views.base import IndexView
 
 
 class IndexScreen(Screen):
@@ -36,7 +36,7 @@ class IndexScreen(Screen):
     ordering_fields: typing.Sequence[str] = tuple()
     ordering_filter: Filter | None = None
 
-    view: IndexView | None = None
+    view_class: IndexView = IndexView
     template: str = "ohmyadmin/screens/index/page.html"
     content_template: str = "ohmyadmin/screens/index/content.html"
 
@@ -78,12 +78,6 @@ class IndexScreen(Screen):
             query = filter_.apply(request, query, filter_form)
         return query
 
-    def get_view(self) -> IndexView:
-        if self.view:
-            return self.view
-
-        raise NotImplementedError(f"View not implemented for {self.__class__.__name__}")
-
     def render_content(self, request: Request, context: typing.Mapping[str, typing.Any]) -> Response:
         return render_to_response(request, self.content_template, context)
 
@@ -100,12 +94,13 @@ class IndexScreen(Screen):
             ["x-ohmyadmin-force-filter-refresh" in request.headers, any([f.is_active(request) for f in self.filters])]
         )
 
+        component = self.view_class(models)
         if htmx.matches_target(request, "datatable"):
             return self.render_content(
                 request,
                 {
                     "request": request,
-                    "view": self.get_view(),
+                    "component": component,
                     "screen": self,
                     "models": models,
                     "oob_filters": should_refresh_filters,
@@ -127,7 +122,7 @@ class IndexScreen(Screen):
                 "screen": self,
                 "models": models,
                 "request": request,
-                "view": self.get_view(),
+                "component": component,
                 "page_title": self.label,
                 "page_description": self.description,
                 "oob_filters": should_refresh_filters,

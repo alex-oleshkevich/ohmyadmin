@@ -5,14 +5,12 @@ from starlette.requests import Request
 
 from examples import icons
 from examples.models import Category
-from ohmyadmin import components, formatters
+from ohmyadmin import components
 from ohmyadmin.components import Component
 from ohmyadmin.components.display import DetailView
 from ohmyadmin.datasources.sqlalchemy import load_choices, SADataSource
-from ohmyadmin.display_fields import DisplayField
 from ohmyadmin.forms.utils import safe_int_coerce
 from ohmyadmin.resources.resource import ResourceScreen
-from ohmyadmin.views.table import TableView
 
 
 class CategoryForm(wtforms.Form):
@@ -70,28 +68,50 @@ class CategoryFormView(components.FormView[CategoryForm, Category]):
         )
 
 
+class CategoryIndexView(components.IndexView[Category]):
+    def build(self, request: Request) -> Component:
+        return components.Table(
+            items=self.models,
+            header=components.TableRow(
+                children=[
+                    components.TableSortableHeadCell("Name", sort_field="name"),
+                    components.TableHeadCell("Parent"),
+                    components.TableHeadCell("Visible to customers"),
+                ]
+            ),
+            row_builder=lambda row: components.TableRow(
+                children=[
+                    components.TableColumn(
+                        value_builder=lambda: components.Link(
+                            text=row.name, url=CategoryResource.get_edit_page_route(row.id)
+                        )
+                    ),
+                    components.TableColumn(
+                        value_builder=lambda: components.Link(
+                            text=row.parent.name,
+                            url=CategoryResource.get_edit_page_route(row.parent_id),
+                        )
+                        if row.parent_id
+                        else components.Text("-"),
+                    ),
+                    components.TableColumn(value_builder=lambda: components.BoolValue(row.visible_to_customers)),
+                ]
+            ),
+        )
+
+
 class CategoryResource(ResourceScreen):
     group = "Shop"
     icon = icons.ICON_CATEGORY
     form_class = CategoryForm
     datasource = SADataSource(
-        Category, query=(sa.select(Category).options(joinedload(Category.parent)).order_by(Category.name.asc()))
+        Category,
+        query=(sa.select(Category).options(joinedload(Category.parent)).order_by(Category.name.asc())),
     )
-    index_view = TableView(
-        columns=[
-            DisplayField("name", link=True),
-            DisplayField(
-                "parent",
-                label="Parent",
-                formatter=formatters.LinkFormatter(
-                    url=lambda r, v: r.url_for(r.state.resource.get_display_route_name(), object_id=v.id),
-                ),
-            ),
-            DisplayField("visible_to_customers", label="Visibility", formatter=formatters.BoolFormatter()),
-        ]
-    )
+    index_view_class = CategoryIndexView
     detail_view_class = CategoryDetailView
     form_view_class = CategoryFormView
+    ordering_fields = ("name",)
 
     async def init_form(self, request: Request, form: CategoryForm) -> None:
         await load_choices(request.state.dbsession, form.parent_id, sa.select(Category).order_by(Category.name))

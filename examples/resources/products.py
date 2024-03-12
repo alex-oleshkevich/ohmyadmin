@@ -7,17 +7,16 @@ from sqlalchemy.orm import joinedload, selectinload
 from starlette.requests import Request
 from wtforms.fields.choices import SelectField
 
-import ohmyadmin.components.form
 from examples import icons
 from examples.models import Brand, Image, Product
+from examples.resources.brands import BrandResource
 from ohmyadmin import components, filters, formatters
+from ohmyadmin.components import CellAlign
 from ohmyadmin.datasources.sqlalchemy import form_choices_from, load_choices, SADataSource
-from ohmyadmin.display_fields import DisplayField
 from ohmyadmin.forms.utils import safe_int_coerce
 from ohmyadmin.metrics import ProgressMetric, TrendMetric, TrendValue, ValueMetric, ValueValue
 from ohmyadmin.resources.resource import ResourceScreen
 from ohmyadmin.storages.uploaders import delete_file, upload_file
-from ohmyadmin.views.table import TableView
 
 
 class ProductImageForm(wtforms.Form):
@@ -268,6 +267,41 @@ class ProductFormView(components.FormView[ProductForm, Product]):
         )
 
 
+class ProductIndexView(components.IndexView[Product]):
+    def build(self, request: Request) -> components.Component:
+        return components.Table(
+            items=self.models,
+            header=components.TableRow(
+                children=[
+                    components.TableSortableHeadCell("Name", sort_field="name"),
+                    components.TableSortableHeadCell("Brand", sort_field="brand__name"),
+                    components.TableSortableHeadCell("SKU", sort_field="sku", align=CellAlign.RIGHT),
+                    components.TableSortableHeadCell("Price", sort_field="price", align=CellAlign.RIGHT),
+                    components.TableSortableHeadCell("Quantity", sort_field="quantity", align=CellAlign.RIGHT),
+                    components.TableHeadCell("Visible"),
+                ]
+            ),
+            row_builder=lambda row: components.TableRow(
+                children=[
+                    components.TableColumn(
+                        value_builder=lambda: components.Link(
+                            text=row.name, url=ProductResource.get_edit_page_route(row.id)
+                        )
+                    ),
+                    components.TableColumn(
+                        value_builder=lambda: components.Link(
+                            text=row.brand.name, url=BrandResource.get_display_page_route(row.brand_id)
+                        )
+                    ),
+                    components.TableColumn(row.price, formatter=formatters.Number(prefix="$ "), align=CellAlign.RIGHT),
+                    components.TableColumn(row.sku, align=CellAlign.RIGHT),
+                    components.TableColumn(row.quantity, align=CellAlign.RIGHT),
+                    components.TableColumn(value_builder=lambda: components.BoolValue(row.visible)),
+                ]
+            ),
+        )
+
+
 class ProductResource(ResourceScreen):
     icon = icons.ICON_PRODUCTS
     group = "Shop"
@@ -301,18 +335,7 @@ class ProductResource(ResourceScreen):
     ]
     ordering_fields = "name", "brand", "price", "sku", "quantity"  # FIXME: nested ordering = brand.name
     searchable_fields = ("name", "brand")  # FIXME: nested search = brand.name
-    index_view = TableView(
-        columns=[
-            DisplayField("name", link=True),
-            DisplayField(
-                "brand",
-            ),  # FIXME: link to brands
-            DisplayField("price", formatter=formatters.Number(prefix="USD")),
-            DisplayField("sku", formatter=formatters.Number()),
-            DisplayField("quantity", label="Qty.", formatter=formatters.Number()),
-            DisplayField("visible", formatter=formatters.BoolFormatter()),
-        ]
-    )
+    index_view_class = ProductIndexView
     detail_view_class = ProductDetailView
     form_view_class = ProductFormView
 

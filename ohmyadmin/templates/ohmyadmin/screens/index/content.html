@@ -1,4 +1,5 @@
 {% import 'ohmyadmin/pagination.html' as pagination %}
+{% import 'ohmyadmin/components.html' as components %}
 
 {% if oob_filters %}
     <div hx-swap-oob="innerHTML" id="view-filters">
@@ -6,7 +7,7 @@
     </div>
 {% endif %}
 
-{{ view.render(request, screen, models) }}
+{{ components.render_component(request, component) }}
 
 <div class="mt-5" hx-boost="true">
     {{ pagination.pagination(request, models) }}

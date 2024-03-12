@@ -5,17 +5,16 @@ import sqlalchemy as sa
 from sqlalchemy.orm import joinedload, selectinload, with_expression
 from starlette.requests import Request
 
+import ohmyadmin.components.table
 from examples import icons
 from examples.models import Country, Currency, Customer, Order, OrderItem, Product
 from examples.resources.customers import CustomerResource
 from ohmyadmin import components, filters, formatters
 from ohmyadmin.datasources.sqlalchemy import load_choices, SADataSource
-from ohmyadmin.display_fields import DisplayField
 from ohmyadmin.forms.utils import safe_int_coerce
 from ohmyadmin.metrics import Partition, PartitionMetric, TrendMetric, TrendValue, ValueMetric, ValueValue
 from ohmyadmin.resources.resource import ResourceScreen
 from ohmyadmin.components import BadgeColor
-from ohmyadmin.views.table import TableView
 
 STATUS_COLORS: dict[str, str] = {
     Order.Status.NEW: "rgb(59 130 246)",
@@ -132,19 +131,19 @@ class OrderDetailView(components.DetailView[Order]):
                         components.Group(
                             label="Ordered products",
                             children=[
-                                components.Table(
+                                ohmyadmin.components.table.Table(
                                     items=self.model.items,
                                     headers=["Product", "Quantity", "Price"],
                                     row_builder=lambda row: [
-                                        components.TableCell(row.product),
-                                        components.TableCell(row.quantity, align="right"),
-                                        components.TableCell(
+                                        ohmyadmin.components.table.TableColumn(row.product),
+                                        ohmyadmin.components.table.TableColumn(row.quantity, align="right"),
+                                        ohmyadmin.components.table.TableColumn(
                                             row.unit_price * row.quantity, align="right", formatter=formatters.Number()
                                         ),
                                     ],
                                     summary=[
-                                        components.TableCell(value="Total", align="right", colspan=2),
-                                        components.TableCell(
+                                        ohmyadmin.components.table.TableColumn(value="Total", align="right", colspan=2),
+                                        ohmyadmin.components.table.TableColumn(
                                             align="right",
                                             formatter=formatters.Number(prefix="USD "),
                                             value=sum([item.unit_price * item.quantity for item in self.model.items]),
@@ -216,6 +215,53 @@ class OrderFormView(components.FormView[OrderForm, Order]):
         )
 
 
+class OrderIndexView(components.IndexView[Order]):
+    def build(self, request: Request) -> components.Component:
+        return components.Table(
+            items=self.models,
+            header=components.TableRow(
+                children=[
+                    components.TableHeadCell("Number"),
+                    components.TableHeadCell("Customer"),
+                    components.TableSortableHeadCell("Status", sort_field="status"),
+                    components.TableHeadCell("Currency"),
+                    components.TableHeadCell("Total price"),
+                    components.TableHeadCell("Order date"),
+                ]
+            ),
+            row_builder=lambda row: components.TableRow(
+                children=[
+                    components.TableColumn(
+                        value_builder=lambda: components.Link(
+                            text=row.number,
+                            url=OrdersResource.get_edit_page_route(row.id),
+                        )
+                    ),
+                    components.TableColumn(
+                        value_builder=lambda: components.Link(
+                            text=str(row.customer), url=CustomerResource.get_display_page_route(row.customer_id)
+                        )
+                    ),
+                    components.TableColumn(
+                        value_builder=lambda: components.Badge(
+                            row.status,
+                            colors={
+                                Order.Status.NEW: BadgeColor.BLUE,
+                                Order.Status.SHIPPED: BadgeColor.GREEN,
+                                Order.Status.PROCESSING: BadgeColor.YELLOW,
+                                Order.Status.DELIVERED: BadgeColor.INDIGO,
+                                Order.Status.CANCELLED: BadgeColor.RED,
+                            },
+                        )
+                    ),
+                    components.TableColumn(str(row.currency)),
+                    components.TableColumn(row.total_price, formatter=formatters.Number(prefix="$ ")),
+                    components.TableColumn(row.created_at),
+                ]
+            ),
+        )
+
+
 class OrdersResource(ResourceScreen):
     group = "Shop"
     icon = icons.ICON_ORDER
@@ -230,7 +276,8 @@ class OrdersResource(ResourceScreen):
             selectinload(Order.items).joinedload(OrderItem.product),
         ),
         query_for_list=(
-            sa.select(Order).distinct()
+            sa.select(Order)
+            .distinct()
             .join(Order.items)
             .options(
                 with_expression(Order.total_price, OrderItem.unit_price + OrderItem.quantity),
@@ -247,27 +294,7 @@ class OrdersResource(ResourceScreen):
     ]
     searchable_fields = ("number",)
     ordering_fields = ("status",)
-    index_view = TableView(
-        columns=[
-            DisplayField("number", link=True),
-            DisplayField("customer"),
-            DisplayField(
-                "status",
-                formatter=formatters.BadgeFormatter(
-                    color_map={
-                        Order.Status.NEW: "blue",
-                        Order.Status.SHIPPED: "green",
-                        Order.Status.PROCESSING: "yellow",
-                        Order.Status.DELIVERED: "green",
-                        Order.Status.CANCELLED: "red",
-                    }
-                ),
-            ),
-            DisplayField("currency"),
-            DisplayField("total_price", formatter=formatters.Number(suffix="USD")),
-            DisplayField("created_at", label="Order date", formatter=formatters.Date()),
-        ]
-    )
+    index_view_class = OrderIndexView
     detail_view_class = OrderDetailView
     form_view_class = OrderFormView
 
