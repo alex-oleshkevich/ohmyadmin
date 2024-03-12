@@ -5,7 +5,6 @@ import sqlalchemy as sa
 from sqlalchemy.orm import joinedload, selectinload, with_expression
 from starlette.requests import Request
 
-import ohmyadmin.components.table
 from examples import icons
 from examples.models import Country, Currency, Customer, Order, OrderItem, Product
 from examples.resources.customers import CustomerResource
@@ -14,7 +13,7 @@ from ohmyadmin.datasources.sqlalchemy import load_choices, SADataSource
 from ohmyadmin.forms.utils import safe_int_coerce
 from ohmyadmin.metrics import Partition, PartitionMetric, TrendMetric, TrendValue, ValueMetric, ValueValue
 from ohmyadmin.resources.resource import ResourceScreen
-from ohmyadmin.components import BadgeColor
+from ohmyadmin.components import BadgeColor, CellAlign
 
 STATUS_COLORS: dict[str, str] = {
     Order.Status.NEW: "rgb(59 130 246)",
@@ -95,17 +94,15 @@ class OrderDetailView(components.DetailView[Order]):
                     children=[
                         components.ModelField(
                             "Customer",
-                            self.model.customer,
-                            value_builder=lambda _: components.Link(
+                            components.Link(
                                 text=self.model.customer,
                                 url=CustomerResource.get_display_page_route(self.model.customer_id),
                             ),
                         ),
                         components.ModelField(
                             "Status",
-                            self.model.status,
-                            value_builder=lambda value: components.Badge(
-                                value,
+                            components.Badge(
+                                self.model.status,
                                 {
                                     Order.Status.NEW: BadgeColor.BLUE,
                                     Order.Status.SHIPPED: BadgeColor.GREEN,
@@ -117,36 +114,60 @@ class OrderDetailView(components.DetailView[Order]):
                         ),
                         components.ModelField(
                             "Total price",
-                            sum([item.unit_price * item.quantity for item in self.model.items]),
-                            formatter=formatters.Number(prefix="USD "),
+                            components.Text(
+                                sum([item.unit_price * item.quantity for item in self.model.items]),
+                                formatter=formatters.Number(prefix="USD "),
+                            ),
                         ),
-                        components.ModelField("Order date", self.model.created_at),
-                        components.ModelField("Update date", self.model.updated_at),
-                        components.ModelField("Address", self.model.address),
-                        components.ModelField("City", self.model.city),
-                        components.ModelField("ZIP", self.model.zip),
-                        components.ModelField("Currency", self.model.currency),
-                        components.ModelField("Country", self.model.country),
-                        components.ModelField("Notes", self.model.notes),
+                        components.ModelField(
+                            "Order date", components.Text(self.model.created_at, formatter=formatters.DateTime())
+                        ),
+                        components.ModelField(
+                            "Update date", components.Text(self.model.updated_at, formatter=formatters.DateTime())
+                        ),
+                        components.ModelField("Address", components.Text(self.model.address)),
+                        components.ModelField("City", components.Text(self.model.city)),
+                        components.ModelField("ZIP", components.Text(self.model.zip)),
+                        components.ModelField("Currency", components.Text(self.model.currency)),
+                        components.ModelField("Country", components.Text(self.model.country)),
+                        components.ModelField("Notes", components.Text(self.model.notes)),
                         components.Group(
                             label="Ordered products",
                             children=[
-                                ohmyadmin.components.table.Table(
+                                components.Table(
                                     items=self.model.items,
-                                    headers=["Product", "Quantity", "Price"],
-                                    row_builder=lambda row: [
-                                        ohmyadmin.components.table.TableColumn(row.product),
-                                        ohmyadmin.components.table.TableColumn(row.quantity, align="right"),
-                                        ohmyadmin.components.table.TableColumn(
-                                            row.unit_price * row.quantity, align="right", formatter=formatters.Number()
-                                        ),
-                                    ],
+                                    header=components.TableRow(
+                                        children=[
+                                            components.TableHeadCell("Product"),
+                                            components.TableHeadCell("Quantity", align=CellAlign.RIGHT),
+                                            components.TableHeadCell("Price"),
+                                        ]
+                                    ),
+                                    row_builder=lambda row: components.TableRow(
+                                        children=[
+                                            components.TableColumn(components.Text(row.product)),
+                                            components.TableColumn(
+                                                components.Text(row.quantity, formatter=formatters.Number()),
+                                                align=CellAlign.RIGHT,
+                                            ),
+                                            components.TableColumn(
+                                                components.Text(
+                                                    row.unit_price * row.quantity, formatter=formatters.Number()
+                                                ),
+                                                align=CellAlign.RIGHT,
+                                            ),
+                                        ]
+                                    ),
                                     summary=[
-                                        ohmyadmin.components.table.TableColumn(value="Total", align="right", colspan=2),
-                                        ohmyadmin.components.table.TableColumn(
-                                            align="right",
-                                            formatter=formatters.Number(prefix="USD "),
-                                            value=sum([item.unit_price * item.quantity for item in self.model.items]),
+                                        components.TableColumn(
+                                            components.Text("Total"), align=CellAlign.RIGHT, colspan=2
+                                        ),
+                                        components.TableColumn(
+                                            components.Text(
+                                                sum([item.unit_price * item.quantity for item in self.model.items]),
+                                                formatter=formatters.Number(prefix="USD "),
+                                            ),
+                                            align=CellAlign.RIGHT,
                                         ),
                                     ],
                                 ),
@@ -232,18 +253,18 @@ class OrderIndexView(components.IndexView[Order]):
             row_builder=lambda row: components.TableRow(
                 children=[
                     components.TableColumn(
-                        value_builder=lambda: components.Link(
+                        child=components.Link(
                             text=row.number,
                             url=OrdersResource.get_edit_page_route(row.id),
                         )
                     ),
                     components.TableColumn(
-                        value_builder=lambda: components.Link(
+                        child=components.Link(
                             text=str(row.customer), url=CustomerResource.get_display_page_route(row.customer_id)
                         )
                     ),
                     components.TableColumn(
-                        value_builder=lambda: components.Badge(
+                        child=components.Badge(
                             row.status,
                             colors={
                                 Order.Status.NEW: BadgeColor.BLUE,
@@ -254,9 +275,9 @@ class OrderIndexView(components.IndexView[Order]):
                             },
                         )
                     ),
-                    components.TableColumn(str(row.currency)),
-                    components.TableColumn(row.total_price, formatter=formatters.Number(prefix="$ ")),
-                    components.TableColumn(row.created_at),
+                    components.TableColumn(components.Text(row.currency.name)),
+                    components.TableColumn(components.Text(row.total_price, formatter=formatters.Number(prefix="$ "))),
+                    components.TableColumn(components.Text(row.created_at, formatter=formatters.DateTime())),
                 ]
             ),
         )

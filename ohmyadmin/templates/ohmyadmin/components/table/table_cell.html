@@ -1,0 +1,6 @@
+{% import 'ohmyadmin/components.html' as components %}
+<td colspan="{{ component.colspan }}">
+    <div class="table-cell-{{ component.align }}">
+        {{ components.render_component(request, component.child) }}
+    </div>
+</td>

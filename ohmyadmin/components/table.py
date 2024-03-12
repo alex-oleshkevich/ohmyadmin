@@ -5,8 +5,8 @@ import typing
 
 from starlette.requests import Request
 
-from ohmyadmin import formatters
-from ohmyadmin.components import Component, T, Text
+from ohmyadmin.components.base import Component
+from ohmyadmin.components.text import Text
 from ohmyadmin.ordering import SortingHelper
 from ohmyadmin.templating import render_to_string
 
@@ -56,30 +56,16 @@ class TableSortableHeadCell(TableHeadCell):
         )
 
 
-class TableColumn(Component, typing.Generic[T]):
-    template_name: str = "ohmyadmin/components/table_cell.html"
+T = typing.TypeVar("T")
 
-    def __init__(
-        self,
-        value: T = None,
-        formatter: formatters.ValueFormatter = formatters.Auto(),
-        value_builder: typing.Callable[[], Component] | None = None,
-        empty_value: str = "-",
-        align: CellAlign = CellAlign.LEFT,
-        colspan: int = 1,
-    ) -> None:
-        self.value = empty_value if value is None else value
+
+class TableColumn(Component):
+    template_name: str = "ohmyadmin/components/table/table_cell.html"
+
+    def __init__(self, child: Component, align: CellAlign = CellAlign.LEFT, colspan: int = 1) -> None:
+        self.child = child
         self.align = align
-        self.formatter = formatter
         self.colspan = colspan
-        self.value_builder = value_builder
-
-    def build_value(self, request: Request) -> Component:
-        if self.value_builder:
-            return self.value_builder()
-
-        formatted_value = self.formatter(request, self.value)
-        return Text(formatted_value)
 
 
 _ROW = typing.TypeVar("_ROW", bound=TableHeadCell | TableColumn)
@@ -93,7 +79,7 @@ class TableRow(Component, typing.Generic[_ROW]):
 
 
 class Table(Component, typing.Generic[T]):
-    template_name: str = "ohmyadmin/components/table.html"
+    template_name: str = "ohmyadmin/components/table/table.html"
 
     def __init__(
         self,

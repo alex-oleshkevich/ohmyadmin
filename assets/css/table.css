@@ -36,3 +36,15 @@
 .table-sort-index {
     @apply text-sm text-accent-600 ml-1;
 }
+
+.table-cell-left {
+    @apply text-left flex items-center justify-start;
+}
+
+.table-cell-center {
+    @apply text-center flex items-center justify-center;
+}
+
+.table-cell-right {
+    @apply text-right flex items-center justify-end;
+}

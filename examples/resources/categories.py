@@ -5,7 +5,7 @@ from starlette.requests import Request
 
 from examples import icons
 from examples.models import Category
-from ohmyadmin import components
+from ohmyadmin import components, formatters
 from ohmyadmin.components import Component
 from ohmyadmin.components.display import DetailView
 from ohmyadmin.datasources.sqlalchemy import load_choices, SADataSource
@@ -25,27 +25,35 @@ class CategoryDetailView(DetailView[Category]):
     def build(self, request: Request) -> Component:
         return components.Column(
             [
-                components.ModelField("Name", self.model.name),
-                components.ModelField("Description", self.model.description),
+                components.ModelField("Name", components.Text(self.model.name)),
+                components.ModelField("Description", components.Text(self.model.description)),
                 components.ModelField(
                     "Parent",
-                    value=self.model.parent,
-                    value_builder=(
-                        lambda _: components.Link(
-                            url=CategoryResource.get_display_page_route(self.model.parent.id),
-                            text=self.model.parent.name,
-                        )
-                    )
-                    if self.model.parent
-                    else None,
+                    components.When(
+                        expression=self.model.parent_id,
+                        when_true=components.Builder(
+                            builder=lambda: components.Link(
+                                url=CategoryResource.get_display_page_route(self.model.parent.id),
+                                text=self.model.parent.name,
+                            )
+                        ),
+                        when_false=components.Text(),
+                    ),
                 ),
                 components.ModelField(
                     "Visible to customers",
-                    self.model.visible_to_customers,
-                    value_builder=lambda value: components.BoolValue(value, as_text=False),
+                    components.BoolValue(self.model.visible_to_customers),
                 ),
-                components.ModelField("Created at", self.model.created_at),
-                components.ModelField("Updated at", self.model.updated_at),
+                components.ModelField(
+                    "Created at",
+                    components.Text(
+                        self.model.created_at,
+                        formatter=formatters.DateTime(),
+                    ),
+                ),
+                components.ModelField(
+                    "Updated at", components.Text(self.model.updated_at, formatter=formatters.DateTime())
+                ),
             ]
         )
 
@@ -82,19 +90,21 @@ class CategoryIndexView(components.IndexView[Category]):
             row_builder=lambda row: components.TableRow(
                 children=[
                     components.TableColumn(
-                        value_builder=lambda: components.Link(
-                            text=row.name, url=CategoryResource.get_edit_page_route(row.id)
-                        )
+                        child=components.Link(text=row.name, url=CategoryResource.get_edit_page_route(row.id))
                     ),
                     components.TableColumn(
-                        value_builder=lambda: components.Link(
-                            text=row.parent.name,
-                            url=CategoryResource.get_edit_page_route(row.parent_id),
-                        )
-                        if row.parent_id
-                        else components.Text("-"),
+                        child=components.When(
+                            expression=row.parent_id,
+                            when_true=components.Builder(
+                                builder=lambda: components.Link(
+                                    text=row.parent.name,
+                                    url=CategoryResource.get_edit_page_route(row.parent_id),
+                                )
+                            ),
+                            when_false=components.Text(),
+                        ),
                     ),
-                    components.TableColumn(value_builder=lambda: components.BoolValue(row.visible_to_customers)),
+                    components.TableColumn(child=components.BoolValue(row.visible_to_customers)),
                 ]
             ),
         )

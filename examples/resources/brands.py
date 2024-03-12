@@ -3,7 +3,7 @@ from starlette.requests import Request
 
 from examples import icons
 from examples.models import Brand
-from ohmyadmin import components, filters
+from ohmyadmin import components, filters, formatters
 from ohmyadmin.datasources.sqlalchemy import SADataSource
 from ohmyadmin.resources.resource import ResourceScreen
 
@@ -20,14 +20,19 @@ class BrandDetailView(components.DetailView[Brand]):
     def build(self, request: Request) -> components.Component:
         return components.Column(
             [
-                components.ModelField("Name", self.model.name),
-                components.ModelField("Website", self.model.website),
+                components.ModelField("Name", components.Text(self.model.name)),
+                components.ModelField(
+                    "Website",
+                    components.Text(self.model.website, formatter=formatters.Link()),
+                ),
                 components.ModelField(
                     "Visible to customers",
-                    self.model.visible_to_customers,
-                    value_builder=lambda value: components.BoolValue(value=value),
+                    components.BoolValue(self.model.visible_to_customers),
                 ),
-                components.ModelField("Updated at", self.model.updated_at),
+                components.ModelField(
+                    "Updated at",
+                    components.Text(self.model.updated_at, formatter=formatters.DateTime()),
+                ),
             ]
         )
 
@@ -67,19 +72,11 @@ class BrandsIndexView(components.IndexView[Brand]):
             row_builder=lambda row: components.TableRow(
                 children=[
                     components.TableColumn(
-                        value_builder=lambda: components.Link(
-                            text=str(row), url=BrandResource.get_edit_page_route(row.id)
-                        )
+                        child=components.Link(text=str(row), url=BrandResource.get_edit_page_route(row.id))
                     ),
-                    components.TableColumn(
-                        value_builder=lambda: components.Link(
-                            url=row.website,
-                            text=row.website,
-                            target="_blank",
-                        )
-                    ),
-                    components.TableColumn(value_builder=lambda: components.BoolValue(row.visible_to_customers)),
-                    components.TableColumn(row.updated_at),
+                    components.TableColumn(child=components.Link(url=row.website, text=row.website, target="_blank")),
+                    components.TableColumn(child=components.BoolValue(row.visible_to_customers)),
+                    components.TableColumn(child=components.Text(row.updated_at, formatter=formatters.DateTime())),
                 ]
             ),
         )

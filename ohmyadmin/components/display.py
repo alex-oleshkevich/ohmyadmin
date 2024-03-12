@@ -2,7 +2,6 @@ import typing
 
 from starlette.requests import Request
 
-from ohmyadmin import formatters
 from ohmyadmin.components.layout import Column, Grid
 from ohmyadmin.components.base import Component
 from ohmyadmin.components.text import Container, Placeholder, Text
@@ -27,30 +26,15 @@ class ModelField(Component, typing.Generic[T]):
 
     template_name = "ohmyadmin/components/display/model_field.html"
 
-    def __init__(
-        self,
-        label: str,
-        value: T = None,
-        formatter: formatters.ValueFormatter = formatters.Auto(),
-        value_builder: typing.Callable[[T], Component] | None = None,
-        empty_value: str = "-",
-    ) -> None:
+    def __init__(self, label: str, value: Component) -> None:
         self.label = label
         self.value = value
-        self.formatter = formatter
-        self.empty_value = empty_value
-        self.value_builder = value_builder
 
     def build(self, request: Request) -> Component:
-        formatted_value = self.formatter(request, self.value) if self.value is not None else self.empty_value
-        value = Text(formatted_value)
-        if self.value_builder:
-            value = self.value_builder(formatted_value)
-
         return Grid(
             columns=12,
             children=[
                 Column(children=[Text(self.label)], colspan=3),
-                Column(children=[Container(child=value)], colspan=9),
+                Column(children=[Container(child=self.value)], colspan=9),
             ],
         )

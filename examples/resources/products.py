@@ -107,9 +107,9 @@ class ProductDetailView(components.DetailView[Product]):
                         components.Group(
                             label="Product",
                             children=[
-                                components.ModelField("Name", self.model.name),
-                                components.ModelField("Slug", self.model.slug),
-                                components.ModelField("Description", self.model.description),
+                                components.ModelField("Name", components.Text(self.model.name)),
+                                components.ModelField("Slug", components.Text(self.model.slug)),
+                                components.ModelField("Description", components.Text(self.model.description)),
                             ],
                         ),
                         components.Group(
@@ -117,17 +117,25 @@ class ProductDetailView(components.DetailView[Product]):
                             description="This information will be displayed publicly so be careful what you share.",
                             children=[
                                 components.ModelField(
-                                    "Price", self.model.price, formatter=formatters.Number(prefix="$")
+                                    "Price",
+                                    components.Text(
+                                        self.model.price,
+                                        formatter=formatters.Number(prefix="$"),
+                                    ),
                                 ),
                                 components.ModelField(
                                     "Compare at price",
-                                    self.model.compare_at_price,
-                                    formatter=formatters.Number(prefix="$"),
+                                    components.Text(
+                                        self.model.compare_at_price,
+                                        formatter=formatters.Number(prefix="$"),
+                                    ),
                                 ),
                                 components.ModelField(
                                     "Cost per item",
-                                    self.model.cost_per_item,
-                                    formatter=formatters.Number(prefix="$"),
+                                    components.Text(
+                                        self.model.cost_per_item,
+                                        formatter=formatters.Number(prefix="$"),
+                                    ),
                                 ),
                             ],
                         ),
@@ -135,10 +143,28 @@ class ProductDetailView(components.DetailView[Product]):
                             label="Inventory",
                             description="Decide which communications you'd like to receive and how.",
                             children=[
-                                components.ModelField("SKU", self.model.sku),
-                                components.ModelField("Barcode", self.model.barcode),
-                                components.ModelField("Quantity", self.model.quantity),
-                                components.ModelField("Security stock", self.model.security_stock),
+                                components.ModelField(
+                                    "SKU",
+                                    components.Text(
+                                        self.model.sku,
+                                        formatter=formatters.Number(),
+                                    ),
+                                ),
+                                components.ModelField("Barcode", components.Text(self.model.barcode)),
+                                components.ModelField(
+                                    "Quantity",
+                                    components.Text(
+                                        self.model.quantity,
+                                        formatter=formatters.Number(),
+                                    ),
+                                ),
+                                components.ModelField(
+                                    "Security stock",
+                                    components.Text(
+                                        self.model.security_stock,
+                                        formatter=formatters.Number(),
+                                    ),
+                                ),
                             ],
                         ),
                         components.Group(
@@ -158,7 +184,13 @@ class ProductDetailView(components.DetailView[Product]):
                         components.Group(
                             label="Brand",
                             children=[
-                                components.ModelField("Brand", self.model.brand),
+                                components.ModelField(
+                                    "Brand",
+                                    components.Link(
+                                        text=self.model.brand.name,
+                                        url=BrandResource.get_display_page_route(self.model.brand_id),
+                                    ),
+                                ),
                             ],
                         ),
                         components.Group(
@@ -166,13 +198,11 @@ class ProductDetailView(components.DetailView[Product]):
                             children=[
                                 components.ModelField(
                                     "Can be shipped",
-                                    self.model.can_be_shipped,
-                                    value_builder=lambda value: components.BoolValue(value),
+                                    components.BoolValue(self.model.can_be_shipped),
                                 ),
                                 components.ModelField(
                                     "Can be returned",
-                                    self.model.can_be_returned,
-                                    value_builder=lambda value: components.BoolValue(value),
+                                    components.BoolValue(self.model.can_be_returned),
                                 ),
                             ],
                         ),
@@ -278,25 +308,29 @@ class ProductIndexView(components.IndexView[Product]):
                     components.TableSortableHeadCell("SKU", sort_field="sku", align=CellAlign.RIGHT),
                     components.TableSortableHeadCell("Price", sort_field="price", align=CellAlign.RIGHT),
                     components.TableSortableHeadCell("Quantity", sort_field="quantity", align=CellAlign.RIGHT),
-                    components.TableHeadCell("Visible"),
+                    components.TableHeadCell("Visible", align=CellAlign.CENTER),
                 ]
             ),
             row_builder=lambda row: components.TableRow(
                 children=[
                     components.TableColumn(
-                        value_builder=lambda: components.Link(
-                            text=row.name, url=ProductResource.get_edit_page_route(row.id)
-                        )
+                        child=components.Link(text=row.name, url=ProductResource.get_edit_page_route(row.id))
                     ),
                     components.TableColumn(
-                        value_builder=lambda: components.Link(
+                        child=components.Link(
                             text=row.brand.name, url=BrandResource.get_display_page_route(row.brand_id)
                         )
                     ),
-                    components.TableColumn(row.price, formatter=formatters.Number(prefix="$ "), align=CellAlign.RIGHT),
-                    components.TableColumn(row.sku, align=CellAlign.RIGHT),
-                    components.TableColumn(row.quantity, align=CellAlign.RIGHT),
-                    components.TableColumn(value_builder=lambda: components.BoolValue(row.visible)),
+                    components.TableColumn(
+                        components.Text(row.price, formatter=formatters.Number(prefix="$ ")), align=CellAlign.RIGHT
+                    ),
+                    components.TableColumn(
+                        components.Text(row.sku, formatter=formatters.Number()), align=CellAlign.RIGHT
+                    ),
+                    components.TableColumn(
+                        components.Text(row.quantity, formatter=formatters.Number()), align=CellAlign.RIGHT
+                    ),
+                    components.TableColumn(components.BoolValue(row.visible), align=CellAlign.CENTER),
                 ]
             ),
         )

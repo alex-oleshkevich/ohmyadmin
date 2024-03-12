@@ -3,10 +3,10 @@ import wtforms
 from sqlalchemy.orm import selectinload
 from starlette.requests import Request
 
-import ohmyadmin.components.table
 from examples import icons
 from examples.models import Address, Comment, Customer, Order, OrderItem
 from ohmyadmin import components, filters, formatters
+from ohmyadmin.components import CellAlign
 from ohmyadmin.datasources.sqlalchemy import SADataSource
 from ohmyadmin.resources.resource import ResourceScreen
 
@@ -25,86 +25,134 @@ class CustomerDetailView(components.DetailView[Customer]):
                 components.Column(
                     colspan=8,
                     children=[
-                        components.ModelField("Name", self.model.name),
+                        components.ModelField("Name", components.Text(self.model.name)),
                         components.ModelField(
                             "Email",
-                            self.model.email,
-                            formatter=formatters.Link(self.model.email, protocol="mailto"),
+                            components.Text(
+                                self.model.email,
+                                formatter=formatters.Link(self.model.email, protocol="mailto"),
+                            ),
                         ),
                         components.ModelField(
                             "Phone",
-                            self.model.phone,
-                            formatter=formatters.Link(self.model.phone, protocol="tel"),
+                            components.Text(
+                                self.model.phone,
+                                formatter=formatters.Link(self.model.phone, protocol="tel"),
+                            ),
                         ),
-                        components.ModelField("Birthdate", self.model.birthday),
+                        components.ModelField(
+                            "Birthdate", components.Text(self.model.birthday, formatter=formatters.Date())
+                        ),
                         components.Group(
                             label="Addresses",
                             children=[
-                                ohmyadmin.components.table.Table[Address](
+                                components.Table[Address](
                                     items=self.model.addresses,
-                                    headers=["Country", "City", "ZIP", "Street"],
-                                    row_builder=lambda row: [
-                                        ohmyadmin.components.table.TableColumn(row.country),
-                                        ohmyadmin.components.table.TableColumn(row.city),
-                                        ohmyadmin.components.table.TableColumn(row.zip),
-                                        ohmyadmin.components.table.TableColumn(row.street),
-                                    ],
+                                    header=components.TableRow(
+                                        children=[
+                                            components.TableHeadCell("Country"),
+                                            components.TableHeadCell("City"),
+                                            components.TableHeadCell("ZIP"),
+                                            components.TableHeadCell("Street"),
+                                        ]
+                                    ),
+                                    row_builder=lambda row: components.TableRow(
+                                        children=[
+                                            components.TableColumn(components.Text(row.country)),
+                                            components.TableColumn(components.Text(row.city)),
+                                            components.TableColumn(components.Text(row.zip)),
+                                            components.TableColumn(components.Text(row.street)),
+                                        ]
+                                    ),
                                 ),
                             ],
                         ),
                         components.Group(
                             label="Payments",
                             children=[
-                                ohmyadmin.components.table.Table(
+                                components.Table(
                                     items=self.model.payments,
-                                    headers=["Reference", "Currency", "Provider", "Method", "Amount"],
-                                    row_builder=lambda row: [
-                                        ohmyadmin.components.table.TableColumn(row.reference),
-                                        ohmyadmin.components.table.TableColumn(row.currency_code),
-                                        ohmyadmin.components.table.TableColumn(row.provider),
-                                        ohmyadmin.components.table.TableColumn(row.method),
-                                        ohmyadmin.components.table.TableColumn(
-                                            row.amount,
-                                            align="right",
-                                            formatter=formatters.Number(prefix="$"),
-                                        ),
-                                    ],
+                                    header=components.TableRow(
+                                        children=[
+                                            components.TableHeadCell("Reference"),
+                                            components.TableHeadCell("Currency"),
+                                            components.TableHeadCell("Provider"),
+                                            components.TableHeadCell("Method"),
+                                            components.TableHeadCell("Amount"),
+                                        ]
+                                    ),
+                                    row_builder=lambda row: components.TableRow(
+                                        children=[
+                                            components.TableColumn(components.Text(row.reference)),
+                                            components.TableColumn(components.Text(row.currency_code)),
+                                            components.TableColumn(components.Text(row.provider)),
+                                            components.TableColumn(components.Text(row.method)),
+                                            components.TableColumn(
+                                                components.Text(row.amount, formatter=formatters.Number(prefix="$ ")),
+                                                align=CellAlign.RIGHT,
+                                            ),
+                                        ]
+                                    ),
                                 ),
                             ],
                         ),
                         components.Group(
                             label="Orders",
                             children=[
-                                ohmyadmin.components.table.Table(
+                                components.Table(
                                     items=self.model.orders,
-                                    headers=["Number", "Status", "Items", "Total price"],
-                                    row_builder=lambda row: [
-                                        ohmyadmin.components.table.TableColumn(row.number),
-                                        ohmyadmin.components.table.TableColumn(row.status),
-                                        ohmyadmin.components.table.TableColumn(
-                                            ", ".join([str(item.product) for item in row.items])
-                                        ),
-                                        ohmyadmin.components.table.TableColumn(row.total_price),
-                                    ],
+                                    header=components.TableRow(
+                                        children=[
+                                            components.TableHeadCell("Number"),
+                                            components.TableHeadCell("Status"),
+                                            components.TableHeadCell("Items"),
+                                            components.TableHeadCell("Total price"),
+                                        ]
+                                    ),
+                                    row_builder=lambda row: components.TableRow(
+                                        children=[
+                                            components.TableColumn(components.Text(row.number)),
+                                            components.TableColumn(components.Text(row.status)),
+                                            components.TableColumn(
+                                                components.Text(", ".join([str(item.product) for item in row.items]))
+                                            ),
+                                            components.TableColumn(
+                                                components.Text(
+                                                    row.total_price, formatter=formatters.Number(prefix="$ ")
+                                                )
+                                            ),
+                                        ]
+                                    ),
                                 ),
                             ],
                         ),
                         components.Group(
                             label="Comments",
                             children=[
-                                ohmyadmin.components.table.Table(
+                                components.Table(
                                     items=self.model.comments,
-                                    headers=["Title", "Content", "Product", "Public", "Created at"],
-                                    row_builder=lambda row: [
-                                        ohmyadmin.components.table.TableColumn(row.title),
-                                        ohmyadmin.components.table.TableColumn(row.content),
-                                        ohmyadmin.components.table.TableColumn(row.product),
-                                        ohmyadmin.components.table.TableColumn(
-                                            row.public,
-                                            value_builder=lambda value: components.BoolValue(value),
-                                        ),
-                                        ohmyadmin.components.table.TableColumn(row.created_at),
-                                    ],
+                                    header=components.TableRow(
+                                        children=[
+                                            components.TableHeadCell("Title"),
+                                            components.TableHeadCell("Content"),
+                                            components.TableHeadCell("Product"),
+                                            components.TableHeadCell("Public"),
+                                            components.TableHeadCell("Created at"),
+                                        ]
+                                    ),
+                                    row_builder=lambda row: components.TableRow(
+                                        children=[
+                                            components.TableColumn(components.Text(row.title)),
+                                            components.TableColumn(components.Text(row.content)),
+                                            components.TableColumn(components.Text(row.product)),
+                                            components.TableColumn(
+                                                components.BoolValue(row.public),
+                                            ),
+                                            components.TableColumn(
+                                                components.Text(row.created_at, formatter=formatters.DateTime())
+                                            ),
+                                        ]
+                                    ),
                                 ),
                             ],
                         ),
@@ -144,19 +192,16 @@ class CustomerIndexView(components.IndexView[Customer]):
                 children=[
                     components.TableSortableHeadCell("Name", sort_field="name"),
                     components.TableSortableHeadCell("Email", sort_field="email"),
-                    components.TableHeadCell("phone"),
+                    components.TableHeadCell("Phone"),
                 ]
             ),
             row_builder=lambda row: components.TableRow(
                 children=[
                     components.TableColumn(
-                        value_builder=lambda: components.Link(
-                            text=row.name,
-                            url=CustomerResource.get_edit_page_route(row.id),
-                        )
+                        components.Link(text=row.name, url=CustomerResource.get_edit_page_route(row.id))
                     ),
-                    components.TableColumn(row.email, formatter=formatters.Link(protocol="mailto")),
-                    components.TableColumn(row.phone, formatter=formatters.Link(protocol="tel")),
+                    components.TableColumn(components.Text(row.email, formatter=formatters.Link(protocol="mailto"))),
+                    components.TableColumn(components.Text(row.phone, formatter=formatters.Link(protocol="tel"))),
                 ]
             ),
         )

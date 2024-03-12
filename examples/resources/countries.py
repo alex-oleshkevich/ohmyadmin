@@ -18,8 +18,8 @@ class CountryDetailView(components.DetailView[Country]):
     def build(self, request: Request) -> components.Component:
         return components.Column(
             [
-                components.ModelField("Code", self.model.code),
-                components.ModelField("Name", self.model.name),
+                components.ModelField("Code", components.Text(self.model.code)),
+                components.ModelField("Name", components.Text(self.model.name)),
             ]
         )
 
@@ -52,12 +52,9 @@ class CountryIndexView(components.IndexView[Country]):
             row_builder=lambda row: components.TableRow(
                 children=[
                     components.TableColumn(
-                        row.code,
-                        value_builder=lambda: components.Link(
-                            text=str(row), url=CountryResource.get_edit_page_route(row.code)
-                        ),
+                        child=components.Link(text=str(row), url=CountryResource.get_edit_page_route(row.code)),
                     ),
-                    components.TableColumn(row.name),
+                    components.TableColumn(components.Text(row.name)),
                 ]
             ),
         )

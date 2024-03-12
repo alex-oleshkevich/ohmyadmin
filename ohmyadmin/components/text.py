@@ -7,6 +7,7 @@ from starlette.datastructures import URL
 from starlette.requests import Request
 from starlette_babel import gettext_lazy as _
 
+from ohmyadmin import formatters
 from ohmyadmin.components.base import Component
 from ohmyadmin.routing import LazyURL, URLProvider
 
@@ -16,8 +17,20 @@ T = typing.TypeVar("T")
 class Text(Component):
     template_name = "ohmyadmin/components/text/text.html"
 
-    def __init__(self, text: str) -> None:
-        self.text = text
+    def __init__(
+        self, text: str = "", empty_value: str = "-", formatter: formatters.ValueFormatter | None = None
+    ) -> None:
+        self.text = text or empty_value
+        self.formatter = formatter
+        self.empty_value = empty_value
+
+    def build(self, request: Request) -> Component:
+        text = (
+            self.formatter(request, self.text)
+            if (self.formatter and self.text != self.empty_value and self.text)
+            else self.text
+        )
+        return Text(text=text)
 
 
 class Placeholder(Component):
