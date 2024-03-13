@@ -5,7 +5,7 @@ import typing
 import wtforms
 from starlette.requests import Request
 
-from ohmyadmin.components.base import Component
+from ohmyadmin.components.base import Component, ComposeComponent
 from ohmyadmin.components.text import Placeholder
 from ohmyadmin.templating import render_to_string
 
@@ -13,14 +13,14 @@ F = typing.TypeVar("F", bound=wtforms.Form)
 M = typing.TypeVar("M")
 
 
-class FormView(Component, typing.Generic[F, M]):
+class FormView(ComposeComponent, typing.Generic[F, M]):
     template_name = "ohmyadmin/components/forms/form_view.html"
 
     def __init__(self, form: F, model: M | None) -> None:
         self.form = form
         self.model = model
 
-    def build(self, request: Request) -> Component:
+    def compose(self, request: Request) -> Component:
         return Placeholder(message="This view does not define any content.")
 
 

@@ -1,3 +1,4 @@
+import pathlib
 import typing
 
 import pytest
@@ -27,14 +28,21 @@ def auth_policy(user: User) -> AuthPolicy:
 
 
 @pytest.fixture
+def template_dir(tmp_path: pathlib.Path) -> pathlib.Path:
+    yield tmp_path
+
+
+@pytest.fixture
 def ohmyadmin(
     auth_policy: AuthPolicy,
     file_storage: FileStorage,
+    template_dir: pathlib.Path,
 ) -> OhMyAdmin:
     return OhMyAdmin(
         screens=[],
         file_storage=file_storage,
         auth_policy=auth_policy,
+        template_dir=template_dir,
     )
 
 

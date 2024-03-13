@@ -97,7 +97,7 @@ class ProductsByYear(TrendMetric):
 
 
 class ProductDetailView(components.DetailView[Product]):
-    def build(self, request: Request) -> components.Component:
+    def compose(self, request: Request) -> components.Component:
         return components.Grid(
             columns=2,
             children=[
@@ -213,7 +213,7 @@ class ProductDetailView(components.DetailView[Product]):
 
 
 class ProductFormView(components.FormView[ProductForm, Product]):
-    def build(self, request: Request) -> components.Component:
+    def compose(self, request: Request) -> components.Component:
         return components.Grid(
             columns=12,
             children=[
@@ -298,7 +298,7 @@ class ProductFormView(components.FormView[ProductForm, Product]):
 
 
 class ProductIndexView(components.IndexView[Product]):
-    def build(self, request: Request) -> components.Component:
+    def compose(self, request: Request) -> components.Component:
         return components.Table(
             items=self.models,
             header=components.TableRow(

@@ -1,5 +1,7 @@
 import functools
 import itertools
+import os
+
 import jinja2
 import operator
 import typing
@@ -38,6 +40,8 @@ class OhMyAdmin(Router):
         file_storage: FileStorage | None = None,
         auth_policy: AuthPolicy | None = None,
         menu_builder: MenuBuilder | None = None,
+        template_dir: str | os.PathLike | None = None,
+        template_package: str | None = None,
     ) -> None:
         self.theme = theme
         self.screens = screens or []
@@ -45,11 +49,17 @@ class OhMyAdmin(Router):
         self.file_storage = file_storage
         self.menu_builder = menu_builder or ohmyadmin.components.menu.MenuBuilder(builder=self._default_menu_builder)
 
+        jinja_loaders: list[jinja2.BaseLoader] = [jinja2.PackageLoader("ohmyadmin")]
+        if template_dir:
+            jinja_loaders.append(jinja2.FileSystemLoader(template_dir))
+        if template_package:
+            jinja_loaders.append(jinja2.PackageLoader(template_package))
+
         self.jinja_env = jinja2.Environment(
             autoescape=True,
             undefined=jinja2.StrictUndefined,
             extensions=["jinja2.ext.do"],
-            loader=jinja2.ChoiceLoader([jinja2.PackageLoader("ohmyadmin")]),
+            loader=jinja2.ChoiceLoader(jinja_loaders),
         )
         self.jinja_env.filters.update({"object_id": id, "model_pk": model_pk})
         self.templating = templating.Jinja2Templates(

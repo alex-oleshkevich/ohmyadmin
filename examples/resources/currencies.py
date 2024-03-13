@@ -15,7 +15,7 @@ class CurrencyForm(wtforms.Form):
 
 
 class CurrencyDetailView(components.DetailView[Currency]):
-    def build(self, request: Request) -> components.Component:
+    def compose(self, request: Request) -> components.Component:
         return components.Column(
             [
                 components.ModelField("Code", components.Text(self.model.code)),
@@ -25,7 +25,7 @@ class CurrencyDetailView(components.DetailView[Currency]):
 
 
 class CurrencyFormView(components.FormView[CurrencyForm, Currency]):
-    def build(self, request: Request) -> components.Component:
+    def compose(self, request: Request) -> components.Component:
         return components.Grid(
             children=[
                 components.Column(
@@ -40,7 +40,7 @@ class CurrencyFormView(components.FormView[CurrencyForm, Currency]):
 
 
 class CurrencyIndexView(components.IndexView[Currency]):
-    def build(self, request: Request) -> components.Component:
+    def compose(self, request: Request) -> components.Component:
         return components.Table(
             items=self.models,
             header=components.TableRow(

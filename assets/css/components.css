@@ -1,5 +1,6 @@
 @import "forms/repeated_input.css";
 @import "table.css";
+@import "components/avatars.css";
 
 @layer base {
     [type="text"],
@@ -240,43 +241,6 @@
         @apply hover:bg-gray-100;
     }
 
-    .avatar {
-        @apply inline-block h-8 w-8 rounded-full relative bg-slate-100;
-    }
-
-    .avatar img,
-    .avatar svg {
-        @apply h-full w-full rounded-full object-cover object-center;
-    }
-
-    .avatar.avatar-status {
-        @apply after:absolute after:bottom-0 after:right-0 after:h-2 after:w-2 after:rounded-full after:ring after:ring-white;
-    }
-
-    .avatar.avatar-status-green {
-        @apply after:bg-green-400;
-    }
-
-    .avatar.avatar-status-red {
-        @apply after:bg-red-400;
-    }
-
-    .avatar.avatar-sm {
-        @apply h-6 w-6;
-    }
-
-    .avatar.avatar-md {
-        @apply h-8 w-8;
-    }
-
-    .avatar.avatar-lg {
-        @apply h-10 w-10;
-    }
-
-    .avatar.avatar-xl {
-        @apply h-12 w-12;
-    }
-
     .badge {
         @apply inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-800;
     }
@@ -308,6 +272,7 @@
     .badge-pink {
         @apply bg-pink-100 text-pink-800;
     }
+
     .badge-rose {
         @apply bg-rose-100 text-rose-800;
     }

@@ -24,13 +24,13 @@ class Text(Component):
         self.formatter = formatter
         self.empty_value = empty_value
 
-    def build(self, request: Request) -> Component:
-        text = (
-            self.formatter(request, self.text)
-            if (self.formatter and self.text != self.empty_value and self.text)
-            else self.text
-        )
-        return Text(text=text)
+    # def build(self, request: Request) -> Component:
+    #     text = (
+    #         self.formatter(request, self.text)
+    #         if (self.formatter and self.text != self.empty_value and self.text)
+    #         else self.text
+    #     )
+    #     return Text(text=text)
 
 
 class Placeholder(Component):

@@ -7,35 +7,7 @@ import wtforms
 from markupsafe import Markup
 from starlette.requests import Request
 
-from ohmyadmin import formatters
-from ohmyadmin.components.form import FormInput, NestedFormComponent, RepeatedFormInput
 from ohmyadmin.components.base import Component
-from ohmyadmin.components.layout import Column, Grid
-from ohmyadmin.display_fields import DisplayField
-from ohmyadmin.templating import render_to_string
-
-
-class TextComponent(Component):
-    template: str = "ohmyadmin/components/text.html"
-
-    def __init__(
-        self,
-        value: typing.Any,
-        formatter: formatters.ValueFormatter = formatters.String(),
-    ) -> None:
-        self.value = value
-        self.formatter = formatter
-
-    def render(self, request: Request) -> str:
-        return render_to_string(
-            request,
-            self.template,
-            {
-                "layout": self,
-                "value": self.value,
-                "formatted_value": self.formatter(request, self.value),
-            },
-        )
 
 
 class RawHTMLComponent(Component):
@@ -51,41 +23,6 @@ class SeparatorComponent(Component):
         return RawHTMLComponent("<hr>").render(request)
 
 
-class DisplayValue(Component):
-    def __init__(
-        self,
-        label: str,
-        value: typing.Any,
-        formatter: formatters.ValueFormatter = formatters.String(),
-    ) -> None:
-        self.label = label
-        self.value = value
-        self.formatter = formatter
-
-    def render(self, request: Request) -> str:
-        layout = Grid(
-            columns=12,
-            children=[
-                Column(children=[TextComponent(value=self.label)], colspan=4),
-                Column(children=[TextComponent(value=self.formatter(request, self.value))], colspan=8),
-            ],
-        )
-        return layout.render(request)
-
-
-class DisplayFieldComponent(Component):
-    def __init__(self, field: DisplayField, model: typing.Any) -> None:
-        self.field = field
-        self.model = model
-
-    def render(self, request: Request) -> str:
-        component = DisplayValue(
-            label=self.field.label,
-            value=self.field.get_field_value(request, self.model),
-        )
-        return component.render(request)
-
-
 class FormLayoutBuilder(typing.Protocol):
     def __call__(self, form: wtforms.Form | wtforms.Field) -> Component:
         ...
@@ -98,86 +35,3 @@ class BaseFormLayoutBuilder(abc.ABC):
     @abc.abstractmethod
     def build(self, form: wtforms.Form | wtforms.Field) -> Component:
         raise NotImplementedError()
-
-
-class AutoFormLayout(BaseFormLayoutBuilder):
-    def build(self, form: wtforms.Form | wtforms.Field) -> Component:
-        return Grid(
-            columns=12,
-            children=[self.build_for_field(field) for field in form],
-        )
-
-    def build_listfield_item(self, field: wtforms.Form) -> Component:
-        match field:
-            case wtforms.FormField() as form_field:
-                field_count = len(list(form_field))
-                if field_count > 4:
-                    return Column(children=[FormInput(subfield) for subfield in form_field])
-                return Grid(columns=field_count, children=[FormInput(subfield) for subfield in form_field])
-            case _:
-                return FormInput(field)
-
-    def build_for_field(self, field: wtforms.Field) -> Component:
-        match field:
-            case wtforms.FieldList() as list_field:
-                return Column(
-                    colspan=8,
-                    children=[
-                        Column(
-                            label=list_field.label.text,
-                            description=list_field.description,
-                            children=[
-                                RepeatedFormInput(
-                                    field=list_field,
-                                    builder=lambda field: self.build_listfield_item(field),
-                                )
-                            ],
-                        )
-                    ],
-                )
-            case wtforms.TextAreaField():
-                return Grid(children=[FormInput(field, colspan=6)])
-            case wtforms.IntegerField() | wtforms.FloatField() | wtforms.DecimalField():
-                return Grid(children=[FormInput(field, colspan=2)])
-            case wtforms.FormField() as form_field:
-                field_count = len(list(form_field))
-                layout: Component
-                if field_count > 4:
-                    layout = Column(children=[FormInput(subfield) for subfield in form_field])
-                layout = Grid(columns=field_count, children=[FormInput(subfield) for subfield in form_field])
-                return Group(
-                    colspan=8,
-                    label=form_field.label.text,
-                    description=form_field.description,
-                    children=[NestedFormComponent(field=form_field, builder=lambda field: layout)],
-                )
-            case _:
-                return Grid(children=[FormInput(field, colspan=4)])
-
-
-class DisplayLayoutBuilder(typing.Protocol):
-    def __call__(self, request: Request, model: typing.Any) -> Component:
-        ...
-
-
-class BaseDisplayLayoutBuilder(abc.ABC):
-    def __call__(self, request: Request, model: typing.Any) -> Component:
-        return self.build(request, model)
-
-    @abc.abstractmethod
-    def build(self, request: Request, model: typing.Any) -> Component:
-        raise NotImplementedError()
-
-
-class AutoDisplayLayout(BaseDisplayLayoutBuilder):
-    def build(self, request: Request, model: typing.Any) -> Component:
-        fields = request.state.resource.display_fields
-        return Grid(
-            columns=12,
-            children=[
-                Column(
-                    colspan=6,
-                    children=[DisplayFieldComponent(field=field, model=model) for field in fields],
-                )
-            ],
-        )

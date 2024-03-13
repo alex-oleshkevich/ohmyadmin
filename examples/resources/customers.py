@@ -19,7 +19,7 @@ class CustomerForm(wtforms.Form):
 
 
 class CustomerDetailView(components.DetailView[Customer]):
-    def build(self, request: Request) -> components.Component:
+    def compose(self, request: Request) -> components.Component:
         return components.Grid(
             children=[
                 components.Column(
@@ -163,7 +163,7 @@ class CustomerDetailView(components.DetailView[Customer]):
 
 
 class CustomerFormView(components.FormView[CustomerForm, Customer]):
-    def build(self, request: Request) -> components.Component:
+    def compose(self, request: Request) -> components.Component:
         return components.Grid(
             children=[
                 components.Column(
@@ -185,7 +185,7 @@ class CustomerFormView(components.FormView[CustomerForm, Customer]):
 
 
 class CustomerIndexView(components.IndexView[Customer]):
-    def build(self, request: Request) -> components.Component:
+    def compose(self, request: Request) -> components.Component:
         return components.Table(
             items=self.models,
             header=components.TableRow(

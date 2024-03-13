@@ -3,6 +3,7 @@ import wtforms
 from sqlalchemy.orm import joinedload
 from starlette.requests import Request
 
+import ohmyadmin.components.base
 from examples import icons
 from examples.models import Category
 from ohmyadmin import components, formatters
@@ -22,14 +23,14 @@ class CategoryForm(wtforms.Form):
 
 
 class CategoryDetailView(DetailView[Category]):
-    def build(self, request: Request) -> Component:
+    def compose(self, request: Request) -> Component:
         return components.Column(
             [
                 components.ModelField("Name", components.Text(self.model.name)),
                 components.ModelField("Description", components.Text(self.model.description)),
                 components.ModelField(
                     "Parent",
-                    components.When(
+                    ohmyadmin.components.base.When(
                         expression=self.model.parent_id,
                         when_true=components.Builder(
                             builder=lambda: components.Link(
@@ -59,7 +60,7 @@ class CategoryDetailView(DetailView[Category]):
 
 
 class CategoryFormView(components.FormView[CategoryForm, Category]):
-    def build(self, request: Request) -> Component:
+    def compose(self, request: Request) -> Component:
         return components.Grid(
             children=[
                 components.Column(
@@ -77,7 +78,7 @@ class CategoryFormView(components.FormView[CategoryForm, Category]):
 
 
 class CategoryIndexView(components.IndexView[Category]):
-    def build(self, request: Request) -> Component:
+    def compose(self, request: Request) -> Component:
         return components.Table(
             items=self.models,
             header=components.TableRow(
@@ -93,7 +94,7 @@ class CategoryIndexView(components.IndexView[Category]):
                         child=components.Link(text=row.name, url=CategoryResource.get_edit_page_route(row.id))
                     ),
                     components.TableColumn(
-                        child=components.When(
+                        child=ohmyadmin.components.base.When(
                             expression=row.parent_id,
                             when_true=components.Builder(
                                 builder=lambda: components.Link(

@@ -1,15 +1,16 @@
 import datetime
 import decimal
-from starlette_babel import gettext_lazy as _
+
 import sqlalchemy as sa
 import wtforms
-from markupsafe import Markup
 from starlette.datastructures import URL
 from starlette.requests import Request
 from starlette.responses import Response
+from starlette_babel import gettext_lazy as _
 
+from examples import icons
 from examples.models import User
-from ohmyadmin import colors, formatters
+from ohmyadmin import colors, components, formatters
 from ohmyadmin.actions import actions
 from ohmyadmin.breadcrumbs import Breadcrumb
 from ohmyadmin.datasources.datasource import InFilter
@@ -26,26 +27,17 @@ from ohmyadmin.filters import (
     MultiChoiceFilter,
     StringFilter,
 )
-from ohmyadmin.formatters import (
-    AvatarFormatter,
-    BoolFormatter,
-    Callback,
-    Date,
-    LinkFormatter,
-    Number,
-)
-from ohmyadmin.helpers import snake_to_sentence
 from ohmyadmin.htmx import response
 from ohmyadmin.metrics.partition import Partition, PartitionMetric
 from ohmyadmin.metrics.progress import ProgressMetric
 from ohmyadmin.metrics.trend import TrendMetric, TrendValue
 from ohmyadmin.metrics.value import ValueMetric, ValueValue
+from ohmyadmin.resources.resource import ResourceScreen
 from ohmyadmin.screens.table import TableScreen
-from ohmyadmin.display_fields import DisplayField
 
 
 def user_edit_url(request: Request) -> URL:
-    return UsersTable.get_url(request)
+    return UsersResource.get_url(request)
 
 
 async def show_toast_callback(request: Request) -> Response:
@@ -58,16 +50,6 @@ class CreateUserForm(wtforms.Form):
     email = wtforms.EmailField(validators=[wtforms.validators.data_required()])
     password = wtforms.PasswordField(validators=[wtforms.validators.data_required()])
     confirm_password = wtforms.PasswordField(validators=[wtforms.validators.equal_to("password")])
-
-
-PLUS_ICON = Markup(
-    """
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
-<path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 5l0 14" />
-<path d="M5 12l14 0" />
-</svg>
-"""
-)
 
 
 async def create_user_callback(request: Request, form: CreateUserForm) -> Response:
@@ -168,10 +150,48 @@ class ActivationProgressMetric(ProgressMetric):
         return result.scalars().one()
 
 
-class UsersTable(TableScreen):
-    label = "Table view"
+class UsersIndexView(components.IndexView[User]):
+    def compose(self, request: Request) -> components.Component:
+        return components.Table(
+            items=self.models,
+            header=components.TableRow(
+                children=[
+                    components.TableHeadCell("Photo"),
+                    components.TableHeadCell("First name"),
+                    components.TableSortableHeadCell("Last name", "last_name"),
+                    components.TableHeadCell("Birthdate"),
+                    components.TableHeadCell("Balance"),
+                    components.TableHeadCell("Rating"),
+                    components.TableHeadCell("Email"),
+                    components.TableHeadCell("Is active"),
+                    components.TableHeadCell("Gender"),
+                    components.TableHeadCell("Created at"),
+                ]
+            ),
+            row_builder=lambda row: components.TableRow(
+                children=[
+                    components.TableColumn(components.Avatar(row.photo)),
+                    components.TableColumn(
+                        components.Link(text=row.first_name, url=UsersResource.get_edit_page_route(row.id))
+                    ),
+                    components.TableColumn(components.Text(row.last_name)),
+                    components.TableColumn(components.Text(row.birthdate, formatter=formatters.DateTime())),
+                    components.TableColumn(components.Text(row.balance, formatter=formatters.Number(prefix="$ "))),
+                    components.TableColumn(components.Text(row.rating)),
+                    components.TableColumn(components.Text(row.email)),
+                    components.TableColumn(components.BoolValue(row.is_active)),
+                    components.TableColumn(components.Text(row.gender)),
+                    components.TableColumn(components.Text(row.created_at, formatter=formatters.DateTime())),
+                ]
+            ),
+        )
+
+
+class UsersResource(ResourceScreen):
+    icon = icons.ICON_PLUS
+    label = "User"
     group = "Views"
-    description = "Demo of table view."
+    description = "All users"
     datasource = SADataSource(User)
     searchable_fields = ["last_name", "email"]
     ordering_fields = "last_name", "email", "rating", "birthdate", "created_at"
@@ -220,7 +240,7 @@ class UsersTable(TableScreen):
             label="Batch Update",
             callback=object_form_callback,
             form_class=RowObjectForm,
-            icon=PLUS_ICON,
+            icon=icons.ICON_PLUS,
         ),
     ]
     object_actions = [
@@ -236,21 +256,21 @@ class UsersTable(TableScreen):
             label="Form action",
             callback=object_form_callback,
             form_class=RowObjectForm,
-            icon=PLUS_ICON,
+            icon=icons.ICON_PLUS,
         ),
         actions.ModalAction(
             label="Dangerous form action",
             dangerous=True,
             callback=object_form_callback,
             form_class=RowObjectForm,
-            icon=PLUS_ICON,
+            icon=icons.ICON_PLUS,
         ),
     ]
     page_actions = [
         actions.LinkAction(url="/admin", label="To Main page"),
         actions.CallbackAction("Show toast", callback=show_toast_callback),
         actions.ModalAction(
-            icon=PLUS_ICON,
+            icon=icons.ICON_PLUS,
             label="New User",
             variant="accent",
             modal_title="Create user",
@@ -260,15 +280,4 @@ class UsersTable(TableScreen):
         ),
     ]
 
-    columns = [
-        DisplayField("photo", formatter=AvatarFormatter()),
-        DisplayField("first_name", formatter=LinkFormatter(url="/admin")),
-        DisplayField("last_name"),
-        DisplayField("birthdate", formatter=Date()),
-        DisplayField("balance", formatter=Number(prefix="$")),
-        DisplayField("rating"),
-        DisplayField("email"),
-        DisplayField("is_active", formatter=BoolFormatter(as_text=True)),
-        DisplayField("gender", formatter=Callback(lambda r, v: snake_to_sentence(v))),
-        DisplayField("created_at", formatter=Date()),
-    ]
+    index_view_class = UsersIndexView

@@ -13,28 +13,23 @@ from starlette.requests import HTTPConnection, Request
 from starlette.responses import Response
 from starlette.routing import Mount, Route
 from starlette.types import ASGIApp, Receive, Scope, Send
+from starlette_babel import gettext_lazy as _
 
 import ohmyadmin.components.layout
-import ohmyadmin.components.menu
 from examples import icons, settings
 from examples.models import User
 from examples.resources.brands import BrandResource
 from examples.resources.categories import CategoryResource
 from examples.resources.countries import CountryResource
 from examples.resources.currencies import CurrencyResource
-from examples.resources.custom_form_layout import CustomProductFormView
 from examples.resources.customers import CustomerResource
-from examples.resources.display_view import ProductView
-from examples.resources.form_view import ProductFormView
 from examples.resources.orders import OrdersResource
 from examples.resources.products import ProductResource
-from examples.resources.users_table import UsersTable
+from examples.resources.users import UsersResource
+from ohmyadmin import components
 from ohmyadmin.app import OhMyAdmin
 from ohmyadmin.authentication.policy import AuthPolicy
-from ohmyadmin.components.menu import MenuBuilder
 from ohmyadmin.routing import url_to
-from starlette_babel import gettext_lazy as _
-
 from ohmyadmin.theme import Theme
 
 install_error_handler()
@@ -96,10 +91,6 @@ admin = OhMyAdmin(
         title="Jelpy",
     ),
     screens=[
-        UsersTable(),
-        ProductView(),
-        ProductFormView(),
-        CustomProductFormView(),
         CountryResource(),
         CategoryResource(),
         BrandResource(),
@@ -107,39 +98,21 @@ admin = OhMyAdmin(
         CustomerResource(),
         OrdersResource(),
         ProductResource(),
+        UsersResource(),
     ],
-    menu_builder=MenuBuilder(
+    menu_builder=components.MenuBuilder(
         builder=lambda request: ohmyadmin.components.layout.Column(
             children=[
-                ohmyadmin.components.menu.MenuGroup(
-                    heading=_("Shop"),
+                components.MenuGroup(
                     items=[
-                        ohmyadmin.components.menu.MenuItem(
-                            url_to(CountryResource), _("Countries"), icon=icons.ICON_COUNTRIES
-                        ),
-                        ohmyadmin.components.menu.MenuItem(
-                            url_to(CategoryResource), _("Categories"), icon=icons.ICON_CATEGORY
-                        ),
-                        ohmyadmin.components.menu.MenuItem(url_to(BrandResource), _("Brands"), icon=icons.ICON_BASKET),
-                        ohmyadmin.components.menu.MenuItem(
-                            url_to(CurrencyResource), _("Currencies"), icon=icons.ICON_CURRENCY
-                        ),
-                        ohmyadmin.components.menu.MenuItem(
-                            url_to(CustomerResource), _("Customers"), icon=icons.ICON_FRIENDS
-                        ),
-                        ohmyadmin.components.menu.MenuItem(url_to(OrdersResource), _("Orders"), icon=icons.ICON_ORDER),
-                        ohmyadmin.components.menu.MenuItem(
-                            url_to(ProductResource), _("Products"), icon=icons.ICON_PRODUCTS
-                        ),
-                    ],
-                ),
-                ohmyadmin.components.menu.MenuGroup(
-                    heading=_("Demo"),
-                    items=[
-                        ohmyadmin.components.menu.MenuItem(url_to(UsersTable), _("Table view")),
-                        ohmyadmin.components.menu.MenuItem(url_to(ProductView), _("Display view")),
-                        ohmyadmin.components.menu.MenuItem(url_to(ProductFormView), _("Form view")),
-                        ohmyadmin.components.menu.MenuItem(url_to(CustomProductFormView), _("Custom form layout")),
+                        components.MenuItem(url_to(CountryResource), _("Countries"), icon=icons.ICON_COUNTRIES),
+                        components.MenuItem(url_to(CategoryResource), _("Categories"), icon=icons.ICON_CATEGORY),
+                        components.MenuItem(url_to(BrandResource), _("Brands"), icon=icons.ICON_BASKET),
+                        components.MenuItem(url_to(CurrencyResource), _("Currencies"), icon=icons.ICON_CURRENCY),
+                        components.MenuItem(url_to(CustomerResource), _("Customers"), icon=icons.ICON_FRIENDS),
+                        components.MenuItem(url_to(OrdersResource), _("Orders"), icon=icons.ICON_ORDER),
+                        components.MenuItem(url_to(ProductResource), _("Products"), icon=icons.ICON_PRODUCTS),
+                        components.MenuItem(url_to(UsersResource), _("Users"), icon=icons.ICON_PRODUCTS),
                     ],
                 ),
             ]

@@ -15,7 +15,7 @@ class CountryForm(wtforms.Form):
 
 
 class CountryDetailView(components.DetailView[Country]):
-    def build(self, request: Request) -> components.Component:
+    def compose(self, request: Request) -> components.Component:
         return components.Column(
             [
                 components.ModelField("Code", components.Text(self.model.code)),
@@ -25,7 +25,7 @@ class CountryDetailView(components.DetailView[Country]):
 
 
 class FormView(components.FormView[CountryForm, Country]):
-    def build(self, request: Request) -> Component:
+    def compose(self, request: Request) -> Component:
         return components.Grid(
             children=[
                 components.Column(
@@ -40,7 +40,7 @@ class FormView(components.FormView[CountryForm, Country]):
 
 
 class CountryIndexView(components.IndexView[Country]):
-    def build(self, request: Request) -> components.Component:
+    def compose(self, request: Request) -> components.Component:
         return components.Table(
             items=self.models,
             header=components.TableRow(

@@ -86,7 +86,7 @@ class OrdersByYear(TrendMetric):
 
 
 class OrderDetailView(components.DetailView[Order]):
-    def build(self, request: Request) -> components.Component:
+    def compose(self, request: Request) -> components.Component:
         return components.Grid(
             children=[
                 components.Column(
@@ -180,7 +180,7 @@ class OrderDetailView(components.DetailView[Order]):
 
 
 class OrderFormView(components.FormView[OrderForm, Order]):
-    def build(self, request: Request) -> components.Component:
+    def compose(self, request: Request) -> components.Component:
         return components.Grid(
             children=[
                 components.Column(
@@ -237,7 +237,7 @@ class OrderFormView(components.FormView[OrderForm, Order]):
 
 
 class OrderIndexView(components.IndexView[Order]):
-    def build(self, request: Request) -> components.Component:
+    def compose(self, request: Request) -> components.Component:
         return components.Table(
             items=self.models,
             header=components.TableRow(

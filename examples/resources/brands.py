@@ -17,7 +17,7 @@ class BrandForm(wtforms.Form):
 
 
 class BrandDetailView(components.DetailView[Brand]):
-    def build(self, request: Request) -> components.Component:
+    def compose(self, request: Request) -> components.Component:
         return components.Column(
             [
                 components.ModelField("Name", components.Text(self.model.name)),
@@ -38,7 +38,7 @@ class BrandDetailView(components.DetailView[Brand]):
 
 
 class BrandFormView(components.FormView[BrandForm, Brand]):
-    def build(self, request: Request) -> components.Component:
+    def compose(self, request: Request) -> components.Component:
         return components.Grid(
             children=[
                 components.Container(
@@ -58,7 +58,7 @@ class BrandFormView(components.FormView[BrandForm, Brand]):
 
 
 class BrandsIndexView(components.IndexView[Brand]):
-    def build(self, request: Request) -> components.Component:
+    def compose(self, request: Request) -> components.Component:
         return components.Table[Brand](
             items=self.models,
             header=components.TableRow(

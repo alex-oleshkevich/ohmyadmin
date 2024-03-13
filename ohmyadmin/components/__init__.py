@@ -6,4 +6,4 @@ from ohmyadmin.components.form import *
 from ohmyadmin.components.index import *
 from ohmyadmin.components.table import *
 from ohmyadmin.components.display import *
-from ohmyadmin.components.control_flow import *
+from ohmyadmin.components.menu import *
