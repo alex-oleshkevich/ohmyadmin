@@ -4,11 +4,12 @@ import wtforms
 import sqlalchemy as sa
 from sqlalchemy.orm import joinedload, selectinload, with_expression
 from starlette.requests import Request
+from starlette_babel import formatters
 
 from examples import icons
 from examples.models import Country, Currency, Customer, Order, OrderItem, Product
 from examples.resources.customers import CustomerResource
-from ohmyadmin import components, filters, formatters
+from ohmyadmin import components, filters
 from ohmyadmin.datasources.sqlalchemy import load_choices, SADataSource
 from ohmyadmin.forms.utils import safe_int_coerce
 from ohmyadmin.metrics import Partition, PartitionMetric, TrendMetric, TrendValue, ValueMetric, ValueValue
@@ -66,7 +67,6 @@ class TotalProductsMetric(ValueMetric):
 class OrdersByYear(TrendMetric):
     label = "Orders by year"
     show_current_value = True
-    formatter = formatters.String(suffix=" orders this month")
 
     async def calculate_current_value(self, request: Request) -> int | float | decimal.Decimal:
         stmt = sa.select(sa.func.count("*")).where(Order.created_at >= sa.func.now() - sa.text("interval '30 day'"))
@@ -115,15 +115,16 @@ class OrderDetailView(components.DetailView[Order]):
                         components.ModelField(
                             "Total price",
                             components.Text(
-                                sum([item.unit_price * item.quantity for item in self.model.items]),
-                                formatter=formatters.Number(prefix="USD "),
+                                formatters.format_currency(
+                                    sum([item.unit_price * item.quantity for item in self.model.items]), "USD"
+                                )
                             ),
                         ),
                         components.ModelField(
-                            "Order date", components.Text(self.model.created_at, formatter=formatters.DateTime())
+                            "Order date", components.Text(formatters.format_datetime(self.model.created_at))
                         ),
                         components.ModelField(
-                            "Update date", components.Text(self.model.updated_at, formatter=formatters.DateTime())
+                            "Update date", components.Text(formatters.format_datetime(self.model.updated_at))
                         ),
                         components.ModelField("Address", components.Text(self.model.address)),
                         components.ModelField("City", components.Text(self.model.city)),
@@ -140,19 +141,19 @@ class OrderDetailView(components.DetailView[Order]):
                                         children=[
                                             components.TableHeadCell("Product"),
                                             components.TableHeadCell("Quantity", align=CellAlign.RIGHT),
-                                            components.TableHeadCell("Price"),
+                                            components.TableHeadCell("Price", align=CellAlign.RIGHT),
                                         ]
                                     ),
                                     row_builder=lambda row: components.TableRow(
                                         children=[
                                             components.TableColumn(components.Text(row.product)),
                                             components.TableColumn(
-                                                components.Text(row.quantity, formatter=formatters.Number()),
+                                                components.Text(formatters.format_number(row.quantity)),
                                                 align=CellAlign.RIGHT,
                                             ),
                                             components.TableColumn(
                                                 components.Text(
-                                                    row.unit_price * row.quantity, formatter=formatters.Number()
+                                                    formatters.format_number(row.unit_price * row.quantity)
                                                 ),
                                                 align=CellAlign.RIGHT,
                                             ),
@@ -164,8 +165,10 @@ class OrderDetailView(components.DetailView[Order]):
                                         ),
                                         components.TableColumn(
                                             components.Text(
-                                                sum([item.unit_price * item.quantity for item in self.model.items]),
-                                                formatter=formatters.Number(prefix="USD "),
+                                                formatters.format_currency(
+                                                    sum([item.unit_price * item.quantity for item in self.model.items]),
+                                                    "USD",
+                                                ),
                                             ),
                                             align=CellAlign.RIGHT,
                                         ),
@@ -276,8 +279,8 @@ class OrderIndexView(components.IndexView[Order]):
                         )
                     ),
                     components.TableColumn(components.Text(row.currency.name)),
-                    components.TableColumn(components.Text(row.total_price, formatter=formatters.Number(prefix="$ "))),
-                    components.TableColumn(components.Text(row.created_at, formatter=formatters.DateTime())),
+                    components.TableColumn(components.Text(formatters.format_currency(row.total_price, "USD"))),
+                    components.TableColumn(components.Text(formatters.format_datetime(row.created_at))),
                 ]
             ),
         )

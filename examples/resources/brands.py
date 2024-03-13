@@ -1,10 +1,11 @@
 import wtforms
 from starlette.requests import Request
+from starlette_babel import formatters
 
 import ohmyadmin.components.base
 from examples import icons
 from examples.models import Brand
-from ohmyadmin import components, filters, formatters
+from ohmyadmin import components, filters
 from ohmyadmin.datasources.sqlalchemy import SADataSource
 from ohmyadmin.resources.resource import ResourceScreen
 
@@ -24,7 +25,7 @@ class BrandDetailView(components.DetailView[Brand]):
                 components.ModelField("Name", components.Text(self.model.name)),
                 components.ModelField(
                     "Website",
-                    components.Text(self.model.website, formatter=formatters.Link()),
+                    components.Link(self.model.website, text=self.model.website),
                 ),
                 components.ModelField(
                     "Visible to customers",
@@ -32,7 +33,7 @@ class BrandDetailView(components.DetailView[Brand]):
                 ),
                 components.ModelField(
                     "Updated at",
-                    components.Text(self.model.updated_at, formatter=formatters.DateTime()),
+                    components.Text(formatters.format_datetime(self.model.updated_at)),
                 ),
             ]
         )
@@ -77,7 +78,7 @@ class BrandsIndexView(components.IndexView[Brand]):
                     ),
                     components.TableColumn(child=components.Link(url=row.website, text=row.website, target="_blank")),
                     components.TableColumn(child=components.BoolValue(row.visible_to_customers)),
-                    components.TableColumn(child=components.Text(row.updated_at, formatter=formatters.DateTime())),
+                    components.TableColumn(child=components.Text(formatters.format_datetime(row.updated_at))),
                 ]
             ),
         )

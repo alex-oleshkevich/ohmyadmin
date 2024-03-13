@@ -2,11 +2,12 @@ import sqlalchemy as sa
 import wtforms
 from sqlalchemy.orm import joinedload
 from starlette.requests import Request
+from starlette_babel import formatters
 
 import ohmyadmin.components.base
 from examples import icons
 from examples.models import Category
-from ohmyadmin import components, formatters
+from ohmyadmin import components
 from ohmyadmin.components import Component
 from ohmyadmin.components.display import DetailView
 from ohmyadmin.datasources.sqlalchemy import load_choices, SADataSource
@@ -47,14 +48,9 @@ class CategoryDetailView(DetailView[Category]):
                 ),
                 components.ModelField(
                     "Created at",
-                    components.Text(
-                        self.model.created_at,
-                        formatter=formatters.DateTime(),
-                    ),
+                    components.Text(formatters.format_datetime(self.model.created_at)),
                 ),
-                components.ModelField(
-                    "Updated at", components.Text(self.model.updated_at, formatter=formatters.DateTime())
-                ),
+                components.ModelField("Updated at", components.Text(formatters.format_datetime(self.model.updated_at))),
             ]
         )
 

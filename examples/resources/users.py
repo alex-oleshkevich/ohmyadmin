@@ -6,11 +6,11 @@ import wtforms
 from starlette.datastructures import URL
 from starlette.requests import Request
 from starlette.responses import Response
-from starlette_babel import gettext_lazy as _
+from starlette_babel import formatters, gettext_lazy as _
 
 from examples import icons
 from examples.models import User
-from ohmyadmin import colors, components, formatters
+from ohmyadmin import colors, components
 from ohmyadmin.actions import actions
 from ohmyadmin.breadcrumbs import Breadcrumb
 from ohmyadmin.datasources.datasource import InFilter
@@ -98,7 +98,6 @@ class GenderDistributionMetric(PartitionMetric):
 class AdultsMetric(ValueMetric):
     label = "Adults"
     size = 2
-    formatter = formatters.Number(suffix=" users")
 
     async def calculate(self, request: Request) -> ValueValue:
         stmt = (
@@ -115,7 +114,6 @@ class RegistrationsByYearMetric(TrendMetric):
     size = 4
     show_current_value = True
     update_interval = 2
-    formatter = formatters.String(suffix=" new users")
 
     async def calculate_current_value(self, request: Request) -> int | float | decimal.Decimal:
         stmt = sa.select(sa.func.count("*")).where(
@@ -175,13 +173,13 @@ class UsersIndexView(components.IndexView[User]):
                         components.Link(text=row.first_name, url=UsersResource.get_edit_page_route(row.id))
                     ),
                     components.TableColumn(components.Text(row.last_name)),
-                    components.TableColumn(components.Text(row.birthdate, formatter=formatters.DateTime())),
-                    components.TableColumn(components.Text(row.balance, formatter=formatters.Number(prefix="$ "))),
+                    components.TableColumn(components.Text(formatters.format_date(row.birthdate))),
+                    components.TableColumn(components.Text(formatters.format_currency(row.balance, "USD"))),
                     components.TableColumn(components.Text(row.rating)),
                     components.TableColumn(components.Text(row.email)),
                     components.TableColumn(components.BoolValue(row.is_active)),
                     components.TableColumn(components.Text(row.gender)),
-                    components.TableColumn(components.Text(row.created_at, formatter=formatters.DateTime())),
+                    components.TableColumn(components.Text(formatters.format_datetime(row.created_at))),
                 ]
             ),
         )

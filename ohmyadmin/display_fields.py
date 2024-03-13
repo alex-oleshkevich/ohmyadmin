@@ -6,7 +6,6 @@ import typing
 from starlette.datastructures import URL
 from starlette.requests import Request
 
-from ohmyadmin import formatters
 from ohmyadmin.helpers import snake_to_sentence
 
 
@@ -23,19 +22,14 @@ class DisplayField:
         self,
         name: str,
         label: str | None = None,
-        formatter: formatters.ValueFormatter = formatters.String(),
         value_getter: ValueGetter | None = None,
         default_if_none: str = "-",
         link: bool = False,
         link_to: ResourceActionLink = "edit",
     ) -> None:
-        if link and isinstance(formatter, formatters.LinkFormatter):
-            raise AttributeError("DisplayField.link option cannot be used together with LinkFormatter.")
-
         self.name = name
         self.link = link
         self.link_to = link_to
-        self.formatter = formatter
         self.default_if_none = default_if_none
         self.label = label or snake_to_sentence(name)
         self.value_getter = value_getter or functools.partial(default_value_getter, attr=name)
@@ -47,8 +41,6 @@ class DisplayField:
 
         if self.link:
             url = self.get_link_url(request, obj)
-            formatter = formatters.LinkFormatter(url=url)
-            return formatter.format(request, self.format_value(request, obj_value))
         return self.format_value(request, obj_value)
 
     def get_value(self, obj: typing.Any) -> typing.Any:

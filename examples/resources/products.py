@@ -5,12 +5,13 @@ import sqlalchemy as sa
 import wtforms
 from sqlalchemy.orm import joinedload, selectinload
 from starlette.requests import Request
+from starlette_babel import formatters
 from wtforms.fields.choices import SelectField
 
 from examples import icons
 from examples.models import Brand, Image, Product
 from examples.resources.brands import BrandResource
-from ohmyadmin import components, filters, formatters
+from ohmyadmin import components, filters
 from ohmyadmin.components import CellAlign
 from ohmyadmin.datasources.sqlalchemy import form_choices_from, load_choices, SADataSource
 from ohmyadmin.forms.utils import safe_int_coerce
@@ -53,16 +54,12 @@ class ProductForm(wtforms.Form):
 
 
 class TotalProducts(ValueMetric):
-    formatter = formatters.String(suffix=" products")
-
     async def calculate(self, request: Request) -> ValueValue:
         stmt = sa.select(sa.func.count()).select_from(sa.select(Product).subquery())
         return await request.state.dbsession.scalar(stmt)
 
 
 class AveragePrice(ValueMetric):
-    formatter = formatters.Number(suffix=" per item", decimals=2, prefix="$")
-
     async def calculate(self, request: Request) -> ValueValue:
         stmt = sa.select(sa.func.avg(Product.price)).select_from(Product)
         return await request.state.dbsession.scalar(stmt)
@@ -119,22 +116,19 @@ class ProductDetailView(components.DetailView[Product]):
                                 components.ModelField(
                                     "Price",
                                     components.Text(
-                                        self.model.price,
-                                        formatter=formatters.Number(prefix="$"),
+                                        formatters.format_currency(self.model.price, "USD"),
                                     ),
                                 ),
                                 components.ModelField(
                                     "Compare at price",
                                     components.Text(
-                                        self.model.compare_at_price,
-                                        formatter=formatters.Number(prefix="$"),
+                                        formatters.format_currency(self.model.compare_at_price, "USD"),
                                     ),
                                 ),
                                 components.ModelField(
                                     "Cost per item",
                                     components.Text(
-                                        self.model.cost_per_item,
-                                        formatter=formatters.Number(prefix="$"),
+                                        formatters.format_currency(self.model.cost_per_item, "USD"),
                                     ),
                                 ),
                             ],
@@ -145,25 +139,16 @@ class ProductDetailView(components.DetailView[Product]):
                             children=[
                                 components.ModelField(
                                     "SKU",
-                                    components.Text(
-                                        self.model.sku,
-                                        formatter=formatters.Number(),
-                                    ),
+                                    components.Text(formatters.format_number(self.model.sku)),
                                 ),
                                 components.ModelField("Barcode", components.Text(self.model.barcode)),
                                 components.ModelField(
                                     "Quantity",
-                                    components.Text(
-                                        self.model.quantity,
-                                        formatter=formatters.Number(),
-                                    ),
+                                    components.Text(formatters.format_number(self.model.quantity)),
                                 ),
                                 components.ModelField(
                                     "Security stock",
-                                    components.Text(
-                                        self.model.security_stock,
-                                        formatter=formatters.Number(),
-                                    ),
+                                    components.Text(formatters.format_number(self.model.security_stock)),
                                 ),
                             ],
                         ),
@@ -322,13 +307,11 @@ class ProductIndexView(components.IndexView[Product]):
                         )
                     ),
                     components.TableColumn(
-                        components.Text(row.price, formatter=formatters.Number(prefix="$ ")), align=CellAlign.RIGHT
+                        components.Text(formatters.format_currency(row.price, "USD")), align=CellAlign.RIGHT
                     ),
+                    components.TableColumn(components.Text(formatters.format_number(row.sku)), align=CellAlign.RIGHT),
                     components.TableColumn(
-                        components.Text(row.sku, formatter=formatters.Number()), align=CellAlign.RIGHT
-                    ),
-                    components.TableColumn(
-                        components.Text(row.quantity, formatter=formatters.Number()), align=CellAlign.RIGHT
+                        components.Text(formatters.format_number(row.quantity)), align=CellAlign.RIGHT
                     ),
                     components.TableColumn(components.BoolValue(row.visible), align=CellAlign.CENTER),
                 ]

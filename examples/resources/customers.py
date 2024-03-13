@@ -2,10 +2,11 @@ import sqlalchemy as sa
 import wtforms
 from sqlalchemy.orm import selectinload
 from starlette.requests import Request
+from starlette_babel import formatters
 
 from examples import icons
 from examples.models import Address, Comment, Customer, Order, OrderItem
-from ohmyadmin import components, filters, formatters
+from ohmyadmin import components, filters
 from ohmyadmin.components import CellAlign
 from ohmyadmin.datasources.sqlalchemy import SADataSource
 from ohmyadmin.resources.resource import ResourceScreen
@@ -28,20 +29,14 @@ class CustomerDetailView(components.DetailView[Customer]):
                         components.ModelField("Name", components.Text(self.model.name)),
                         components.ModelField(
                             "Email",
-                            components.Text(
-                                self.model.email,
-                                formatter=formatters.Link(self.model.email, protocol="mailto"),
-                            ),
+                            components.Link(url=f"mailto:{self.model.email}", text=self.model.email),
                         ),
                         components.ModelField(
                             "Phone",
-                            components.Text(
-                                self.model.phone,
-                                formatter=formatters.Link(self.model.phone, protocol="tel"),
-                            ),
+                            components.Link(url=f"tel:{self.model.phone}", text=self.model.phone),
                         ),
                         components.ModelField(
-                            "Birthdate", components.Text(self.model.birthday, formatter=formatters.Date())
+                            "Birthdate", components.Text(formatters.format_date(self.model.birthday))
                         ),
                         components.Group(
                             label="Addresses",
@@ -88,7 +83,7 @@ class CustomerDetailView(components.DetailView[Customer]):
                                             components.TableColumn(components.Text(row.provider)),
                                             components.TableColumn(components.Text(row.method)),
                                             components.TableColumn(
-                                                components.Text(row.amount, formatter=formatters.Number(prefix="$ ")),
+                                                components.Text(formatters.format_currency(row.amount, "USD")),
                                                 align=CellAlign.RIGHT,
                                             ),
                                         ]
@@ -117,9 +112,7 @@ class CustomerDetailView(components.DetailView[Customer]):
                                                 components.Text(", ".join([str(item.product) for item in row.items]))
                                             ),
                                             components.TableColumn(
-                                                components.Text(
-                                                    row.total_price, formatter=formatters.Number(prefix="$ ")
-                                                )
+                                                components.Text(formatters.format_currency(row.total_price, "USD"))
                                             ),
                                         ]
                                     ),
@@ -149,7 +142,7 @@ class CustomerDetailView(components.DetailView[Customer]):
                                                 components.BoolValue(row.public),
                                             ),
                                             components.TableColumn(
-                                                components.Text(row.created_at, formatter=formatters.DateTime())
+                                                components.Text(formatters.format_datetime(row.created_at))
                                             ),
                                         ]
                                     ),
@@ -200,8 +193,8 @@ class CustomerIndexView(components.IndexView[Customer]):
                     components.TableColumn(
                         components.Link(text=row.name, url=CustomerResource.get_edit_page_route(row.id))
                     ),
-                    components.TableColumn(components.Text(row.email, formatter=formatters.Link(protocol="mailto"))),
-                    components.TableColumn(components.Text(row.phone, formatter=formatters.Link(protocol="tel"))),
+                    components.TableColumn(components.Link(text=row.email, url=f"mailto:{row.email}")),
+                    components.TableColumn(components.Link(text=row.phone, url=f"tel:{row.phone}")),
                 ]
             ),
         )

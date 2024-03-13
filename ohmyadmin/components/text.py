@@ -8,7 +8,6 @@ from starlette.datastructures import URL
 from starlette.requests import Request
 from starlette_babel import gettext_lazy as _
 
-from ohmyadmin import formatters
 from ohmyadmin.components.base import Component
 from ohmyadmin.routing import LazyURL, resolve_url, URLProvider, URLType
 
@@ -18,11 +17,8 @@ T = typing.TypeVar("T")
 class Text(Component):
     template_name = "ohmyadmin/components/text/text.html"
 
-    def __init__(
-        self, text: str = "", empty_value: str = "-", formatter: formatters.ValueFormatter | None = None
-    ) -> None:
+    def __init__(self, text: str = "", empty_value: str = "-") -> None:
         self.text = text or empty_value
-        self.formatter = formatter
         self.empty_value = empty_value
 
 
@@ -94,19 +90,23 @@ class Image(Component):
 
 
 class ButtonVariant(enum.StrEnum):
-    DEFAULT = 'default'
-    ACCENT = 'accent'
-    PRIMARY = 'primary'
-    DANGER = 'danger'
-    ICON = 'icon'
-    TEXT = 'text'
+    DEFAULT = "default"
+    ACCENT = "accent"
+    PRIMARY = "primary"
+    DANGER = "danger"
+    ICON = "icon"
+    TEXT = "text"
 
 
 class Button(Component):
     template_name: str = "ohmyadmin/components/button.html"
 
-    def __init__(self, text: str | None = None, icon: str | None = None,
-                 variant: ButtonVariant = ButtonVariant.DEFAULT, ) -> None:
+    def __init__(
+        self,
+        text: str | None = None,
+        icon: str | None = None,
+        variant: ButtonVariant = ButtonVariant.DEFAULT,
+    ) -> None:
         assert text or icon, "Must provide either text or icon."
         self.text = text
         self.icon = icon
@@ -114,28 +114,19 @@ class Button(Component):
 
 
 class DropdownMenuItem(Component, abc.ABC):
-    template_name = 'ohmyadmin/components/dropdown_menu_item.html'
+    template_name = "ohmyadmin/components/dropdown_menu_item.html"
 
-    def __init__(
-        self,
-        child: Component,
-        leading: Component | None = None,
-        trailing: Component | None = None
-    ) -> None:
+    def __init__(self, child: Component, leading: Component | None = None, trailing: Component | None = None) -> None:
         self.child = child
         self.leading = leading
         self.trailing = trailing
 
 
 class DropdownMenuLink(DropdownMenuItem):
-    template_name = 'ohmyadmin/components/dropdown_menu_link.html'
+    template_name = "ohmyadmin/components/dropdown_menu_link.html"
 
     def __init__(
-        self,
-        url: URLType,
-        child: Component,
-        leading: Component | None = None,
-        trailing: Component | None = None
+        self, url: URLType, child: Component, leading: Component | None = None, trailing: Component | None = None
     ) -> None:
         self.url = url
         super().__init__(child, leading, trailing)
@@ -145,7 +136,7 @@ class DropdownMenuLink(DropdownMenuItem):
 
 
 class DropdownMenu(Component):
-    template_name = 'ohmyadmin/components/dropdown_menu.html'
+    template_name = "ohmyadmin/components/dropdown_menu.html"
 
     def __init__(
         self,

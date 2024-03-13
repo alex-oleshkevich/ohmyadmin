@@ -6,7 +6,7 @@ import typing
 from starlette.requests import Request
 from starlette.responses import Response
 
-from ohmyadmin import colors, formatters
+from ohmyadmin import colors
 from ohmyadmin.metrics.base import Metric
 from ohmyadmin.templating import render_to_response
 
@@ -30,10 +30,9 @@ class TrendMetric(Metric):
     color: str = colors.COLOR_SKY
     background_color: str = colors.COLOR_SKY_LIGHT
 
-    formatter: formatters.Formatter = formatters.String()
     template = "ohmyadmin/metrics/trend.html"
 
-    async def calculate_current_value(self, request: Request) -> int | float | decimal.Decimal:
+    async def calculate_current_value(self, request: Request) -> int | float | decimal.Decimal | str:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -48,6 +47,6 @@ class TrendMetric(Metric):
 
         view_model = _TrendViewModel(
             series=series,
-            current_value=self.formatter.format(request, current_value),
+            current_value=str(current_value),
         )
         return render_to_response(request, self.template, {"request": request, "metric": self, "value": view_model})
