@@ -18,9 +18,6 @@ class RawHTMLComponent(Component):
         return self.content
 
 
-class SeparatorComponent(Component):
-    def render(self, request: Request) -> str:
-        return RawHTMLComponent("<hr>").render(request)
 
 
 class FormLayoutBuilder(typing.Protocol):

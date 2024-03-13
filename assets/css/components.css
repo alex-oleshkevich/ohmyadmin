@@ -1,5 +1,5 @@
 @import "forms/repeated_input.css";
-@import "table.css";
+@import "components/table.css";
 @import "components/avatars.css";
 
 @layer base {

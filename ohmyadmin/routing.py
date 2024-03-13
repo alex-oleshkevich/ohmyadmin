@@ -21,3 +21,13 @@ class LazyURL:
 
 def url_to(screen: URLProvider, **params: typing.Any) -> LazyURL:
     return LazyURL(screen.url_name, **params)
+
+
+URLType = str | URL | LazyURL
+
+
+def resolve_url(request: Request, url: URLType) -> URL:
+    if isinstance(url, (URL, str)):
+        return URL(str(url))
+
+    return url.resolve(request)

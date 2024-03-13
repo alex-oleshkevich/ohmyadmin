@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import abc
 import enum
 import typing
 
@@ -9,7 +10,7 @@ from starlette_babel import gettext_lazy as _
 
 from ohmyadmin import formatters
 from ohmyadmin.components.base import Component
-from ohmyadmin.routing import LazyURL, URLProvider
+from ohmyadmin.routing import LazyURL, resolve_url, URLProvider, URLType
 
 T = typing.TypeVar("T")
 
@@ -24,57 +25,26 @@ class Text(Component):
         self.formatter = formatter
         self.empty_value = empty_value
 
-    # def build(self, request: Request) -> Component:
-    #     text = (
-    #         self.formatter(request, self.text)
-    #         if (self.formatter and self.text != self.empty_value and self.text)
-    #         else self.text
-    #     )
-    #     return Text(text=text)
-
-
-class Placeholder(Component):
-    template_name = "ohmyadmin/components/text/placeholder.html"
-
-    def __init__(self, message: str) -> None:
-        self.message = message
-
-
-class Container(Component):
-    template_name = "ohmyadmin/components/container.html"
-
-    def __init__(self, child: Component, colspan: int = 12) -> None:
-        self.child = child
-        self.colspan = colspan
-
 
 class Link(Component):
     template_name = "ohmyadmin/components/text/link.html"
 
     def __init__(
         self,
-        url: str | URL | LazyURL | URLProvider | None = None,
+        url: URLType | URLProvider | None = None,
         *,
         text: str,
         target: typing.Literal["", "_blank"] = "",
-        builder: typing.Callable[[], str | URL] = None,
     ) -> None:
         self.text = text
         self.target = target
         self.url = URL(url) if isinstance(url, str) else url
-        self.builder = builder
 
         if hasattr(url, "url_name"):
             self.url = LazyURL(url)
 
     def get_url(self, request: Request) -> URL:
-        if isinstance(self.url, URL):
-            return self.url
-
-        if isinstance(self.url, LazyURL):
-            return self.url.resolve(request)
-
-        return URL(self.builder())
+        return resolve_url(request, self.url)
 
 
 class BadgeColor(enum.StrEnum):
@@ -121,3 +91,66 @@ class Image(Component):
     def __init__(self, src: str, alt: str = "") -> None:
         self.src = src
         self.alt = alt
+
+
+class ButtonVariant(enum.StrEnum):
+    DEFAULT = 'default'
+    ACCENT = 'accent'
+    PRIMARY = 'primary'
+    DANGER = 'danger'
+    ICON = 'icon'
+    TEXT = 'text'
+
+
+class Button(Component):
+    template_name: str = "ohmyadmin/components/button.html"
+
+    def __init__(self, text: str | None = None, icon: str | None = None,
+                 variant: ButtonVariant = ButtonVariant.DEFAULT, ) -> None:
+        assert text or icon, "Must provide either text or icon."
+        self.text = text
+        self.icon = icon
+        self.variant = variant
+
+
+class DropdownMenuItem(Component, abc.ABC):
+    template_name = 'ohmyadmin/components/dropdown_menu_item.html'
+
+    def __init__(
+        self,
+        child: Component,
+        leading: Component | None = None,
+        trailing: Component | None = None
+    ) -> None:
+        self.child = child
+        self.leading = leading
+        self.trailing = trailing
+
+
+class DropdownMenuLink(DropdownMenuItem):
+    template_name = 'ohmyadmin/components/dropdown_menu_link.html'
+
+    def __init__(
+        self,
+        url: URLType,
+        child: Component,
+        leading: Component | None = None,
+        trailing: Component | None = None
+    ) -> None:
+        self.url = url
+        super().__init__(child, leading, trailing)
+
+    def resolve(self, request: Request) -> URL:
+        return resolve_url(request, self.url)
+
+
+class DropdownMenu(Component):
+    template_name = 'ohmyadmin/components/dropdown_menu.html'
+
+    def __init__(
+        self,
+        trigger: Component,
+        items: typing.Iterable[Component],
+    ) -> None:
+        self.trigger = trigger
+        self.items = items

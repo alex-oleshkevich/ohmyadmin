@@ -3,11 +3,13 @@ from __future__ import annotations
 import enum
 import typing
 
+from starlette.datastructures import URL
 from starlette.requests import Request
 
 from ohmyadmin.components.base import Component
 from ohmyadmin.components.text import Text
 from ohmyadmin.ordering import SortingHelper
+from ohmyadmin.routing import LazyURL, resolve_url, URLType
 from ohmyadmin.templating import render_to_string
 
 
@@ -100,3 +102,19 @@ class Table(Component, typing.Generic[T]):
     def rows(self) -> typing.Iterable[TableRow]:
         for item in self.items:
             yield self.row_builder(item)
+
+
+class RowActions(Component):
+    template_name: str = "ohmyadmin/components/table/row_actions.html"
+
+
+class LinkRowAction(Component):
+    template_name: str = "ohmyadmin/components/table/table_row_action_link.html"
+
+    def __init__(self, url: URLType, label: str, icon: str) -> None:
+        self.url = url
+        self.label = label
+        self.icon = icon
+
+    def resolve(self, request: Request) -> URL:
+        return resolve_url(request, self.url)

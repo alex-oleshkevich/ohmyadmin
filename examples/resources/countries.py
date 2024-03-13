@@ -4,7 +4,7 @@ from starlette.requests import Request
 from examples import icons
 from examples.models import Country
 from ohmyadmin import components
-from ohmyadmin.components import Component
+from ohmyadmin.components import CellAlign, Component
 from ohmyadmin.datasources.sqlalchemy import SADataSource
 from ohmyadmin.resources.resource import ResourceScreen
 
@@ -47,14 +47,43 @@ class CountryIndexView(components.IndexView[Country]):
                 children=[
                     components.TableSortableHeadCell("Code", sort_field="code"),
                     components.TableHeadCell("Name"),
+                    components.TableHeadCell('Actions', align=CellAlign.RIGHT),
                 ]
             ),
             row_builder=lambda row: components.TableRow(
                 children=[
                     components.TableColumn(
-                        child=components.Link(text=str(row), url=CountryResource.get_edit_page_route(row.code)),
+                        child=components.Link(
+                            text=str(row),
+                            url=CountryResource.get_edit_page_route(row.code),
+                        ),
                     ),
                     components.TableColumn(components.Text(row.name)),
+                    components.TableColumn(components.Row(children=[
+                        components.DropdownMenu(
+                            trigger=components.Button(
+                                icon=icons.ICON_DOTS,
+                                variant=components.ButtonVariant.TEXT,
+                            ),
+                            items=[
+                                components.DropdownMenuLink(
+                                    url=CountryResource.get_display_page_route(row.code),
+                                    child=components.Text('View'),
+                                    leading=components.HTML(icons.ICON_EYE),
+                                ),
+                                components.DropdownMenuLink(
+                                    url=CountryResource.get_edit_page_route(row.code),
+                                    child=components.Text('Edit'),
+                                    leading=components.HTML(icons.ICON_PENCIL),
+                                ),
+                                components.DropdownMenuLink(
+                                    url=CountryResource.get_edit_page_route(row.code),
+                                    child=components.Text('Delete'),
+                                    leading=components.HTML(icons.ICON_THRASH),
+                                ),
+                            ]
+                        ),
+                    ]), align=CellAlign.RIGHT),
                 ]
             ),
         )

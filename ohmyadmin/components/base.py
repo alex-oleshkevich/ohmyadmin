@@ -4,6 +4,7 @@ import abc
 import enum
 import typing
 
+from markupsafe import Markup
 from starlette.requests import Request
 
 from ohmyadmin.templating import render_to_string
@@ -84,3 +85,26 @@ class Avatar(Component):
         self.text = text
         self.image_url = image_url
         self.status_icon = status_icon
+
+
+class Placeholder(Component):
+    template_name = "ohmyadmin/components/text/placeholder.html"
+
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+
+class Container(Component):
+    template_name = "ohmyadmin/components/container.html"
+
+    def __init__(self, child: Component, colspan: int = 12) -> None:
+        self.child = child
+        self.colspan = colspan
+
+
+class HTML(Component):
+    def __init__(self, markup: str) -> None:
+        self.markup = markup
+
+    def render(self, request: Request) -> str:
+        return Markup(self.markup)

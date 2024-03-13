@@ -1,4 +1,3 @@
-from ohmyadmin.components import FormLayoutBuilder
 from ohmyadmin.screens.base import ExposeViewMiddleware, Screen
 from ohmyadmin.screens.display import DisplayScreen
 from ohmyadmin.screens.form import FormScreen
@@ -11,6 +10,5 @@ __all__ = [
     "TableScreen",
     "FormScreen",
     "IndexScreen",
-    "FormLayoutBuilder",
     "DisplayScreen",
 ]

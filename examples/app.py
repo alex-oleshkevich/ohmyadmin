@@ -15,7 +15,6 @@ from starlette.routing import Mount, Route
 from starlette.types import ASGIApp, Receive, Scope, Send
 from starlette_babel import gettext_lazy as _
 
-import ohmyadmin.components.layout
 from examples import icons, settings
 from examples.models import User
 from examples.resources.brands import BrandResource
@@ -101,7 +100,7 @@ admin = OhMyAdmin(
         UsersResource(),
     ],
     menu_builder=components.MenuBuilder(
-        builder=lambda request: ohmyadmin.components.layout.Column(
+        builder=lambda request: components.Column(
             children=[
                 components.MenuGroup(
                     items=[

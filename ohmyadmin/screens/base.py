@@ -12,7 +12,6 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 from ohmyadmin import metrics
 from ohmyadmin.actions import actions
 from ohmyadmin.breadcrumbs import Breadcrumb
-from ohmyadmin.menu import MenuItem
 
 
 class Screen(abc.ABC):

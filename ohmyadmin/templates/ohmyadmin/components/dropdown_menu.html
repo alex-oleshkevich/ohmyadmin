@@ -1,0 +1,14 @@
+{% import 'ohmyadmin/components.html' as components %}
+
+<o-dropdown-menu>
+    <o-dropdown-menu-trigger slot="trigger">
+        {{ components.render_component(request, component.trigger) }}
+    </o-dropdown-menu-trigger>
+    <div class="dropdown absolute hidden" slot="menu">
+        <div class="list-menu">
+            {% for item in component.items %}
+                {{ components.render_component(request, item) }}
+            {% endfor %}
+        </div>
+    </div>
+</o-dropdown-menu>

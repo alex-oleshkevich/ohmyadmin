@@ -27,7 +27,7 @@ from ohmyadmin.authentication.policy import AnonymousAuthPolicy, AuthPolicy
 from ohmyadmin.components.menu import MenuBuilder
 from ohmyadmin.menu import MenuItem
 from ohmyadmin.middleware import LoginRequiredMiddleware
-from ohmyadmin.templating import model_pk, static_url, url_matches
+from ohmyadmin.templating import model_pk, static_url, to_html_attrs, url_matches
 from ohmyadmin.theme import Theme
 from ohmyadmin.screens.base import Screen
 
@@ -61,7 +61,7 @@ class OhMyAdmin(Router):
             extensions=["jinja2.ext.do"],
             loader=jinja2.ChoiceLoader(jinja_loaders),
         )
-        self.jinja_env.filters.update({"object_id": id, "model_pk": model_pk})
+        self.jinja_env.filters.update({"object_id": id, "model_pk": model_pk, 'to_html_attrs': to_html_attrs})
         self.templating = templating.Jinja2Templates(
             env=self.jinja_env,
             context_processors=[

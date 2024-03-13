@@ -6,7 +6,7 @@ import wtforms
 from starlette.requests import Request
 
 from ohmyadmin.components.base import Component, ComposeComponent
-from ohmyadmin.components.text import Placeholder
+from ohmyadmin.components import Placeholder
 from ohmyadmin.templating import render_to_string
 
 F = typing.TypeVar("F", bound=wtforms.Form)

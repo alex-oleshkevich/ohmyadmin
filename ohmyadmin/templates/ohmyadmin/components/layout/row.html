@@ -1,0 +1,7 @@
+<!-- row -->
+<div class="flex items-center justify-{{ component.align }} gap-{{ component.gap }}">
+    {% for child in component.children %}
+        {{ child.render(request) }}
+    {% endfor %}
+</div>
+<!-- /row -->

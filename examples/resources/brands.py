@@ -1,6 +1,7 @@
 import wtforms
 from starlette.requests import Request
 
+import ohmyadmin.components.base
 from examples import icons
 from examples.models import Brand
 from ohmyadmin import components, filters, formatters
@@ -41,7 +42,7 @@ class BrandFormView(components.FormView[BrandForm, Brand]):
     def compose(self, request: Request) -> components.Component:
         return components.Grid(
             children=[
-                components.Container(
+                ohmyadmin.components.base.Container(
                     colspan=5,
                     child=components.Column(
                         children=[

@@ -1,0 +1,15 @@
+{% import 'ohmyadmin/components.html' as components %}
+{% set url = component.resolve(request) %}
+<a class="list-menu-item" href="{{ url }}">
+    <span class="w-5">
+        {% if component.leading %}
+            {{ components.render_component(request, component.leading) }}
+        {% endif %}
+    </span>
+    {{ components.render_component(request, component.child) }}
+    <span class="w-5 ml-auto">
+        {% if component.trailing %}
+            {{ components.render_component(request, component.trailing) }}
+        {% endif %}
+    </span>
+</a>

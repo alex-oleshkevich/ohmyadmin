@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import enum
 import typing
 
 from ohmyadmin.components.base import Component
@@ -17,6 +18,28 @@ class Column(Component):
         colspan: int = 12,
     ) -> None:
         self.gap = gap
+        self.colspan = colspan
+        self.children = children
+
+
+class AxisAlign(enum.StrEnum):
+    START = 'start'
+    CENTER = 'center'
+    END = 'end'
+
+
+class Row(Component):
+    template_name: str = "ohmyadmin/components/layout/row.html"
+
+    def __init__(
+        self,
+        children: list[Component],
+        align: AxisAlign = AxisAlign.START,
+        gap: int = 0,
+        colspan: int = 12,
+    ) -> None:
+        self.gap = gap
+        self.align = align
         self.colspan = colspan
         self.children = children
 

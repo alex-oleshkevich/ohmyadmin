@@ -3,6 +3,7 @@ import time
 import typing
 
 import jinja2
+import markupsafe
 from markupsafe import Markup
 from starlette.datastructures import URL
 from starlette.requests import Request
@@ -48,6 +49,26 @@ def model_pk(context: jinja2.runtime.Context, obj: typing.Any, request: Request 
                     return screen.datasource.get_pk(obj)
 
             raise ValueError(f"Can't infer primary key. No datasource found for {type(obj).__name__}")
+
+
+def to_html_attrs(attrs: typing.Mapping[str, typing.Any]) -> str:
+    def clean_key(key: str) -> str:
+        key = key.rstrip("_")
+        if key.startswith("data_") or key.startswith("aria_"):
+            key = key.replace("_", "-")
+        return key
+
+    parts = []
+    for key, value in sorted(attrs.items()):
+        key = clean_key(key)
+        if value is True:
+            parts.append(key)
+        elif value is False or value is None:
+            pass
+        else:
+            parts.append(f'{key}="{markupsafe.escape(value)}"')
+
+    return ' '.join(parts).strip()
 
 
 def render_to_response(

@@ -9,8 +9,8 @@
     text-align: center;
 }
 
-.table-head-cell-left {
-    text-align: left;
+.table-head-cell-right {
+    text-align: right;
 }
 
 .table-sortable-head-cell {
