@@ -12,7 +12,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 from ohmyadmin import metrics
 from ohmyadmin.actions import actions
 from ohmyadmin.breadcrumbs import Breadcrumb
-from ohmyadmin.components.base import PageToolbar
+from ohmyadmin.components.base import Component, PageToolbar
 
 
 class Screen(abc.ABC):
@@ -23,7 +23,7 @@ class Screen(abc.ABC):
     show_in_menu: bool = True
     breadcrumbs: list[Breadcrumb] | None = None
     page_metrics: typing.Sequence[metrics.Metric] = tuple()
-    page_toolbar: PageToolbar = PageToolbar()
+    page_toolbar: Component = PageToolbar()
 
     @property
     def slug(self) -> str:
