@@ -73,7 +73,7 @@ class Invisible(ProgressMetric):
         return await request.state.dbsession.scalar(stmt)
 
     async def calculate(self, request: Request) -> int | float:
-        stmt = sa.select(sa.func.count()).select_from(sa.select(Product).where(Product.visible == False).subquery())
+        stmt = sa.select(sa.func.count()).select_from(sa.select(Product).where(Product.visible == False).subquery())  # noqa: E712
         return await request.state.dbsession.scalar(stmt)
 
 

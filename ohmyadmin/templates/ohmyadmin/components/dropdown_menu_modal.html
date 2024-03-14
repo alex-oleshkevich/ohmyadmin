@@ -1,0 +1,19 @@
+{% import 'ohmyadmin/components.html' as components %}
+
+{% set action_url = component.resolve(request)  %}
+<div class="list-menu-item {% if component.action.dangerous %}danger{% endif %}"
+     hx-get="{{ action_url }}"
+     hx-push-url="false"
+     hx-target="o-modals">
+    <span class="w-5">
+        {% if component.leading %}
+            {{ components.render_component(request, component.leading) }}
+        {% endif %}
+    </span>
+    {{ components.render_component(request, component.child) }}
+    <span class="w-5 ml-auto">
+        {% if component.trailing %}
+            {{ components.render_component(request, component.trailing) }}
+        {% endif %}
+    </span>
+</div>

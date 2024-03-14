@@ -1,6 +1,7 @@
 import random
 import typing
-
+from starlette_babel import gettext_lazy as _
+import slugify
 import wtforms
 from starlette.datastructures import URL
 from starlette.exceptions import HTTPException
@@ -8,12 +9,10 @@ from starlette.requests import Request
 from starlette.responses import Response
 from starlette.types import Receive, Scope, Send
 
-import ohmyadmin.components.form
-import ohmyadmin.components.layout
-from ohmyadmin import htmx
+from ohmyadmin import components, htmx
+from ohmyadmin.components import form
 from ohmyadmin.components import BaseFormLayoutBuilder, Component, FormLayoutBuilder
 from ohmyadmin.forms.utils import create_form, validate_on_submit
-from ohmyadmin.routing import resolve_url, URLType
 from ohmyadmin.templating import render_to_response
 
 ActionVariant = typing.Literal["accent", "default", "text", "danger", "link", "primary"]
@@ -111,7 +110,7 @@ ModalActionCallback: typing.TypeAlias = typing.Callable[[Request, wtforms.Form],
 
 class ModalFormLayout(BaseFormLayoutBuilder):
     def build(self, form: wtforms.Form | wtforms.Field) -> Component:
-        return ohmyadmin.components.layout.Column([ohmyadmin.components.form.FormInput(field) for field in form])
+        return components.Column([components.FormInput(field) for field in form])
 
 
 class ModalAction(Action):
@@ -184,3 +183,45 @@ class ModalAction(Action):
         if self.callback:
             return await self.callback(request, form)
         raise NotImplementedError()
+
+
+class NewAction:
+    dangerous: bool = False
+    label: str = _("Unnamed Action", domain="ohmyadmin")
+    icon: str = ""
+    form_class: type[wtforms.Form] = wtforms.Form
+    form_view_class: type[form.FormView[typing.Any, typing.Any]] = form.FormView
+    template_name: str = "ohmyadmin/actions/modal_modal.html"
+    modal_title: str = _("Confirm action", domain="ohmyadmin")
+    modal_description: str = _("Are you sure you want to execute this action?", domain="ohmyadmin")
+    ok_button_label: str = _("Submit", domain="ohmyadmin")
+    cancel_button_label: str = _("Cancel", domain="ohmyadmin")
+
+    @classmethod
+    @property
+    def url_name(cls) -> str:
+        slug = slugify.slugify(".".join([cls.__module__, cls.__name__]))
+        return f"ohmyadmin.action.{slug}"
+
+    async def init_form(self, form: wtforms.Form) -> None:
+        ...
+
+    async def apply(self, request: Request, object_ids: list[str]) -> Response:
+        return htmx.response().close_modal().toast("Action called successfully!")
+
+    async def dispatch(self, request: Request, object_ids: list[str]) -> Response:
+        form = await create_form(request, self.form_class)
+        await self.init_form(form)
+
+        if await validate_on_submit(request, form):
+            return await self.apply(request, object_ids)
+
+        form_view = self.form_view_class(form, {})
+        return render_to_response(
+            request,
+            self.template_name,
+            {
+                "action": self,
+                "form_view": form_view,
+            },
+        )

@@ -39,8 +39,6 @@ class DisplayField:
         if obj_value is None:
             return self.default_if_none
 
-        if self.link:
-            url = self.get_link_url(request, obj)
         return self.format_value(request, obj_value)
 
     def get_value(self, obj: typing.Any) -> typing.Any:

@@ -5,8 +5,7 @@ import typing
 import wtforms
 from starlette.requests import Request
 
-from ohmyadmin.components.base import Component, ComposeComponent
-from ohmyadmin.components import Placeholder
+from ohmyadmin.components.base import Component, ComposeComponent, Empty
 from ohmyadmin.templating import render_to_string
 
 F = typing.TypeVar("F", bound=wtforms.Form)
@@ -21,7 +20,7 @@ class FormView(ComposeComponent, typing.Generic[F, M]):
         self.model = model
 
     def compose(self, request: Request) -> Component:
-        return Placeholder(message="This view does not define any content.")
+        return Empty()
 
 
 class FormInput(Component):

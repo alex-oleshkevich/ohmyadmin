@@ -1,0 +1,5 @@
+{% set url = component.resolve(request) %}
+<a href="{{ url }}" class="btn btn-{{ component.variant }}" target="{{ component.target }}">
+    {% if component.icon %}{{ component.icon }}{% endif %}
+    {% if component.text %}{{ component.text }}{% endif %}
+</a>

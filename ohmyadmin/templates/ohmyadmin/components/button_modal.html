@@ -1,0 +1,11 @@
+{% import 'ohmyadmin/components.html' as components %}
+
+{% set action_url = component.resolve(request)  %}
+{% set variant = 'danger' if component.action.dangerous else component.variant %}
+<button class="btn btn-{{ variant }}"
+     hx-get="{{ action_url }}"
+     hx-push-url="false"
+     hx-target="o-modals">
+    {% if component.text %}{{ component.text }}{% endif %}
+    {% if component.icon %}{{ component.icon }}{% endif %}
+</button>

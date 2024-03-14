@@ -5,7 +5,7 @@ import wtforms
 from starlette.middleware import Middleware
 from starlette.requests import Request
 from starlette.responses import Response
-from starlette.routing import BaseRoute, Mount
+from starlette.routing import BaseRoute, Mount, Route
 from starlette_babel import gettext_lazy as _
 from starlette_flash import flash
 
@@ -63,6 +63,9 @@ class ResourceScreen(Screen):
 
     # data
     datasource: typing.ClassVar[DataSource | None] = None
+
+    # actions
+    action_classes: typing.Sequence[type[actions.NewAction]] = tuple()
 
     # index page
     index_view_class: IndexView = IndexView
@@ -283,7 +286,7 @@ class ResourceScreen(Screen):
 
     @classmethod
     def get_edit_page_route(cls, object_id: int) -> LazyURL:
-        return LazyURL(cls.get_edit_route_name(), object_id=object_id)
+        return LazyURL(cls.get_edit_route_name(), path_params=dict(object_id=object_id))
 
     @classmethod
     def get_display_route_name(cls) -> str:
@@ -291,7 +294,24 @@ class ResourceScreen(Screen):
 
     @classmethod
     def get_display_page_route(cls, object_id: int) -> LazyURL:
-        return LazyURL(cls.get_display_route_name(), object_id=object_id)
+        return LazyURL(cls.get_display_route_name(), path_params=dict(object_id=object_id))
+
+    @classmethod
+    def get_action_route(
+        cls, action: type[actions.NewAction], object_ids: typing.Sequence[str] | None = None
+    ) -> LazyURL:
+        object_ids = object_ids or []
+        return LazyURL(
+            "ohmyadmin.resource.action",
+            query_params={"object_id": object_ids},
+            path_params=dict(action_id=action.url_name),
+        )
+
+    def get_action_class(self, action_id: str) -> type[actions.NewAction]:
+        for action in self.action_classes:
+            if action.url_name == action_id:
+                return action
+        raise ValueError(f'Action "{action_id}" does not exist.')
 
     def get_route(self) -> BaseRoute:
         return Mount(
@@ -315,10 +335,32 @@ class ResourceScreen(Screen):
                         self.display_screen.get_route(),
                     ],
                 ),
+                Route(
+                    "/actions/{action_id}", self.action_view, name="ohmyadmin.resource.action", methods=["get", "post"]
+                ),
                 self.index_screen.get_route(),
             ],
             middleware=[Middleware(ExposeViewMiddleware, screen=self, resource=self)],
         )
+
+    async def list_view(self, request: Request) -> Response:
+        ...
+
+    async def create_view(self, request: Request) -> Response:
+        ...
+
+    async def edit_view(self, request: Request) -> Response:
+        ...
+
+    async def delete_view(self, request: Request) -> Response:
+        ...
+
+    async def action_view(self, request: Request) -> Response:
+        action_id = request.path_params["action_id"]
+        action_class = self.get_action_class(action_id)
+        action = action_class()
+        object_ids = request.query_params.getlist("object_id")
+        return await action.dispatch(request, object_ids)
 
     async def init_form(self, request: Request, form: wtforms.Form) -> None:
         pass

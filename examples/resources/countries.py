@@ -4,7 +4,8 @@ from starlette.requests import Request
 from examples import icons
 from examples.models import Country
 from ohmyadmin import components
-from ohmyadmin.components import CellAlign, Component
+from ohmyadmin.actions.actions import NewAction
+from ohmyadmin.components import ButtonVariant, CellAlign, Component
 from ohmyadmin.datasources.sqlalchemy import SADataSource
 from ohmyadmin.resources.resource import ResourceScreen
 
@@ -47,7 +48,7 @@ class CountryIndexView(components.IndexView[Country]):
                 children=[
                     components.TableSortableHeadCell("Code", sort_field="code"),
                     components.TableHeadCell("Name"),
-                    components.TableHeadCell('Actions', align=CellAlign.RIGHT),
+                    components.TableHeadCell("Actions", align=CellAlign.RIGHT),
                 ]
             ),
             row_builder=lambda row: components.TableRow(
@@ -59,31 +60,45 @@ class CountryIndexView(components.IndexView[Country]):
                         ),
                     ),
                     components.TableColumn(components.Text(row.name)),
-                    components.TableColumn(components.Row(children=[
-                        components.DropdownMenu(
-                            trigger=components.Button(
-                                icon=icons.ICON_DOTS,
-                                variant=components.ButtonVariant.TEXT,
-                            ),
-                            items=[
-                                components.DropdownMenuLink(
-                                    url=CountryResource.get_display_page_route(row.code),
-                                    child=components.Text('View'),
-                                    leading=components.HTML(icons.ICON_EYE),
-                                ),
-                                components.DropdownMenuLink(
+                    components.TableColumn(
+                        components.Row(
+                            children=[
+                                components.LinkButton(
+                                    text="Delete",
+                                    icon=icons.ICON_THRASH,
+                                    variant=ButtonVariant.TEXT,
                                     url=CountryResource.get_edit_page_route(row.code),
-                                    child=components.Text('Edit'),
-                                    leading=components.HTML(icons.ICON_PENCIL),
                                 ),
-                                components.DropdownMenuLink(
-                                    url=CountryResource.get_edit_page_route(row.code),
-                                    child=components.Text('Delete'),
-                                    leading=components.HTML(icons.ICON_THRASH),
+                                components.ModalButton(
+                                    text="Modal",
+                                    icon=icons.ICON_COUNTRIES,
+                                    variant=ButtonVariant.TEXT,
+                                    action=NewAction,
+                                    object_ids=[row.code],
+                                ),
+                                components.DropdownMenu(
+                                    trigger=components.Button(
+                                        icon=icons.ICON_DOTS,
+                                        variant=components.ButtonVariant.TEXT,
+                                    ),
+                                    items=[
+                                        components.DropdownMenuLink(
+                                            url=CountryResource.get_display_page_route(row.code),
+                                            child=components.Text("View"),
+                                            leading=components.HTML(icons.ICON_EYE),
+                                        ),
+                                        components.DropdownMenuLink(
+                                            url=CountryResource.get_edit_page_route(row.code),
+                                            child=components.Text("Edit"),
+                                            leading=components.HTML(icons.ICON_PENCIL),
+                                        ),
+                                        # components.DropdownMenuModal(DeleteAction, object_ids=[row.code]),
+                                    ],
                                 ),
                             ]
                         ),
-                    ]), align=CellAlign.RIGHT),
+                        align=CellAlign.RIGHT,
+                    ),
                 ]
             ),
         )
@@ -98,3 +113,4 @@ class CountryResource(ResourceScreen):
     detail_view_class = CountryDetailView
     form_view_class = FormView
     ordering_fields = ("code",)
+    action_classes = (NewAction,)

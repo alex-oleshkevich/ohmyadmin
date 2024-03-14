@@ -9,7 +9,7 @@ from starlette.requests import Request
 from ohmyadmin.components.base import Component
 from ohmyadmin.components.text import Text
 from ohmyadmin.ordering import SortingHelper
-from ohmyadmin.routing import LazyURL, resolve_url, URLType
+from ohmyadmin.routing import resolve_url, URLType
 from ohmyadmin.templating import render_to_string
 
 

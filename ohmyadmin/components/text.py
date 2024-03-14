@@ -8,7 +8,8 @@ from starlette.datastructures import URL
 from starlette.requests import Request
 from starlette_babel import gettext_lazy as _
 
-from ohmyadmin.components.base import Component
+from ohmyadmin.actions import actions
+from ohmyadmin.components.base import Component, HTML
 from ohmyadmin.routing import LazyURL, resolve_url, URLProvider, URLType
 
 T = typing.TypeVar("T")
@@ -113,6 +114,46 @@ class Button(Component):
         self.variant = variant
 
 
+class LinkButton(Button):
+    template_name: str = "ohmyadmin/components/button_link.html"
+
+    def __init__(
+        self,
+        url: URLType,
+        text: str | None = None,
+        icon: str | None = None,
+        variant: ButtonVariant = ButtonVariant.DEFAULT,
+        target: typing.Literal["_blank", ""] = "",
+    ) -> None:
+        super().__init__(text, icon, variant)
+        self.url = url
+        self.target = target
+
+    def resolve(self, request: Request) -> URL:
+        return resolve_url(request, self.url)
+
+
+class ModalButton(Button):
+    template_name: str = "ohmyadmin/components/button_modal.html"
+
+    def __init__(
+        self,
+        action: type[actions.NewAction],
+        object_ids: typing.Sequence[str] = tuple(),
+        text: str | None = None,
+        icon: str | None = None,
+        variant: ButtonVariant = ButtonVariant.DEFAULT,
+    ) -> None:
+        super().__init__(text=text, icon=icon, variant=variant)
+        self.action = action
+        self.object_ids = object_ids
+
+    def resolve(self, request: Request) -> URL:
+        resource = request.state.resource
+        route_name = resource.get_action_route(self.action, self.object_ids)
+        return resolve_url(request, route_name)
+
+
 class DropdownMenuItem(Component, abc.ABC):
     template_name = "ohmyadmin/components/dropdown_menu_item.html"
 
@@ -135,13 +176,39 @@ class DropdownMenuLink(DropdownMenuItem):
         return resolve_url(request, self.url)
 
 
+class DropdownMenuAction(DropdownMenuItem):
+    template_name = "ohmyadmin/components/dropdown_menu_action.html"
+
+    def __init__(
+        self, url: URLType, child: Component, leading: Component | None = None, trailing: Component | None = None
+    ) -> None:
+        self.url = url
+        super().__init__(child, leading, trailing)
+
+    def resolve(self, request: Request) -> URL:
+        return resolve_url(request, self.url)
+
+
+class DropdownMenuModal(DropdownMenuItem):
+    template_name = "ohmyadmin/components/dropdown_menu_modal.html"
+
+    def __init__(self, action: type[actions.NewAction], object_ids: typing.Sequence[str] = tuple()) -> None:
+        super().__init__(
+            child=Text(action.label),
+            leading=HTML(action.icon),
+        )
+        self.action = action
+        self.object_ids = object_ids
+
+    def resolve(self, request: Request) -> URL:
+        resource = request.state.resource
+        route_name = resource.get_action_route(self.action, self.object_ids)
+        return resolve_url(request, route_name)
+
+
 class DropdownMenu(Component):
     template_name = "ohmyadmin/components/dropdown_menu.html"
 
-    def __init__(
-        self,
-        trigger: Component,
-        items: typing.Iterable[Component],
-    ) -> None:
+    def __init__(self, trigger: Component, items: typing.Iterable[Component]) -> None:
         self.trigger = trigger
         self.items = items

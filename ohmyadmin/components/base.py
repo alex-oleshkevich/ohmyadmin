@@ -108,3 +108,8 @@ class HTML(Component):
 
     def render(self, request: Request) -> str:
         return Markup(self.markup)
+
+
+class Empty(ComposeComponent):
+    def compose(self, request: Request) -> Component:
+        return HTML("")
