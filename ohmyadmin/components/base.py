@@ -102,6 +102,76 @@ class Container(Component):
         self.colspan = colspan
 
 
+class Column(Component):
+    template_name: str = "ohmyadmin/components/layout/column.html"
+
+    def __init__(
+        self,
+        children: typing.Iterable[Component],
+        gap: int = 0,
+        colspan: int = 12,
+    ) -> None:
+        self.gap = gap
+        self.colspan = colspan
+        self.children = children
+
+
+class AxisAlign(enum.StrEnum):
+    START = "start"
+    CENTER = "center"
+    END = "end"
+
+
+class Row(Component):
+    template_name: str = "ohmyadmin/components/layout/row.html"
+
+    def __init__(
+        self,
+        children: typing.Iterable[Component],
+        align: AxisAlign = AxisAlign.START,
+        gap: int = 0,
+        colspan: int = 12,
+    ) -> None:
+        self.gap = gap
+        self.align = align
+        self.colspan = colspan
+        self.children = children
+
+
+class Grid(Component):
+    template_name: str = "ohmyadmin/components/layout/grid.html"
+
+    def __init__(
+        self,
+        children: typing.Iterable[Component],
+        columns: int = 12,
+        gap: int = 5,
+        colspan: int = 12,
+    ) -> None:
+        self.gap = gap
+        self.colspan = colspan
+        self.columns = columns
+        self.children = children
+
+
+class Group(Component):
+    template_name: str = "ohmyadmin/components/group.html"
+
+    def __init__(
+        self,
+        children: typing.Iterable[Component],
+        label: str = "",
+        description: str = "",
+        colspan: int = 12,
+        gap: int = 2,
+    ) -> None:
+        self.gap = gap
+        self.label = label
+        self.colspan = colspan
+        self.children = children
+        self.description = description
+
+
 class HTML(Component):
     def __init__(self, markup: str) -> None:
         self.markup = markup
@@ -113,3 +183,16 @@ class HTML(Component):
 class Empty(ComposeComponent):
     def compose(self, request: Request) -> Component:
         return HTML("")
+
+
+class PageToolbar(ComposeComponent):
+    def __init__(self, builder: typing.Callable[[Request], typing.Iterable[Component]] | None = None) -> None:
+        self.builder = builder
+
+    def build(self, request: Request) -> typing.Iterable[Component]:
+        return self.builder(request)
+
+    def compose(self, request: Request) -> Component:
+        if self.builder:
+            return Row(children=self.build(request), gap=2)
+        return Empty()

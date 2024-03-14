@@ -12,6 +12,7 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 from ohmyadmin import metrics
 from ohmyadmin.actions import actions
 from ohmyadmin.breadcrumbs import Breadcrumb
+from ohmyadmin.components.base import PageToolbar
 
 
 class Screen(abc.ABC):
@@ -21,8 +22,8 @@ class Screen(abc.ABC):
     group: str = ""
     show_in_menu: bool = True
     breadcrumbs: list[Breadcrumb] | None = None
-    page_actions: typing.Sequence[actions.Action] = tuple()
     page_metrics: typing.Sequence[metrics.Metric] = tuple()
+    page_toolbar: PageToolbar = PageToolbar()
 
     @property
     def slug(self) -> str:
@@ -31,7 +32,7 @@ class Screen(abc.ABC):
     @classmethod
     @property
     def url_name(cls) -> str:
-        slug = slugify.slugify('.'.join([cls.__module__, cls.__name__]))
+        slug = slugify.slugify(".".join([cls.__module__, cls.__name__]))
         return f"ohmyadmin.screen.{slug}"
 
     def get_url(self, request: Request) -> URL:
@@ -40,17 +41,8 @@ class Screen(abc.ABC):
     def get_action_route_name(self, action: actions.Action) -> str:
         return f"{self.url_name}.actions.{action.slug}"
 
-    def get_action_handlers(self) -> typing.Sequence[actions.Action]:
-        return self.page_actions
-
     def get_page_metrics(self) -> typing.Sequence[metrics.Metric]:
         return self.page_metrics
-
-    def get_action_routes(self) -> typing.Sequence[BaseRoute]:
-        return [
-            Route("/" + action.slug, action, name=self.get_action_route_name(action), methods=["get", "post"])
-            for action in self.get_action_handlers()
-        ]
 
     def get_metrics_routes(self) -> typing.Sequence[BaseRoute]:
         return [metric.get_route(self.url_name) for metric in self.get_page_metrics()]
@@ -60,17 +52,12 @@ class Screen(abc.ABC):
             "",
             routes=[
                 Route(path="/", endpoint=self.dispatch, name=self.url_name, methods=["get", "post"]),
-                Mount("/actions", routes=self.get_action_routes()),
                 Mount("/metrics", routes=self.get_metrics_routes()),
             ],
             middleware=[
                 Middleware(ExposeViewMiddleware, screen=self),
             ],
         )
-
-
-    def get_page_actions(self) -> typing.Sequence[actions.Action]:
-        return self.page_actions
 
     async def dispatch(self, request: Request) -> Response:
         raise NotImplementedError()

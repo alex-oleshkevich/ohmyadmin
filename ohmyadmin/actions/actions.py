@@ -185,6 +185,9 @@ class ModalAction(Action):
         raise NotImplementedError()
 
 
+ObjectIds = typing.Iterable[str | int] | typing.Literal["__all__"]
+
+
 class NewAction:
     dangerous: bool = False
     label: str = _("Unnamed Action", domain="ohmyadmin")
@@ -203,13 +206,15 @@ class NewAction:
         slug = slugify.slugify(".".join([cls.__module__, cls.__name__]))
         return f"ohmyadmin.action.{slug}"
 
+    slug = url_name
+
     async def init_form(self, form: wtforms.Form) -> None:
         ...
 
-    async def apply(self, request: Request, object_ids: list[str]) -> Response:
+    async def apply(self, request: Request, object_ids: ObjectIds) -> Response:
         return htmx.response().close_modal().toast("Action called successfully!")
 
-    async def dispatch(self, request: Request, object_ids: list[str]) -> Response:
+    async def dispatch(self, request: Request, object_ids: ObjectIds) -> Response:
         form = await create_form(request, self.form_class)
         await self.init_form(form)
 

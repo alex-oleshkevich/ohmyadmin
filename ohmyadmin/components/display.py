@@ -3,7 +3,7 @@ import typing
 from starlette.requests import Request
 
 from ohmyadmin.components.base import Component, ComposeComponent
-from ohmyadmin.components.layout import Column, Grid
+from ohmyadmin.components.base import Column, Grid
 from ohmyadmin.components.text import Text
 from ohmyadmin.components import Container, Placeholder
 

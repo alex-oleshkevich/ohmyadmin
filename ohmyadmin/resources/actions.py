@@ -9,6 +9,7 @@ from starlette_flash import flash
 
 from ohmyadmin import htmx
 from ohmyadmin.actions import actions, ActionVariant
+from ohmyadmin.actions.actions import ObjectIds
 from ohmyadmin.datasources.datasource import InFilter
 from ohmyadmin.templating import render_to_response
 from ohmyadmin.screens import DisplayScreen, TableScreen
@@ -75,7 +76,7 @@ class ReturnToResourceIndexAction(actions.LinkAction):
         return request.url_for(resource.get_index_route_name())
 
 
-class DeleteResourceAction(actions.ModalAction):
+class DeleteResourceAction2(actions.ModalAction):
     modal_template: str = "ohmyadmin/resources/delete_action.html"
 
     def __init__(
@@ -106,8 +107,22 @@ class DeleteResourceAction(actions.ModalAction):
         return render_to_response(
             request,
             self.modal_template,
-            {
-                "count": total,
-                "action": self,
-            },
+            {"count": total, "action": self},
         )
+
+
+class DeleteResourceAction(actions.NewAction):
+    dangerous = True
+    label = _("Delete")
+
+    async def apply(self, request: Request, object_ids: ObjectIds) -> Response:
+        pk_field = request.state.resource.datasource.get_id_field()
+        query = request.state.resource.datasource
+        if object_ids == "__all__":
+            await query.delete_all()
+        else:
+            query = query.filter(InFilter(pk_field, object_ids))
+
+        count = await query.count(request)
+        await query.delete_all(request)
+        return htmx.response().close_modal().toast(_("{count} objects deleted".format(count=count))).refresh()

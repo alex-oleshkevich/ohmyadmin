@@ -2,7 +2,6 @@
 {% import 'ohmyadmin/actions.html' as actions %}
 {% import 'ohmyadmin/components.html' as components %}
 
-
 {% block main %}
     <div class="flex flex-col md:flex-row w-full h-full overflow-hidden">
         <aside
@@ -48,14 +47,7 @@
                     </div>
                     <div class="flex items-center gap-2 justify-end flex-wrap">
                         {% block page_actions %}
-                            {% call actions.action_toolbar() %}
-                                {% if model is undefined %}
-                                    {% set model = none %}
-                                {% endif %}
-                                {% for action in screen.get_page_actions() %}
-                                    {{ actions.action_button(request, action, screen, model) }}
-                                {% endfor %}
-                            {% endcall %}
+                            {{ components.render_component(request, screen.page_toolbar) }}
                         {% endblock %}
                     </div>
                 </div>

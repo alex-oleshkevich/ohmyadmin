@@ -12,7 +12,7 @@ from starlette_flash import flash
 from ohmyadmin import filters, htmx, metrics, screens
 from ohmyadmin.actions import actions
 from ohmyadmin.breadcrumbs import Breadcrumb
-from ohmyadmin.components import FormLayoutBuilder
+from ohmyadmin.components import Component, FormLayoutBuilder
 from ohmyadmin.components.display import DetailView
 from ohmyadmin.components.form import FormView
 from ohmyadmin.components.index import IndexView
@@ -20,14 +20,9 @@ from ohmyadmin.datasources.datasource import DataSource, DuplicateError, InFilte
 from ohmyadmin.forms.utils import populate_object
 from ohmyadmin.helpers import pluralize, snake_to_sentence
 from ohmyadmin.resources.actions import (
-    CreateResourceAction,
     DeleteResourceAction,
     EditResourceAction,
-    ReturnToResourceIndexAction,
-    SaveResourceAction,
-    SaveResourceAndReturnAction,
     SubmitActionType,
-    ViewResourceAction,
 )
 from ohmyadmin.resources.policy import AccessPolicy, PermissiveAccessPolicy
 from ohmyadmin.routing import LazyURL
@@ -79,7 +74,7 @@ class ResourceScreen(Screen):
     ordering_filter: filters.Filter | None = None
 
     page_filters: typing.Sequence[filters.Filter] = tuple()
-    page_actions: typing.Sequence[actions.Action] = tuple()
+    page_actions: typing.Sequence[Component] = tuple()
     page_metrics: typing.Sequence[metrics.Metric] = tuple()
     object_actions: typing.Sequence[actions.Action] = tuple()
     batch_actions: typing.Sequence[actions.ModalAction] = tuple()
@@ -125,41 +120,37 @@ class ResourceScreen(Screen):
     def get_index_page_actions(self) -> list[actions.Action]:
         """Return user defined actions along with default actions."""
         return [
-            *self.page_actions,
-            CreateResourceAction(
-                label=self.create_resource_label.format(label=self.label, label_plural=self.label_plural),
-            ),
-        ]
-
-    def get_object_actions(self) -> list[actions.Action]:
-        return [
-            *self.object_actions,
-            ViewResourceAction(
-                label=self.display_resource_label.format(label=self.label, label_plural=self.label_plural)
-            ),
-            EditResourceAction(label=self.edit_resource_label.format(label=self.label, label_plural=self.label_plural)),
-            DeleteResourceAction(),
+            # *self.page_actions,
+            # CreateResourceAction(
+            #     label=self.create_resource_label.format(label=self.label, label_plural=self.label_plural),
+            # ),
         ]
 
     def get_batch_actions(self) -> list[actions.Action]:
         return [
-            *self.batch_actions,
-            DeleteResourceAction(),
+            # *self.batch_actions,
+            # DeleteResourceAction(),
         ]
 
     def get_create_form_actions(self) -> list[actions.Action]:
-        return self.create_form_actions or [
-            SaveResourceAction(label=self.create_resource_form_label),
-            SaveResourceAndReturnAction(label=self.create_and_return_resource_form_label),
-            ReturnToResourceIndexAction(label=self.cancel_resource_form_label),
-        ]
+        return (
+            self.create_form_actions
+            or [
+                # SaveResourceAction(label=self.create_resource_form_label),
+                # SaveResourceAndReturnAction(label=self.create_and_return_resource_form_label),
+                # ReturnToResourceIndexAction(label=self.cancel_resource_form_label),
+            ]
+        )
 
     def get_edit_form_actions(self) -> list[actions.Action]:
-        return self.form_actions or [
-            SaveResourceAction(label=self.update_resource_form_label),
-            SaveResourceAndReturnAction(label=self.update_and_return_resource_form_label),
-            ReturnToResourceIndexAction(label=self.cancel_resource_form_label),
-        ]
+        return (
+            self.form_actions
+            or [
+                # SaveResourceAction(label=self.update_resource_form_label),
+                # SaveResourceAndReturnAction(label=self.update_and_return_resource_form_label),
+                # ReturnToResourceIndexAction(label=self.cancel_resource_form_label),
+            ]
+        )
 
     def get_display_actions(self) -> list[actions.Action]:
         return [*self.display_object_actions, EditResourceAction(), DeleteResourceAction()]
@@ -182,7 +173,6 @@ class ResourceScreen(Screen):
                 filters=self.page_filters,
                 page_actions=self.get_index_page_actions(),
                 page_metrics=self.page_metrics,
-                object_actions=self.get_object_actions(),
                 batch_actions=self.get_batch_actions(),
                 search_param=self.search_param,
                 search_placeholder=self.search_placeholder,
@@ -190,6 +180,7 @@ class ResourceScreen(Screen):
                 search_filter=self.search_filter,
                 url_name=self.get_index_route_name(),
                 view_class=self.index_view_class,
+                page_toolbar=self.page_toolbar,
                 breadcrumbs=[
                     Breadcrumb(label=_("Home", domain="ohmyadmin"), url=lambda r: r.url_for("ohmyadmin.welcome")),
                     Breadcrumb(label=self.label_plural, url=lambda r: r.url_for(self.get_index_route_name())),
@@ -307,8 +298,11 @@ class ResourceScreen(Screen):
             path_params=dict(action_id=action.url_name),
         )
 
+    def get_action_classes(self) -> list[type[actions.NewAction]]:
+        return self.action_classes or []
+
     def get_action_class(self, action_id: str) -> type[actions.NewAction]:
-        for action in self.action_classes:
+        for action in self.get_action_classes():
             if action.url_name == action_id:
                 return action
         raise ValueError(f'Action "{action_id}" does not exist.')

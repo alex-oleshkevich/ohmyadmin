@@ -1,12 +1,13 @@
+from __future__ import annotations
 import wtforms
 from starlette.requests import Request
 
 from examples import icons
 from examples.models import Country
 from ohmyadmin import components
-from ohmyadmin.actions.actions import NewAction
 from ohmyadmin.components import ButtonVariant, CellAlign, Component
 from ohmyadmin.datasources.sqlalchemy import SADataSource
+from ohmyadmin.resources.actions import DeleteResourceAction
 from ohmyadmin.resources.resource import ResourceScreen
 
 
@@ -63,19 +64,6 @@ class CountryIndexView(components.IndexView[Country]):
                     components.TableColumn(
                         components.Row(
                             children=[
-                                components.LinkButton(
-                                    text="Delete",
-                                    icon=icons.ICON_THRASH,
-                                    variant=ButtonVariant.TEXT,
-                                    url=CountryResource.get_edit_page_route(row.code),
-                                ),
-                                components.ModalButton(
-                                    text="Modal",
-                                    icon=icons.ICON_COUNTRIES,
-                                    variant=ButtonVariant.TEXT,
-                                    action=NewAction,
-                                    object_ids=[row.code],
-                                ),
                                 components.DropdownMenu(
                                     trigger=components.Button(
                                         icon=icons.ICON_DOTS,
@@ -92,7 +80,7 @@ class CountryIndexView(components.IndexView[Country]):
                                             child=components.Text("Edit"),
                                             leading=components.HTML(icons.ICON_PENCIL),
                                         ),
-                                        # components.DropdownMenuModal(DeleteAction, object_ids=[row.code]),
+                                        components.DropdownMenuModal(DeleteResourceAction, object_ids=[row.code]),
                                     ],
                                 ),
                             ]
@@ -113,4 +101,14 @@ class CountryResource(ResourceScreen):
     detail_view_class = CountryDetailView
     form_view_class = FormView
     ordering_fields = ("code",)
-    action_classes = (NewAction,)
+    action_classes = (DeleteResourceAction,)
+    page_toolbar = components.PageToolbar(
+        builder=lambda _: [
+            components.LinkButton(
+                url=CountryResource.get_create_page_route(),
+                text="Add country",
+                icon=icons.ICON_PLUS,
+                variant=ButtonVariant.ACCENT,
+            )
+        ]
+    )

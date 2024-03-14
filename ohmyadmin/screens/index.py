@@ -23,7 +23,6 @@ class IndexScreen(Screen):
     page_sizes: typing.ClassVar[typing.Sequence[int]] = [10, 25, 50, 100]
 
     filters: typing.Sequence[Filter] = tuple()
-    object_actions: typing.Sequence[Action] = tuple()
     batch_actions: typing.Sequence[ModalAction] = tuple()
 
     search_param: str = "search"
@@ -63,9 +62,6 @@ class IndexScreen(Screen):
 
     def get_batch_actions(self) -> typing.Sequence[ModalAction]:
         return self.batch_actions
-
-    def get_object_actions(self) -> typing.Sequence[Action]:
-        return self.object_actions
 
     def get_ordering_fields(self) -> typing.Sequence[str]:
         return self.ordering_fields
@@ -133,7 +129,5 @@ class IndexScreen(Screen):
 
     def get_action_handlers(self) -> typing.Sequence[Action]:
         return [
-            *self.page_actions,
-            *self.object_actions,
             *self.batch_actions,
         ]
