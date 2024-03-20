@@ -3,7 +3,7 @@ import dataclasses
 
 @dataclasses.dataclass
 class Theme:
-    title: str = "OhMyAdmin!"
-    logo: str = ""
-    favicon: str = ""
-    navbar_color: str = "red"
+    logo_url: str = "/static/icon.png"
+    icon_url: str = "/static/icon.png"
+    navbar_color: str = "#da532c"
+    background_color: str = "#ffffff"

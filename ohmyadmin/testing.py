@@ -1,5 +1,9 @@
-import bs4
+from __future__ import annotations
+
 import typing
+
+import bs4
+import httpx
 from bs4 import BeautifulSoup
 
 
@@ -30,6 +34,9 @@ class MarkupSelector:
 
     def has_attribute(self, selector: str, attribute: str) -> bool:
         return attribute in self.find_node_or_raise(selector).attrs
+
+    def match_attribute(self, selector: str, attribute: str, value: str) -> bool:
+        return self.get_attribute(selector, attribute) == value
 
     def get_classes(self, selector: str) -> list[str]:
         return self.find_node_or_raise(selector).attrs.get("class", "").split(" ")
@@ -68,3 +75,7 @@ class MarkupSelector:
 
     def count(self, selector: str) -> int:
         return len(self.root.select(selector))
+
+    @classmethod
+    def from_response(cls, response: httpx.Response) -> MarkupSelector:
+        return MarkupSelector(response.text)

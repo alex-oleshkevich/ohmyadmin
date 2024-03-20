@@ -1,115 +1,106 @@
-import functools
-import itertools
-import os
+from __future__ import annotations
 
-import jinja2
-import operator
+import functools
+import os
 import typing
 
-import slugify
+import jinja2
 from async_storages import FileStorage
+from async_storages.contrib.starlette import FileServer
 from starlette import templating
 from starlette.middleware import Middleware
 from starlette.middleware.authentication import AuthenticationMiddleware
 from starlette.requests import Request
-from starlette.responses import RedirectResponse, Response
+from starlette.responses import JSONResponse, RedirectResponse, Response
 from starlette.routing import BaseRoute, Mount, Route, Router
 from starlette.staticfiles import StaticFiles
 from starlette.types import Receive, Scope, Send
 from starlette_babel import gettext_lazy as _
 from starlette_babel.contrib.jinja import configure_jinja_env
+from starlette_babel.locale import get_language
 from starlette_flash import flash
 
-import ohmyadmin.components.layout
-import ohmyadmin.components.menu
-from ohmyadmin import components
-from ohmyadmin.authentication.policy import AnonymousAuthPolicy, AuthPolicy
-from ohmyadmin.components.menu import MenuBuilder
-from ohmyadmin.menu import MenuItem
-from ohmyadmin.middleware import LoginRequiredMiddleware
-from ohmyadmin.templating import model_pk, static_url, to_html_attrs, url_matches
+from ohmyadmin.authentication import AnonymousAuthPolicy, AuthPolicy
+from ohmyadmin.pages import Page
+from ohmyadmin.templating import media_url, static_url, url_matches
 from ohmyadmin.theme import Theme
-from ohmyadmin.screens.base import Screen
+
+PACKAGE_NAME = __name__.split(".")[0]
 
 
 class OhMyAdmin(Router):
     def __init__(
         self,
-        screens: list[Screen] | None = None,
+        app_name: str = "OhMyAdmin!",
+        pages: typing.Sequence[Page] = tuple(),
         theme: Theme = Theme(),
         file_storage: FileStorage | None = None,
         auth_policy: AuthPolicy | None = None,
-        menu_builder: MenuBuilder | None = None,
-        template_dir: str | os.PathLike | None = None,
-        template_package: str | None = None,
+        template_dirs: typing.Sequence[str | os.PathLike] = tuple(),
+        template_packages: typing.Sequence[str] = tuple(),
     ) -> None:
+        self.pages = pages
         self.theme = theme
-        self.screens = screens or []
-        self.auth_policy = auth_policy or AnonymousAuthPolicy()
+        self.app_name = app_name
         self.file_storage = file_storage
-        self.menu_builder = menu_builder or ohmyadmin.components.menu.MenuBuilder(builder=self._default_menu_builder)
+        self.auth_policy = auth_policy or AnonymousAuthPolicy()
+        self.jinja_env = self.configure_jinja(template_dirs, template_packages)
+        self.templating = templating.Jinja2Templates(env=self.jinja_env, context_processors=[self.template_context])
 
-        jinja_loaders: list[jinja2.BaseLoader] = [jinja2.PackageLoader("ohmyadmin")]
-        if template_dir:
-            jinja_loaders.append(jinja2.FileSystemLoader(template_dir))
-        if template_package:
-            jinja_loaders.append(jinja2.PackageLoader(template_package))
-
-        self.jinja_env = jinja2.Environment(
-            autoescape=True,
-            undefined=jinja2.StrictUndefined,
-            extensions=["jinja2.ext.do"],
-            loader=jinja2.ChoiceLoader(jinja_loaders),
-        )
-        self.jinja_env.filters.update({"object_id": id, "model_pk": model_pk, 'to_html_attrs': to_html_attrs})
-        self.templating = templating.Jinja2Templates(
-            env=self.jinja_env,
-            context_processors=[
-                self.context_processor,
+        super().__init__(
+            routes=self.get_routes(),
+            middleware=[
+                Middleware(
+                    AuthenticationMiddleware,
+                    backend=self.auth_policy.get_authentication_backend(),
+                ),
             ],
         )
-        configure_jinja_env(self.templating.env)
-        super().__init__(routes=self.get_routes())
+
+    def configure_jinja(
+        self,
+        template_dirs: typing.Sequence[str | os.PathLike] = tuple(),
+        template_packages: typing.Sequence[str] = tuple(),
+    ) -> jinja2.Environment:
+        loaders = [jinja2.PackageLoader(PACKAGE_NAME)]
+        loaders.append(jinja2.FileSystemLoader(list(template_dirs)))
+        loaders.extend([jinja2.PackageLoader(template_package) for template_package in template_packages])
+
+        env = jinja2.Environment(
+            autoescape=True,
+            undefined=jinja2.StrictUndefined,
+            loader=jinja2.ChoiceLoader(loaders),
+        )
+        configure_jinja_env(env)
+        return env
+
+    def template_context(self, request: Request) -> dict[str, typing.Any]:
+        return {
+            "app": self,
+            "theme": self.theme,
+            "request": request,
+            "app_language": get_language(),
+            "static_url": functools.partial(static_url, request),
+            "media_url": functools.partial(media_url, request),
+            "url_matches": functools.partial(url_matches, request),
+            "flash_messages": flash(request),
+        }
 
     def get_routes(self) -> list[BaseRoute]:
         return [
-            Mount(
-                path="",
-                routes=[
-                    Route("/", self.welcome_view, name="ohmyadmin.welcome"),
-                    Route("/login", self.login_view, name="ohmyadmin.login", methods=["get", "post"]),
-                    Route("/logout", self.logout_view, name="ohmyadmin.logout", methods=["post"]),
-                    Mount("/static", app=StaticFiles(packages=["ohmyadmin"]), name="ohmyadmin.static"),
-                    Route("/media/{path:path}", self.media_view, name="ohmyadmin.media"),
-                    *[
-                        Mount(
-                            "/{group_slug}/{view_slug}".format(
-                                group_slug=slugify.slugify(screen.group),
-                                view_slug=screen.slug,
-                            ),
-                            routes=[screen.get_route()],
-                        )
-                        for screen in self.screens
-                    ],
-                ],
-                middleware=[
-                    Middleware(AuthenticationMiddleware, backend=self.auth_policy.get_authentication_backend()),
-                    Middleware(LoginRequiredMiddleware, exclude_paths=["/login", "/static"]),
-                ],
-            ),
+            Route("/", self.welcome_view, name="ohmyadmin.welcome"),
+            Route("/login", self.login_view, name="ohmyadmin.login", methods=["get", "post"]),
+            Route("/logout", self.logout_view, name="ohmyadmin.logout", methods=["post"]),
+            Route("/site.webmanifest", self.webmanifest_view, name="ohmyadmin.webmanifest"),
+            Mount("/static", app=StaticFiles(packages=[PACKAGE_NAME]), name="ohmyadmin.static"),
+            Mount("/media", app=FileServer(self.file_storage), name="ohmyadmin.media"),
         ]
 
     async def welcome_view(self, request: Request) -> Response:
-        class WelcomeScreen(Screen):
-            ...
-
         return self.templating.TemplateResponse(
             request,
             "ohmyadmin/welcome.html",
-            {
-                "page_title": _("Welcome"),
-                "screen": WelcomeScreen(),
-            },
+            {"page_title": _("Welcome", domain="ohmyadmin")},
         )
 
     async def login_view(self, request: Request) -> Response:
@@ -127,59 +118,28 @@ class OhMyAdmin(Router):
         return self.templating.TemplateResponse(
             request,
             "ohmyadmin/login.html",
-            {
-                "page_title": _("Login"),
-                "form": form,
-            },
+            {"page_title": _("Login", domain="ohmyadmin"), "form": form},
         )
 
     async def logout_view(self, request: Request) -> Response:
         self.auth_policy.logout(request)
-        flash(request).success(_("You have been logged out."))
-        return RedirectResponse(request.url_for("ohmyadmin.login"), status_code=302)
+        flash(request).success(_("You have been logged out.", domain="ohmyadmin"))
+        redirect_url = request.url_for("ohmyadmin.login")
+        return RedirectResponse(redirect_url, status_code=302)
 
-    async def media_view(self, request: Request) -> Response:
-        path = request.path_params["path"]
-        if path.startswith("http://") or path.startswith("https://"):
-            return RedirectResponse(path, status_code=302)
-        return self.file_storage.as_response(path)
-
-    def _default_menu_builder(self, request: Request) -> components.Component:
-        return ohmyadmin.components.layout.Column(
-            children=[
-                ohmyadmin.components.menu.MenuGroup(
-                    heading=group[0],
-                    items=[
-                        ohmyadmin.components.menu.MenuItem(
-                            url=screen.get_url(request),
-                            label=getattr(screen, "label_plural", screen.label),
-                            icon=screen.icon,
-                        )
-                        for screen in group[1]
-                    ],
-                )
-                for group in itertools.groupby(self.screens, key=operator.attrgetter("group"))
-            ]
+    async def webmanifest_view(self, request: Request) -> Response:
+        return JSONResponse(
+            {
+                "name": self.app_name,
+                "short_name": self.app_name,
+                "background_color": self.theme.background_color,
+                "theme_color": self.theme.navbar_color,
+                "start_url": str(request.url_for("ohmyadmin.welcome").include_query_params(utm_source="welcome")),
+                "icons": [{"src": self.theme.icon_url, "type": "image/png", "sizes": "512x512"}],
+            }
         )
-
-    def generate_user_menu(self, request: Request) -> list[MenuItem]:
-        return []
-
-    def context_processor(self, request: Request) -> dict[str, typing.Any]:
-        return {
-            "ohmyadmin": self,
-            "theme": self.theme,
-            "request": request,
-            "static_url": functools.partial(static_url, request),
-            "url_matches": functools.partial(url_matches, request),
-            "flash_messages": flash(request),
-            # "ohmyadmin_main_menu": request.scope["ohmyadmin_main_menu"],
-            "ohmyadmin_user_menu": request.scope["ohmyadmin_user_menu"],
-        }
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         scope.setdefault("state")
         scope["state"]["ohmyadmin"] = self
-        # scope["ohmyadmin_main_menu"] = await self.generate_menu(Request(scope))
-        scope["ohmyadmin_user_menu"] = self.generate_user_menu(Request(scope))
         await super().__call__(scope, receive, send)

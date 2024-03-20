@@ -1,8 +1,0 @@
-{% set url = url_for(screen.get_action_route_name(action)) %}
-{% if model %}
-    {% set url = url.include_query_params(object_id=model|model_pk) %}
-{% endif %}
-<button type="button" class="btn btn-{{ action.variant }}" hx-push-url="false" hx-post="{{ url }}">
-    {{ action.icon }}
-    {{ action.label }}
-</button>

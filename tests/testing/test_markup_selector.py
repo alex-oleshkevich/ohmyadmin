@@ -1,6 +1,13 @@
+import httpx
 import pytest
 
 from ohmyadmin.testing import MarkupSelector, NodeNotFoundError
+
+
+def test_from_response() -> None:
+    response = httpx.Response(200, content="<span>hello</span>")
+    selector = MarkupSelector.from_response(response)
+    assert isinstance(selector, MarkupSelector)
 
 
 def test_find_node() -> None:
@@ -30,6 +37,12 @@ def test_has_attribute() -> None:
     selector = MarkupSelector('<div class="red blue" title="div tag"></div>')
     assert selector.has_attribute("div", "title")
     assert not selector.has_attribute("div", "id")
+
+
+def test_match_attribute() -> None:
+    selector = MarkupSelector('<div class="red blue" title="div tag"></div>')
+    assert selector.match_attribute("div", "title", "div tag")
+    assert not selector.match_attribute("div", "title", "invalid")
 
 
 def test_get_classes() -> None:

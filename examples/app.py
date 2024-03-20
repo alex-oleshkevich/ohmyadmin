@@ -13,23 +13,11 @@ from starlette.requests import HTTPConnection, Request
 from starlette.responses import Response
 from starlette.routing import Mount, Route
 from starlette.types import ASGIApp, Receive, Scope, Send
-from starlette_babel import gettext_lazy as _
 
-from examples import icons, settings
+from examples import settings
 from examples.models import User
-from examples.resources.brands import BrandResource
-from examples.resources.categories import CategoryResource
-from examples.resources.countries import CountryResource
-from examples.resources.currencies import CurrencyResource
-from examples.resources.customers import CustomerResource
-from examples.resources.orders import OrdersResource
-from examples.resources.products import ProductResource
-from examples.resources.users import UsersResource
-from ohmyadmin import components
 from ohmyadmin.app import OhMyAdmin
-from ohmyadmin.authentication.policy import AuthPolicy
-from ohmyadmin.routing import url_to
-from ohmyadmin.theme import Theme
+from ohmyadmin.authentication import AuthPolicy
 
 install_error_handler()
 
@@ -79,44 +67,11 @@ class UserPolicy(AuthPolicy):
 admin = OhMyAdmin(
     auth_policy=UserPolicy(),
     file_storage=FileStorage(
-        FileSystemBackend(
-            base_dir=this_dir / "media",
-            base_url="/",
-            mkdirs=True,
-        )
+        FileSystemBackend(base_dir=this_dir / "media", base_url="/", mkdirs=True),
     ),
-    theme=Theme(
-        logo="https://jelpy.io/static/logo.svg",
-        title="Jelpy",
-    ),
-    screens=[
-        CountryResource(),
-        CategoryResource(),
-        BrandResource(),
-        CurrencyResource(),
-        CustomerResource(),
-        OrdersResource(),
-        ProductResource(),
-        UsersResource(),
-    ],
-    menu_builder=components.MenuBuilder(
-        builder=lambda request: components.Column(
-            children=[
-                components.MenuGroup(
-                    items=[
-                        components.MenuItem(url_to(CountryResource), _("Countries"), icon=icons.ICON_COUNTRIES),
-                        components.MenuItem(url_to(CategoryResource), _("Categories"), icon=icons.ICON_CATEGORY),
-                        components.MenuItem(url_to(BrandResource), _("Brands"), icon=icons.ICON_BASKET),
-                        components.MenuItem(url_to(CurrencyResource), _("Currencies"), icon=icons.ICON_CURRENCY),
-                        components.MenuItem(url_to(CustomerResource), _("Customers"), icon=icons.ICON_FRIENDS),
-                        components.MenuItem(url_to(OrdersResource), _("Orders"), icon=icons.ICON_ORDER),
-                        components.MenuItem(url_to(ProductResource), _("Products"), icon=icons.ICON_PRODUCTS),
-                        components.MenuItem(url_to(UsersResource), _("Users"), icon=icons.ICON_PRODUCTS),
-                    ],
-                ),
-            ]
-        )
-    ),
+    # theme=Theme(
+    #     logo_url="https://jelpy.io/static/logo.svg",
+    # ),
 )
 
 app = Starlette(

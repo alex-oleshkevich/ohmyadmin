@@ -12,3 +12,8 @@ class User(BaseUser):
     email: str
     is_active: bool
     birthdate: datetime.date
+    password: str
+
+    @property
+    def identity(self) -> str:
+        return self.id

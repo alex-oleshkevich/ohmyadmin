@@ -1,17 +1,15 @@
-@import "tailwindcss/base";
-@import "tailwindcss/components";
-@import "tailwindcss/utilities";
-@import "notyf/notyf.min.css";
 @import "theme.css";
-/*@import "forms.css";*/
-@import "components.css";
 
-@layer base {
-    body {
-        @apply text-sm;
-    }
-
-    [x-cloak] {
-        display: none;
-    }
+body {
+    color-scheme: var(--o-color-scheme);
+    background: var(--o-background);
+    color: var(--o-text-color);
+    font-family: var(--o-font-family);
+    font-size: var(--o-font-size);
+    font-optical-sizing: auto;
+    font-weight: normal;
+    font-style: normal;
+    font-variation-settings: "slnt" 0;
+    padding: 0;
+    margin: 0;
 }

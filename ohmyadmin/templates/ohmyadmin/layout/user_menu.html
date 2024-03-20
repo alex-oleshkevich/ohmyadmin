@@ -1,9 +1,0 @@
-<div class="list-menu">
-    {% for item in ohmyadmin_user_menu %}
-        <a href="{{ item.url }}">{{ item.label }}</a>
-    {% endfor %}
-
-    <button class="list-menu-item" form="logout-form">
-        {{ _('Log out', domain='ohmyadmin') }}
-    </button>
-</div>
