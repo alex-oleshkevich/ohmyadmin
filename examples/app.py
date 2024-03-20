@@ -3,7 +3,7 @@ import pathlib
 import sqlalchemy as sa
 from async_storages import FileStorage, FileSystemBackend
 from passlib.handlers.pbkdf2 import pbkdf2_sha256
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, create_async_engine
 from starception import install_error_handler
 from starlette.applications import Starlette
 from starlette.authentication import BaseUser
@@ -33,7 +33,7 @@ def index_view(request: Request) -> Response:
 
 
 class DatabaseSessionMiddleware:
-    def __init__(self, app: ASGIApp, sessionmaker: async_sessionmaker) -> None:
+    def __init__(self, app: ASGIApp, sessionmaker: async_sessionmaker[AsyncSession]) -> None:
         self.app = app
         self.sessionmaker = sessionmaker
 

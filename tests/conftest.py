@@ -73,8 +73,7 @@ def app(app_f: AppFactory, ohmyadmin: OhMyAdmin) -> Starlette:
 
 
 class RequestFactory(typing.Protocol):  # pragma: no cover:
-    def __call__(self, method: str = "get", type: str = "http") -> Request:
-        ...
+    def __call__(self, method: str = "get", type: str = "http") -> Request: ...
 
 
 @pytest.fixture

@@ -243,8 +243,8 @@ def seed_product_categories(session: AsyncSession) -> None:
     session.add_all(
         [
             ProductCategory(
-                product_id=random.randint(1, OBJECTS_COUNT),  # type: ignore[call-arg]
-                category_id=random.randint(1, 20),  # type: ignore[call-arg]
+                product_id=random.randint(1, OBJECTS_COUNT),
+                category_id=random.randint(1, 20),
             )
             for _ in range(1, (OBJECTS_COUNT + 1 * 20))
         ]

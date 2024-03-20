@@ -6,13 +6,13 @@ import bs4
 import httpx
 from bs4 import BeautifulSoup
 
-
-class SelectorError(Exception):
-    ...
+T = typing.TypeVar("T")
 
 
-class NodeNotFoundError(SelectorError):
-    ...
+class SelectorError(Exception): ...
+
+
+class NodeNotFoundError(SelectorError): ...
 
 
 class MarkupSelector:
@@ -29,8 +29,17 @@ class MarkupSelector:
             return node
         raise NodeNotFoundError(f'No nodes: "{selector}".')
 
-    def get_attribute(self, selector: str, attribute: str, default: typing.Any = None) -> str:
-        return self.find_node_or_raise(selector).get(attribute, default)
+    @typing.overload
+    def get_attribute(self, selector: str, attribute: str, default: str) -> str: ...
+
+    @typing.overload
+    def get_attribute(self, selector: str, attribute: str, default: None = None) -> None: ...
+
+    def get_attribute(self, selector: str, attribute: str, default: str | None = None) -> str | None:
+        value = self.find_node_or_raise(selector).get(attribute, default)
+        if not isinstance(value, str):
+            raise TypeError("Attribute must be a string.")
+        return value
 
     def has_attribute(self, selector: str, attribute: str) -> bool:
         return attribute in self.find_node_or_raise(selector).attrs

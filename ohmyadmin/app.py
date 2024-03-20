@@ -5,7 +5,7 @@ import os
 import typing
 
 import jinja2
-from async_storages import FileStorage
+from async_storages import FileStorage, MemoryBackend
 from async_storages.contrib.starlette import FileServer
 from starlette import templating
 from starlette.middleware import Middleware
@@ -36,13 +36,13 @@ class OhMyAdmin(Router):
         theme: Theme = Theme(),
         file_storage: FileStorage | None = None,
         auth_policy: AuthPolicy | None = None,
-        template_dirs: typing.Sequence[str | os.PathLike] = tuple(),
+        template_dirs: typing.Sequence[str | os.PathLike[str]] = tuple(),
         template_packages: typing.Sequence[str] = tuple(),
     ) -> None:
         self.pages = pages
         self.theme = theme
         self.app_name = app_name
-        self.file_storage = file_storage
+        self.file_storage = file_storage or FileStorage(storage=MemoryBackend())
         self.auth_policy = auth_policy or AnonymousAuthPolicy()
         self.jinja_env = self.configure_jinja(template_dirs, template_packages)
         self.templating = templating.Jinja2Templates(env=self.jinja_env, context_processors=[self.template_context])
@@ -59,10 +59,10 @@ class OhMyAdmin(Router):
 
     def configure_jinja(
         self,
-        template_dirs: typing.Sequence[str | os.PathLike] = tuple(),
+        template_dirs: typing.Sequence[str | os.PathLike[str]] = tuple(),
         template_packages: typing.Sequence[str] = tuple(),
     ) -> jinja2.Environment:
-        loaders = [jinja2.PackageLoader(PACKAGE_NAME)]
+        loaders: list[jinja2.BaseLoader] = [jinja2.PackageLoader(PACKAGE_NAME)]
         loaders.append(jinja2.FileSystemLoader(list(template_dirs)))
         loaders.extend([jinja2.PackageLoader(template_package) for template_package in template_packages])
 
@@ -108,10 +108,12 @@ class OhMyAdmin(Router):
         form_class = self.auth_policy.get_login_form_class()
         form = form_class(formdata=await request.form(), data={"next_url": next_url})
         if request.method in ["POST"] and form.validate():
-            if user := await self.auth_policy.authenticate(request, form.identity.data, form.password.data):
+            identity = typing.cast(str, form.identity.data)
+            password = typing.cast(str, form.password.data)
+            if user := await self.auth_policy.authenticate(request, identity, password):
                 self.auth_policy.login(request, user)
                 flash(request).success(_("You have been logged in.", domain="ohmyadmin"))
-                return RedirectResponse(url=form.next_url.data, status_code=302)
+                return RedirectResponse(url=typing.cast(str, form.next_url.data), status_code=302)
             else:
                 flash(request).error(_("Invalid credentials.", domain="ohmyadmin"))
 

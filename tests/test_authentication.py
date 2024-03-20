@@ -7,12 +7,10 @@ from tests.conftest import RequestFactory
 from tests.models import User
 
 
-def test_login_page() -> None:
-    ...
+def test_login_page() -> None: ...
 
 
-def test_logout_page() -> None:
-    ...
+def test_logout_page() -> None: ...
 
 
 async def test_auth_policy(http_get: Request, user: User) -> None:

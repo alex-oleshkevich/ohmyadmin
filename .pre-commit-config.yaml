@@ -25,14 +25,14 @@ repos:
             -   id: check-executables-have-shebangs
 
     -   repo: https://github.com/astral-sh/ruff-pre-commit
-        rev: v0.1.7
+        rev: v0.3.3
         hooks:
             -   id: ruff
                 args: [ --fix ]
             -   id: ruff-format
 
     -   repo: https://github.com/pre-commit/mirrors-mypy
-        rev: 'v1.7.1'
+        rev: 'v1.9.0'
         hooks:
             -   id: mypy
                 files: "ohmyadmin"
@@ -41,7 +41,10 @@ repos:
                     - starlette
                     - starlette_babel
                     - starlette_flash
-                    - "sqlalchemy==2.0.0rc1"
+                    - types-beautifulsoup4
+                    - types-passlib
+                    - types-wtforms
+                    - "sqlalchemy==2"
 
     -   repo: https://github.com/myint/docformatter.git
         rev: v1.7.5
