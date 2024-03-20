@@ -8,8 +8,8 @@ from ohmyadmin.theme import Theme
 from tests.conftest import AppFactory
 
 
-def test_welcome_view(client: TestClient) -> None:
-    response = client.get("/admin/")
+def test_welcome_view(auth_client: TestClient) -> None:
+    response = auth_client.get("/admin/")
     assert response.status_code == 200
 
 
@@ -103,8 +103,14 @@ def test_static_files(client: TestClient) -> None:
     assert response.headers["content-type"] == "image/png"
 
 
-async def test_media_files(client: TestClient, file_storage: FileStorage) -> None:
+async def test_media_files(auth_client: TestClient, file_storage: FileStorage) -> None:
     await file_storage.write("text.txt", b"")
-    response = client.get("/admin/media/text.txt")
+    response = auth_client.get("/admin/media/text.txt")
     assert response.status_code == 200
     assert response.headers["content-type"] == "text/plain; charset=utf-8"
+
+
+async def test_requires_auth(client: TestClient) -> None:
+    response = client.get("/admin/")
+    assert response.status_code == 302
+    assert response.headers["location"] == "http://testserver/admin/login?next=%2Fadmin%2F"

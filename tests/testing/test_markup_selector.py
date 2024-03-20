@@ -17,6 +17,13 @@ def test_find_node() -> None:
     assert node.name == "span"
 
 
+def test_find_node_using_bytes() -> None:
+    selector = MarkupSelector(b"<div><span></span></div>")
+    node = selector.find_node("span")
+    assert node
+    assert node.name == "span"
+
+
 def test_find_node_or_raise() -> None:
     selector = MarkupSelector("<div><span></span></div>")
     node = selector.find_node_or_raise("span")

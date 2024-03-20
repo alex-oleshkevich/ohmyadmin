@@ -69,7 +69,7 @@ def retarget(response: R, target: str) -> R:
     return response
 
 
-def trigger(response: R, event: str, data: typing.Any = None, stage: TriggerStage = "immediate") -> R:
+def trigger(response: R, event: str, data: typing.Any = None, *, stage: TriggerStage = "immediate") -> R:
     hx_event = {
         "immediate": "hx-trigger",
         "after-swap": "hx-trigger-after-swap",
@@ -91,7 +91,7 @@ def refresh(response: R) -> R:
     return trigger(response, "refresh")
 
 
-def toast(response: R, message: str, category: ToastCategory = "success", stage: TriggerStage = "immediate") -> R:
+def toast(response: R, message: str, category: ToastCategory = "success", *, stage: TriggerStage = "immediate") -> R:
     return trigger(response, "toast", {"message": message, "category": category}, stage=stage)
 
 
@@ -129,7 +129,7 @@ class HXResponse(Response):
         return reswap(self, target)
 
     def trigger(self, event: str, data: typing.Any = None, stage: TriggerStage = "immediate") -> typing.Self:
-        return trigger(self, event, data, stage)
+        return trigger(self, event, data, stage=stage)
 
 
 def response(

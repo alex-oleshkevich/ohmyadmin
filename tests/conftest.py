@@ -73,29 +73,53 @@ def app(app_f: AppFactory, ohmyadmin: OhMyAdmin) -> Starlette:
 
 
 class RequestFactory(typing.Protocol):  # pragma: no cover:
-    def __call__(self, method: str = "get", type: str = "http") -> Request: ...
+    def __call__(
+        self,
+        method: str = "get",
+        path: str = "/",
+        *,
+        headers: typing.Sequence[tuple[bytes, bytes]] = tuple(),
+        type: str = "http",
+        state: dict[str, typing.Any] | None = None,
+        session: dict[str, typing.Any] | None = None,
+    ) -> Request: ...
 
 
 @pytest.fixture
-def request_f(ohmyadmin: OhMyAdmin) -> RequestFactory:
+def request_f(ohmyadmin: OhMyAdmin, app: Starlette) -> RequestFactory:
     def factory(
         method: str = "get",
+        path: str = "/",
+        *,
+        headers: typing.Sequence[tuple[bytes, bytes]] = tuple(),
         type: str = "http",
+        state: dict[str, typing.Any] | None = None,
+        session: dict[str, typing.Any] | None = None,
     ) -> Request:
+        state = state or {}
+        state.update(
+            {
+                "ohmyadmin": ohmyadmin,
+            }
+        )
         scope = {
+            "app": app,
+            "path": path,
             "type": type,
             "method": method,
-            "state": {
-                "ohmyadmin": ohmyadmin,
-            },
+            "state": state,
+            "headers": headers,
+            "router": app.router,
         }
+        if session:
+            scope["session"] = session
         return Request(scope)
 
     return factory
 
 
 @pytest.fixture
-def http_get(request_f: RequestFactory) -> Request:
+def http_request(request_f: RequestFactory) -> Request:
     return request_f(method="get")
 
 
@@ -103,3 +127,11 @@ def http_get(request_f: RequestFactory) -> Request:
 def client(app: Starlette) -> typing.Generator[TestClient, None, None]:
     with TestClient(app, follow_redirects=False) as client:
         yield client
+
+
+@pytest.fixture
+def auth_client(client: TestClient, user: User) -> typing.Generator[TestClient, None, None]:
+    response = client.post("/admin/login", data={"identity": user.email, "password": "password"})
+    assert response.status_code == 302
+    assert "location" in response.headers
+    yield client

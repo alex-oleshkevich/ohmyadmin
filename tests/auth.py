@@ -15,6 +15,6 @@ class AuthTestPolicy(AuthPolicy):
         return None
 
     async def load_user(self, conn: HTTPConnection, user_id: str) -> BaseUser | None:
-        if str(self.user.id) == user_id:
+        if str(self.user.id) == str(user_id):
             return self.user
         return None

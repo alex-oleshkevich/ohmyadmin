@@ -37,8 +37,7 @@ class MarkupSelector:
 
     def get_attribute(self, selector: str, attribute: str, default: str | None = None) -> str | None:
         value = self.find_node_or_raise(selector).get(attribute, default)
-        if not isinstance(value, str):
-            raise TypeError("Attribute must be a string.")
+        assert not isinstance(value, list)
         return value
 
     def has_attribute(self, selector: str, attribute: str) -> bool:

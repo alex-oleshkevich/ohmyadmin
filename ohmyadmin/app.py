@@ -20,7 +20,7 @@ from starlette_babel.contrib.jinja import configure_jinja_env
 from starlette_babel.locale import get_language
 from starlette_flash import flash
 
-from ohmyadmin.authentication import AnonymousAuthPolicy, AuthPolicy
+from ohmyadmin.authentication import AnonymousAuthPolicy, AuthPolicy, LoginRequiredMiddleware
 from ohmyadmin.pages import Page
 from ohmyadmin.templating import media_url, static_url, url_matches
 from ohmyadmin.theme import Theme
@@ -54,6 +54,7 @@ class OhMyAdmin(Router):
                     AuthenticationMiddleware,
                     backend=self.auth_policy.get_authentication_backend(),
                 ),
+                Middleware(LoginRequiredMiddleware, exclude_paths=["/login", "/static", "/site.webmanifest"]),
             ],
         )
 
