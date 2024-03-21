@@ -1,4 +1,17 @@
 {% extends 'ohmyadmin/auth.html' %}
+{% import 'ohmyadmin/forms.html' as forms %}
 
 {% block content %}
+    <form method="post">
+        <p class="text-xl mb-6 font-medium text-center">
+            {{ _('Sign in to your account', domain='ohmyadmin') }}
+        </p>
+        {{ forms.form_group(form.identity) }}
+        {{ forms.form_group(form.password) }}
+        <div class="flex items-center gap-5">
+            <button class="btn btn-accent" type="submit">
+                {{ _('Login', domain='ohmyadmin') }}
+            </button>
+        </div>
+    </form>
 {% endblock %}

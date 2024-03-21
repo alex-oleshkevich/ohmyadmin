@@ -1,0 +1,11 @@
+{% if field.type == 'FormField' %}
+    {{ form_form_field(field) }}
+{% elif field.type == 'FieldList' %}
+    {{ form_list_field(field) }}
+{% elif field.type == 'BooleanField' %}
+    {{ form_checkbox(field) }}
+{% else %}
+    {{ form_input(field) }}
+    {{ form_help(field) }}
+    {{ form_errors(field) }}
+{% endif %}

@@ -1,5 +1,43 @@
 {% extends 'ohmyadmin/base.html' %}
+{% import 'ohmyadmin/icons.html' as icons %}
 
 {% block body %}
-    {% block content %}{% endblock %}
+    <main class="page">
+        <aside class="sidebar">
+            <section class="logo">
+                <img src="{{ static_url('icons/icon.png') }}">
+                <span>{{ app.app_name }}</span>
+            </section>
+            <nav>
+                <a href="#">
+                    {{ icons.trash() }}
+                    Dashboard
+                </a>
+                <div class="menu-item">
+                    {{ icons.trash() }}
+                    With Action
+                    <span class="ml-auto">{{ icons.plus() }}</span>
+                </div>
+            </nav>
+            <section class="mt-auto">
+                <button class="user-profile">
+                    <div class="avatar avatar-lg">
+                        <img src="{{ media_url(request.user.avatar) }}">
+                    </div>
+                    <div class="w-full">
+                        <div class="font-semibold">{{ request.user }}</div>
+                        <div class="text-sm text-gray-600">Description</div>
+                    </div>
+                    <div class="ml-auto flex items-center justify-end h-full">
+                        {{ icons.chevron_down() }}
+                    </div>
+                </button>
+            </section>
+        </aside>
+        <article>
+            <header>HEADER</header>
+            <section>{% block content %}{% endblock %}</section>
+        </article>
+    </main>
+    <footer></footer>
 {% endblock %}

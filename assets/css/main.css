@@ -1,9 +1,17 @@
+@import "tailwind.css";
+@import "components/all.css";
 @import "theme.css";
+
+html, body {
+    height: 100%;
+    width: 100%;
+    min-height: 100%;
+}
 
 body {
     color-scheme: var(--o-color-scheme);
     background: var(--o-background);
-    color: var(--o-text-color);
+    color: var(--o-primary-text);
     font-family: var(--o-font-family);
     font-size: var(--o-font-size);
     font-optical-sizing: auto;
@@ -12,4 +20,22 @@ body {
     font-variation-settings: "slnt" 0;
     padding: 0;
     margin: 0;
+    height: 100%;
+}
+
+body > main {
+    height: 100%;
+    min-height: 100%;
+}
+
+a {
+    color: var(--o-link-color);
+}
+
+.auth-screen {
+    background: var(--o-auth-background);
+}
+
+.auth-screen article {
+    background: var(--o-auth-body-background);
 }

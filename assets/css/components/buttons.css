@@ -1,0 +1,178 @@
+:root {
+    --o-button-padding: var(--o-spacing-1) var(--o-spacing-4);
+    --o-button-font-size: var(--o-font-size);
+    --o-button-text: var(--o-primary-text);
+    --o-button-border-color: var(--o-color-gray-300);
+    --o-button-background: white;
+    --o-button-border-radius: var(--o-radius-md);
+    --o-button-line-height: var(--o-line-height-6);
+    --o-button-height: var(--o-height-8);
+    --o-button-icon-color: var(--o-button-text);
+
+    --o-button-hover-text: var(--o-button-text);
+    --o-button-hover-background: var(--o-color-gray-100);
+    --o-button-hover-border-color: var(--o-button-border-color);
+
+    --o-button-active-text: var(--o-button-text);
+    --o-button-active-background: var(--o-color-gray-200);
+    --o-button-active-border-color: var(--o-button-border-color);
+
+    --o-button-disabled-text: var(--o-color-gray-400);
+    --o-button-disabled-background: var(--o-button-background);
+    --o-button-disabled-border-color: var(--o-button-border-color);
+}
+
+.btn {
+    padding: var(--o-button-padding);
+    display: inline-flex;
+    align-items: center;
+    justify-items: center;
+    gap: var(--o-spacing-1);
+    font-size: var(--o-button-font-size);
+    color: var(--o-button-text);
+    background: var(--o-button-background);
+    border: 1px solid var(--o-button-border-color);
+    line-height: var(--o-button-line-height);
+    box-sizing: border-box;
+    min-height: var(--o-button-height);
+    border-radius: var(--o-button-border-radius);
+    transition: background-color ease-in-out 100ms;
+    font-weight: var(--o-font-weight-medium);
+
+    & > svg {
+        max-height: 20px;
+        max-width: 20px;
+        color: var(--o-button-icon-color);
+    }
+}
+
+.btn:hover {
+    --o-button-text: var(--o-button-hover-text);
+    --o-button-background: var(--o-button-hover-background);
+    --o-button-border-color: var(--o-button-hover-border-color);
+}
+
+.btn:active {
+    --o-button-text: var(--o-button-active-text);
+    --o-button-background: var(--o-button-active-background);
+    --o-button-border-color: var(--o-button-active-border-color);
+}
+
+.btn:focus {
+    outline: var(--o-input-ring-width) solid var(--o-input-ring-color);
+    outline-offset: var(--o-input-ring-offset);
+}
+
+.btn:disabled {
+    --o-button-text: var(--o-button-disabled-text);
+    --o-button-background: var(--o-button-disabled-background);
+    --o-button-border-color: var(--o-button-disabled-border-color);
+    cursor: not-allowed;
+
+    & > svg {
+        color: var(--o-button-disabled-text);
+    }
+}
+
+.btn-block {
+    width: 100%;
+}
+
+.btn-accent {
+    --o-button-icon-color: var(--o-accent-onbackground);
+    --o-button-text: var(--o-accent-onbackground);
+    --o-button-background: var(--o-accent-background);
+    --o-button-border-color: var(--o-accent-border-color);
+
+    --o-button-hover-text: var(--o-accent-onbackground);
+    --o-button-hover-background: var(--o-accent-background-hover);
+    --o-button-hover-border-color: var(--o-button-hover-background);
+
+    --o-button-active-text: var(--o-accent-onbackground);
+    --o-button-active-background: var(--o-accent-background-active);
+    --o-button-active-border-color: var(--o-button-active-background);
+
+    --o-button-disabled-text: var(--o-accent-onbackground-disabled);
+    --o-button-disabled-background: var(--o-accent-background-disabled);
+    --o-button-disabled-border-color: var(--o-button-background);
+}
+
+.btn-primary {
+    --o-button-text: var(--o-primary-onbackground);
+    --o-button-background: var(--o-primary-background);
+    --o-button-border-color: var(--o-primary-border-color);
+    --o-button-icon-color: var(--o-primary-onbackground);
+
+    --o-button-hover-text: var(--o-primary-onbackground);
+    --o-button-hover-background: var(--o-primary-background-hover);
+    --o-button-hover-border-color: var(--o-button-hover-background);
+
+    --o-button-active-text: var(--o-primary-onbackground);
+    --o-button-active-background: var(--o-primary-background-active);
+    --o-button-active-border-color: var(--o-button-active-background);
+
+    --o-button-disabled-text: var(--o-primary-onbackground-disabled);
+    --o-button-disabled-background: var(--o-primary-background-disabled);
+    --o-button-disabled-border-color: var(--o-button-background);
+}
+
+.btn-danger {
+    --o-button-text: var(--o-danger-onbackground);
+    --o-button-background: var(--o-danger-background);
+    --o-button-border-color: var(--o-danger-border-color);
+    --o-button-icon-color: var(--o-danger-onbackground);
+
+    --o-button-hover-text: var(--o-danger-onbackground);
+    --o-button-hover-background: var(--o-danger-background-hover);
+    --o-button-hover-border-color: var(--o-button-hover-background);
+
+    --o-button-active-text: var(--o-danger-onbackground);
+    --o-button-active-background: var(--o-danger-background-active);
+    --o-button-active-border-color: var(--o-button-active-background);
+
+    --o-button-disabled-text: var(--o-danger-onbackground-disabled);
+    --o-button-disabled-background: var(--o-danger-background-disabled);
+    --o-button-disabled-border-color: var(--o-button-background);
+}
+
+.btn-secondary {
+    --o-button-text: var(--o-secondary-onbackground);
+    --o-button-background: var(--o-secondary-background);
+    --o-button-border-color: var(--o-secondary-border-color);
+
+    --o-button-hover-text: var(--o-secondary-onbackground);
+    --o-button-hover-background: var(--o-secondary-background-hover);
+    --o-button-hover-border-color: var(--o-button-hover-background);
+
+    --o-button-active-text: var(--o-secondary-onbackground);
+    --o-button-active-background: var(--o-secondary-background-active);
+    --o-button-active-border-color: var(--o-button-active-background);
+
+    --o-button-disabled-text: var(--o-secondary-onbackground-disabled);
+    --o-button-disabled-background: var(--o-secondary-background-disabled);
+    --o-button-disabled-border-color: var(--o-button-background);
+}
+
+.btn-link {
+    --o-button-text: var(--o-link-color);
+    --o-button-icon-color: var(--o-button-text);
+    --o-button-background: transparent;
+    --o-button-border-color: transparent;
+    --o-button-hover-border-color: transparent;
+    --o-button-active-border-color: transparent;
+    --o-button-disabled-background: transparent;
+    --o-button-disabled-border-color: transparent;
+}
+
+.btn-text {
+    --o-button-background: transparent;
+    --o-button-border-color: transparent;
+    --o-button-hover-border-color: transparent;
+    --o-button-active-border-color: transparent;
+    --o-button-disabled-background: transparent;
+    --o-button-disabled-border-color: transparent;
+}
+
+.btn-icon {
+    --o-button-padding: var(--o-spacing-1_5);
+}

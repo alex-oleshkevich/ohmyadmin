@@ -1,0 +1,5 @@
+<div class="form-radio-list">
+    {% for element in field %}
+        <label for="{{ element.label.field_id }}">{{ element }} {{ element.label.text }}</label>
+    {% endfor %}
+</div>

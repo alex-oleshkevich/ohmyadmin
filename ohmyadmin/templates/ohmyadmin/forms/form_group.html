@@ -1,0 +1,8 @@
+<div class="form-group">
+    {% if field.type not in ['RadioField', 'BooleanField'] %}
+        {% if label or field.label.text %}
+            {{ label or form_label(field) }}
+        {% endif %}
+    {% endif %}
+    {{ form_field(field) }}
+</div>

@@ -1,17 +1,64 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
 @import "colors.css";
+@import "dark.css";
 
 
 :root {
     --o-color-scheme: light;
     --o-background: white;
-    --o-font-size: 14px;
     --o-font-family: "Inter", sans-serif;
-    --o-text-color: var(--o-color-gray-900);
-}
 
-html[data-theme="dark"] {
-    --o-color-scheme: dark;
-    --o-text-color: white;
-    --o-background: var(--o-color-gray-900);
+    --o-auth-background: var(--o-background);
+    --o-auth-body-background: var(--o-background);
+
+    --o-text-muted: var(--o-color-gray-700);
+    --o-input-ring-color: var(--o-color-blue-300);
+    --o-input-ring-offset: 1px;
+    --o-input-ring-width: 2px;
+
+    /* accent/brand colors */
+    --o-accent-text: var(--o-color-blue-600);
+    --o-accent-background: var(--o-color-blue-500);
+    --o-accent-background-hover: var(--o-color-blue-600);
+    --o-accent-background-active: var(--o-color-blue-700);
+    --o-accent-background-disabled: var(--o-color-blue-300);
+    --o-accent-icon: var(--o-color-blue-500);
+    --o-accent-onbackground: white;
+    --o-accent-onbackground-disabled: var(--o-color-blue-100);
+    --o-accent-border-color: var(--o-color-blue-500);
+
+    /* primary colors */
+    --o-primary-text: var(--o-color-gray-900);
+    --o-primary-background: var(--o-color-gray-900);
+    --o-primary-background-hover: var(--o-color-gray-700);
+    --o-primary-background-active: var(--o-color-gray-600);
+    --o-primary-background-disabled: var(--o-color-gray-200);
+    --o-primary-icon: var(--o-color-gray-800);
+    --o-primary-onbackground: white;
+    --o-primary-onbackground-disabled: var(--o-color-gray-400);
+    --o-primary-border-color: var(--o-color-gray-900);
+
+    /* danger colors */
+    --o-danger-text: var(--o-color-red-600);
+    --o-danger-background: var(--o-color-red-500);
+    --o-danger-background-hover: var(--o-color-red-600);
+    --o-danger-background-active: var(--o-color-red-700);
+    --o-danger-background-disabled: var(--o-color-red-300);
+    --o-danger-icon: var(--o-color-red-500);
+    --o-danger-onbackground: white;
+    --o-danger-onbackground-disabled: var(--o-color-red-100);
+    --o-danger-border-color: var(--o-color-red-500);
+
+    /* secondary colors */
+    --o-secondary-text: var(--o-color-gray-600);
+    --o-secondary-background: var(--o-color-gray-100);
+    --o-secondary-background-hover: var(--o-color-gray-200);
+    --o-secondary-background-active: var(--o-color-gray-300);
+    --o-secondary-background-disabled: var(--o-color-gray-100);
+    --o-secondary-icon: var(--o-color-gray-600);
+    --o-secondary-onbackground: var(--o-color-gray-900);
+    --o-secondary-onbackground-disabled: var(--o-color-gray-400);
+    --o-secondary-border-color: transparent;
+
+    --o-link-color: var(--o-accent-text);
 }

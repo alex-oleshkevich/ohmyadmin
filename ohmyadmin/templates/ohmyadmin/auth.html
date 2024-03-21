@@ -1,5 +1,15 @@
 {% extends 'ohmyadmin/base.html' %}
 
 {% block body %}
-    {% block content %}{% endblock %}
+    <main class="h-full w-full flex items-center justify-center p-5 md:p-0 auth-screen">
+        <div class="w-full max-w-md">
+            <header class="flex items-center justify-center px-5 py-4 gap-5">
+                <img class="h-10" src="{{ static_url(theme.logo_url) }}" alt="{{ app.app_name }}">
+                <span class="text-lg font-semibold">{{ app.app_name }}</span>
+            </header>
+            <article class="rounded-md p-5">
+                {% block content %}{% endblock %}
+            </article>
+        </div>
+    </main>
 {% endblock %}

@@ -1,0 +1,38 @@
+{% import 'ohmyadmin/forms.html' as forms %}
+{% import 'ohmyadmin/icons.html' as icons %}
+
+{% macro list_field_item(field) %}
+    <div class="mb-3 border border-gray-300 rounded-md">
+        <div class="flex items-center bg-gray-100 px-2 py-0.5">
+            <div class="ml-auto">
+                <button class="delete-icon" type="button" @click="deleted.push(index)">
+                    {{ icons.trash() }}
+                </button>
+            </div>
+        </div>
+        <div class="p-2">{{ form_field(field) }}</div>
+    </div>
+{% endmacro %}
+
+<div x-data="{deleted: [], newCounter: 0, startIndex: {{ field|length }} }">
+    <div class="mb-5">
+        {% for subfield in field %}
+            <template x-if="!deleted.includes({{ loop.index0 }})" x-data="{ index: {{ loop.index0 }} }">
+                {{ list_field_item(subfield) }}
+            </template>
+        {% endfor %}
+
+        <template x-for="_index in newCounter">
+            <template x-if="!deleted.includes(_index + startIndex)" x-data="{index: _index + startIndex}">
+                {% set template_field = field.append_entry() %}
+                {% set _ignore = field.pop_entry() %}
+                {{ list_field_item(template_field) }}
+            </template>
+        </template>
+    </div>
+    <div>
+        <button type="button" class="btn btn-link" @click="newCounter += 1">
+            {{ icons.plus() }} {{ _('Add a new item') }}
+        </button>
+    </div>
+</div>

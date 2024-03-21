@@ -1,0 +1,51 @@
+html[data-theme="dark"] {
+    --o-color-scheme: dark;
+    --o-background: var(--o-color-gray-900);
+    --o-auth-background: var(--o-background);
+    --o-auth-body-background: var(--o-background);
+
+    --o-text-muted: var(--o-color-gray-400);
+
+    --o-accent-text: var(--o-color-blue-300);
+    --o-accent-background: var(--o-color-blue-600);
+    --o-accent-background-hover: var(--o-color-blue-700);
+    --o-accent-background-active: var(--o-color-blue-800);
+    --o-accent-background-disabled: var(--o-color-blue-900);
+    --o-accent-onbackground-disabled: var(--o-color-gray-400);
+    --o-accent-icon: var(--o-color-blue-400);
+
+    --o-primary-text: var(--o-color-gray-100);
+    --o-primary-background: var(--o-color-gray-200);
+    --o-primary-background-hover: var(--o-color-gray-300);
+    --o-primary-background-active: var(--o-color-gray-400);
+    --o-primary-icon: var(--o-color-gray-400);
+    --o-primary-onbackground: var(--o-color-gray-900);
+    --o-primary-background-disabled: var(--o-color-gray-700);
+    --o-primary-onbackground-disabled: var(--o-color-gray-500);
+
+    --o-secondary-text: var(--o-color-gray-100);
+    --o-secondary-background: var(--o-color-gray-700);
+    --o-secondary-background-hover: var(--o-color-gray-800);
+    --o-secondary-background-active: var(--o-color-gray-900);
+    --o-secondary-icon: var(--o-color-gray-400);
+    --o-secondary-onbackground: var(--o-secondary-text);
+    --o-secondary-background-disabled: var(--o-color-gray-700);
+    --o-secondary-onbackground-disabled: var(--o-color-gray-500);
+
+    --o-button-background: var(--o-color-gray-900);
+    --o-button-border-color: var(--o-color-gray-600);
+    --o-button-hover-background: var(--o-color-gray-800);
+    --o-button-active-background: var(--o-color-gray-700);
+    --o-button-disabled-background: var(--o-color-gray-700);
+    --o-button-disabled-text: var(--o-color-gray-500);
+
+    --o-danger-text: var(--o-color-red-400);
+    --o-danger-background-disabled: var(--o-color-red-900);
+    --o-danger-onbackground-disabled: var(--o-color-red-400);
+
+    --o-input-text: var(--o-secondary-text);
+    --o-input-background: var(--o-color-gray-900);
+    --o-input-border-color: var(--o-color-gray-600);
+    --o-input-disabled-background: var(--o-color-gray-700);
+    --o-input-disabled-text: var(--o-color-gray-500);
+}
