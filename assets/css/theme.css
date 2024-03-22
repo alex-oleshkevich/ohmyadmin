@@ -21,6 +21,12 @@
     --o-breakpoint-xl: theme('screens.xl');
     --o-breakpoint-2xl: theme('screens.2xl');
 
+    --o-content-width: theme('maxWidth.7xl');
+    --o-surface-border-color: var(--o-color-gray-200);
+    --o-surface-background: var(--o-color-gray-100);
+    --o-surface-background-hover: var(--o-color-gray-200);
+    --o-surface-background-active: var(--o-color-gray-300);
+
     /* accent/brand colors */
     --o-accent-text: var(--o-color-blue-600);
     --o-accent-background: var(--o-color-blue-500);

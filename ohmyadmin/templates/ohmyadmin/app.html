@@ -3,7 +3,7 @@
 
 {% block body %}
     <main class="h-full overflow-hidden flex">
-        <aside class="sidebar hidden flex-shrink-0 w-full md:fixed md:left-0 md:top-0 md:flex">
+        <aside class="sidebar hidden flex-shrink-0 md:fixed md:left-0 md:top-0 md:flex">
             <section class="flex items-center p-3 gap-3 font-semibold text-xl leading-5 mb-3">
                 <img class="h-6" src="{{ static_url(theme.logo_url) }}">
                 <span>{{ app.app_name }}</span>
@@ -24,13 +24,23 @@
                 {% include 'ohmyadmin/user_menu.html' %}
             </section>
         </aside>
-        <article class="sidebar-offset flex-grow-1 p-6 overflow-y-auto">
-            <header class="flex items-center">
-                <button class="btn btn-icon btn-text md:hidden">{{ icons.menu2() }}</button>
-            </header>
-            <section>
-                {% block content %}{% endblock %}
-            </section>
+        <article
+            class="md:sidebar-offset w-full flex-grow-1 p-0 md:p-6 overflow-auto md:ml-[--o-sidebar-width]">
+            <div class="md:max-w-[--o-content-width]">
+                <header
+                    class="flex items-center bg-[--o-sidebar-background] p-2 md:p-0 md:bg-transparent border-b md:border-0 border-[--o-sidebar-border-color]">
+                    <button class="btn btn-icon btn-text mr-3 md:hidden">{{ icons.menu2() }}</button>
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg md:text-4xl font-semibold">Page title</span>
+                    </div>
+                    <div class="ml-auto">
+                        <button class="btn btn-accent">{{ icons.plus() }} Add item</button>
+                    </div>
+                </header>
+                <section class="p-2 md:p-0 md:mt-5">
+                    {% block content %}{% endblock %}
+                </section>
+            </div>
         </article>
     </main>
     <footer></footer>

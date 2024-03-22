@@ -2,10 +2,10 @@
     --o-sidebar-desktop-width: 280px;
     --o-sidebar-mobile-width: 100%;
     --o-sidebar-width: var(--o-sidebar-mobile-width);
-    --o-sidebar-background: var(--o-color-gray-100);
-    --o-sidebar-border-color: var(--o-color-gray-200);
-    --o-sidebar-item-background-hover: var(--o-color-gray-200);
-    --o-sidebar-item-background-active: var(--o-color-gray-300);
+    --o-sidebar-background: var(--o-surface-background);
+    --o-sidebar-border-color: var(--o-surface-border-color);
+    --o-sidebar-item-background-hover: var(--o-surface-background-hover);
+    --o-sidebar-item-background-active: var(--o-surface-background-active);
     --o-sidebar-item-radius: var(--o-radius-md);
     --o-sidebar-item-padding: var(--o-spacing-2);
     --o-sidebar-item-icon-size: var(--o-spacing-6);
@@ -16,7 +16,7 @@
 
 .sidebar {
     height: 100%;
-    display: flex;
+    /*display: flex;*/
     flex-direction: column;
     width: var(--o-sidebar-width);
     padding: var(--o-spacing-2);
@@ -59,8 +59,4 @@
     &:active {
         background: var(--o-sidebar-item-background-active);
     }
-}
-
-.sidebar-offset {
-    margin-left: var(--o-sidebar-width);
 }
