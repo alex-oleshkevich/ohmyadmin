@@ -16,6 +16,11 @@
     --o-input-ring-offset: 1px;
     --o-input-ring-width: 2px;
 
+    --o-breakpoint-sm: theme('screens.sm');
+    --o-breakpoint-md: theme('screens.md');
+    --o-breakpoint-xl: theme('screens.xl');
+    --o-breakpoint-2xl: theme('screens.2xl');
+
     /* accent/brand colors */
     --o-accent-text: var(--o-color-blue-600);
     --o-accent-background: var(--o-color-blue-500);

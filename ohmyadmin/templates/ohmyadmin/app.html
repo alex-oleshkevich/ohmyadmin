@@ -2,41 +2,35 @@
 {% import 'ohmyadmin/icons.html' as icons %}
 
 {% block body %}
-    <main class="page">
-        <aside class="sidebar">
-            <section class="logo">
-                <img src="{{ static_url('icons/icon.png') }}">
+    <main class="h-full overflow-hidden flex">
+        <aside class="sidebar hidden flex-shrink-0 w-full md:fixed md:left-0 md:top-0 md:flex">
+            <section class="flex items-center p-3 gap-3 font-semibold text-xl leading-5 mb-3">
+                <img class="h-6" src="{{ static_url(theme.logo_url) }}">
                 <span>{{ app.app_name }}</span>
             </section>
-            <nav>
-                <a href="#">
+
+            <nav class="sidebar-menu">
+                <a href="#" class="sidebar-menu-item">
                     {{ icons.trash() }}
                     Dashboard
                 </a>
-                <div class="menu-item">
+                <div class="sidebar-menu-item">
                     {{ icons.trash() }}
                     With Action
-                    <span class="ml-auto">{{ icons.plus() }}</span>
+                    <span class="ml-auto">{{ icons.plus(24) }}</span>
                 </div>
             </nav>
             <section class="mt-auto">
-                <button class="user-profile">
-                    <div class="avatar avatar-lg">
-                        <img src="{{ media_url(request.user.avatar) }}">
-                    </div>
-                    <div class="w-full">
-                        <div class="font-semibold">{{ request.user }}</div>
-                        <div class="text-sm text-gray-600">Description</div>
-                    </div>
-                    <div class="ml-auto flex items-center justify-end h-full">
-                        {{ icons.chevron_down() }}
-                    </div>
-                </button>
+                {% include 'ohmyadmin/user_menu.html' %}
             </section>
         </aside>
-        <article>
-            <header>HEADER</header>
-            <section>{% block content %}{% endblock %}</section>
+        <article class="sidebar-offset flex-grow-1 p-6 overflow-y-auto">
+            <header class="flex items-center">
+                <button class="btn btn-icon btn-text md:hidden">{{ icons.menu2() }}</button>
+            </header>
+            <section>
+                {% block content %}{% endblock %}
+            </section>
         </article>
     </main>
     <footer></footer>

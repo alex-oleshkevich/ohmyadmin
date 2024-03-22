@@ -1,15 +1,15 @@
 :root {
-    --o-input-padding: var(--o-spacing-1) var(--o-spacing-3);
+    --o-input-padding: var(--o-spacing-2) var(--o-spacing-4);
     --o-input-font-size: var(--o-font-size);
     --o-input-text: var(--o-primary-text);
     --o-input-border-color: var(--o-color-gray-300);
     --o-input-background: white;
-    --o-input-line-height: var(--o-line-height-6);
+    --o-input-line-height: var(--o-line-height-5_5);
     --o-input-height: var(--o-height-8);
     --o-input-border-radius: var(--o-radius-md);
 
     --o-input-disabled-text: var(--o-color-gray-400);
-    --o-input-disabled-background: var(--o-color-gray-100);
+    --o-input-disabled-background: var(--o-color-gray-200);
     --o-input-disabled-border-color: var(--o-button-border-color);
     --o-input-checkbox-size: var(--o-spacing-5);
     --o-input-checkbox-checked-color: var(--o-accent-background);
@@ -76,11 +76,15 @@ input[type="checkbox"]:not(.form-switch), input[type="radio"] {
         outline-offset: var(--o-input-ring-offset);
     }
 
-    &:checked:hover {
+    &:checked:not(:disabled) {
+        --o-input-background: var(--o-input-checkbox-checked-color);
+    }
+
+    &:checked:hover:not(:disabled) {
         --o-input-background: var(--o-accent-background-hover);
     }
 
-    &:checked:active {
+    &:checked:active:not(:disabled) {
         --o-input-background: var(--o-accent-background-active);
     }
 
@@ -89,10 +93,6 @@ input[type="checkbox"]:not(.form-switch), input[type="radio"] {
         --o-input-background: var(--o-input-disabled-background);
         --o-input-border-color: var(--o-input-disabled-border-color);
         cursor: not-allowed;
-    }
-
-    &:checked {
-        --o-input-background: var(--o-input-checkbox-checked-color);
     }
 }
 
@@ -133,12 +133,20 @@ input[type="checkbox"].form-switch {
 
     &:checked {
         --o-input-switch-knob-background: white;
-        --o-input-switch-background: var(--o-accent-background);
         --x: 12px;
     }
 
+    &:checked:not(:disabled) {
+        --o-input-switch-background: var(--o-accent-background);
+    }
+
+    &:disabled {
+        cursor: not-allowed;
+        --o-input-switch-background: var(--o-input-disabled-background);
+    }
+
     &:disabled::after {
-        opacity: .5;
+        --o-input-switch-knob-background: white;
     }
 }
 
@@ -157,7 +165,8 @@ textarea {
     margin-bottom: var(--o-spacing-1);
 }
 
-.form-group:has(> [type="checkbox"]) {
+.form-group:has(> [type="checkbox"]),
+.form-group:has(> [type="radio"]){
     flex-direction: row-reverse;
     justify-content: start;
     gap: var(--o-spacing-1_5);

@@ -1,13 +1,14 @@
 :root {
-    --o-button-padding: var(--o-spacing-1) var(--o-spacing-4);
+    --o-button-padding: var(--o-input-padding);
     --o-button-font-size: var(--o-font-size);
     --o-button-text: var(--o-primary-text);
     --o-button-border-color: var(--o-color-gray-300);
     --o-button-background: white;
     --o-button-border-radius: var(--o-radius-md);
-    --o-button-line-height: var(--o-line-height-6);
-    --o-button-height: var(--o-height-8);
+    --o-button-line-height: var(--o-input-line-height);
+    --o-button-height: var(--o-height-10);
     --o-button-icon-color: var(--o-button-text);
+    --o-button-icon-height: var(--o-spacing-6);
 
     --o-button-hover-text: var(--o-button-text);
     --o-button-hover-background: var(--o-color-gray-100);
@@ -40,8 +41,8 @@
     font-weight: var(--o-font-weight-medium);
 
     & > svg {
-        max-height: 20px;
-        max-width: 20px;
+        max-height: var(--o-button-icon-height);
+        max-width: var(--o-button-icon-height);
         color: var(--o-button-icon-color);
     }
 }
@@ -174,5 +175,7 @@
 }
 
 .btn-icon {
-    --o-button-padding: var(--o-spacing-1_5);
+    min-width: var(--o-button-height);
+    min-height: var(--o-button-height);
+    --o-button-padding: var(--o-spacing-2);
 }

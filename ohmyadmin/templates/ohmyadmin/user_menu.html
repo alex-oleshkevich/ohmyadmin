@@ -1,0 +1,12 @@
+<button class="user-profile flex items-center w-full text-left px-3 py-2 gap-3">
+    <div class="avatar avatar-lg">
+        <img src="{{ media_url(request.user.avatar) }}">
+    </div>
+    <div class="w-full">
+        <div class="font-semibold">{{ request.user }}</div>
+        <div class="text-sm text-muted">Description</div>
+    </div>
+    <div class="ml-auto flex items-center justify-end h-full">
+        {{ icons.chevron_down() }}
+    </div>
+</button>

@@ -189,10 +189,24 @@
     --o-spacing-20: theme('spacing.20');
     --o-spacing-24: theme('spacing.24');
 
-    --o-line-height-5: theme('lineHeight.5');
+    --o-line-height-5: theme('lineHeight.4');
+    --o-line-height-5_5: 1.375rem;
     --o-line-height-6: theme('lineHeight.6');
     --o-line-height-8: theme('lineHeight.8');
+
+    --o-height-0_5: theme('height[0.5]');
+    --o-height-1: theme('height.1');
+    --o-height-2: theme('height.2');
+    --o-height-3: theme('height.3');
+    --o-height-4: theme('height.4');
+    --o-height-5: theme('height.5');
+    --o-height-6: theme('height.6');
     --o-height-8: theme('height.8');
+    --o-height-10: theme('height.10');
+    --o-height-12: theme('height.12');
+    --o-height-16: theme('height.16');
+    --o-height-20: theme('height.20');
+
     --o-radius-sm: theme('borderRadius.sm');
     --o-radius-md: theme('borderRadius.md');
     --o-font-size-xs: 0.625rem;

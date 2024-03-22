@@ -48,4 +48,9 @@ html[data-theme="dark"] {
     --o-input-border-color: var(--o-color-gray-600);
     --o-input-disabled-background: var(--o-color-gray-700);
     --o-input-disabled-text: var(--o-color-gray-500);
+
+    --o-sidebar-background: var(--o-color-gray-800);
+    --o-sidebar-border-color: var(--o-color-gray-700);
+    --o-sidebar-item-background-hover: var(--o-color-gray-600);
+    --o-sidebar-item-background-active: var(--o-color-gray-500);
 }
