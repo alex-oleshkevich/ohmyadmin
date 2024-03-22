@@ -19,5 +19,9 @@ class User(BaseUser):
         return self.id
 
     @property
+    def avatar(self) -> str:
+        return ""
+
+    @property
     def is_authenticated(self) -> bool:
         return True
