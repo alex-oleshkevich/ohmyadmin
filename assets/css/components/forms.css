@@ -116,7 +116,7 @@ input[type="checkbox"].form-switch {
     border: 1px solid var(--o-input-border-color);
     width: var(--o-input-switch-width);
     height: var(--o-input-switch-height);
-    background: var(--o-input-switch-background);
+    background-color: var(--o-input-switch-background);
 
     &::after {
         content: '';
@@ -126,7 +126,7 @@ input[type="checkbox"].form-switch {
         border-radius: 50%;
         width: var(--o-input-switch-knob-size);
         height: var(--o-input-switch-knob-size);
-        background: var(--o-input-switch-knob-background);
+        background-color: var(--o-input-switch-knob-background);
         transform: translateX(var(--x, 0));
         transition: all ease-in-out 100ms;
     }
